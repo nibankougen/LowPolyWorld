@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find:*)",
+      "Bash(dotnet:*)",
+      "Bash(mkdir -p \"D:/Documents/Unity Projects/LowPolyWorld/.config\" && cd \"D:/Documents/Unity Projects/LowPolyWorld\" && dotnet new tool-manifest --force 2>&1)",
+      "Bash(chmod +x:*)",
+      "Bash(cd:*)",
+      "Bash(uloop get-hierarchy:*)",
+      "Bash(uloop compile:*)",
+      "Bash(uloop execute-dynamic-code:*)"
+    ]
+  }
+}

@@ -1,0 +1,6 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="MenuOverlay.uss" />
+    <ui:VisualElement name="root">
+        <ui:Button name="menu-button" text="&#9776;" />
+    </ui:VisualElement>
+</ui:UXML>
