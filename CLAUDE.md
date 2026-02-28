@@ -26,7 +26,7 @@ Start all server services: `docker compose up --build`
 - **Target**: iOS / Android / PC (Windows・Mac) — performance and UI optimized for iOS/Android
 - **FPS**: 60fps target, 30fps minimum (with 24 simultaneous avatars)
 - **Memory**: < 500MB total
-- **Max simultaneous avatars**: 16
+- **Max simultaneous avatars**: 24
 
 ### Key Packages
 
