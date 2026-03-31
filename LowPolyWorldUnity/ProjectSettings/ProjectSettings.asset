@@ -826,7 +826,7 @@ PlayerSettings:
   webWasm2023: 0
   webEnableSubmoduleStrippingCompatibility: 0
   scriptingDefineSymbols:
-    Android: ULOOPMCP_HAS_ROSLYN
+    Android: ULOOPMCP_HAS_ROSLYN;GLTFAST_FORCE_DEFAULT_IMPORTER_OFF
   additionalCompilerArguments: {}
   platformArchitecture: {}
   scriptingBackend:
@@ -928,7 +928,7 @@ PlayerSettings:
   cloudProjectId: d3bbd23a-54f7-47b3-9a8c-1f932dba6add
   framebufferDepthMemorylessMode: 0
   qualitySettingsNames: []
-  projectName: LowPolygonWorld 2026-02-28_14-38-38
+  projectName: LowPolyWorld
   organizationId: some_arrows
   cloudEnabled: 0
   legacyClampBlendShapeWeights: 0
