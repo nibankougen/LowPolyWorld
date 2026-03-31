@@ -27,6 +27,7 @@ Start all server services: `docker compose up --build`
 - **FPS**: 60fps target, 30fps minimum (with 24 simultaneous avatars)
 - **Memory**: < 500MB total
 - **Max simultaneous avatars**: 24
+- **Safe Area**: All buttons, text, and interactive elements must be placed within `Screen.safeArea`. Apply a `SafeAreaFitter` component to every canvas root RectTransform. Never place interactive or readable content in notch / Dynamic Island (iOS) or camera punch-hole / gesture navigation bar (Android) areas.
 
 ### Key Packages
 
@@ -82,8 +83,9 @@ Start all server services: `docker compose up --build`
 
 - **State sync**: Netcode for GameObjects (UDP via Unity Transport)
   - Synced: player position, animation state (on change), avatar change events, world events
+  - Position send: max 20Hz, only when delta > 0.01m or rotation > 1° (Unity Relay cost reduction)
   - Interpolation: client-side linear
-- **Avatar file fetching**: HTTP to Go API server
+- **Avatar file fetching**: HTTP to Go API server; static files (VRM/GLB/PNG/atlas) served from CDN via content-addressed URLs (`{sha256}.ext`, `Cache-Control: immutable`); assets cached locally (persistent for own, temporary for others)
 - **Voice**: Vivox — 3D positional, per-world channel, distance attenuation; Unity side sends position updates to Vivox SDK
 
 ### Accessory System
@@ -97,8 +99,9 @@ Start all server services: `docker compose up --build`
 
 ### Texture Paint Feature
 
-- Scope: avatar Diffuse (256×256) and accessory Diffuse (64×64 — pixel-art style)
-- Method: 2D paint, max 8 layers, PNG output
+- Scope: avatar Diffuse (256×256, single texture), accessory Diffuse (64×64), and world object Diffuse (16×16〜512×512; one customization per object type per world (world-scoped); saveable as reusable "saved variants" via slots — 10 normal / 100 premium; saved variants are treated as independent atlas entries)
+- Method: 2D paint, **max 16 raster layers + 1 color adjustment layer (counted separately)**, PNG output
+- Transparent pixel rule: α < 128 → α=0 and RGB=(0,0,0) fixed (improves ASTC compression); α ≥ 128 → α=255 (RGB preserved). Applied at save time.
 - Implementation: **native Rust library** (`paint-engine/`) called from Unity via P/Invoke
   - Unity sends canvas data → native lib processes → returns composited PNG
   - Handles layer management, Undo history, GPU-optimized processing
@@ -106,17 +109,18 @@ Start all server services: `docker compose up --build`
 
 ### Required Scene Managers
 
-`NetworkManager`, `AvatarManager`, `AtlasManager`, `VoiceManager`, `PlayerController`, `WorldLoader`
+`NetworkManager`, `AvatarManager`, `AtlasManager`, `VoiceManager`, `PlayerController`, `WorldLoader`, `CacheManager`
 
 ### Startup Load Flow
 
-1. Login (auth via API server)
-2. World data fetch (API)
-3. Avatar list fetch (API)
-4. Atlas generation
-5. Player spawn
-6. Netcode for GameObjects session start
-7. Vivox voice connection
+1. API version compatibility check (`GET /api/version`) — show update modal and block if incompatible
+2. Login (auth via API server — auto-login if token exists, else show account creation modal with terms/privacy consent)
+3. World data fetch (API)
+4. Avatar list fetch (API)
+5. Atlas generation
+6. Player spawn
+7. Netcode for GameObjects session start
+8. Vivox voice connection
 
 ### Future Extension (design for loose coupling)
 
@@ -151,6 +155,40 @@ CSharpier (v0.29.0) runs automatically as a git pre-commit hook on staged `.cs` 
 - Config: `.csharpierrc.json` (120 char width, 4-space indent, LF)
 - Tool manifest: `.config/dotnet-tools.json`
 - New machine setup: `dotnet tool restore` at repo root
+
+---
+
+## C# Architecture Guidelines
+
+### MonoBehaviour の責務制限
+
+MonoBehaviour は Unity エンジンとの境界のみを担当する。**ゲームロジックを MonoBehaviour に書かない。**
+
+担当する処理:
+- 物理コールバック（`OnCollisionEnter` / `OnTriggerEnter` など）→ ロジッククラスへ委譲
+- Unity ライフサイクル（`Awake` / `Start` / `Update`）→ ロジッククラスのメソッド呼び出しのみ
+- アニメーション操作（`Animator.SetBool` / `SetFloat` など）
+- シーン参照・オブジェクト操作（`GetComponent` / `Instantiate` / `Destroy` / `transform`）
+- Input System コールバック受信 → ロジッククラスへ委譲
+- Coroutine / `Time.deltaTime` → ロジッククラスへ渡す
+
+### ロジッククラス（純粋 C#）
+
+ゲームロジックは `UnityEngine` に依存しない純粋 C# クラスで実装する:
+
+- `MonoBehaviour` を継承しない（`new` で生成可能）
+- `UnityEngine` 名前空間は原則使用しない
+  - 例外: `Vector3` / `Quaternion` / `Color` などの数学・値型（副作用なし）は使用可
+- コンストラクタ注入またはインターフェース経由で疎結合にする
+
+### テスト方針
+
+ロジッククラスは **Unity Test Runner** でユニットテストを作成する:
+
+- EditMode テスト: `Assets/Tests/EditMode/`（Unity ランタイム不要・高速）
+- PlayMode テスト: `Assets/Tests/PlayMode/`（Unity ランタイムが必要な統合テスト）
+- フレームワーク: NUnit（Unity Test Runner 標準）
+- **ロジッククラスを新規作成・変更したときは対応するテストを同時に作成・更新する**
 
 ---
 

@@ -7,17 +7,83 @@
 
 ## 🔴 Phase 1 着手前に必要（最優先）
 
-### 1. Humanoidアニメーション
+### 1. アプリアイコン
+
+iOS / Android 用アプリアイコン。
+
+| ✅ | ファイル名 | 配置先 |
+|---|---|---|
+| ✅ | AppIcon.png | `LowPolyWorldUnity/Assets/Textures/UI/AppIcon.png` |
+
+**仕様:**
+- サイズ: 1024×1024 px（Unity が各 OS 向けにリサイズ）
+- 形式: PNG（アルファチャンネルなし・背景透明不可）
+- 内容: アプリのブランドアイコン
+
+---
+
+### 2. UIアイコンセット
+
+アプリ全体で使用する共通UIアイコン。
+
+**配置先:** `LowPolyWorldUnity/Assets/Textures/UI/Icons/`
+
+| ✅ | ファイル名 | 用途 |
+|---|---|---|
+| ✅ | icon_nav_world.png | ナビゲーションバー「ワールド」タブ |
+| ✅ | icon_nav_avatar.png | ナビゲーションバー「アバター管理」タブ |
+| ✅ | icon_nav_worldmgr.png | ナビゲーションバー「ワールド管理」タブ |
+| ✅ | icon_nav_shop.png | ナビゲーションバー「ショップ」タブ |
+| ✅ | icon_nav_settings.png | ナビゲーションバー「設定」タブ |
+| ✅ | icon_close.png | × 閉じるボタン |
+| ✅ | icon_back.png | ← 戻るボタン |
+| ✅ | icon_search.png | 検索 |
+| ✅ | icon_heart.png | ♥ いいね（未いいね状態） |
+| ✅ | icon_heart_filled.png | ♥ いいね（いいね済み状態） |
+| ✅ | icon_more.png | … その他メニュー |
+| ✅ | icon_lock.png | 🔒 ロック（プレミアム解約後スロット等） |
+
+**仕様:**
+- サイズ: 128×128 px
+- 形式: PNG（アルファチャンネルあり・背景透明）
+- 色: **白単色**（アルファで形状を表現。Unity 側で Color プロパティを乗算してカラーリング）
+
+---
+
+### 3. システムSEファイル
+
+アプリ基本 UI で使用するサウンドエフェクト。
+
+**配置先:** `LowPolyWorldUnity/Assets/Audio/System/SE`
+
+| ✅ | ファイル名 | 用途 |
+|---|---|---|
+| ✅ | se_button_tap.wav | 汎用ボタンタップ音 |
+| ✅ | se_accept.wav | 決定操作音（確認モーダル等の決定時など、重要度の高い決定操作時に利用） |
+| ✅ | se_cancel.wav | キャンセル操作音（確認モーダル等のキャンセル時に利用） |
+| ✅ | se_enter_room.wav | ルーム入室通知音 |
+| ✅ | se_exit_room.wav | ルーム退室通知音 |
+| ✅ | se_notification.wav | アプリ内通知受信音 |
+| ✅ | se_error.wav | エラー / 操作不可音 |
+
+**仕様:**
+- 形式: WAV（44.1kHz・16bit・モノラル）
+- 長さ: 0.5 秒以内推奨
+- 著作権: ロイヤリティフリー素材を使用（商用利用可）
+
+---
+
+### 4. Humanoidアニメーション
 
 Humanoidリグに対応したアニメーションファイル。
 **Mixamo**（https://www.mixamo.com/ 無料）からFBXでダウンロード推奨。
 
 | ✅ | ファイル名 | 配置先 |
 |---|---|---|
-| ☐ | Idle.fbx | `LowPolyWorldUnity/Assets/Animations/Common/Idle.fbx` |
-| ☐ | Walk.fbx | `LowPolyWorldUnity/Assets/Animations/Common/Walk.fbx` |
-| ☐ | Run.fbx | `LowPolyWorldUnity/Assets/Animations/Common/Run.fbx` |
-| ☐ | Jump.fbx | `LowPolyWorldUnity/Assets/Animations/Common/Jump.fbx` |
+| ✅ | Idle.fbx | `LowPolyWorldUnity/Assets/Animations/Common/Idle.fbx` |
+| ✅ | Walk.fbx | `LowPolyWorldUnity/Assets/Animations/Common/Walk.fbx` |
+| ✅ | Run.fbx | `LowPolyWorldUnity/Assets/Animations/Common/Run.fbx` |
+| ✅ | Jump.fbx | `LowPolyWorldUnity/Assets/Animations/Common/Jump.fbx` |
 
 **Mixaroダウンロード時の設定:**
 - Format: `FBX for Unity (.fbx)`
@@ -26,35 +92,35 @@ Humanoidリグに対応したアニメーションファイル。
 
 ---
 
-### 2. ブロブシャドウテクスチャ
+### 5. ブロブシャドウテクスチャ
 
 アバター足元に投影する丸い影テクスチャ。
 
 | ✅ | ファイル名 | 配置先 |
 |---|---|---|
-| ☐ | BlobShadow.png | `LowPolyWorldUnity/Assets/Textures/BlobShadow.png` |
+| ✅ | BlobShadow.png | `LowPolyWorldUnity/Assets/Textures/BlobShadow.png` |
 
 **仕様:**
 - サイズ: 128×128 px
 - 形式: PNG（アルファチャンネルあり）
-- 内容: 中心が黒・周囲に向かって透明になる円形グラデーション
+- 内容: 中心が白・周囲に向かって透明になる円形グラデーション
 - 背景: 透明
 
 > Photoshop / GIMP / Affinity Photo 等で「円形グラデーション（黒→透明）」を描くだけでOK。
 
 ---
 
-### 3. テスト用ワールドGLB
+### 6. テスト用ワールドGLB
 
 Phase 1 の動作確認に使う簡易シーン。
 
 | ✅ | ファイル名 | 配置先 |
 |---|---|---|
-| ☐ | TestWorld.glb | `LowPolyWorldUnity/Assets/StreamingAssets/Worlds/TestWorld.glb` |
+| ✅ | TestWorld.glb | `LowPolyWorldUnity/Assets/StreamingAssets/Worlds/TestWorld.glb` |
 
 **仕様:**
 - 形式: GLB（バイナリGLTF）
-- 内容: 地面（平面）＋障害物（箱・壁など）数点で十分
+- 内容: 高さ1、縦横8*8の直方体（ワールドとして扱う）
 - スケール: Unityの1unit = 1mに合わせる（Blenderではエクスポート時に `Apply Transform` を有効にする）
 - マテリアル: 何でもOK（ゲーム内ではUnlitシェーダーに差し替えます）
 - ポリゴン数: 制限なし（テスト用のため）
@@ -63,15 +129,36 @@ Phase 1 の動作確認に使う簡易シーン。
 
 ---
 
+### 7. インワールドHUDアイコン
+
+ルーム内（ワールドモード）の操作HUDで使用するアイコン。
+
+**配置先:** `LowPolyWorldUnity/Assets/Textures/UI/Icons/`
+
+| ✅ | ファイル名 | 用途 |
+|---|---|---|
+| ✅ | icon_hud_camera.png | HUD カメラボタン（撮影モードへ移行） |
+| ✅ | icon_hud_menu.png | HUD ☰ メニューボタン |
+| ✅ | icon_hud_jump.png | HUD ジャンプボタン |
+| ✅ | icon_hud_sprint.png | HUD スプリントボタン |
+| ✅ | icon_hud_action.png | HUD アクションボタン（ギミック接触時） |
+
+**仕様:**
+- サイズ: 128×128 px
+- 形式: PNG（アルファチャンネルあり・背景透明）
+- 色: **白単色**（アルファで形状を表現。Unity 側で Color プロパティを乗算してカラーリング）
+
+---
+
 ## 🟡 Phase 2 着手前に必要
 
-### 4. テスト用VRM 1.0アバター
+### 8. テスト用VRM 1.0アバター
 
 アバターシステムの動作確認に使うVRMファイル。
 
 | ✅ | ファイル名 | 配置先 |
 |---|---|---|
-| ☐ | TestAvatar.vrm | `LowPolyWorldUnity/Assets/StreamingAssets/Avatars/TestAvatar.vrm` |
+| ✅ | Yuyu.vrm | `LowPolyWorldUnity/Assets/StreamingAssets/Avatars/Yuyu.vrm` |
 
 **仕様:**
 - 形式: VRM **1.0**（VRM 0.x は不可）
@@ -80,13 +167,13 @@ Phase 1 の動作確認に使う簡易シーン。
 - ファイルサイズ: 500KB以内推奨
 
 **入手方法:**
-- Booth等で配布されている無料VRM 1.0モデルを使う
+- `LowPolyWorldUnity\Assets\3DModels\Avatars\Yuyu\Yuyu.fbx`のVRM書き出し版
 
 ---
 
 ## 🟢 Phase 4 着手前に必要
 
-### 5. テスト用アクセサリGLB
+### 9. テスト用アクセサリGLB
 
 アクセサリシステムの動作確認用。複数あると望ましい。
 
@@ -101,3 +188,233 @@ Phase 1 の動作確認に使う簡易シーン。
 - ファイルサイズ: 100KB以内
 - 内容: シンプルな形状でOK（帽子・リボン・バッジ等）
 - スケール: Unityの1unit = 1mに合わせる
+
+---
+
+### 10. テクスチャペイント機能アイコン
+
+テクスチャペイント機能のカラーパレット UI で使用するアイコン。
+
+**配置先:** `LowPolyWorldUnity/Assets/Textures/UI/Icons/`
+
+| ✅ | ファイル名 | 用途 |
+|---|---|---|
+| ☐ | icon_eyedropper.png | カラーパレットのスポイトアイコン |
+
+**仕様:**
+- サイズ: 128×128 px
+- 形式: PNG（アルファチャンネルあり・背景透明）
+- 色: **白単色**（アルファで形状を表現。Unity 側で Color プロパティを乗算してカラーリング）
+
+---
+
+## 🟣 Phase 5 着手前に必要
+
+### 11. 称号アイコン画像
+
+ユーザー情報パネル・プロフィール画面に表示する称号アイコン（4 種）。
+
+**配置先:** `LowPolyWorldUnity/Assets/Textures/UI/Titles/`
+
+| ✅ | ファイル名 | 称号 |
+|---|---|---|
+| ☐ | title_premium.png | プレミアム |
+| ☐ | title_shop_owner.png | ショップ開設者 |
+| ☐ | title_developer.png | 開発者 |
+| ☐ | title_staff.png | 運営関係者 |
+
+**仕様:**
+- サイズ: 64×64 px（ユーザー情報パネル内で小さく並んで表示される）
+- 形式: PNG（アルファチャンネルあり・背景透明）
+- 色: **白単色**（アルファで形状を表現。Unity 側で Color プロパティを乗算してカラーリング）
+- 内容: 称号の種類が一目でわかるバッジ形式のアイコン
+
+---
+
+## 🟠 Phase 9 着手前に必要
+
+### 12. ソーシャル・撮影機能アイコン
+
+発話インジケーター・撮影機能（Phase 9）で使用するアイコン。
+
+**配置先:** `LowPolyWorldUnity/Assets/Textures/UI/Icons/`
+
+| ✅ | ファイル名 | 用途 |
+|---|---|---|
+| ☐ | icon_voice_indicator.png | 発話インジケーター（アバター頭上に表示） |
+| ☐ | icon_stamp_trash.png | スタンプ削除用ゴミ箱アイコン |
+
+**仕様:**
+- サイズ: 128×128 px
+- 形式: PNG（アルファチャンネルあり・背景透明）
+- 色: **白単色**（アルファで形状を表現。Unity 側で Color プロパティを乗算してカラーリング）
+- 発話インジケーターのみ: 演出として点滅するため、アニメーション用に複数フレームでなく単一アイコンでOK（点滅はコードで制御）
+
+---
+
+### 13. 多言語翻訳文字列（8言語）
+
+アプリの全 UI 文字列を日本語・英語以外の 8 言語に翻訳したもの。
+Unity Localization の String Table に取り込む CSV 形式で用意する。
+
+**対象言語:**
+
+| ✅ | 言語コード | 言語 |
+|---|---|---|
+| ☐ | zh-Hans | 中国語（簡体字） |
+| ☐ | zh-Hant | 中国語（繁体字） |
+| ☐ | ko | 韓国語 |
+| ☐ | fr | フランス語 |
+| ☐ | es | スペイン語 |
+| ☐ | it | イタリア語 |
+| ☐ | de | ドイツ語 |
+| ☐ | pt-BR | ポルトガル語（ブラジル） |
+
+**作業手順:**
+1. Unity Localization の String Table から全キーと日本語・英語テキストを CSV エクスポート
+2. CSV を各言語に翻訳（DeepL 等の機械翻訳 + ネイティブチェック推奨）
+3. 翻訳済み CSV を `LowPolyWorldUnity/Assets/Localization/` 以下に言語コード別に配置
+
+---
+
+### 14. CJK 対応フォント
+
+中国語（簡体字・繁体字）・韓国語を正しく表示するためのフォントファイル。
+日本語・欧文は既存フォントで対応可。
+
+| ✅ | ファイル名 | 配置先 |
+|---|---|---|
+| ☐ | NotoSansCJK-Regular.otf（または .ttf） | `LowPolyWorldUnity/Assets/Fonts/NotoSansCJK-Regular.otf` |
+| ☐ | NotoSansCJK-Bold.otf（任意・太字用） | `LowPolyWorldUnity/Assets/Fonts/NotoSansCJK-Bold.otf` |
+
+**推奨フォント:**
+- **Noto Sans CJK**（Google Fonts / SIL Open Font License・無償）
+  - https://fonts.google.com/noto/specimen/Noto+Sans+JP
+  - 日本語・簡体字・繁体字・韓国語・ラテン文字を 1 フォントでカバー
+
+**注意:** Unity の TextMeshPro で使用するため、フォントインポート後に TMP Font Asset を生成すること。
+
+---
+
+### 15. テキストスタンプ用フォント
+
+文字入れスタンプ（撮影機能）で使用する装飾フォント。
+
+**配置先:** `LowPolyWorldUnity/Assets/Fonts/Stamps/`
+
+| ✅ | ファイル名 | 用途 |
+|---|---|---|
+| ☐ | StampFont_Regular.otf | スタンプ用フォント（通常） |
+| ☐ | StampFont_Bold.otf（任意） | スタンプ用フォント（太字） |
+
+**仕様:**
+- 日本語・英数字・記号を含むこと（CJK 対応必須）
+- ライセンス: 商用利用可・アプリへの同梱可のもの
+- 推奨: **Noto Sans JP**（CJKフォントと同じファミリーで代用可）または装飾的な和文フォント
+- Unity の TextMeshPro で使用するため、インポート後に TMP Font Asset を生成すること
+
+---
+
+### 16. スタンプ画像セット
+
+撮影機能のスタンプとして使用する 2D 画像。
+
+**配置先:** `LowPolyWorldUnity/Assets/UI/Stamps/`
+
+| ✅ | ファイル名（例） | 内容 |
+|---|---|---|
+| ☐ | stamp_heart.png | ハートマーク |
+| ☐ | stamp_star.png | 星 |
+| ☐ | stamp_speech_bubble.png | 吹き出し（空白） |
+| ☐ | stamp_crown.png | 王冠 |
+| ☐ | stamp_rainbow.png | 虹 |
+| ☐ | （プレミアム限定） stamp_premium_*.png | プレミアム限定スタンプ（種類は任意） |
+
+**仕様:**
+- 形式: PNG（アルファチャンネルあり・背景透明）
+- サイズ: 256×256 px 推奨（UI 表示時にスケール調整されます）
+- 最低点数: 無料 5 点以上・プレミアム限定 5 点以上
+- ファイル名は `stamp_` プレフィックスで統一
+
+---
+
+## 🔵 Phase 12 着手前に必要
+
+### 17. デフォルトワールドオブジェクト GLB セット（最小構成）
+
+ワールド作成モードで最初から使用できるオブジェクトセット。
+テストと本番の両方に使用するため、本番仕様で作成すること。
+
+**配置先:** 管理画面からアップロードして登録（ファイル自体のローカル保管先は `Assets/StreamingAssets/WorldObjects/Default/`）
+
+| ✅ | ファイル名（例） | 内容 | コライダー (W×D×H) | テクスチャ |
+|---|---|---|---|---|
+| ☐ | floor_1x1.glb | 床パネル 1×1 | 1×1×0.25 | 64×64 |
+| ☐ | floor_2x2.glb | 床パネル 2×2 | 2×2×0.25 | 128×128 |
+| ☐ | wall_1x2.glb | 壁 幅1×高さ2 | 1×0.25×2 | 64×64 |
+| ☐ | wall_2x2.glb | 壁 幅2×高さ2 | 2×0.25×2 | 128×128 |
+| ☐ | box_1x1x1.glb | ボックス 1×1×1 | 1×1×1 | 64×64 |
+| ☐ | box_2x1x1.glb | ボックス 2×1×1 | 2×1×1 | 64×64 |
+| ☐ | step_1x0.5.glb | 階段ステップ | 1×1×0.5 | 64×64 |
+| ☐ | deco_tree.glb | 木（装飾） | 0×0×0 | 128×128 |
+| ☐ | deco_rock.glb | 岩（装飾） | 0×0×0 | 64×64 |
+
+**仕様（本番仕様で作成すること）:**
+- 形式: GLB
+- テクスチャ: Diffuse 1枚のみ（上記サイズ。16/32/64/128/256/512 のいずれか）
+- マテリアル: 単色または簡易テクスチャ（ゲーム内で Unlit シェーダーに差し替え）
+- スケール: 1 unit = 1m（Blender エクスポート時に `Apply Transform` を有効化）
+- ピボット: 底面中心
+
+> 最小構成として上記 9 点（物理 7 点・装飾 2 点）があればワールド作成の動作確認が可能。本番リリースに向けて種類を拡充する。
+
+---
+
+### 18. 環境音ライブラリ
+
+ワールド作成設定で選択できる環境音（ループ再生・`docs/world-creation.md` セクション 13.2 参照）。
+
+**配置先:** `LowPolyWorldUnity/Assets/Audio/Ambient/`
+
+| ✅ | ファイル名 | soundId | 内容 |
+|---|---|---|---|
+| ☐ | ambient_forest.ogg | `forest` | 森・鳥のさえずり |
+| ☐ | ambient_rain.ogg | `rain` | 雨音 |
+| ☐ | ambient_ocean.ogg | `ocean` | 波音・海辺 |
+| ☐ | ambient_wind.ogg | `wind` | 風音 |
+| ☐ | ambient_city.ogg | `city` | 街のざわめき |
+| ☐ | ambient_cave.ogg | `cave` | 洞窟・残響 |
+| ☐ | ambient_night.ogg | `night` | 夜・虫の声 |
+
+**仕様:**
+- 形式: OGG（ループポイント設定必須・シームレスにつながること）
+- 長さ: 30 秒以上推奨
+- 著作権: ロイヤリティフリー素材（商用利用可）
+- 推奨素材サイト: Freesound（https://freesound.org）・効果音ラボ等
+
+---
+
+### 19. 内蔵サウンドエフェクトライブラリ
+
+ギミックの「音・音楽を鳴らす」反応で選択できる効果音・BGM ファイル。
+
+**配置先:** `LowPolyWorldUnity/Assets/Audio/WorldGimmick/`
+
+| ✅ | ファイル名（例） | 内容 |
+|---|---|---|
+| ☐ | se_coin.wav | コイン取得音 |
+| ☐ | se_button.wav | ボタン・スイッチ音 |
+| ☐ | se_door_open.wav | ドア開閉音 |
+| ☐ | se_magic.wav | 魔法・エフェクト音 |
+| ☐ | se_fanfare.wav | ファンファーレ・クリア音 |
+| ☐ | se_damage.wav | ダメージ・失敗音 |
+| ☐ | se_footstep.wav | 足音 |
+| ☐ | bgm_cheerful.ogg | 明るい BGM（ループ） |
+| ☐ | bgm_calm.ogg | 落ち着いた BGM（ループ） |
+| ☐ | bgm_suspense.ogg | シリアス系 BGM（ループ） |
+
+**仕様:**
+- 形式: SE は WAV（44.1kHz・16bit）、BGM は OGG（ループポイント設定推奨）
+- 著作権: ロイヤリティフリー素材を使用（商用利用可・クレジット表記不要のもの推奨）
+- 推奨素材サイト: Freesound（https://freesound.org）・効果音ラボ（https://soundeffect-lab.info）等
+- 最低点数: SE 5 点以上・BGM 2 点以上

@@ -8,7 +8,8 @@
       "Bash(cd:*)",
       "Bash(uloop get-hierarchy:*)",
       "Bash(uloop compile:*)",
-      "Bash(uloop execute-dynamic-code:*)"
+      "Bash(uloop execute-dynamic-code:*)",
+      "Bash(\"D:\\\\Documents\\\\Unity Projects\\\\LowPolyWorld\\\\docs\\\\screens-and-modes.md\":*)"
     ]
   }
 }
