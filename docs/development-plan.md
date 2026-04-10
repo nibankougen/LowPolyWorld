@@ -238,9 +238,32 @@
 
 ---
 
-## Phase 5 — APIサーバー統合（Docker localhost）
+## Phase 5A — コア API 統合
 
-**目標**: `docker compose up` で立ち上げたローカルAPIとUnityが連携できる状態
+**目標**: `docker compose up` で立ち上げたローカルAPIとUnityが連携できる状態。プレイヤーがログインしてワールドに参加し動ける状態を達成する
+
+### 前提タスク（非技術・GDPR P0）
+
+> コーディング開始前に完了している必要がある。`Constants.cs` の URL 定数が空のままでは Phase 5A の同意 UI が完成しない。
+
+- [ ] PP 執筆前調査: Vivox SDK・Unity Gaming Services（Relay）が収集・転送するデータの内容を各サービスのドキュメント / DPA で確認する（「第三者サービス」セクションの記載根拠になる）
+- [ ] プライバシーポリシー本文を作成・公開 URL を確定する
+  - 必須記載: 取得情報・利用目的・第三者提供（Google Cloud / Cloudflare / Unity Gaming Services / Resend）・保存期間・国際データ転送根拠（SCC）・音声は保存・自動分析されない旨
+  - GDPR データ請求窓口の明記: 「アクセス権・移転・削除等の請求は nibankougen@gmail.com まで。30 日以内に対応します」
+  - 訂正権（Art. 16）の明記: 表示名・@name は設定画面から変更可能。それ以外の訂正はメール窓口で受け付ける旨を記載
+  - 同意撤回権（Art. 7）の明記: アカウント削除 = 同意撤回として機能する旨・通知設定からプッシュ通知をオプトアウトできる旨を記載
+- [ ] 利用規約本文を作成・公開 URL を確定する
+- [ ] `Constants.cs` の `TermsOfServiceUrl`・`PrivacyPolicyUrl` を確定 URL に更新する（仮 URL のままリリース不可）
+- [ ] App Store Connect・Google Play Console のプライバシーポリシー欄に登録する
+- [ ] カスタムドメインのメール受信設定（Cloudflare Email Routing + Gmail）
+  - Cloudflare ダッシュボード → Email → Email Routing を有効化
+  - 受信アドレスを作成してルーティングを設定（MX レコードは Cloudflare が自動追加）
+    - `support@yourdomain.com` → `nibankougen@gmail.com`（GDPR 請求・お問い合わせ窓口）
+    - 他の用途（将来のサポート自動返信等）が増えた際もここに追加する
+  - Gmail から `support@yourdomain.com` 差出人で返信できるよう「Send mail as」を設定
+    - Gmail 設定 → アカウント → 「他のメールアドレスを追加」→ SMTP サーバーに Resend を指定
+    - Resend SMTP: ホスト `smtp.resend.com`・ポート `587`・ユーザー名 `resend`・パスワード: Resend API キー
+  - PP の GDPR 請求窓口を `nibankougen@gmail.com` から `support@yourdomain.com` に更新する
 
 ### 開発環境設定
 - [ ] Unityに接続先URL設定（`ScriptableObject` またはシンボリック設定ファイルで切り替え）
@@ -251,14 +274,46 @@
 
 #### クライアント向けAPI
 - [ ] API バージョンエンドポイント（`GET /api/version`）— `{ "min_compatible_version": <int>, "latest_version": <int> }` を返す。認証不要
-- [ ] 認証エンドポイント — ソーシャルサインイン（Google / X / Apple）OAuth コールバック処理・JWT 発行
-  - `POST /auth/google/callback`・`POST /auth/x/callback`・`POST /auth/apple/callback`
+- [ ] 認証エンドポイント — ソーシャルサインイン（Google / Apple）OAuth コールバック処理・JWT 発行
+  - `POST /auth/google/callback`・`POST /auth/apple/callback`
   - 認証プロバイダーを抽象化した設計（将来のメール・SMS 認証追加に対応）
   - 初回サインイン時は自動でアカウント作成（@name は未設定状態で作成し、セットアップ画面へ誘導）
+- [ ] 年齢確認・保護者同意フロー（GDPR Art. 8・P0。設計詳細: `api-abstract.md` §4・`screens-and-modes.md` §1.5.6）
+  - [ ] Resend セットアップ（特別設定あり）
+    - Resend アカウント作成・API キー発行・環境変数 `RESEND_API_KEY` を設定
+    - **送信ドメインの DNS 認証が必須**: Resend ダッシュボード → Domains → Add Domain で DKIM レコード（CNAME 2〜3件）を取得し DNS に追加。未設定のままでは Gmail / Yahoo 等でスパム判定されリマインドメールが届かないリスクがある
+    - SPF レコード追加: Resend ダッシュボードの指示に従って `TXT` レコードを DNS に追加
+    - DMARC レコード追加（推奨）: `v=DMARC1; p=none; rua=mailto:nibankougen@gmail.com` を DNS に追加（監視モードから開始し、将来 `p=quarantine` へ強化）
+    - 抑制リスト: ハードバウンス・迷惑メール報告は Resend が自動管理するため自前 DB への保持は不要
+  - [ ] `active_users` に `parental_email VARCHAR` カラムを追加（保護者同意フロー中のみ保持。検証完了または 14 日タイムアウト時に NULL 化）
+  - [ ] `active_users` に `age_group VARCHAR` カラムを追加（値: `adult` / `teen_13_15` / `child_under_13`）
+  - [ ] `parental_consents` テーブル実装（監査証跡・5 年保持・`users.id` 参照）
+    - `parental_email_hash VARCHAR` — `SHA-256(parental_email)` のみ保持（平文は持たない）
+    - `email_sent_at TIMESTAMPTZ`・`reminder_sent_at TIMESTAMPTZ`・`verified_at TIMESTAMPTZ`・`expired_at TIMESTAMPTZ`
+  - [ ] サインイン時の年齢入力処理
+    - 生年月日を受け取り `age_group` を計算・保存。生年月日自体は保存しない（データ最小化）
+    - 13 歳未満 → 即時拒否（アカウント作成不可）
+    - 13〜15 歳 → 保護者同意フローへ進む（JWT は発行するがアクセスを保護者同意待ち状態でブロック）
+    - 16 歳以上 → 通常フロー
+  - [ ] 保護者同意メール送信処理（Resend API 経由）
+    - 確認メール送信（検証リンク付き・有効期限 14 日）
+    - `active_users.parental_email` に平文アドレスを一時保存
+    - `parental_consents` に `parental_email_hash`・`email_sent_at` を記録
+    - Cloud Tasks: 7 日後に Day 7 リマインドジョブ・14 日後にタイムアウトジョブを予約（サインアップ時点で予約）
+  - [ ] 保護者検証リンク処理（`GET /auth/parental-consent/verify?token=...`）
+    - トークン検証 → `parental_consents.verified_at` を記録
+    - `active_users.parental_email` を NULL 化（平文削除）・ユーザーのブロック解除
+  - [ ] Day 7 リマインドジョブ: 未検証の場合のみ Resend でリマインドメール送信・`parental_consents.reminder_sent_at` を記録
+  - [ ] 14 日タイムアウトジョブ: 未検証の場合 → `active_users.parental_email` を NULL 化・`parental_consents.expired_at` を記録・アカウントを削除状態へ移行
+  - [ ] `POST /admin/users/{id}/delete-underage`: 13 歳未満誤登録時の即時物理削除（2 段階確認・管理監査ログ記録）
 - [ ] @name 設定・更新エンドポイント（`PUT /me/name`・初回設定は全ユーザー可・変更はプレミアム会員のみ・90 日制限チェック）
 - [ ] プロバイダー連携管理エンドポイント（`GET /me/auth-providers`・`POST /me/auth-providers`・`DELETE /me/auth-providers/{provider}`・最低 1 プロバイダー維持の制約）
 - [ ] アカウント削除エンドポイント（`DELETE /me`・`active_users.deleted_at` を設定してソフトデリート・セッション全無効化・公開ワールドを非公開へ変更）
 - [ ] アカウント削除バッチ処理（`active_users.deleted_at` から 30 日後に `active_users` レコードを物理削除・関連アップロードリソースも物理削除。`users` レコードおよび財務・監査データは `users.id` への参照を維持したまま保持。匿名化処理は不要）
+- [ ] アクセスログ個人情報削除バッチ（GDPR 保持期間対応・`api-abstract.md` §13）: DB 上の IP アドレス・User-Agent カラムを記録から 90 日後に NULL 化する。Cloud Logging へのリアルタイム転送済みのため外部保全は完了している
+  - 本番: Cloud Scheduler（日次）→ HTTP `POST /admin/internal/run-batch/cleanup-access-logs`（内部エンドポイント・認証必須）
+  - 開発: `docker compose run api go run cmd/batch/main.go cleanup-access-logs` で手動実行
+  - バッチ失敗時は Cloud Monitoring アラートで通知（既存アラート基盤に追加）
 - [ ] アカウント復元エンドポイント（管理画面用・`PATCH /admin/users/{id}/restore`・`active_users.deleted_at` をクリア・`active_users` レコードが存在する 30 日以内のみ有効）
 - [ ] VRMアップロードエンドポイント（optimizerへ転送）
 - [ ] アバター取得エンドポイント（最適化済みVRMを返す）
@@ -306,7 +361,7 @@
   - その他リスト: ID ベースカーソル方式を基本とし、用途に応じて選択
 - [ ] コンテンツアドレス型ファイル URL（ファイル名 = SHA-256 ハッシュ.ext）+ CDN 配信設定（`Cache-Control: immutable`）
 - [ ] サーバーサイドキャッシュ（Redis）導入: ワールド一覧・ショップ商品一覧など頻繁読み取り・低変更頻度のエンドポイントに適用
-- [ ] トラストレベルシステム基盤（`docs/unity-game-abstract.md` セクション 22 参照）
+- [ ] DB スキーマ基盤（`docs/unity-game-abstract.md` セクション 22・23 参照）
   - [ ] `users` / `active_users` テーブル設計
     - `users`（不変レコード）: `id`（PK）・`created_at` のみを持つ。購入履歴・消費履歴・違反報告・モデレーションログなど財務・監査レコードの外部キーは `users.id` を参照することで、アカウント削除後も参照整合性を維持する
     - `active_users`（個人情報レコード）: `user_id`（PK・`users.id` への FK・1対1）を持ち、表示名・@name・ソーシャルプロバイダー紐づけ・言語設定・信頼スコア・削除タイムスタンプなど個人情報と設定を格納する。アカウント削除時にこのレコードを削除することで個人データを消去できる
@@ -318,25 +373,8 @@
     - `deleted_at` TIMESTAMPTZ DEFAULT `NULL`
     - `subscription_tier` VARCHAR NOT NULL DEFAULT `'free'` — プランティア。現行値: `'free'` / `'premium'`。将来の多段階プラン追加を考慮し `is_premium BOOL` は使用しない（設計詳細: `docs/unity-game-abstract.md` セクション 23）
     - `subscription_expires_at` TIMESTAMPTZ DEFAULT `NULL` — サブスクリプション有効期限。NULL = 無料プラン
-  - [ ] `trust_level_logs` テーブル実装（変更日時・変更前後レベル・理由・操作者 admin_id・`user_id` は `users.id` を参照）
-  - [ ] `room_trust_events` テーブル実装（公開ルーム退室時の join_count / exit_count / duration_minutes を記録・`user_id` は `users.id` を参照）
-  - [ ] トラストポイント加算処理（公開ルーム退室時: `floor((join+exit)/2 * floor(minutes))` を `trust_points` に加算）
-  - [ ] トラストレベル昇格非同期ジョブ（トラストポイント更新・フレンド数変動・ワールドいいね変動・課金完了・プレミアム変更 の各イベント後に実行。全条件を評価し最上位レベルを設定。ロック中はスキップ）
-  - [ ] 管理画面: トラストレベル手動変更・ロック操作・制限解除・変更履歴表示・ユーザー一覧のトラストレベルフィルター
-
-#### 管理画面（`/admin`）
-- [ ] 管理者ログイン認証（セッションまたはJWT）
-- [ ] ショップ商品登録UI（アバター・アクセサリのGLB・テクスチャ・価格・Edit OK/NGフラグ）
-- [ ] ショップクリエイター登録UI（クリエイター情報・ユーザーアカウント紐づけ）
-- [ ] アバター審査画面（前面/背面スクリーンショット＋テクスチャ一覧・承認/BAN操作）
-  - [ ] 3Dビューアコンポーネント（`@pixiv/three-vrm` + `THREE.OrbitControls`・クリック時 lazy load）
-  - [ ] optimizer による前面/背面スクリーンショット生成（審査用・保存してAPIから配信）
-- [ ] ユーザー管理画面（一覧・@name検索・警告発行・BAN/BAN解除・称号付与）
-  - [ ] 削除申請済みアカウントの表示（「削除予定 YYYY-MM-DD」バッジ）・30 日以内の復元操作（`PATCH /admin/users/{id}/restore`）
-- [ ] 違反報告管理画面（報告一覧・対象ユーザーの警告/BANログ・対応アクション）
-- [ ] 売上管理（期間別確定売上登録・ショップ別/クリエイター別集計表示）
-- [ ] ワールド管理画面（ワールド登録・縦長サムネイルアップロード・有効/無効切り替え）
-- [ ] 取引キャンセル管理画面（一覧・絞り込み・手動キャンセル操作）（`docs/coins.md` セクション17参照）
+    - `last_name_change_at` TIMESTAMPTZ DEFAULT `NULL` — @name の最終変更日時。NULL = まだ変更していない。初回セットアップ（@name 設定画面での確定）時と、プレミアム会員による変更時に `now()` で更新する
+  （トラストレベル変更ロジック・昇格ジョブ・関連テーブル・管理画面は Phase 5B で実装）
 
 ### `optimizer/`（Docker）
 - [ ] アップロードされたVRMから不要データを削除（UniVRM仕様準拠）
@@ -392,6 +430,52 @@
 
 ---
 
+## Phase 5B — 管理基盤・トラストレベル
+
+**目標**: 管理画面でユーザー・ワールド・ショップ・売上を管理できる状態。トラストレベルシステムが稼働し、不正ユーザーへの自動制限が機能する状態
+
+**前提**: Phase 5A 完了
+
+### `api/`（Go）
+
+#### トラストレベルシステム（`docs/unity-game-abstract.md` セクション 22 参照）
+- [ ] `trust_level_logs` テーブル実装（変更日時・変更前後レベル・理由・操作者 admin_id・`user_id` は `users.id` を参照）
+- [ ] `room_trust_events` テーブル実装（公開ルーム退室時の join_count / exit_count / duration_minutes を記録・`user_id` は `users.id` を参照）
+- [ ] トラストポイント加算処理（公開ルーム退室時: `floor((join+exit)/2 * floor(minutes))` を `trust_points` に加算）
+- [ ] トラストレベル昇格非同期ジョブ（**asynq** を使用・イベント駆動。トラストポイント更新・フレンド数変動・ワールドいいね変動・課金完了・プレミアム変更 の各イベント後にジョブをエンキューして実行。全条件を評価し最上位レベルを設定。ロック中はスキップ）
+- [ ] `user_violation_reports` テーブル実装（違反報告の保存・`reporter_id` と `target_id` は `users.id` を参照）
+- [ ] 違反報告の自動制限トリガー（`visitor`: 24h以内2件以上 または 累計4件以上で自動制限。`new_user`: 3件/10件）
+
+#### 管理者操作監査ログ
+- [ ] `admin_audit_logs` テーブル実装（詳細: `docs/api-abstract.md` セクション9参照）
+- [ ] すべての管理者操作エンドポイントで `admin_audit_logs` に自動記録するミドルウェア実装
+
+#### 管理画面（`/admin`）
+- [ ] 管理者ログイン認証（セッションまたはJWT）
+- [ ] ショップ商品登録UI（アバター・アクセサリのGLB・テクスチャ・価格・Edit OK/NGフラグ）
+- [ ] ショップクリエイター登録UI（クリエイター情報・ユーザーアカウント紐づけ）
+- [ ] アバター審査画面（前面/背面スクリーンショット＋テクスチャ一覧・承認/BAN操作）
+  - [ ] 3Dビューアコンポーネント（`@pixiv/three-vrm` + `THREE.OrbitControls`・クリック時 lazy load）
+  - [ ] optimizer による前面/背面スクリーンショット生成（審査用・保存してAPIから配信）
+- [ ] ユーザー管理画面（一覧・@name検索・警告発行・BAN/BAN解除・称号付与）
+  - [ ] 削除申請済みアカウントの表示（「削除予定 YYYY-MM-DD」バッジ）・30 日以内の復元操作（`PATCH /admin/users/{id}/restore`）
+  - [ ] トラストレベル手動変更・ロック操作・制限解除・変更履歴表示・ユーザー一覧のトラストレベルフィルター
+  - [ ] 個人データエクスポート機能（GDPR Art. 15 / 20 メール対応支援）
+    - API: `GET /admin/users/{id}/data-export` → アカウント情報・購入/消費履歴・フォロー/フレンド/非表示リスト・アバター/ワールドメタデータ・CDN URL を JSON で返却
+    - 管理画面 UI: ユーザー詳細画面に「個人データを JSON でダウンロード」ボタン → ブラウザの `<a download>` でファイル保存
+    - ユーザーからの請求メール受信後、このボタンで JSON を生成して返送する運用フロー
+- [ ] 違反報告管理画面（報告一覧・対象ユーザーの警告/BANログ・対応アクション）
+- [ ] 売上管理（期間別確定売上登録・ショップ別/クリエイター別集計表示）（`docs/coins.md` セクション14.5参照）
+- [ ] ワールド管理画面（ワールド登録・縦長サムネイルアップロード・有効/無効切り替え）
+- [ ] 取引キャンセル管理画面（一覧・絞り込み・手動キャンセル操作）（`docs/coins.md` セクション17参照）
+- [ ] 管理者操作ログ画面（`admin_audit_logs` の一覧・管理者名/操作種別/対象で絞り込み・`docs/api-abstract.md` セクション9参照）
+
+### テスト（EditMode）
+- [ ] `TrustPointCalculator`: 公開ルーム退室時のポイント計算（`floor((join+exit)/2 * floor(minutes))`）
+- [ ] `TrustLevelPromoter`: 全条件評価・最上位レベル設定・ロック中スキップ
+
+---
+
 ## Phase 6 — 音声通信
 
 **目標**: ワールド内で3D位置音声が動作する状態
@@ -428,7 +512,7 @@
 ## Phase 8 — ショップ・コインシステム
 
 **目標**: コインでアバター・アクセサリ・ワールドオブジェクト・スタンプを購入できる状態
-※ Phase 5・管理画面が完成していることが前提
+※ Phase 5B（管理画面・ショップ商品登録 UI）が完成していることが前提
 
 ### `api/`（Go）
 
@@ -553,7 +637,7 @@
   - [ ] 非表示ユーザーのアバター描画スキップ（`AvatarManager` 連携）
   - [ ] 非表示ユーザーの Vivox 音声ミュート（`VoiceManager` 連携）
   - [ ] 非表示ユーザーの物理・ギミック処理は通常通り維持（ゲーム状態に影響しない）
-- [ ] 非表示リスト管理画面（設定画面から遷移・非表示解除ボタン）
+- [ ] ユーザー非表示リスト管理画面（設定画面から遷移・非表示解除ボタン）
 - [ ] 通報モーダル共通UI（通報理由8種・必須詳細テキスト・非表示チェックボックス（デフォルトON）・通報/キャンセルボタン）
 - [ ] ワールド詳細画面: クイックいいねボタン（サムネイル右下ハートアイコン）・いいねボタン・その他アクションボタン（…）→ 非表示/通報
 - [ ] ワールド非表示: 一覧・ポータルサムネイル非表示・ポータル移動不可・「非表示にしました」フラッシュメッセージ

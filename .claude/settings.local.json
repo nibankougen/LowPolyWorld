@@ -9,7 +9,9 @@
       "Bash(uloop get-hierarchy:*)",
       "Bash(uloop compile:*)",
       "Bash(uloop execute-dynamic-code:*)",
-      "Bash(\"D:\\\\Documents\\\\Unity Projects\\\\LowPolyWorld\\\\docs\\\\screens-and-modes.md\":*)"
+      "Bash(\"D:\\\\Documents\\\\Unity Projects\\\\LowPolyWorld\\\\docs\\\\screens-and-modes.md\":*)",
+      "Bash(grep -l \"age\\\\|年齢\\\\|parental\\\\|保護者\\\\|consent\\\\|同意\" *.md)",
+      "WebSearch"
     ]
   }
 }

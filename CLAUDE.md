@@ -17,6 +17,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Start all server services: `docker compose up --build`
 
+### Backend Architecture (詳細: `docs/api-abstract.md`)
+
+- **DB**: PostgreSQL 16 + golang-migrate (`api/migrations/`)
+- **Auth**: JWT RS256, 7-day access token + 90-day refresh token (rotation on use), invalidation via `token_revision` in DB
+- **Storage**: Cloudflare R2 (prod) / Docker volume (dev), content-addressed (`{sha256}.ext`), `Cache-Control: immutable`
+- **CDN**: Cloudflare CDN (integrated with R2)
+- **VRM upload**: async job via Cloud Tasks (prod) / Redis queue (dev) → Optimizer worker → polling `GET /api/v1/jobs/{id}`
+- **API format**: envelope `{"data":...}` / `{"error":{"code":"...","message":"..."}}`, ISO 8601 dates, string IDs
+- **API versioning**: `/api/v1/` prefix for all client endpoints
+
+### Production Infrastructure (詳細: `docs/infra-abstract.md`)
+
+- **Compute**: Google Cloud Run (API + Optimizer)
+- **DB**: Google Cloud SQL PostgreSQL
+- **Storage/CDN**: Cloudflare R2 + CDN
+- **Queue**: Google Cloud Tasks (prod) / Redis (dev)
+- **Voice**: Unity Vivox → MAU 4万到達時に LiveKit (GCE) へ移行予定
+
 ---
 
 ## Unity Client
@@ -107,9 +125,24 @@ Start all server services: `docker compose up --build`
   - Handles layer management, Undo history, GPU-optimized processing
 - Unity plugin binaries placed under `Assets/Plugins/`
 
-### Required Scene Managers
+### Scene Structure
 
-`NetworkManager`, `AvatarManager`, `AtlasManager`, `VoiceManager`, `PlayerController`, `WorldLoader`, `CacheManager`
+2 scenes: `Assets/Scenes/HomeScene.unity` and `Assets/Scenes/WorldScene.unity`.
+
+**DontDestroyOnLoad** (initialized in HomeScene via `Bootstrapper`, persist into WorldScene):
+- Phase A (before API): `AudioManager`, `LocalizationManager`
+- Phase B (after `/startup` API): `UserManager` → `CacheManager` → `LocalizationManager`(re-apply) → `NotificationManager` → `FriendManager` → `FollowManager` → `HideManager` → `ShopManager`
+
+**WorldScene only** (created on room entry, destroyed on exit — reverse order on exit):
+`WorldLoader` → `AvatarManager` → `AtlasManager` → `NetworkManager` → `VoiceManager` → `PlayerController` → `WorldCreationManager`
+
+**Input**: `InputActionAsset` direct manipulation (no `PlayerInput` component). Action Maps: `Player` (WorldScene normal) / `UI` (always on) / `PhotoMode` (photo mode, disables Player). Mobile touch handled by custom `TouchInput` logic class. Asset: `Assets/Settings/InputActions.inputactions`.
+
+**UI**: UI Toolkit for all screen-space UI (UXML/USS under `Assets/UI/`). uGUI used only for world-space elements (avatar name tags, voice indicator) — World Space Canvas per avatar. 3D preview via `PreviewCamera` → RenderTexture → `VisualElement.style.backgroundImage`.
+
+**Cameras**: `MainCamera` (WorldScene, follows player; photo mode reuses same object). `PreviewCamera` (DontDestroyOnLoad, renders to RenderTexture 1024×1024, Culling Mask: PreviewLayer, disabled when not in use). Preview models placed at PreviewStage `(0, 2000, 0)`.
+
+**Native plugin** (`paint-engine`): `Assets/Plugins/iOS/libpaint_engine.a`, `Assets/Plugins/Android/arm64-v8a/libpaint_engine.so`, etc. iOS P/Invoke uses `"__Internal"`, others use `"paint_engine"`.
 
 ### Startup Load Flow
 
@@ -185,10 +218,12 @@ MonoBehaviour は Unity エンジンとの境界のみを担当する。**ゲー
 
 ロジッククラスは **Unity Test Runner** でユニットテストを作成する:
 
-- EditMode テスト: `Assets/Tests/EditMode/`（Unity ランタイム不要・高速）
-- PlayMode テスト: `Assets/Tests/PlayMode/`（Unity ランタイムが必要な統合テスト）
+- EditMode テスト: `Assets/Tests/EditMode/`（Unity ランタイム不要・高速）— push ごとに GitHub Actions で自動実行
+- PlayMode テスト: `Assets/Tests/PlayMode/`（マネージャー初期化・シーン遷移の統合テスト）
 - フレームワーク: NUnit（Unity Test Runner 標準）
+- カバレッジ目標: ロジッククラス 80% 以上
 - **ロジッククラスを新規作成・変更したときは対応するテストを同時に作成・更新する**
+- テストファイル名: `{ClassName}Tests.cs`
 
 ---
 
