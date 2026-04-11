@@ -1,0 +1,27 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="WorldHUD.uss" />
+    <ui:VisualElement name="hud-root" class="hud-root">
+
+        <!-- 右上ボタン群 -->
+        <ui:VisualElement class="hud-top-right">
+            <ui:Button name="btn-camera" class="hud-icon-btn" text="📷" />
+            <ui:Button name="btn-bell" class="hud-icon-btn" text="🔔" />
+            <ui:Button name="btn-menu" class="hud-icon-btn" text="☰" />
+        </ui:VisualElement>
+
+        <!-- 下部エリア（アクション・ジャンプ・スプリント） -->
+        <ui:VisualElement class="hud-bottom">
+
+            <!-- 左下: ジャンプボタン（コントロール設定 ON 時のみ表示） -->
+            <ui:Button name="btn-jump" class="hud-action-btn hud-hidden" text="↑" />
+
+            <!-- 下中央: アクションボタン -->
+            <ui:Button name="btn-action" class="hud-action-btn hud-action-btn--center" text="!" />
+
+            <!-- 右下: スプリントボタン（コントロール設定 ON 時のみ表示） -->
+            <ui:Button name="btn-sprint" class="hud-action-btn hud-hidden" text="▶▶" />
+
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>

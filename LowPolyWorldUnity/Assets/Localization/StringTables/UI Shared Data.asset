@@ -1,0 +1,76 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b11a58205ec3474ca216360e9fa74a8, type: 3}
+  m_Name: UI Shared Data
+  m_EditorClassIdentifier: Unity.Localization::UnityEngine.Localization.Tables.SharedTableData
+  m_TableCollectionName: UI
+  m_TableCollectionNameGuidString: 129294337adf9c8499829a27dff8ebec
+  m_Entries:
+  - m_Id: 2399825920
+    m_Key: nav.world
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2445963264
+    m_Key: nav.avatar
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2450157568
+    m_Key: nav.world_manage
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2450157569
+    m_Key: nav.shop
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2450157570
+    m_Key: nav.settings
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2450157571
+    m_Key: settings.volume.voice
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2450157572
+    m_Key: settings.volume.world_sfx
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2450157573
+    m_Key: settings.volume.system_sfx
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2450157574
+    m_Key: inworldmenu.tab.room
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2450157575
+    m_Key: inworldmenu.tab.avatar
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2450157576
+    m_Key: inworldmenu.tab.worlds
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2450157577
+    m_Key: inworldmenu.tab.settings
+    m_Metadata:
+      m_Items: []
+  m_Metadata:
+    m_Items: []
+  m_KeyGenerator:
+    rid: 3908819068611723975
+  references:
+    version: 2
+    RefIds:
+    - rid: 3908819068611723975
+      type: {class: DistributedUIDGenerator, ns: UnityEngine.Localization.Tables, asm: Unity.Localization}
+      data:
+        m_CustomEpoch: 1775915962121

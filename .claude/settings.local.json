@@ -13,7 +13,10 @@
       "Bash(grep -l \"age\\\\|年齢\\\\|parental\\\\|保護者\\\\|consent\\\\|同意\" *.md)",
       "WebSearch",
       "Bash(uloop get-logs:*)",
-      "Bash(uloop run-tests:*)"
+      "Bash(uloop run-tests:*)",
+      "Bash(uloop execute-menu-item:*)",
+      "Bash(uloop get-menu-items:*)",
+      "Bash(uloop capture-window:*)"
     ]
   }
 }

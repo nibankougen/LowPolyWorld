@@ -1,0 +1,138 @@
+.menu-backdrop {
+    position: absolute;
+    left: 0; right: 0; top: 0; bottom: 0;
+    background-color: rgba(0, 0, 0, 0.45);
+}
+
+.menu-panel {
+    position: absolute;
+    top: 0; right: 0; bottom: 0;
+    width: 640px;
+    background-color: rgb(30, 30, 38);
+    flex-direction: column;
+}
+
+/* ヘッダー */
+.menu-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 40px 32px 24px;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+.menu-title {
+    font-size: 36px;
+    color: rgb(255, 255, 255);
+    -unity-font-style: bold;
+}
+
+.menu-close-btn {
+    width: 80px;
+    height: 80px;
+    font-size: 36px;
+    background-color: rgba(255, 255, 255, 0.08);
+    color: rgb(200, 200, 210);
+    border-radius: 40px;
+    border-width: 0;
+}
+
+.menu-close-btn:active {
+    background-color: rgba(255, 255, 255, 0.18);
+    scale: 0.93;
+}
+
+/* タブバー */
+.menu-tab-bar {
+    flex-direction: row;
+    padding: 0 16px;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.menu-tab {
+    flex-grow: 1;
+    height: 80px;
+    font-size: 24px;
+    background-color: rgba(0, 0, 0, 0);
+    color: rgba(180, 180, 190, 0.6);
+    border-width: 0;
+    border-radius: 0;
+    border-bottom-width: 3px;
+    border-bottom-color: rgba(0, 0, 0, 0);
+}
+
+.menu-tab--active {
+    color: rgb(120, 200, 255);
+    border-bottom-color: rgb(120, 200, 255);
+}
+
+/* コンテンツ */
+.menu-content {
+    flex-grow: 1;
+}
+
+.menu-tab-content {
+    flex-grow: 1;
+    padding: 32px;
+}
+
+.menu-tab-content--hidden {
+    display: none;
+}
+
+.menu-stub-text {
+    font-size: 28px;
+    color: rgba(255, 255, 255, 0.3);
+    -unity-text-align: middle-center;
+    flex-grow: 1;
+}
+
+/* 設定タブ内 音量コントロール */
+.menu-section-title {
+    font-size: 26px;
+    color: rgba(255, 255, 255, 0.45);
+    margin-bottom: 20px;
+    -unity-font-style: bold;
+}
+
+.volume-row {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.volume-label {
+    width: 200px;
+    font-size: 24px;
+    color: rgb(220, 220, 230);
+}
+
+.volume-slider {
+    flex-grow: 1;
+    margin-left: 12px;
+    margin-right: 12px;
+}
+
+.volume-slider > .unity-base-slider__dragger {
+    width: 36px;
+    height: 36px;
+    border-radius: 18px;
+    background-color: rgb(120, 200, 255);
+    border-width: 0;
+    top: -12px;
+}
+
+.volume-slider > .unity-base-slider__tracker {
+    height: 6px;
+    border-radius: 3px;
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+.volume-value {
+    width: 80px;
+    font-size: 24px;
+    color: rgb(120, 200, 255);
+    -unity-text-align: middle-right;
+}

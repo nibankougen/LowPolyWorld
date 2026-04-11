@@ -1,0 +1,57 @@
+.safe-area-root {
+    flex-grow: 1;
+    flex-direction: column;
+    background-color: rgb(24, 24, 28);
+}
+
+.content-area {
+    flex-grow: 1;
+}
+
+/* ナビゲーションバー */
+.nav-bar {
+    flex-direction: row;
+    height: 120px;
+    background-color: rgb(28, 28, 34);
+    border-top-width: 1px;
+    border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+.nav-tab {
+    flex-grow: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    border-radius: 0;
+    padding: 8px 4px;
+}
+
+.nav-tab:hover {
+    background-color: rgba(255, 255, 255, 0.06);
+}
+
+.nav-tab:active {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.nav-tab__icon {
+    font-size: 36px;
+    color: rgba(180, 180, 190, 0.6);
+    -unity-text-align: middle-center;
+    margin-bottom: 4px;
+}
+
+.nav-tab__label {
+    font-size: 18px;
+    color: rgba(180, 180, 190, 0.6);
+    -unity-text-align: middle-center;
+    white-space: nowrap;
+}
+
+/* アクティブタブ */
+.nav-tab--active .nav-tab__icon,
+.nav-tab--active .nav-tab__label {
+    color: rgb(120, 200, 255);
+}

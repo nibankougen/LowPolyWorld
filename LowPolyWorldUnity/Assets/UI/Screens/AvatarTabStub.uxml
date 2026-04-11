@@ -1,0 +1,6 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:VisualElement class="stub-screen">
+        <ui:Label class="stub-title" text="アバター管理" />
+        <ui:Label class="stub-note" text="Phase 2 で実装予定" />
+    </ui:VisualElement>
+</ui:UXML>

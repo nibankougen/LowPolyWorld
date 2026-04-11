@@ -1,0 +1,31 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="HomeScreen.uss" />
+    <ui:VisualElement name="safe-area-root" class="safe-area-root">
+        <!-- コンテンツエリア（タブ切り替えで内容が変わる） -->
+        <ui:VisualElement name="content-area" class="content-area" />
+
+        <!-- ナビゲーションバー（下部固定） -->
+        <ui:VisualElement name="nav-bar" class="nav-bar">
+            <ui:Button name="nav-world" class="nav-tab nav-tab--active">
+                <ui:Label class="nav-tab__icon" text="⊕" />
+                <ui:Label class="nav-tab__label" text="ワールド" />
+            </ui:Button>
+            <ui:Button name="nav-avatar" class="nav-tab">
+                <ui:Label class="nav-tab__icon" text="♟" />
+                <ui:Label class="nav-tab__label" text="アバター" />
+            </ui:Button>
+            <ui:Button name="nav-world-manage" class="nav-tab">
+                <ui:Label class="nav-tab__icon" text="⬡" />
+                <ui:Label class="nav-tab__label" text="ワールド管理" />
+            </ui:Button>
+            <ui:Button name="nav-shop" class="nav-tab">
+                <ui:Label class="nav-tab__icon" text="◈" />
+                <ui:Label class="nav-tab__label" text="ショップ" />
+            </ui:Button>
+            <ui:Button name="nav-settings" class="nav-tab">
+                <ui:Label class="nav-tab__icon" text="⚙" />
+                <ui:Label class="nav-tab__label" text="設定" />
+            </ui:Button>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

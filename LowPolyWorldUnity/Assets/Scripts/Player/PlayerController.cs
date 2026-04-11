@@ -37,6 +37,13 @@ public class PlayerController : MonoBehaviour
         _rigidbody.freezeRotation = true;
         _rigidbody.useGravity = false;
 
+        // Player-Player 間の衝突を無効化（アバター同士は重なれる）
+        int playerLayer = LayerMask.NameToLayer("Player");
+        if (playerLayer >= 0)
+            Physics.IgnoreLayerCollision(playerLayer, playerLayer, true);
+
+        gameObject.layer = playerLayer >= 0 ? playerLayer : gameObject.layer;
+
         _movement = new PlayerMovementLogic();
         _touchInput = new TouchInputLogic();
         _touchInput.SetScreenSize(Screen.width, Screen.height);

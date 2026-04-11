@@ -1,0 +1,32 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="SettingsTab.uss" />
+    <ui:ScrollView name="settings-scroll" class="settings-scroll">
+
+        <ui:Label class="settings-section-title" text="音量設定" />
+
+        <!-- 通話音声 -->
+        <ui:VisualElement class="volume-row">
+            <ui:Label class="volume-label" text="通話音声" />
+            <ui:Slider name="slider-voice" class="volume-slider"
+                       low-value="0" high-value="1" value="1" />
+            <ui:Label name="label-voice" class="volume-value" text="100%" />
+        </ui:VisualElement>
+
+        <!-- ワールド効果音 -->
+        <ui:VisualElement class="volume-row">
+            <ui:Label class="volume-label" text="ワールド効果音" />
+            <ui:Slider name="slider-world-sfx" class="volume-slider"
+                       low-value="0" high-value="1" value="1" />
+            <ui:Label name="label-world-sfx" class="volume-value" text="100%" />
+        </ui:VisualElement>
+
+        <!-- システム音 -->
+        <ui:VisualElement class="volume-row">
+            <ui:Label class="volume-label" text="システム音" />
+            <ui:Slider name="slider-system-sfx" class="volume-slider"
+                       low-value="0" high-value="1" value="1" />
+            <ui:Label name="label-system-sfx" class="volume-value" text="100%" />
+        </ui:VisualElement>
+
+    </ui:ScrollView>
+</ui:UXML>

@@ -1,0 +1,73 @@
+.hud-root {
+    flex-grow: 1;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+}
+
+/* 右上ボタン群 */
+.hud-top-right {
+    position: absolute;
+    top: 40px;
+    right: 30px;
+    flex-direction: row;
+}
+
+.hud-icon-btn {
+    width: 110px;
+    height: 110px;
+    font-size: 48px;
+    background-color: rgba(0, 0, 0, 0.55);
+    color: rgb(255, 255, 255);
+    border-radius: 16px;
+    border-width: 0;
+    margin-left: 12px;
+    transition: background-color 0.1s;
+}
+
+.hud-icon-btn:hover {
+    background-color: rgba(60, 60, 60, 0.75);
+}
+
+.hud-icon-btn:active {
+    background-color: rgba(100, 100, 100, 0.85);
+    scale: 0.95;
+}
+
+/* 下部エリア */
+.hud-bottom {
+    position: absolute;
+    bottom: 50px;
+    left: 0;
+    right: 0;
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding: 0 40px;
+}
+
+.hud-action-btn {
+    width: 140px;
+    height: 140px;
+    font-size: 44px;
+    background-color: rgba(0, 0, 0, 0.55);
+    color: rgb(255, 255, 255);
+    border-radius: 70px;
+    border-width: 0;
+    transition: background-color 0.1s;
+}
+
+.hud-action-btn--center {
+    background-color: rgba(120, 200, 255, 0.7);
+}
+
+.hud-action-btn:active {
+    scale: 0.92;
+}
+
+/* 非表示（コントロール設定 OFF 時） */
+.hud-hidden {
+    display: none;
+}

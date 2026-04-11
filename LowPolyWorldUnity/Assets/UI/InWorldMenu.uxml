@@ -1,0 +1,67 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="InWorldMenu.uss" />
+
+    <!-- 背景タップで閉じる用オーバーレイ -->
+    <ui:VisualElement name="backdrop" class="menu-backdrop" />
+
+    <!-- メニューパネル本体 -->
+    <ui:VisualElement name="menu-panel" class="menu-panel">
+
+        <!-- ヘッダー -->
+        <ui:VisualElement class="menu-header">
+            <ui:Label class="menu-title" text="メニュー" />
+            <ui:Button name="btn-close" class="menu-close-btn" text="✕" />
+        </ui:VisualElement>
+
+        <!-- タブバー -->
+        <ui:VisualElement class="menu-tab-bar">
+            <ui:Button name="tab-room" class="menu-tab menu-tab--active" text="ルーム" />
+            <ui:Button name="tab-avatar" class="menu-tab" text="アバター" />
+            <ui:Button name="tab-worlds" class="menu-tab" text="ワールド一覧" />
+            <ui:Button name="tab-settings" class="menu-tab" text="設定" />
+        </ui:VisualElement>
+
+        <!-- タブコンテンツ -->
+        <ui:VisualElement name="menu-content" class="menu-content">
+
+            <!-- ルームタブ（Phase 3 でフル実装・Phase 1 はスタブ） -->
+            <ui:VisualElement name="content-room" class="menu-tab-content">
+                <ui:Label class="menu-stub-text" text="Phase 3 で実装予定" />
+            </ui:VisualElement>
+
+            <!-- アバタータブ（Phase 2 でフル実装） -->
+            <ui:VisualElement name="content-avatar" class="menu-tab-content menu-tab-content--hidden">
+                <ui:Label class="menu-stub-text" text="Phase 2 で実装予定" />
+            </ui:VisualElement>
+
+            <!-- ワールド一覧タブ（Phase 5 でフル実装） -->
+            <ui:VisualElement name="content-worlds" class="menu-tab-content menu-tab-content--hidden">
+                <ui:Label class="menu-stub-text" text="Phase 5 で実装予定" />
+            </ui:VisualElement>
+
+            <!-- 設定タブ（AudioManager と共有）-->
+            <ui:VisualElement name="content-settings" class="menu-tab-content menu-tab-content--hidden">
+                <ui:Label class="menu-section-title" text="音量設定" />
+
+                <ui:VisualElement class="volume-row">
+                    <ui:Label class="volume-label" text="通話音声" />
+                    <ui:Slider name="slider-voice" class="volume-slider" low-value="0" high-value="1" value="1" />
+                    <ui:Label name="label-voice" class="volume-value" text="100%" />
+                </ui:VisualElement>
+
+                <ui:VisualElement class="volume-row">
+                    <ui:Label class="volume-label" text="ワールド効果音" />
+                    <ui:Slider name="slider-world-sfx" class="volume-slider" low-value="0" high-value="1" value="1" />
+                    <ui:Label name="label-world-sfx" class="volume-value" text="100%" />
+                </ui:VisualElement>
+
+                <ui:VisualElement class="volume-row">
+                    <ui:Label class="volume-label" text="システム音" />
+                    <ui:Slider name="slider-system-sfx" class="volume-slider" low-value="0" high-value="1" value="1" />
+                    <ui:Label name="label-system-sfx" class="volume-value" text="100%" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
