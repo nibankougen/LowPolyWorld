@@ -11,7 +11,9 @@
       "Bash(uloop execute-dynamic-code:*)",
       "Bash(\"D:\\\\Documents\\\\Unity Projects\\\\LowPolyWorld\\\\docs\\\\screens-and-modes.md\":*)",
       "Bash(grep -l \"age\\\\|年齢\\\\|parental\\\\|保護者\\\\|consent\\\\|同意\" *.md)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(uloop get-logs:*)",
+      "Bash(uloop run-tests:*)"
     ]
   }
 }
