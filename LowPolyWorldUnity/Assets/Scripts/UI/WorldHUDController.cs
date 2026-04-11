@@ -12,6 +12,8 @@ public class WorldHUDController : MonoBehaviour
     private UIDocument _document;
     private VisualElement _inWorldMenuRoot;
 
+    private const string KeyShowControlButtons = "ShowControlButtons";
+
     // コントロールボタン表示状態（設定 19.5 と共有）
     private bool _showControlButtons;
 
@@ -40,11 +42,14 @@ public class WorldHUDController : MonoBehaviour
         _btnJump?.RegisterCallback<ClickEvent>(_ => OnJumpButtonClicked());
         _btnSprint?.RegisterCallback<ClickEvent>(_ => OnSprintButtonClicked());
 
+        _showControlButtons = PlayerPrefs.GetInt(KeyShowControlButtons, 0) == 1;
+
         if (_inWorldMenuDocument != null)
         {
             _inWorldMenuRoot = _inWorldMenuDocument.rootVisualElement;
             _menuController = new InWorldMenuController(_inWorldMenuRoot);
             _menuController.OnCloseRequested += CloseMenu;
+            _menuController.BindControlButtons(_showControlButtons, OnControlButtonsToggled);
             _inWorldMenuRoot.style.display = DisplayStyle.None;
         }
 
@@ -62,6 +67,13 @@ public class WorldHUDController : MonoBehaviour
     {
         _showControlButtons = visible;
         ApplyControlButtonVisibility();
+    }
+
+    private void OnControlButtonsToggled(bool visible)
+    {
+        PlayerPrefs.SetInt(KeyShowControlButtons, visible ? 1 : 0);
+        PlayerPrefs.Save();
+        SetControlButtonsVisible(visible);
     }
 
     private void ApplyControlButtonVisibility()

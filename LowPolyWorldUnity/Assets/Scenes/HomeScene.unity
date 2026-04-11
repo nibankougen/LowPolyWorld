@@ -149,6 +149,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: LowPolyWorld.Runtime::AudioManager
   _mixer: {fileID: 24100000, guid: 4cbc257b4621cf54ba6ae9abcc26c2ba, type: 2}
+  _seButtonTap: {fileID: 8300000, guid: 187fdcd9d5a249043960045ac03dc290, type: 3}
+  _seAccept: {fileID: 8300000, guid: 160edc11beedcc04799726a990c78fef, type: 3}
+  _seCancel: {fileID: 8300000, guid: 6efd69a8abe7e4848bf132d70bda7e1e, type: 3}
+  _seEnterRoom: {fileID: 8300000, guid: 02d881ce3160f03479290bca596c159e, type: 3}
+  _seExitRoom: {fileID: 8300000, guid: 8ce59ef73c55c094c9ad5828a3ca2352, type: 3}
+  _seNotification: {fileID: 8300000, guid: b3e3edd62e7af9e468d582e81e90579a, type: 3}
+  _seError: {fileID: 8300000, guid: b101a57e5f47f2940876040b34606617, type: 3}
 --- !u!4 &6419327
 Transform:
   m_ObjectHideFlags: 0

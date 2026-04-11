@@ -2,7 +2,7 @@ using System;
 using UnityEngine.UIElements;
 
 /// <summary>
-/// 音量3スライダーの表示・操作を管理するコントローラー。
+/// 音量3スライダー・コントロールボタントグルの表示・操作を管理するコントローラー。
 /// HomeScreen 設定タブおよびインワールドメニュー設定タブの両方から使用する。
 /// </summary>
 public class SettingsTabController
@@ -13,8 +13,10 @@ public class SettingsTabController
     private readonly Label _labelVoice;
     private readonly Label _labelWorldSfx;
     private readonly Label _labelSystemSfx;
+    private readonly Toggle _toggleControlButtons;
 
     private WorldSettingsLogic _settings;
+    private Action<bool> _onControlButtonsChanged;
 
     public SettingsTabController(VisualElement root)
     {
@@ -24,6 +26,7 @@ public class SettingsTabController
         _labelVoice = root.Q<Label>("label-voice");
         _labelWorldSfx = root.Q<Label>("label-world-sfx");
         _labelSystemSfx = root.Q<Label>("label-system-sfx");
+        _toggleControlButtons = root.Q<Toggle>("toggle-control-buttons");
 
         if (_sliderVoice != null)
             _sliderVoice.RegisterValueChangedCallback(e => _settings?.SetVoiceVolume(e.newValue));
@@ -31,6 +34,15 @@ public class SettingsTabController
             _sliderWorldSfx.RegisterValueChangedCallback(e => _settings?.SetWorldSfxVolume(e.newValue));
         if (_sliderSystemSfx != null)
             _sliderSystemSfx.RegisterValueChangedCallback(e => _settings?.SetSystemSfxVolume(e.newValue));
+        if (_toggleControlButtons != null)
+            _toggleControlButtons.RegisterValueChangedCallback(e => _onControlButtonsChanged?.Invoke(e.newValue));
+    }
+
+    /// <summary>コントロールボタントグルの初期値とコールバックを設定する。</summary>
+    public void BindControlButtons(bool initialValue, Action<bool> onChange)
+    {
+        _onControlButtonsChanged = onChange;
+        _toggleControlButtons?.SetValueWithoutNotify(initialValue);
     }
 
     /// <summary>WorldSettingsLogic を紐付けてスライダーを同期する。</summary>

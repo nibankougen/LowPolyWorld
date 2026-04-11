@@ -1,6 +1,17 @@
 using UnityEngine;
 using UnityEngine.Audio;
 
+public enum SystemSEType
+{
+    ButtonTap,
+    Accept,
+    Cancel,
+    EnterRoom,
+    ExitRoom,
+    Notification,
+    Error,
+}
+
 /// <summary>
 /// DontDestroyOnLoad オーディオ管理 MonoBehaviour。
 /// WorldSettingsLogic を所有し、PlayerPrefs への読み書きと AudioMixer への適用を行う。
@@ -16,6 +27,17 @@ public class AudioManager : MonoBehaviour
 
     [SerializeField] private AudioMixer _mixer;
 
+    [Header("System SE")]
+    [SerializeField] private AudioClip _seButtonTap;
+    [SerializeField] private AudioClip _seAccept;
+    [SerializeField] private AudioClip _seCancel;
+    [SerializeField] private AudioClip _seEnterRoom;
+    [SerializeField] private AudioClip _seExitRoom;
+    [SerializeField] private AudioClip _seNotification;
+    [SerializeField] private AudioClip _seError;
+
+    private AudioSource _seSource;
+
     public static AudioManager Instance { get; private set; }
     public WorldSettingsLogic Settings { get; private set; }
 
@@ -29,6 +51,14 @@ public class AudioManager : MonoBehaviour
 
         Instance = this;
         DontDestroyOnLoad(gameObject);
+
+        _seSource = gameObject.AddComponent<AudioSource>();
+        _seSource.playOnAwake = false;
+        _seSource.outputAudioMixerGroup = _mixer != null
+            ? _mixer.FindMatchingGroups("SystemSFX").Length > 0
+                ? _mixer.FindMatchingGroups("SystemSFX")[0]
+                : null
+            : null;
 
         float voice = PlayerPrefs.GetFloat(KeyVoice, 1.0f);
         float worldSfx = PlayerPrefs.GetFloat(KeyWorldSfx, 1.0f);
@@ -85,5 +115,24 @@ public class AudioManager : MonoBehaviour
             return;
         float dB = linearValue > 0.0001f ? 20f * Mathf.Log10(linearValue) : -80f;
         _mixer.SetFloat(paramName, dB);
+    }
+
+    /// <summary>システム SE を再生する。</summary>
+    public void PlaySE(SystemSEType type)
+    {
+        var clip = type switch
+        {
+            SystemSEType.ButtonTap => _seButtonTap,
+            SystemSEType.Accept => _seAccept,
+            SystemSEType.Cancel => _seCancel,
+            SystemSEType.EnterRoom => _seEnterRoom,
+            SystemSEType.ExitRoom => _seExitRoom,
+            SystemSEType.Notification => _seNotification,
+            SystemSEType.Error => _seError,
+            _ => null,
+        };
+
+        if (clip != null)
+            _seSource.PlayOneShot(clip);
     }
 }

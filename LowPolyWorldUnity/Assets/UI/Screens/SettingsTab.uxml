@@ -28,5 +28,13 @@
             <ui:Label name="label-system-sfx" class="volume-value" text="100%" />
         </ui:VisualElement>
 
+        <ui:Label class="settings-section-title" text="コントロール設定" />
+
+        <!-- コントロールボタン表示 -->
+        <ui:VisualElement class="volume-row">
+            <ui:Label class="volume-label" text="ジャンプ/スプリントボタン表示" />
+            <ui:Toggle name="toggle-control-buttons" value="false" />
+        </ui:VisualElement>
+
     </ui:ScrollView>
 </ui:UXML>

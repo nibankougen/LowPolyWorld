@@ -9,6 +9,7 @@ using Touch = UnityEngine.InputSystem.EnhancedTouch.Touch;
 /// </summary>
 [RequireComponent(typeof(Rigidbody))]
 [RequireComponent(typeof(CapsuleCollider))]
+[RequireComponent(typeof(Animator))]
 public class PlayerController : MonoBehaviour
 {
     [Header("Input")]
@@ -20,8 +21,13 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float _groundCheckOffset = 0.05f;
 
     private Rigidbody _rigidbody;
+    private Animator _animator;
     private PlayerMovementLogic _movement;
     private TouchInputLogic _touchInput;
+
+    private static readonly int AnimSpeed = Animator.StringToHash("Speed");
+    private static readonly int AnimIsGrounded = Animator.StringToHash("IsGrounded");
+    private static readonly int AnimJump = Animator.StringToHash("Jump");
 
     private InputAction _moveAction;
     private InputAction _lookAction;
@@ -36,6 +42,7 @@ public class PlayerController : MonoBehaviour
         _rigidbody = GetComponent<Rigidbody>();
         _rigidbody.freezeRotation = true;
         _rigidbody.useGravity = false;
+        _animator = GetComponent<Animator>();
 
         // Player-Player 間の衝突を無効化（アバター同士は重なれる）
         int playerLayer = LayerMask.NameToLayer("Player");
@@ -104,10 +111,18 @@ public class PlayerController : MonoBehaviour
         bool isGrounded = CheckGrounded();
         _movement.SetGrounded(isGrounded);
 
+        bool jumped = false;
         if (jumpRequested)
-            _movement.TryJump();
+            jumped = _movement.TryJump();
 
         _movement.Update(Time.deltaTime, moveInput, sprint);
+
+        // Animator 駆動
+        float speed = _movement.HorizontalVelocity.magnitude / PlayerMovementLogic.SprintSpeed;
+        _animator.SetFloat(AnimSpeed, speed);
+        _animator.SetBool(AnimIsGrounded, isGrounded);
+        if (jumped)
+            _animator.SetTrigger(AnimJump);
     }
 
     private void FixedUpdate()

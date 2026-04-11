@@ -58,6 +58,12 @@ public class InWorldMenuController : IDisposable
         _settingsTabController?.Bind(settings);
     }
 
+    /// <summary>コントロールボタントグルを紐付ける。</summary>
+    public void BindControlButtons(bool initialValue, Action<bool> onChange)
+    {
+        _settingsTabController?.BindControlButtons(initialValue, onChange);
+    }
+
     private void SelectTab(Button tab, VisualElement content)
     {
         if (_activeTab != null)
