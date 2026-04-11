@@ -247,6 +247,7 @@
 > コーディング開始前に完了している必要がある。`Constants.cs` の URL 定数が空のままでは Phase 5A の同意 UI が完成しない。
 
 - [ ] PP 執筆前調査: Vivox SDK・Unity Gaming Services（Relay）が収集・転送するデータの内容を各サービスのドキュメント / DPA で確認する（「第三者サービス」セクションの記載根拠になる）
+  - **Vivox 音声録音ポリシーの独自確認（security-todo Low 項目）**: 「音声は録音・保存されない」ことを Vivox 公式ドキュメントで確認し、根拠 URL を `gdpr-todo.md §10` に記録する。確認後にプライバシーポリシーへ「音声は保存・自動分析されない」旨を明記する
 - [ ] プライバシーポリシー本文を作成・公開 URL を確定する
   - 必須記載: 取得情報・利用目的・第三者提供（Google Cloud / Cloudflare / Unity Gaming Services / Resend）・保存期間・国際データ転送根拠（SCC）・音声は保存・自動分析されない旨
   - GDPR データ請求窓口の明記: 「アクセス権・移転・削除等の請求は nibankougen@gmail.com まで。30 日以内に対応します」
@@ -255,6 +256,27 @@
 - [ ] 利用規約本文を作成・公開 URL を確定する
 - [ ] `Constants.cs` の `TermsOfServiceUrl`・`PrivacyPolicyUrl` を確定 URL に更新する（仮 URL のままリリース不可）
 - [ ] App Store Connect・Google Play Console のプライバシーポリシー欄に登録する
+- [ ] **App Store Privacy Nutrition Label**（App Store Connect → App Privacy）を正確に入力する
+  - 収集するデータ種別: メールアドレス・ユーザー ID（プロバイダー ID）・購入履歴・デバイス ID（プッシュトークン）・ユーザーコンテンツ（UGC）・使用状況データ（IP・UA）
+  - 「データとデバイスのリンク」: あり（アカウントに紐付く）
+  - 「トラッキング」: なし（Unity Analytics / Ads を無効化済み）
+  - 入力内容は `privacy-policy-elements.md §3・§6` を参照
+- [ ] **Google Play データセーフティセクション**（Play Console → ストアの掲載情報 → データセーフティ）を正確に入力する
+  - 収集・共有するデータ: 上記 Nutrition Label と同じカテゴリ
+  - データ暗号化: あり（転送中 TLS）
+  - 削除リクエスト対応: あり（アプリ内設定から実行可能）
+  - 入力内容は `privacy-policy-elements.md §3・§6` を参照
+- [ ] App Store Connect・Google Play Console の **配信地域から EU/EEA 30 か国を除外**する（GDPR 適用対象外とするため）
+  - 除外対象: オーストリア・ベルギー・ブルガリア・クロアチア・キプロス・チェコ・デンマーク・エストニア・フィンランド・フランス・ドイツ・ギリシャ・ハンガリー・アイルランド・イタリア・ラトビア・リトアニア・ルクセンブルク・マルタ・オランダ・ポーランド・ポルトガル・ルーマニア・スロバキア・スロベニア・スペイン・スウェーデン（EU 27 か国）＋ アイスランド・リヒテンシュタイン・ノルウェー（EEA 追加 3 か国）
+  - 日本・米国・その他の地域は通常配信
+  - **EU 配信解禁チェックリスト**（以下が揃ったタイミングで除外を解除する）:
+    - [ ] GDPR Art. 27 EU 代理人を指定する（EU 拠点を持つ代理人サービスを契約）
+    - [ ] Google Cloud との SCC（Standard Contractual Clauses）締結確認
+    - [ ] Cloudflare GDPR Data Processing Addendum の確認・署名
+    - [ ] Unity Gaming Services GDPR Compliance Agreement の確認
+    - [ ] プライバシーポリシーに「EU 代理人の連絡先」「国際データ転送根拠（SCC）」を追記
+    - [ ] `breach-notification-plan.md §5` を選択肢 B（PPC + EU DPA）へ移行
+    - [ ] App Store Connect・Google Play Console の配信地域に EU/EEA を追加
 - [ ] カスタムドメインのメール受信設定（Cloudflare Email Routing + Gmail）
   - Cloudflare ダッシュボード → Email → Email Routing を有効化
   - 受信アドレスを作成してルーティングを設定（MX レコードは Cloudflare が自動追加）
@@ -308,12 +330,27 @@
   - [ ] `POST /admin/users/{id}/delete-underage`: 13 歳未満誤登録時の即時物理削除（2 段階確認・管理監査ログ記録）
 - [ ] @name 設定・更新エンドポイント（`PUT /me/name`・初回設定は全ユーザー可・変更はプレミアム会員のみ・90 日制限チェック）
 - [ ] プロバイダー連携管理エンドポイント（`GET /me/auth-providers`・`POST /me/auth-providers`・`DELETE /me/auth-providers/{provider}`・最低 1 プロバイダー維持の制約）
-- [ ] アカウント削除エンドポイント（`DELETE /me`・`active_users.deleted_at` を設定してソフトデリート・セッション全無効化・公開ワールドを非公開へ変更）
+- [ ] アカウント削除エンドポイント（`DELETE /me`・`active_users.deleted_at` を設定してソフトデリート・セッション全無効化・公開ワールドを非公開へ変更・`vivox_id` を `gen_random_uuid()` で再生成）
+  - [ ] **削除ユーザー ID の公開 API 漏洩防止確認**（`api-abstract.md §13` 準拠・ソフトデリート後 30 日間の確認）
+    - `deleted_at IS NOT NULL` のユーザーを参照しうる全パブリックエンドポイントで 404 を返すことを実装・テストで確認する
+    - 対象エンドポイント（`deleted_at IS NOT NULL` チェックが必要）:
+      - `GET /api/v1/users/{id}` — ユーザープロフィール
+      - `GET /api/v1/users/{id}/avatars` — ユーザーのアバター一覧
+      - `GET /api/v1/users/{id}/worlds` — ユーザーのワールド一覧（実装時に追加）
+      - フレンド申請・フォロー・違反報告など対象ユーザーを指定する全操作
+    - 実装方針: 認証済みエンドポイントは認証ミドルウェアで `deleted_at IS NOT NULL` → 403 を一元返却済み。ユーザー ID をパスパラメータに取る公開エンドポイントは個別に 404 を返す処理を追加する
+    - テスト: 削除済みユーザー ID で上記エンドポイントを叩いて 404 が返ることを Go 統合テストで確認する
 - [ ] アカウント削除バッチ処理（`active_users.deleted_at` から 30 日後に `active_users` レコードを物理削除・関連アップロードリソースも物理削除。`users` レコードおよび財務・監査データは `users.id` への参照を維持したまま保持。匿名化処理は不要）
-- [ ] アクセスログ個人情報削除バッチ（GDPR 保持期間対応・`api-abstract.md` §13）: DB 上の IP アドレス・User-Agent カラムを記録から 90 日後に NULL 化する。Cloud Logging へのリアルタイム転送済みのため外部保全は完了している
-  - 本番: Cloud Scheduler（日次）→ HTTP `POST /admin/internal/run-batch/cleanup-access-logs`（内部エンドポイント・認証必須）
+  - 本番: Cloud Scheduler（毎日 JST 03:00）→ `POST /admin/internal/run-batch/delete-expired-accounts`
+  - 失敗ポリシー（`api-abstract.md §13` 全バッチ共通ポリシー準拠）:
+    - Cloud Scheduler リトライ設定: 最大 3 回・30 分間隔（コンソール設定）
+    - 正常完了時に `{"event": "batch_completed", "batch": "delete-expired-accounts", "affected_count": N}` 構造化ログを出力
+    - 3 回失敗後: Cloud Monitoring → Pub/Sub → Discord 通知（Phase 5B モニタリング設定で追加）
+- [ ] アクセスログ個人情報削除バッチ（GDPR 保持期間対応・`api-abstract.md` §13）: DB 上の IP アドレス・User-Agent カラムを記録から 1 年後に NULL 化する。Cloud Logging へのリアルタイム転送済みのため外部保全は完了している
+  - 本番: Cloud Scheduler（毎日 JST 03:30）→ `POST /admin/internal/run-batch/cleanup-access-logs`（内部エンドポイント・認証必須）
   - 開発: `docker compose run api go run cmd/batch/main.go cleanup-access-logs` で手動実行
-  - バッチ失敗時は Cloud Monitoring アラートで通知（既存アラート基盤に追加）
+  - 失敗ポリシー: 共通ポリシー準拠（Cloud Scheduler 3 回リトライ → Discord 通知）
+  - 正常完了時に `{"event": "batch_completed", "batch": "cleanup-access-logs", "affected_count": N}` 構造化ログを出力
 - [ ] アカウント復元エンドポイント（管理画面用・`PATCH /admin/users/{id}/restore`・`active_users.deleted_at` をクリア・`active_users` レコードが存在する 30 日以内のみ有効）
 - [ ] VRMアップロードエンドポイント（optimizerへ転送）
 - [ ] アバター取得エンドポイント（最適化済みVRMを返す）
@@ -374,6 +411,7 @@
     - `subscription_tier` VARCHAR NOT NULL DEFAULT `'free'` — プランティア。現行値: `'free'` / `'premium'`。将来の多段階プラン追加を考慮し `is_premium BOOL` は使用しない（設計詳細: `docs/unity-game-abstract.md` セクション 23）
     - `subscription_expires_at` TIMESTAMPTZ DEFAULT `NULL` — サブスクリプション有効期限。NULL = 無料プラン
     - `last_name_change_at` TIMESTAMPTZ DEFAULT `NULL` — @name の最終変更日時。NULL = まだ変更していない。初回セットアップ（@name 設定画面での確定）時と、プレミアム会員による変更時に `now()` で更新する
+    - `vivox_id` UUID NOT NULL DEFAULT `gen_random_uuid()` — Vivox ログイン用仮名 ID。実ユーザー UUID の代わりに渡す。アカウント削除（ソフトデリート）時に再生成する（`api-abstract.md §4` 参照）
   （トラストレベル変更ロジック・昇格ジョブ・関連テーブル・管理画面は Phase 5B で実装）
 
 ### `optimizer/`（Docker）
@@ -455,9 +493,11 @@
 - [ ] ショップ商品登録UI（アバター・アクセサリのGLB・テクスチャ・価格・Edit OK/NGフラグ）
 - [ ] ショップクリエイター登録UI（クリエイター情報・ユーザーアカウント紐づけ）
 - [ ] アバター審査画面（前面/背面スクリーンショット＋テクスチャ一覧・承認/BAN操作）
+  - 検疫キュー（`moderation_status = 'pending'`）のアバター・アクセサリを一覧表示
+  - CSAM アラート（`admin_alerts`）を優先表示・IHC 通報ガイダンスを管理画面内に記載
   - [ ] 3Dビューアコンポーネント（`@pixiv/three-vrm` + `THREE.OrbitControls`・クリック時 lazy load）
   - [ ] optimizer による前面/背面スクリーンショット生成（審査用・保存してAPIから配信）
-- [ ] ユーザー管理画面（一覧・@name検索・警告発行・BAN/BAN解除・称号付与）
+- [ ] ユーザー管理画面（一覧・@name検索・警告発行・BAN/BAN解除・称号付与・公認バッジ付与/剥奪）
   - [ ] 削除申請済みアカウントの表示（「削除予定 YYYY-MM-DD」バッジ）・30 日以内の復元操作（`PATCH /admin/users/{id}/restore`）
   - [ ] トラストレベル手動変更・ロック操作・制限解除・変更履歴表示・ユーザー一覧のトラストレベルフィルター
   - [ ] 個人データエクスポート機能（GDPR Art. 15 / 20 メール対応支援）
@@ -470,6 +510,42 @@
 - [ ] 取引キャンセル管理画面（一覧・絞り込み・手動キャンセル操作）（`docs/coins.md` セクション17参照）
 - [ ] 管理者操作ログ画面（`admin_audit_logs` の一覧・管理者名/操作種別/対象で絞り込み・`docs/api-abstract.md` セクション9参照）
 
+#### 本番環境モニタリング設定（侵害検知アラート）
+
+詳細仕様: `infra-abstract.md §10`・`breach-notification-plan.md §9`
+
+- [ ] Pub/Sub トピック `lowpolyworld-security-alerts` を作成する
+- [ ] Discord Webhook URL を Secret Manager に登録する（キー名: `DISCORD_WEBHOOK_URL`）
+- [ ] `discord-notifier` Cloud Functions（Go）を実装・デプロイする
+  - Pub/Sub トリガー → Cloud Monitoring の JSON ペイロードを Discord Embed 形式に変換 → Webhook POST
+- [ ] **レイヤー 1** Cloud Monitoring メトリクスアラートを設定する（コンソール操作のみ・コード変更なし）
+  - `high-5xx-error-rate`: Cloud Run 5xx エラーレート 5 分間 5% 超
+  - `high-sql-connections`: Cloud SQL 接続数 80% 超（5 分間）
+  - `high-sql-cpu`: Cloud SQL CPU 90% 超（5 分間）
+  - `api-uptime-check`: 既存アップタイムチェックを Pub/Sub 通知チャンネルに追加
+- [ ] **レイヤー 2** Cloud Logging ログベースアラートを設定する（コンソール操作のみ）
+  - `mass-admin-delete`: `admin_audit_logs` で 1 時間以内に 100 件超の `delete_*` アクション
+  - `after-hours-admin-op`: 23:00〜7:00 JST に管理者操作が 1 件でも発生
+- [ ] **レイヤー 3** Go API 構造化ログを実装し Cloud Logging アラートを設定する（コード実装あり）
+  - 認証ミドルウェア: レートリミット発動時に `brute_force_attempt` ログを出力
+  - トークン無効化処理: `mass_token_revocation` ログを出力（1 時間 100 ユーザー超でアラート）
+  - レートリミットミドルウェア: `high_api_rate` ログを出力（同一ユーザー 500 req/分超）
+  - 上記 3 種を Cloud Logging ログベースアラートに設定し Pub/Sub トピックへ接続
+  - 上記 3 種を `system_alerts` テーブルにも挿入（管理画面に表示）
+- [ ] 全アラートポリシーに `lowpolyworld-security-alerts` Pub/Sub トピックを Notification Channel として追加する
+- [ ] **バッチ失敗監視** Cloud Scheduler 失敗メトリクスアラートを設定する（コンソール操作のみ）
+  - 対象: アカウント物理削除・アクセスログ削除・通報者匿名化（全 3 バッチ）
+  - 条件: `cloudscheduler.googleapis.com/job/last_attempt_result = failed`（3 回リトライ後）
+  - 通知: `lowpolyworld-security-alerts` Pub/Sub → Discord（既存パイプライン利用）
+- [ ] **バッチ完了ログ監視** Cloud Logging ログベースアラートを設定する（コンソール操作のみ）
+  - 条件: 各バッチの実行予定時刻から 26 時間以内に `batch_completed` ログが出力されない場合
+  - 通知: 同上（部分失敗・HTTP 200 だが処理 0 件などのサイレント失敗を検知）
+- [ ] **フォールバックログのディスク保護** Go コードに 2 段階閾値チェックを実装する（`infra-abstract.md §9` 参照）
+  - 書き込みのたびにファイルサイズを確認する
+  - 40MB 到達（警告）: 書き込み継続 + `system_alerts` 記録（`audit_fallback_log_warning`）+ `lowpolyworld-security-alerts` Pub/Sub パブリッシュ → Discord 通知
+  - 50MB 到達（停止）: 新規書き込み停止 + `system_alerts` 記録（`audit_fallback_log_full`）+ Pub/Sub → Discord 通知（法的リスクあり・即時対応要求）
+  - DB への `admin_audit_logs` 書き込みは停止しない（監査記録自体は継続）
+
 ### テスト（EditMode）
 - [ ] `TrustPointCalculator`: 公開ルーム退室時のポイント計算（`floor((join+exit)/2 * floor(minutes))`）
 - [ ] `TrustLevelPromoter`: 全条件評価・最上位レベル設定・ロック中スキップ
@@ -481,7 +557,7 @@
 **目標**: ワールド内で3D位置音声が動作する状態
 
 ### Unityクライアント
-- [ ] Vivox SDK初期化・ログイン
+- [ ] Vivox SDK 初期化・ログイン（`/startup` レスポンスの `vivoxId` を Vivox ユーザー識別子として使用する。実ユーザー UUID は渡さない）
 - [ ] ワールド単位チャンネルの入退室管理
 - [ ] プレイヤー座標をVivox SDKへ通知
 - [ ] 距離減衰パラメータ調整
@@ -722,10 +798,18 @@
 
 ### `api/`（Go）
 - [ ] 警告記録・BAN記録データモデル実装
-- [ ] アバターBANエンドポイント（非表示フラグ設定）
+- [ ] `avatars` / `accessories` テーブルに `moderation_status VARCHAR(10) NOT NULL DEFAULT 'pending'` 追加・マイグレーション作成
+- [ ] `admin_alerts` テーブル実装（CSAM 検知等のアラート記録）
+- [ ] Optimizer ワーカーにモデレーションステップ追加
+  - [ ] CSAM ハッシュ照合インターフェース（`ContentModerationService` と同様に差し替え可能な no-op から開始）
+  - [ ] アップロード完了時に trust_level で `moderation_status` を確定（visitor/new_user → pending、user 以上 → approved）
+- [ ] `GET /api/v1/avatars/{id}` に visibility チェック追加（pending は本人以外 404）
+- [ ] `GET /api/v1/users/{id}/avatars` で `moderation_status = 'approved'` のみ返すよう絞り込み
+- [ ] アバターBANエンドポイント（`moderation_status = 'rejected'` 設定）
 - [ ] ユーザーBAN/BAN解除エンドポイント（ログイン不可・データ凍結）
 - [ ] 警告発行エンドポイント（警告数カウント・累積2回でBAN推奨フラグ）
 - [ ] 称号付与エンドポイント（開発者・運営関係者）
+- [ ] 公認バッジ付与/剥奪エンドポイント（`PATCH /admin/users/{id}/verified`・`admin` / `super_admin` ロールのみ）
 - [ ] 自動ユーザー制限ロジック（通報受信時に同期実行・`docs/unity-game-abstract.md` セクション 22.5 参照）
   - [ ] `report_records` テーブル実装（reporter_id / target_id / reported_at）
   - [ ] 通報受信時: ターゲットのトラストレベルを確認し visitor / new_user のしきい値チェック
@@ -736,8 +820,16 @@
 
 ### Unityクライアント
 - [ ] BANユーザーのログイン拒否処理
-- [ ] BAN済みアバターの非表示処理（Atlas更新・スロット表示）
+- [ ] 検疫中アバター（`moderation_status = 'pending'`）の扱い
+  - 本人のアバター一覧に「審査中」バッジ表示
+  - ルーム内で他プレイヤーが pending アバターを持つプレイヤーを見た場合、フォールバックアバター（システム既定）を表示
+- [ ] BAN済みアバター（`moderation_status = 'rejected'`）の非表示処理（Atlas更新・スロット表示）
 - [ ] ルーム参加時に 403 `user_restricted` を受信したとき制限エラー画面を表示（お問い合わせメールリンク: nibankougen@gmail.com）
+- [ ] 公認バッジ表示対応（`is_verified` フィールドを受け取り、表示名の右横に `icon_verified.png` を表示）
+  - ワールド内アバター頭上の World Space Canvas 名前タグ
+  - ユーザー情報パネル（セクション 2.4）
+  - アカウント情報画面（セクション 22.1）
+  - ルームメンバー一覧・フレンド一覧・フォロー/フォロワー一覧など表示名が出るすべての箇所
 
 ---
 

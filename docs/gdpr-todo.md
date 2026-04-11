@@ -33,8 +33,14 @@
 
 ### 3. 国際データ転送の適法化（GDPR Chapter V）
 
+> **現状**: ローンチ時は App Store / Google Play の配信地域から EU/EEA を除外するため、GDPR Chapter V は現時点で適用対象外。以下の項目は **EU 配信解禁時**に対応する。
+
 - [ ] Google Cloud・Cloudflare は米国企業のため、SCC の適用状況を確認する
-- [ ] プライバシーポリシーに「国際データ転送とその根拠」を記載する
+- [ ] プライバシーポリシーに「EU 代理人の連絡先」「国際データ転送根拠（SCC）」を追記する
+- [ ] GDPR Art. 27 に基づく EU 代理人を指定する（EU 拠点を持つ代理人サービスを契約）
+- [ ] `breach-notification-plan.md §5` を選択肢 B（PPC + EU DPA）へ移行する
+
+EU 配信解禁の全チェックリストは `development-plan.md`「EU 配信解禁チェックリスト」を参照。
 
 ### 4. データ侵害（ブリーチ）通知計画の策定
 
@@ -94,15 +100,23 @@
 
 ### 10. Vivox・Unity SDK のデータ収集ポリシー確認
 
-- [ ] Vivox SDK が収集・転送するデータの内容を確認する
+- [x] Vivox SDK が収集・転送するデータの内容を確認する
+  - 音声: エフェメラル（録音・保存なし）
+  - Vivox が最大 30 日間保持: 仮名ユーザー ID（`vivox_id`）・デバイス ID・末尾切り詰め済み IP アドレス
+  - テキストデータ: デフォルト 7 日（最大 30 日）— 本サービスはテキストチャット非使用のため対象外
 - [ ] Unity Gaming Services（Relay）が収集するデータを確認する
-- [ ] 確認結果をプライバシーポリシーの「第三者サービス」セクションに反映する
-- [ ] プライバシーポリシーに「音声は保存・自動分析されない」旨を明記する（Vivox）
+- [x] 確認結果をプライバシーポリシーの「第三者サービス」セクションに反映する（Vivox 分のみ完了・`privacy-policy-elements.md §6` 更新済み。Relay 分は上記確認後に反映）
+- [x] プライバシーポリシーに「音声は保存・自動分析されない」旨を明記する（Vivox）
+  - `privacy-policy-elements.md §3.3`「収集しない情報」に記載済み
+  - 対応策: Vivox に実ユーザー UUID の代わりに `vivox_id`（仮名 ID）を渡す設計に変更済み（`api-abstract.md §4`・`development-plan.md` Phase 5A / Phase 6）
 
 ### 11. IP アドレス・User-Agent の自動削除バッチ確認
 
-- [ ] 90 日後の自動削除（`api-abstract.md` セクション13）がバッチで確実に実行されることを確認する
-- [ ] バッチ失敗時のアラート通知を設定する
+- [x] 1 年後の自動削除（`api-abstract.md` セクション 13）がバッチで確実に実行されることを確認する
+  - Cloud Scheduler（毎日 JST 03:30）→ `cleanup-access-logs` バッチとして `development-plan.md` Phase 5A に実装タスク追加済み
+- [x] バッチ失敗時のアラート通知を設定する
+  - 全バッチ共通ポリシー（Cloud Scheduler 3 回リトライ → Discord 通知）を `api-abstract.md §13` に定義済み
+  - Cloud Scheduler 失敗メトリクスアラート・完了ログ監視アラートを `development-plan.md` Phase 5B に実装タスク追加済み
 
 ---
 
@@ -122,11 +136,34 @@
 
 ### 14. 定期コンプライアンス監査の仕組み化
 
-- [ ] 四半期ごとの確認項目を定める
-  - DPA の有効性確認
-  - 削除バッチの実行ログレビュー
-  - プライバシーポリシーの内容更新有無確認
-- [ ] インシデント記録の定期レビュープロセスを定義する
+- [x] 四半期ごとの確認項目を定める
+
+  **四半期レビューチェックリスト（年 4 回・1月/4月/7月/10月の第1週に実施）:**
+
+  #### サードパーティ ポリシー確認（各社プライバシーポリシー・DPA の変更有無）
+  - [ ] Google Cloud（Cloud Run / Cloud SQL / Cloud Tasks / Cloud Logging / Pub/Sub / Secret Manager）— https://cloud.google.com/terms/data-processing-addendum
+  - [ ] Cloudflare（R2 / CDN）— https://www.cloudflare.com/privacypolicy/
+  - [ ] Unity Vivox — https://unity.com/legal/privacy-policy
+  - [ ] Unity Gaming Services（Relay）— https://unity.com/legal/privacy-policy
+  - [ ] Apple（Sign-In / StoreKit / APNs）— https://www.apple.com/legal/privacy/
+  - [ ] Google（Sign-In / Play Billing / FCM）— https://policies.google.com/privacy
+  - [ ] Resend（メール送信）— https://resend.com/legal/privacy-policy
+  - [ ] Upstash / Cloud Memorystore（Redis）— 利用サービスのポリシーを確認
+  - 変更があった場合: プライバシーポリシー本文・`privacy-policy-elements.md §6` を更新する
+
+  #### 削除バッチの実行ログレビュー
+  - [ ] Cloud Logging で過去 3 ヶ月分の `batch_completed` ログを確認し、失敗・スキップがないことを検証する
+  - [ ] `system_alerts` テーブルにバッチ関連のアラートが残っていないことを確認する
+
+  #### プライバシーポリシー・利用規約の整合性確認
+  - [ ] プライバシーポリシー本文と `privacy-policy-elements.md` の内容が一致しているか確認する
+  - [ ] 新機能追加・仕様変更でデータ収集内容に変化がないか確認する
+
+  #### インシデント記録レビュー
+  - [ ] `docs/incident-log.md`（または管理画面 `system_alerts`）を開き、未対応・未記録のインシデントがないか確認する
+  - [ ] レベル 2 以上のインシデントがあった場合、監督機関（PPC）への報告が完了しているか確認する
+
+- [x] インシデント記録の定期レビュープロセスを定義する（上記チェックリスト「インシデント記録レビュー」として統合）
 
 ### 15. 子ども向けコンプライアンスの継続監視
 
