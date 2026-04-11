@@ -16,7 +16,8 @@
       "Bash(uloop run-tests:*)",
       "Bash(uloop execute-menu-item:*)",
       "Bash(uloop get-menu-items:*)",
-      "Bash(uloop capture-window:*)"
+      "Bash(uloop capture-window:*)",
+      "Bash(xargs grep:*)"
     ]
   }
 }

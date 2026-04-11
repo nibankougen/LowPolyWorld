@@ -2,7 +2,10 @@
     "name": "LowPolyWorld.Runtime",
     "rootNamespace": "",
     "references": [
-        "Unity.InputSystem"
+        "Unity.InputSystem",
+        "VRM10",
+        "UniGLTF",
+        "glTFast"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

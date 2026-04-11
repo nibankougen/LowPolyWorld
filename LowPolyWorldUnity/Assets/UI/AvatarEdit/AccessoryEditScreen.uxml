@@ -1,0 +1,47 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="AvatarEditScreen.uss" />
+
+    <ui:VisualElement name="accessory-edit-root" class="avatar-edit-root">
+
+        <!-- 3D プレビュー領域 -->
+        <ui:VisualElement name="preview-area" class="preview-area">
+            <ui:Button name="btn-back" class="btn-back" text="＜" />
+            <ui:VisualElement name="preview-render" class="preview-render" />
+        </ui:VisualElement>
+
+        <!-- 下部パネル -->
+        <ui:VisualElement name="bottom-panel" class="bottom-panel">
+
+            <ui:VisualElement name="panel-header" class="panel-header">
+                <ui:VisualElement class="undo-redo-row">
+                    <ui:Button name="btn-undo" class="btn-undo-redo" text="＜" />
+                    <ui:Button name="btn-redo" class="btn-undo-redo" text="＞" />
+                </ui:VisualElement>
+                <ui:VisualElement class="tab-row">
+                    <ui:Button name="tab-texture" class="edit-tab" text="テクスチャ" />
+                    <ui:Button name="tab-placement" class="edit-tab" text="配置" />
+                </ui:VisualElement>
+                <ui:Button name="btn-minimize" class="btn-minimize" text="▽" />
+            </ui:VisualElement>
+
+            <ui:VisualElement name="tab-content" class="tab-content">
+
+                <!-- テクスチャタブ（Phase 4 で実装） -->
+                <ui:VisualElement name="content-texture" class="content-texture">
+                    <ui:Label class="stub-label" text="テクスチャペイント（Phase 4 で実装）" />
+                </ui:VisualElement>
+
+                <!-- 配置タブ -->
+                <ui:VisualElement name="content-placement" class="content-accessory edit-tab-content--hidden">
+                    <ui:VisualElement class="placement-row">
+                        <ui:Label class="volume-label" text="つける場所" />
+                        <ui:DropdownField name="dropdown-bone" class="bone-dropdown" />
+                    </ui:VisualElement>
+                    <ui:Button name="btn-switch-avatar" class="btn-switch-avatar" text="アバター切り替え" />
+                </ui:VisualElement>
+
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>

@@ -1,0 +1,54 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="AvatarEditScreen.uss" />
+
+    <!-- 全画面コンテナ -->
+    <ui:VisualElement name="avatar-edit-root" class="avatar-edit-root">
+
+        <!-- 3D プレビュー領域 -->
+        <ui:VisualElement name="preview-area" class="preview-area">
+            <ui:Button name="btn-back" class="btn-back" text="＜" />
+            <ui:VisualElement name="preview-render" class="preview-render" />
+        </ui:VisualElement>
+
+        <!-- 下部パネル -->
+        <ui:VisualElement name="bottom-panel" class="bottom-panel">
+
+            <!-- パネルヘッダー（最小化ボタン + Undo/Redo + タブ） -->
+            <ui:VisualElement name="panel-header" class="panel-header">
+                <ui:VisualElement class="undo-redo-row">
+                    <ui:Button name="btn-undo" class="btn-undo-redo" text="＜" />
+                    <ui:Button name="btn-redo" class="btn-undo-redo" text="＞" />
+                </ui:VisualElement>
+                <ui:VisualElement class="tab-row">
+                    <ui:Button name="tab-texture" class="edit-tab" text="テクスチャ" />
+                    <ui:Button name="tab-accessory" class="edit-tab" text="アクセサリ" />
+                </ui:VisualElement>
+                <ui:Button name="btn-minimize" class="btn-minimize" text="▽" />
+            </ui:VisualElement>
+
+            <!-- タブコンテンツ -->
+            <ui:VisualElement name="tab-content" class="tab-content">
+
+                <!-- テクスチャタブ（Phase 4 で実装） -->
+                <ui:VisualElement name="content-texture" class="content-texture">
+                    <ui:Label class="stub-label" text="テクスチャペイント（Phase 4 で実装）" />
+                </ui:VisualElement>
+
+                <!-- アクセサリタブ -->
+                <ui:VisualElement name="content-accessory" class="content-accessory edit-tab-content--hidden">
+                    <!-- サブタブ -->
+                    <ui:VisualElement class="sub-tab-row">
+                        <ui:Button name="subtab-active" class="edit-subtab" text="利用中" />
+                        <ui:Button name="subtab-saved" class="edit-subtab" text="保存・編集" />
+                        <ui:Button name="subtab-shop" class="edit-subtab" text="ショップ購入" />
+                        <ui:Button name="subtab-preset" class="edit-subtab" text="デフォルト" />
+                    </ui:VisualElement>
+                    <!-- アクセサリグリッド -->
+                    <ui:ScrollView name="accessory-grid" class="accessory-grid" />
+                </ui:VisualElement>
+
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>
