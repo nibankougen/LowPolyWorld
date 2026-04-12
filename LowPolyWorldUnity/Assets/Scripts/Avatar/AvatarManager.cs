@@ -39,7 +39,7 @@ public class AvatarManager : MonoBehaviour
     /// </summary>
     public AvatarInstance RegisterAvatar(string userId, GameObject vrmRoot, bool isLocal)
     {
-        if (_avatars.TryGetValue(userId, out var existing))
+        if (_avatars.ContainsKey(userId))
         {
             DestroyAvatar(userId);
         }

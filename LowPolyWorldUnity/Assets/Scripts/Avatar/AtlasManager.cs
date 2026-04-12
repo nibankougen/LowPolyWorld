@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using UnityEngine;
-using UnityEngine.Rendering;
 
 /// <summary>
 /// 1024×2048 テクスチャアトラスの生成・更新を行う MonoBehaviour。
@@ -105,7 +104,6 @@ public class AtlasManager : MonoBehaviour
 
     private void BlitToAtlas(Texture src, RectInt dstPixel)
     {
-        var mat = new Material(Shader.Find("Hidden/BlitCopy"));
         var prev = RenderTexture.active;
         RenderTexture.active = AtlasTexture;
 
@@ -119,6 +117,5 @@ public class AtlasManager : MonoBehaviour
 
         GL.PopMatrix();
         RenderTexture.active = prev;
-        Destroy(mat);
     }
 }

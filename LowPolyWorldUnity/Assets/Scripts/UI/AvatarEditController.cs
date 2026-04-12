@@ -38,14 +38,11 @@ public class AvatarEditController : MonoBehaviour
 
     // パネル最小化
     private Button _btnMinimize;
-    private VisualElement _bottomPanel;
     private VisualElement _tabContent;
     private bool _isMinimized;
 
     // 3D プレビューカメラ
     private readonly EditPreviewCameraLogic _previewCamera3D = new();
-    private Vector2 _lastTouchPos;
-    private float _lastPinchDistance;
 
     public event Action OnBackRequested;
 
@@ -84,7 +81,6 @@ public class AvatarEditController : MonoBehaviour
         _btnRedo?.RegisterCallback<ClickEvent>(_ => _currentUndoRedo?.Redo());
 
         _btnMinimize = _root.Q<Button>("btn-minimize");
-        _bottomPanel = _root.Q<VisualElement>("bottom-panel");
         _tabContent = _root.Q<VisualElement>("tab-content");
         _btnMinimize?.RegisterCallback<ClickEvent>(_ => ToggleMinimize());
 
