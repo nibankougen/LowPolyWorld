@@ -17,7 +17,8 @@
       "Bash(uloop execute-menu-item:*)",
       "Bash(uloop get-menu-items:*)",
       "Bash(uloop capture-window:*)",
-      "Bash(xargs grep:*)"
+      "Bash(xargs grep:*)",
+      "Bash(python3:*)"
     ]
   }
 }

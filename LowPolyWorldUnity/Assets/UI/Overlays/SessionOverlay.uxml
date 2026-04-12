@@ -1,0 +1,37 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="SessionOverlay.uss" />
+
+    <!-- フラッシュメッセージ（残り時間警告） -->
+    <ui:VisualElement name="flash-message" class="flash-message overlay-hidden">
+        <ui:Label name="flash-label" class="flash-label" text="" />
+    </ui:VisualElement>
+
+    <!-- セッション終了ダイアログ -->
+    <ui:VisualElement name="session-expired-dialog" class="dialog-backdrop overlay-hidden">
+        <ui:VisualElement class="dialog-panel">
+            <ui:Label class="dialog-title" text="セッション終了" />
+            <ui:Label class="dialog-message" text="ルームの制限時間に達しました。" />
+            <ui:Button name="btn-session-ok" class="dialog-btn-primary" text="退室する" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+
+    <!-- 再接続中モーダル -->
+    <ui:VisualElement name="reconnecting-modal" class="dialog-backdrop overlay-hidden">
+        <ui:VisualElement class="dialog-panel">
+            <ui:Label class="dialog-title" text="接続が切断されました" />
+            <ui:Label class="dialog-message" text="再接続しています…" />
+            <ui:Label name="label-attempt" class="dialog-sub" text="" />
+            <ui:Button name="btn-reconnect-back" class="dialog-btn-secondary" text="タイトルに戻る" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+
+    <!-- 接続失敗モーダル -->
+    <ui:VisualElement name="connect-failed-modal" class="dialog-backdrop overlay-hidden">
+        <ui:VisualElement class="dialog-panel">
+            <ui:Label class="dialog-title" text="接続に失敗しました" />
+            <ui:Label class="dialog-message" text="ネットワークを確認してもう一度お試しください。" />
+            <ui:Button name="btn-failed-back" class="dialog-btn-primary" text="タイトルに戻る" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+
+</ui:UXML>

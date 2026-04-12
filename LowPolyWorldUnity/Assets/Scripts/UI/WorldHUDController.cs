@@ -8,9 +8,11 @@ using UnityEngine.UIElements;
 public class WorldHUDController : MonoBehaviour
 {
     [SerializeField] private UIDocument _inWorldMenuDocument;
+    [SerializeField] private RoomSessionController _sessionController;
 
     private UIDocument _document;
     private VisualElement _inWorldMenuRoot;
+    private float _sessionUpdateTimer;
 
     private const string KeyShowControlButtons = "ShowControlButtons";
 
@@ -108,6 +110,17 @@ public class WorldHUDController : MonoBehaviour
     {
         if (_inWorldMenuRoot != null)
             _inWorldMenuRoot.style.display = DisplayStyle.None;
+    }
+
+    private void Update()
+    {
+        if (_sessionController == null || _menuController == null) return;
+        _sessionUpdateTimer += Time.deltaTime;
+        if (_sessionUpdateTimer >= 1f)
+        {
+            _sessionUpdateTimer = 0f;
+            _menuController.UpdateSessionRemaining(_sessionController.GetRemainingSeconds());
+        }
     }
 
     private void OnCameraButtonClicked() => Debug.Log("[HUD] Camera button clicked");

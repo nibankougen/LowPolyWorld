@@ -1605,6 +1605,16 @@ Canvas は常にメインカメラ方向を向くよう `LookAt` で更新する
 - 撮影モード時は同じカメラオブジェクトのまま `PlayerController` が制御を `PhotoModeController` に委譲する（カメラオブジェクトは切り替えない）。
 - HomeScene では MainCamera は存在しない。
 
+#### 初期カメラパラメータ
+
+| パラメータ | 値 | 説明 |
+|---|---|---|
+| `distance` | 5.0 m | プレイヤーからカメラまでの距離 |
+| `heightOffset` | 1.5 m | ピボット点の高さオフセット（足元基準） |
+| `initialPitch` | 45° | 初期仰角（アバター上部斜め 45° から俯瞰） |
+| `pitch` 下限 | −20° | カメラを上向きにできる最大角 |
+| `pitch` 上限 | 80° | カメラを下向きにできる最大角 |
+
 ### PreviewCamera（3D プレビュー用）
 
 - HomeScene に配置し `DontDestroyOnLoad` を適用。WorldScene でも再利用する。

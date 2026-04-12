@@ -9,7 +9,7 @@ public class CameraFollowController : MonoBehaviour
     [SerializeField] private Transform _target;
     [SerializeField] private float _distance = 5f;
     [SerializeField] private float _heightOffset = 1.5f;
-    [SerializeField] private float _initialPitch = 15f;
+    [SerializeField] private float _initialPitch = 45f;
     [SerializeField] private float _mouseSensitivity = 0.15f;
     [SerializeField] private float _touchSensitivity = 0.1f;
 

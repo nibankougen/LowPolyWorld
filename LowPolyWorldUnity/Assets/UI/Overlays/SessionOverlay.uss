@@ -1,0 +1,83 @@
+.overlay-hidden {
+    display: none;
+}
+
+/* フラッシュメッセージ */
+.flash-message {
+    position: absolute;
+    top: 80px;
+    left: 0;
+    right: 0;
+    align-items: center;
+}
+
+.flash-label {
+    background-color: rgba(220, 60, 60, 0.9);
+    color: white;
+    font-size: 15px;
+    padding: 10px 24px;
+    border-radius: 20px;
+}
+
+/* ダイアログ共通 */
+.dialog-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    align-items: center;
+    justify-content: center;
+}
+
+.dialog-panel {
+    background-color: rgb(40, 40, 40);
+    border-radius: 16px;
+    padding: 28px 24px;
+    width: 300px;
+    align-items: center;
+}
+
+.dialog-title {
+    color: white;
+    font-size: 18px;
+    -unity-font-style: bold;
+    margin-bottom: 12px;
+}
+
+.dialog-message {
+    color: rgb(200, 200, 200);
+    font-size: 14px;
+    white-space: normal;
+    -unity-text-align: upper-center;
+    margin-bottom: 8px;
+}
+
+.dialog-sub {
+    color: rgb(150, 150, 150);
+    font-size: 12px;
+    margin-bottom: 20px;
+}
+
+.dialog-btn-primary {
+    width: 200px;
+    height: 44px;
+    background-color: rgb(80, 140, 220);
+    color: white;
+    font-size: 15px;
+    border-radius: 8px;
+    border-width: 0;
+    margin-top: 12px;
+}
+
+.dialog-btn-secondary {
+    width: 200px;
+    height: 44px;
+    background-color: rgb(70, 70, 70);
+    color: rgb(200, 200, 200);
+    font-size: 15px;
+    border-radius: 8px;
+    border-width: 0;
+    margin-top: 20px;
+}

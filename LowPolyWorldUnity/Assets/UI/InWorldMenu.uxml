@@ -24,9 +24,13 @@
         <!-- タブコンテンツ -->
         <ui:VisualElement name="menu-content" class="menu-content">
 
-            <!-- ルームタブ（Phase 3 でフル実装・Phase 1 はスタブ） -->
+            <!-- ルームタブ -->
             <ui:VisualElement name="content-room" class="menu-tab-content">
-                <ui:Label class="menu-stub-text" text="Phase 3 で実装予定" />
+                <ui:VisualElement class="room-info-row">
+                    <ui:Label class="room-info-label" text="セッション残り時間" />
+                    <ui:Label name="label-session-remaining" class="room-info-value" text="--:--:--" />
+                </ui:VisualElement>
+                <ui:Label class="menu-stub-text" text="ルーム詳細は Phase 5 で実装予定" />
             </ui:VisualElement>
 
             <!-- アバタータブ（Phase 2 でフル実装） -->

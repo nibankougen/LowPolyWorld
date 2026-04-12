@@ -11,6 +11,8 @@ public class InWorldMenuController : IDisposable
 
     private readonly VisualElement _root;
 
+    private Label _labelSessionRemaining;
+
     private Button _tabRoom;
     private Button _tabAvatar;
     private Button _tabWorlds;
@@ -30,6 +32,7 @@ public class InWorldMenuController : IDisposable
 
         _root.Q<Button>("btn-close")?.RegisterCallback<ClickEvent>(_ => OnCloseRequested?.Invoke());
         _root.Q<VisualElement>("backdrop")?.RegisterCallback<ClickEvent>(_ => OnCloseRequested?.Invoke());
+        _labelSessionRemaining = _root.Q<Label>("label-session-remaining");
 
         _tabRoom = root.Q<Button>("tab-room");
         _tabAvatar = root.Q<Button>("tab-avatar");
@@ -62,6 +65,17 @@ public class InWorldMenuController : IDisposable
     public void BindControlButtons(bool initialValue, Action<bool> onChange)
     {
         _settingsTabController?.BindControlButtons(initialValue, onChange);
+    }
+
+    /// <summary>セッション残り時間表示を更新する（毎秒呼び出し）。</summary>
+    public void UpdateSessionRemaining(float remainingSeconds)
+    {
+        if (_labelSessionRemaining == null) return;
+        int total = (int)System.Math.Ceiling((double)remainingSeconds);
+        int h = total / 3600;
+        int m = (total % 3600) / 60;
+        int s = total % 60;
+        _labelSessionRemaining.text = $"{h:00}:{m:00}:{s:00}";
     }
 
     private void SelectTab(Button tab, VisualElement content)

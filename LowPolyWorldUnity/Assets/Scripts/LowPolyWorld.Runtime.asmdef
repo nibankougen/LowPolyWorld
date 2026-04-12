@@ -5,7 +5,8 @@
         "Unity.InputSystem",
         "VRM10",
         "UniGLTF",
-        "glTFast"
+        "glTFast",
+        "Unity.Netcode.Runtime"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
