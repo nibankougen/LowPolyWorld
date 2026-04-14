@@ -165,7 +165,7 @@ Phase 1 の動作確認に使う簡易シーン。
 
 | ✅ | ファイル名 | 配置先 |
 |---|---|---|
-| ✅ | Yuyu.vrm | `LowPolyWorldUnity/Assets/StreamingAssets/Avatars/Yuyu.vrm` |
+| ✅ | Yuyu.vrm | `LowPolyWorldUnity/Assets/StreamingAssets/Avatars/Yuyu/Yuyu.vrm` |
 
 **仕様:**
 - 形式: VRM **1.0**（VRM 0.x は不可）
@@ -186,8 +186,10 @@ Phase 1 の動作確認に使う簡易シーン。
 
 | ✅ | ファイル名 | 配置先 |
 |---|---|---|
-| ☐ | AccessoryHead.glb | `LowPolyWorldUnity/Assets/StreamingAssets/Accessories/AccessoryHead.glb` |
-| ☐ | AccessoryChest.glb | `LowPolyWorldUnity/Assets/StreamingAssets/Accessories/AccessoryChest.glb` |
+| ✅ | CatEars.glb | `LowPolyWorldUnity/Assets/StreamingAssets/Accessories/CatEars/CatEars.glb` |
+| ✅ | CatTail.glb | `LowPolyWorldUnity/Assets/StreamingAssets/Accessories/CatTail/CatTail.glb` |
+| ✅ | Glasses.glb | `LowPolyWorldUnity/Assets/StreamingAssets/Accessories/Glasses/Glasses.glb` |
+| ✅ | Necklace.glb | `LowPolyWorldUnity/Assets/StreamingAssets/Accessories/Necklace/Necklace.glb` |
 
 **仕様（本番と同じ制限で作ること）:**
 - 形式: GLB
@@ -195,6 +197,9 @@ Phase 1 の動作確認に使う簡易シーン。
 - ファイルサイズ: 100KB以内
 - 内容: シンプルな形状でOK（帽子・リボン・バッジ等）
 - スケール: Unityの1unit = 1mに合わせる
+- CatEars.glb、Glasses.glbはデフォルトで頭に追従する
+- CatTail.glbはデフォルトで腰に追従する
+- Necklace.glbはデフォルトで胸に追従する
 
 ---
 
@@ -206,15 +211,15 @@ Phase 1 の動作確認に使う簡易シーン。
 
 | ✅ | ファイル名 | 用途 |
 |---|---|---|
-| ☐ | icon_eyedropper.png | カラーパレットのスポイトアイコン |
-| ☐ | icon_tool_brush.png | ツールバー「ブラシ」 |
-| ☐ | icon_tool_eraser.png | ツールバー「消しゴム」 |
-| ☐ | icon_tool_fill.png | ツールバー「塗りつぶし」 |
-| ☐ | icon_tool_shape.png | ツールバー「図形」 |
-| ☐ | icon_tool_select.png | ツールバー「範囲選択」 |
-| ☐ | icon_tool_move.png | ツールバー「移動・拡大縮小」 |
-| ☐ | icon_tool_layer.png | ツールバー「レイヤー」 |
-| ☐ | icon_tool_more.png | ツールバー「その他」 |
+| ✅ | icon_eyedropper.png | カラーパレットのスポイトアイコン |
+| ✅ | icon_tool_brush.png | ツールバー「ブラシ」 |
+| ✅ | icon_tool_eraser.png | ツールバー「消しゴム」 |
+| ✅ | icon_tool_fill.png | ツールバー「塗りつぶし」 |
+| ✅ | icon_tool_shape.png | ツールバー「図形」 |
+| ✅ | icon_tool_select.png | ツールバー「範囲選択」 |
+| ✅ | icon_tool_move.png | ツールバー「移動・拡大縮小」 |
+| ✅ | icon_tool_layer.png | ツールバー「レイヤー」 |
+| ✅ | icon_tool_more.png | ツールバー「その他」 |
 
 **仕様:**
 - サイズ: 128×128 px

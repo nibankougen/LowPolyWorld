@@ -32,9 +32,12 @@ public class AvatarEditController : MonoBehaviour
     // Undo/Redo
     private Button _btnUndo;
     private Button _btnRedo;
-    private readonly UndoRedoLogic _undoRedoTexture = new();
     private readonly UndoRedoLogic _undoRedoAccessory = new();
     private UndoRedoLogic _currentUndoRedo;
+
+    // テクスチャペイント
+    private TexturePaintController _texturePaint;
+    private AvatarPaintSession _paintSession;
 
     // パネル最小化
     private Button _btnMinimize;
@@ -62,8 +65,8 @@ public class AvatarEditController : MonoBehaviour
         _contentTexture = _root.Q<VisualElement>("content-texture");
         _contentAccessory = _root.Q<VisualElement>("content-accessory");
 
-        _tabTexture?.RegisterCallback<ClickEvent>(_ => SelectTab(_tabTexture, _contentTexture, _undoRedoTexture));
-        _tabAccessory?.RegisterCallback<ClickEvent>(_ => SelectTab(_tabAccessory, _contentAccessory, _undoRedoAccessory));
+        _tabTexture?.RegisterCallback<ClickEvent>(_ => SelectTextureTab());
+        _tabAccessory?.RegisterCallback<ClickEvent>(_ => SelectAccessoryTab());
 
         _subtabActive = _root.Q<Button>("subtab-active");
         _subtabSaved = _root.Q<Button>("subtab-saved");
@@ -77,8 +80,22 @@ public class AvatarEditController : MonoBehaviour
 
         _btnUndo = _root.Q<Button>("btn-undo");
         _btnRedo = _root.Q<Button>("btn-redo");
-        _btnUndo?.RegisterCallback<ClickEvent>(_ => _currentUndoRedo?.Undo());
-        _btnRedo?.RegisterCallback<ClickEvent>(_ => _currentUndoRedo?.Redo());
+        _btnUndo?.RegisterCallback<ClickEvent>(_ =>
+        {
+            if (_paintSession != null && _activeTab == _tabTexture)
+                _paintSession.Undo();
+            else
+                _currentUndoRedo?.Undo();
+            UpdateUndoRedoButtons();
+        });
+        _btnRedo?.RegisterCallback<ClickEvent>(_ =>
+        {
+            if (_paintSession != null && _activeTab == _tabTexture)
+                _paintSession.Redo();
+            else
+                _currentUndoRedo?.Redo();
+            UpdateUndoRedoButtons();
+        });
 
         _btnMinimize = _root.Q<Button>("btn-minimize");
         _tabContent = _root.Q<VisualElement>("tab-content");
@@ -89,18 +106,25 @@ public class AvatarEditController : MonoBehaviour
         if (previewRender != null && _previewRenderTexture != null)
             previewRender.style.backgroundImage = Background.FromRenderTexture(_previewRenderTexture);
 
-        _undoRedoTexture.OnHistoryChanged += UpdateUndoRedoButtons;
         _undoRedoAccessory.OnHistoryChanged += UpdateUndoRedoButtons;
 
+        // テクスチャペイントセッション初期化（OnEnable が複数回呼ばれても重複しないよう null チェック）
+        if (_paintSession == null)
+            _paintSession = new AvatarPaintSession();
+        if (_texturePaint == null)
+            _texturePaint = gameObject.AddComponent<TexturePaintController>();
+        _texturePaint.Initialize(_contentTexture, _paintSession, UpdateUndoRedoButtons);
+
         // デフォルト: テクスチャタブ
-        SelectTab(_tabTexture, _contentTexture, _undoRedoTexture);
+        SelectTextureTab();
         SelectSubtab(_subtabActive);
     }
 
     private void OnDisable()
     {
-        _undoRedoTexture.OnHistoryChanged -= UpdateUndoRedoButtons;
         _undoRedoAccessory.OnHistoryChanged -= UpdateUndoRedoButtons;
+        _paintSession?.Dispose();
+        _paintSession = null;
     }
 
     private void LateUpdate()
@@ -113,17 +137,27 @@ public class AvatarEditController : MonoBehaviour
         _previewCamera.transform.rotation = _previewCamera3D.GetCameraRotation();
     }
 
-    private void SelectTab(Button tab, VisualElement content, UndoRedoLogic undoRedo)
+    private void SelectTextureTab()
     {
         _activeTab?.RemoveFromClassList("edit-tab--active");
-        _contentTexture?.AddToClassList("edit-tab-content--hidden");
+        _contentTexture?.RemoveFromClassList("edit-tab-content--hidden");
         _contentAccessory?.AddToClassList("edit-tab-content--hidden");
-
-        _activeTab = tab;
+        _activeTab = _tabTexture;
         _activeTab?.AddToClassList("edit-tab--active");
-        content?.RemoveFromClassList("edit-tab-content--hidden");
+        _currentUndoRedo = null;
+        _texturePaint?.OnTabEnter();
+        UpdateUndoRedoButtons();
+    }
 
-        _currentUndoRedo = undoRedo;
+    private void SelectAccessoryTab()
+    {
+        _texturePaint?.OnTabExit();
+        _activeTab?.RemoveFromClassList("edit-tab--active");
+        _contentTexture?.AddToClassList("edit-tab-content--hidden");
+        _contentAccessory?.RemoveFromClassList("edit-tab-content--hidden");
+        _activeTab = _tabAccessory;
+        _activeTab?.AddToClassList("edit-tab--active");
+        _currentUndoRedo = _undoRedoAccessory;
         UpdateUndoRedoButtons();
     }
 
@@ -145,9 +179,19 @@ public class AvatarEditController : MonoBehaviour
 
     private void UpdateUndoRedoButtons()
     {
-        if (_btnUndo != null)
-            _btnUndo.SetEnabled(_currentUndoRedo?.CanUndo ?? false);
-        if (_btnRedo != null)
-            _btnRedo.SetEnabled(_currentUndoRedo?.CanRedo ?? false);
+        if (_activeTab == _tabTexture && _paintSession != null)
+        {
+            if (_btnUndo != null)
+                _btnUndo.SetEnabled(_paintSession.CanUndo);
+            if (_btnRedo != null)
+                _btnRedo.SetEnabled(_paintSession.CanRedo);
+        }
+        else
+        {
+            if (_btnUndo != null)
+                _btnUndo.SetEnabled(_currentUndoRedo?.CanUndo ?? false);
+            if (_btnRedo != null)
+                _btnRedo.SetEnabled(_currentUndoRedo?.CanRedo ?? false);
+        }
     }
 }
