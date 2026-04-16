@@ -9,6 +9,9 @@ public enum PaintTool
     Rect = 3,
     Circle = 4,
     Line = 5,
+    SelectRect = 6,
+    SelectEllipse = 7,
+    Transform = 8,
 }
 
 /// <summary>
@@ -61,13 +64,16 @@ public class BrushSettingsLogic
     {
         return _tool switch
         {
-            PaintTool.Brush   => "ブラシ",
-            PaintTool.Eraser  => "消しゴム",
-            PaintTool.Fill    => "塗りつぶし",
-            PaintTool.Rect    => "四角形",
-            PaintTool.Circle  => "円",
-            PaintTool.Line    => "直線",
-            _                 => string.Empty,
+            PaintTool.Brush         => "ブラシ",
+            PaintTool.Eraser        => "消しゴム",
+            PaintTool.Fill          => "塗りつぶし",
+            PaintTool.Rect          => "四角形",
+            PaintTool.Circle        => "円",
+            PaintTool.Line          => "直線",
+            PaintTool.SelectRect    => "矩形選択",
+            PaintTool.SelectEllipse => "楕円選択",
+            PaintTool.Transform     => "移動・変形",
+            _                       => string.Empty,
         };
     }
 }

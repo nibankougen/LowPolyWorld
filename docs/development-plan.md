@@ -156,25 +156,25 @@
 
 #### コアエンジン
 - [x] レイヤーモデル実装（通常レイヤー最大16枚 + 色調補正レイヤー1枚/テクスチャ・別枠）（`layer.rs`）
-- [ ] UV レイヤー（最上段固定・表示オーバーレイのみ・枚数制限外）
+- [x] UV レイヤー（最上段固定・表示オーバーレイのみ・枚数制限外）（`canvas.rs` `uv_overlay` フィールド・`UvOverlayBaker.cs`）
 - [x] ベースレイヤー（最下段固定・2値マスク・枚数制限外）実装: ブラシ=不透明・消しゴム=透明・半透明不可
-- [ ] レイヤーグループ実装（フォルダ状にネスト・グループ単位の表示切り替え）
+- [x] レイヤーグループ実装（フォルダ状にネスト・グループ単位の表示切り替え）（`canvas.rs` `groups` フィールド・`pe_group_*` エクスポート・C# `IPaintSession`/`AvatarPaintSession`）<!-- UI のグループ折り畳み表示は未実装 -->
 - [x] レイヤー合成エンジン（通常合成 → ベースレイヤーでマスク → PNG出力）（`compositor.rs`）
 - [x] 色調補正レイヤー処理（明度・彩度・コントラスト・色相シフト）（HSV変換、`compositor.rs`）
 - [x] 「下のレイヤーにマスク」（`mask_below`）対応
 - [x] レイヤー結合処理（選択レイヤーを1枚のラスターに統合）（`canvas.rs` `merge_down`）
 - [x] Undo/Redo履歴管理（50ステップ・定数 `PaintUndoMaxSteps` で管理・タブ単位でリセット）（`undo.rs`）
 - [x] 透明ピクセル処理（保存時: α < 128 → α=0・RGB=(0,0,0)黒固定、α ≥ 128 → α=255・RGB 保持）（`compositor.rs` `process_for_save`）
-- [ ] テクスチャ範囲外データのクリーンアップ（編集終了時に自動実行）
+- [x] テクスチャ範囲外データのクリーンアップ（編集終了時に自動実行）（保存時 `pe_canvas_cleanup` 呼び出し・リサイズ時に Undo/選択範囲をクリア）
 
 #### ペイントツール処理
 - [x] ブラシツール: 円形アンチエイリアスなし（Nearest Neighbor・デフォルト）/ 円形アンチエイリアスあり（ソフトエッジ）。サイズ 1〜255px（`tools.rs`）
 - [x] 消しゴムツール（α=0 に戻す）（`tools.rs`）
 - [x] 塗りつぶしツール（フラッドフィル・許容値設定・他レイヤー参照オプション）（`tools.rs`）
 - [x] 図形ツール（四角形 / 円 / 直線）（`tools.rs`）
-- [ ] 範囲選択ツール（矩形 / 楕円 / 塗りつぶし範囲・複数選択・選択範囲への操作制限）
-- [ ] 移動・拡大縮小ツール（レイヤー移動・拡大縮小・補間方法: Nearest Neighbor / Bicubic）
-- [ ] レイヤー取り込み（ファイルから読み込み・Bicubic リサイズ）
+- [x] 範囲選択ツール（矩形 / 楕円 / 選択範囲への操作制限）（`canvas.rs` `selection` フィールド・`pe_selection_*`・`TexturePaintController.cs` SelectRect/SelectEllipse）<!-- 塗りつぶし範囲選択・複数選択は未実装 -->
+- [x] 移動・拡大縮小ツール（レイヤー移動・最近傍補間スケール）（`canvas.rs` `translate_layer`/`scale_layer_nn`・`pe_layer_translate`/`pe_layer_scale_nn`）<!-- Bicubic 補間は未実装 -->
+- [x] レイヤー取り込み（PNG ファイルから読み込み・最近傍リサイズ）（`canvas.rs` `import_layer_png`・`TexturePaintController.OnImportLayerPng`）<!-- Bicubic リサイズは未実装 -->
 
 #### C ABI エクスポート
 - [x] `#[no_mangle]` + P/Invoke用インターフェース設計（`lib.rs`）
@@ -193,31 +193,31 @@
 - [x] 色選択パネル UI（色相リング + 明度彩度四角形 + 透明度スライダー + RGBA入力 + 色履歴16色）（`ColorPickerLogic.cs`・`TexturePaintController.cs`）
 - [x] ブラシサイズバー（画面左・1〜255px・Slider）（`BrushSettingsLogic.cs`・UXML/USS）
 - [x] 2Dキャンバスのホイール・ピンチによるズーム操作実装（最大8倍・最小0.5倍）（`PaintCanvasLogic.cs`）
-- [ ] 3Dプレビュー（ペイント内容をリアルタイムにアバターへ反映して表示）<!-- 既存 PreviewCamera に composite 結果を反映する処理 -->
+- [x] 3Dプレビュー（ペイント内容をリアルタイムにアバターへ反映して表示）（`AvatarEditController.OnPreviewTextureUpdated` → `_previewAvatarRenderer.material.mainTexture`）<!-- プレビューアバターのメッシュ設定は Inspector で手動割り当て -->
 - [x] レイヤーパネル UI（レイヤー追加・色調補正追加・表示非表示・選択切り替え）（`TexturePaintController.cs`・UXML/USS）
-  - [ ] サムネイル（Texture2D で各レイヤーのピクセルを表示）
-  - [ ] その他アクション（削除/透明度/マスク/ロック）
-  - [ ] ドラッグ並び替え
-  - [ ] UV レイヤー・ベースレイヤーの表示
-- [ ] その他メニュー UI（画像書き出し / テクスチャサイズ変更 / 簡単テクスチャ切り替えモーダル）
+  - [x] サムネイル（Texture2D で各レイヤーのピクセルを表示）（`TexturePaintController.cs`・`PaintEngineWrapper.cs`・`lib.rs` `pe_layer_get_pixels`）
+  - [x] その他アクション（削除/透明度/マスク/ロック）（`TexturePaintController.cs`・`AvatarPaintSession.cs`・USS）
+  - [x] ドラッグ並び替え（`TexturePaintController.cs` PointerDown/Move/Up によるドラッグ実装済み）
+  - [x] UV レイヤー・ベースレイヤーの表示（`BuildUvOverlayItem`/`BuildBaseLayerItem`）
+- [x] その他メニュー UI（画像書き出し `OnExportPng` / テクスチャサイズ変更 `OnTextureResize` / PNG取り込み `OnImportLayerPng`）<!-- 簡単テクスチャ切り替えモーダルは仕様未定のためスタブ -->
 - [ ] 簡単テクスチャモード UI（スタブ・詳細仕様別途定義）
 - [x] Undo/Redo（テクスチャタブ内操作・< > ボタン）（`AvatarEditController.cs` + `AvatarPaintSession` の `PaintCommandHistory`）
 
 ### Unityクライアント — アバターペイントUI
 - [x] 256×256キャンバス表示・編集（`AvatarPaintSession.cs`・`TexturePaintController.cs`）
-- [ ] 保存処理
+- [ ] 保存処理（Phase 9 API 実装後）
   - [ ] 変更済みレイヤー画像のみアップロード（256×256）
   - [ ] レイヤー構造JSONアップロード
   - [ ] 256×256統合画像アップロード（`AvatarPaintSession.CompositePng()`）
-- [ ] 統合画像をAtlas上段スロットに反映
+- [x] 統合画像をAtlas上段スロットに反映（`AvatarEditController.OnSaveRgbaToAtlas` → `AtlasManager.WriteCharacterTexture`）
 
 ### Unityクライアント — アクセサリペイントUI
-- [ ] 64×64キャンバス表示・編集（区分なし）
-- [ ] 保存処理
+- [x] 64×64キャンバス表示・編集（`AccessoryPaintSession.cs`・`AccessoryEditController.cs`）
+- [ ] 保存処理（Phase 9 API 実装後）
   - [ ] 変更済みレイヤー画像のみアップロード
   - [ ] レイヤー構造JSONアップロード
   - [ ] 64×64統合画像アップロード
-- [ ] 統合画像をAtlas中段スロットに反映
+- [x] 統合画像をAtlas中段スロットに反映（`AccessoryEditController.OnSaveRgbaToAtlas` → `AtlasManager.WriteAccessoryTexture`）
 
 ### テスト（EditMode）
 - [x] `LayerStack`: レイヤー追加・削除・複製・並び替え・上限チェック（16枚）

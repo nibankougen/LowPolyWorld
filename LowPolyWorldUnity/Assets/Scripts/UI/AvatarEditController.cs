@@ -12,6 +12,15 @@ public class AvatarEditController : MonoBehaviour
     [SerializeField] private Camera _previewCamera;
     [SerializeField] private RenderTexture _previewRenderTexture;
 
+    /// <summary>ペイント結果をリアルタイム反映するプレビューアバターの Renderer。</summary>
+    [SerializeField] private Renderer _previewAvatarRenderer;
+
+    /// <summary>このアバターに対応する AtlasManager キャラクタースロット番号（-1 = 未割り当て）。</summary>
+    [SerializeField] private int _atlasCharacterSlot = -1;
+
+    /// <summary>UV オーバーレイ生成元のアバターメッシュ（省略可・未設定時は UV オーバーレイなし）。</summary>
+    [SerializeField] private SkinnedMeshRenderer[] _uvSourceRenderers;
+
     private UIDocument _document;
     private VisualElement _root;
 
@@ -37,7 +46,7 @@ public class AvatarEditController : MonoBehaviour
 
     // テクスチャペイント
     private TexturePaintController _texturePaint;
-    private AvatarPaintSession _paintSession;
+    private IPaintSession _paintSession;
 
     // パネル最小化
     private Button _btnMinimize;
@@ -110,10 +119,28 @@ public class AvatarEditController : MonoBehaviour
 
         // テクスチャペイントセッション初期化（OnEnable が複数回呼ばれても重複しないよう null チェック）
         if (_paintSession == null)
+        {
             _paintSession = new AvatarPaintSession();
+
+            // UV オーバーレイのベイク（メッシュが設定されている場合のみ）
+            if (_uvSourceRenderers is { Length: > 0 })
+            {
+                var meshes = new UnityEngine.Mesh[_uvSourceRenderers.Length];
+                for (int i = 0; i < _uvSourceRenderers.Length; i++)
+                    meshes[i] = _uvSourceRenderers[i] != null ? _uvSourceRenderers[i].sharedMesh : null;
+                var uvRgba = UvOverlayBaker.Bake(meshes, (int)AvatarPaintSession.CanvasWidth, (int)AvatarPaintSession.CanvasHeight);
+                if (uvRgba != null)
+                    _paintSession.SetUvOverlay(uvRgba);
+            }
+        }
         if (_texturePaint == null)
             _texturePaint = gameObject.AddComponent<TexturePaintController>();
-        _texturePaint.Initialize(_contentTexture, _paintSession, UpdateUndoRedoButtons);
+        _texturePaint.Initialize(
+            _contentTexture,
+            _paintSession,
+            UpdateUndoRedoButtons,
+            onPreviewUpdated: OnPreviewTextureUpdated,
+            onSaveRgba: OnSaveRgbaToAtlas);
 
         // デフォルト: テクスチャタブ
         SelectTextureTab();
@@ -175,6 +202,32 @@ public class AvatarEditController : MonoBehaviour
             _tabContent.style.display = _isMinimized ? DisplayStyle.None : DisplayStyle.Flex;
         if (_btnMinimize != null)
             _btnMinimize.text = _isMinimized ? "△" : "▽";
+    }
+
+    // ---- ペイントコールバック ----
+
+    /// <summary>コンポジット更新時にプレビューアバターのマテリアルテクスチャを差し替える。</summary>
+    private void OnPreviewTextureUpdated(Texture2D composite)
+    {
+        if (_previewAvatarRenderer == null) return;
+        // sharedMaterial を使わずインスタンスマテリアルに書き込む（他のアバターに影響しない）
+        _previewAvatarRenderer.material.mainTexture = composite;
+    }
+
+    /// <summary>保存時に Atlas のキャラクタースロットへ書き込む。</summary>
+    private void OnSaveRgbaToAtlas(byte[] rgba)
+    {
+        if (_atlasCharacterSlot < 0 || AtlasManager.Instance == null) return;
+        var tex = new Texture2D(
+            (int)(_paintSession?.CanvasWidth ?? AvatarPaintSession.CanvasWidth),
+            (int)(_paintSession?.CanvasHeight ?? AvatarPaintSession.CanvasHeight),
+            TextureFormat.RGBA32,
+            false);
+        tex.SetPixelData(rgba, 0);
+        tex.Apply();
+        AtlasManager.Instance.WriteCharacterTexture(_atlasCharacterSlot, tex);
+        AtlasManager.Instance.ScheduleAtlasUpdate();
+        Destroy(tex);
     }
 
     private void UpdateUndoRedoButtons()

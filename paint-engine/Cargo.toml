@@ -8,3 +8,4 @@ name = "paint_engine"
 crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
+image = { version = "0.25", default-features = false, features = ["png"] }

@@ -97,7 +97,13 @@
     overflow: hidden;
 }
 
-.content-texture,
+.content-texture {
+    flex-grow: 1;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 0;
+}
+
 .content-accessory {
     flex-grow: 1;
     padding: 8px;
@@ -105,13 +111,6 @@
 
 .edit-tab-content--hidden {
     display: none;
-}
-
-.stub-label {
-    color: rgb(120, 120, 120);
-    font-size: 13px;
-    align-self: center;
-    margin-top: 20px;
 }
 
 .sub-tab-row {
@@ -139,4 +138,485 @@
     flex-grow: 1;
     flex-direction: row;
     flex-wrap: wrap;
+}
+
+/* ================================================================
+   テクスチャペイント UI
+   ================================================================ */
+
+/* メイン作業エリア */
+.paint-main {
+    flex-grow: 1;
+    flex-direction: row;
+    overflow: hidden;
+}
+
+/* 左: ブラシサイズバー */
+.paint-left-bar {
+    width: 40px;
+    flex-direction: column;
+    align-items: center;
+    padding: 4px 2px;
+    background-color: rgb(22, 22, 22);
+}
+
+.brush-size-slider {
+    flex-grow: 1;
+    width: 20px;
+}
+
+.brush-size-label {
+    color: rgb(180, 180, 180);
+    font-size: 10px;
+    margin-top: 2px;
+    -unity-text-align: middle-center;
+}
+
+/* 中央: キャンバスコンテナ */
+.paint-canvas-container {
+    flex-grow: 1;
+    background-color: rgb(50, 50, 50);
+    overflow: hidden;
+    align-items: center;
+    justify-content: center;
+}
+
+.paint-canvas {
+    width: 256px;
+    height: 256px;
+    background-color: rgb(255, 255, 255);
+}
+
+/* 右: ツールバー */
+.paint-toolbar {
+    width: 44px;
+    flex-direction: column;
+    align-items: center;
+    padding: 4px 2px;
+    background-color: rgb(22, 22, 22);
+}
+
+.tool-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+    background-color: transparent;
+    color: rgb(200, 200, 200);
+    border-width: 0;
+    border-radius: 6px;
+    margin-bottom: 2px;
+    -unity-text-align: middle-center;
+}
+
+.tool-btn--active {
+    background-color: rgba(100, 180, 255, 0.25);
+    color: rgb(100, 180, 255);
+}
+
+.tool-separator {
+    height: 1px;
+    width: 28px;
+    background-color: rgba(255, 255, 255, 0.1);
+    margin: 4px 4px;
+}
+
+/* 下: ペイントボトムバー */
+.paint-bottom-bar {
+    flex-direction: row;
+    align-items: center;
+    padding: 4px 8px;
+    background-color: rgb(22, 22, 22);
+    border-top-width: 1px;
+    border-top-color: rgba(255, 255, 255, 0.08);
+    height: 44px;
+}
+
+.color-swatch {
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    border-width: 1px;
+    border-color: rgba(255, 255, 255, 0.3);
+    background-color: rgb(255, 0, 0);
+    margin-right: 8px;
+}
+
+.tool-hint-label {
+    color: rgb(160, 160, 160);
+    font-size: 12px;
+    margin-right: 8px;
+}
+
+.antialias-toggle {
+    color: rgb(160, 160, 160);
+    font-size: 11px;
+    margin-right: 8px;
+}
+
+.spacer {
+    flex-grow: 1;
+}
+
+.btn-paint-save {
+    padding: 6px 16px;
+    background-color: rgb(60, 140, 240);
+    color: white;
+    border-width: 0;
+    border-radius: 6px;
+    font-size: 13px;
+}
+
+/* ================================================================
+   オーバーレイパネル共通
+   ================================================================ */
+
+.overlay-panel {
+    position: absolute;
+    background-color: rgb(35, 35, 35);
+    border-radius: 10px;
+    border-width: 1px;
+    border-color: rgba(255, 255, 255, 0.12);
+    padding: 8px;
+}
+
+.paint-panel--hidden {
+    display: none;
+}
+
+.overlay-panel-header {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.overlay-panel-title {
+    flex-grow: 1;
+    color: white;
+    font-size: 13px;
+    -unity-font-style: bold;
+}
+
+.overlay-close-btn {
+    width: 28px;
+    height: 28px;
+    background-color: transparent;
+    color: rgb(180, 180, 180);
+    border-width: 0;
+    font-size: 16px;
+    -unity-text-align: middle-center;
+}
+
+/* ================================================================
+   カラーピッカーパネル
+   ================================================================ */
+
+.color-picker-panel {
+    left: 44px;
+    bottom: 44px;
+    width: 220px;
+}
+
+.color-wheel-area {
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.color-hue-ring {
+    width: 180px;
+    height: 180px;
+    border-radius: 90px;
+    align-items: center;
+    justify-content: center;
+    background-color: rgb(60, 60, 60);
+}
+
+.color-sv-square {
+    width: 120px;
+    height: 120px;
+    background-color: rgb(80, 80, 80);
+}
+
+.color-cursor {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-radius: 5px;
+    border-width: 2px;
+    border-color: white;
+    background-color: transparent;
+}
+
+.picker-slider-row {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.picker-row-label {
+    color: rgb(180, 180, 180);
+    font-size: 11px;
+    width: 16px;
+    -unity-text-align: middle-center;
+}
+
+.alpha-slider {
+    flex-grow: 1;
+    margin: 0 4px;
+}
+
+.rgba-row {
+    flex-direction: row;
+    margin-bottom: 8px;
+}
+
+.rgba-field {
+    flex-grow: 1;
+    font-size: 11px;
+    color: white;
+    margin: 0 2px;
+}
+
+.rgba-field > Label {
+    color: rgb(140, 140, 140);
+    font-size: 10px;
+    min-width: 10px;
+}
+
+.color-history {
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: 204px;
+}
+
+.color-history-swatch {
+    width: 22px;
+    height: 22px;
+    border-radius: 3px;
+    border-width: 1px;
+    border-color: rgba(255, 255, 255, 0.15);
+    margin: 1px;
+}
+
+/* ================================================================
+   レイヤーパネル
+   ================================================================ */
+
+.layer-panel {
+    right: 44px;
+    top: 0;
+    bottom: 44px;
+    width: 180px;
+}
+
+.layer-header-btn {
+    padding: 2px 6px;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: rgb(200, 200, 200);
+    border-width: 0;
+    border-radius: 4px;
+    font-size: 11px;
+    margin-right: 4px;
+}
+
+.layer-list {
+    flex-grow: 1;
+}
+
+/* レイヤーアイテム（TexturePaintController が動的生成） */
+.layer-item {
+    flex-direction: column;
+    padding: 0 6px;
+    border-radius: 4px;
+    margin-bottom: 2px;
+    background-color: rgba(255, 255, 255, 0.04);
+}
+
+.layer-item--selected {
+    background-color: rgba(100, 180, 255, 0.2);
+}
+
+/* 主行（サムネ＋名前＋表示ボタン＋展開ボタン） */
+.layer-item-main-row {
+    flex-direction: row;
+    align-items: center;
+    height: 44px;
+}
+
+/* アクション行（展開時） */
+.layer-item-actions {
+    flex-direction: column;
+    padding: 4px 0 6px 38px;
+    border-top-width: 1px;
+    border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+.layer-item-actions--hidden {
+    display: none;
+}
+
+/* 不透明度行 */
+.layer-opacity-row {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.layer-opacity-label {
+    color: rgb(140, 140, 140);
+    font-size: 10px;
+    width: 34px;
+}
+
+.layer-opacity-slider {
+    flex-grow: 1;
+    margin: 0 4px;
+}
+
+.layer-opacity-value {
+    color: rgb(180, 180, 180);
+    font-size: 10px;
+    width: 28px;
+    -unity-text-align: middle-right;
+}
+
+/* アクションボタン行（ロック / マスク / 削除） */
+.layer-action-btn-row {
+    flex-direction: row;
+}
+
+.layer-action-btn {
+    padding: 2px 6px;
+    background-color: rgba(255, 255, 255, 0.08);
+    color: rgb(180, 180, 180);
+    border-width: 0;
+    border-radius: 4px;
+    font-size: 11px;
+    margin-right: 4px;
+    min-width: 28px;
+    -unity-text-align: middle-center;
+}
+
+.layer-action-btn--active {
+    background-color: rgba(100, 180, 255, 0.3);
+    color: rgb(100, 180, 255);
+}
+
+.layer-action-btn--delete {
+    color: rgb(255, 100, 100);
+    background-color: rgba(255, 80, 80, 0.12);
+}
+
+/* 展開ボタン */
+.layer-expand-btn {
+    width: 20px;
+    height: 20px;
+    background-color: transparent;
+    color: rgb(160, 160, 160);
+    border-width: 0;
+    font-size: 10px;
+    -unity-text-align: middle-center;
+    margin-left: 2px;
+}
+
+/* ロック中レイヤー名 */
+.layer-name--locked {
+    color: rgb(130, 130, 130);
+}
+
+.layer-thumb {
+    width: 32px;
+    height: 32px;
+    border-radius: 2px;
+    border-width: 1px;
+    border-color: rgba(255, 255, 255, 0.2);
+    margin-right: 6px;
+    background-color: rgb(60, 60, 60);
+}
+
+.layer-name {
+    flex-grow: 1;
+    color: white;
+    font-size: 12px;
+    overflow: hidden;
+    -unity-text-overflow-position: end;
+    white-space: nowrap;
+}
+
+.layer-visible-btn {
+    width: 24px;
+    height: 24px;
+    background-color: transparent;
+    color: rgb(200, 200, 200);
+    border-width: 0;
+    font-size: 13px;
+    -unity-text-align: middle-center;
+}
+
+.layer-visible-btn--hidden {
+    color: rgb(80, 80, 80);
+}
+
+/* ベースレイヤー（読み取り専用） */
+.layer-item--base {
+    background-color: rgba(255, 255, 255, 0.02);
+    opacity: 0.6;
+}
+
+/* ドラッグゴースト */
+.layer-drag-ghost {
+    position: absolute;
+    opacity: 0.7;
+    border-width: 1px;
+    border-color: rgba(100, 180, 255, 0.6);
+    background-color: rgba(100, 180, 255, 0.15);
+    border-radius: 4px;
+    pointer-events: none;
+}
+
+/* ドラッグ中のドロップ位置インジケーター */
+.layer-drop-indicator {
+    height: 2px;
+    background-color: rgb(100, 180, 255);
+    margin: 1px 0;
+    pointer-events: none;
+}
+
+/* ================================================================
+   その他メニューパネル
+   ================================================================ */
+
+.other-menu-panel {
+    right: 44px;
+    bottom: 44px;
+    width: 180px;
+}
+
+.other-menu-item {
+    width: 100%;
+    height: 36px;
+    background-color: rgba(255, 255, 255, 0.06);
+    color: rgb(220, 220, 220);
+    border-width: 0;
+    border-radius: 6px;
+    font-size: 12px;
+    margin-bottom: 4px;
+    -unity-text-align: middle-left;
+    padding-left: 10px;
+}
+
+.other-menu-item:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+}
+
+/* ================================================================
+   選択範囲オーバーレイ
+   ================================================================ */
+
+.selection-overlay {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
 }

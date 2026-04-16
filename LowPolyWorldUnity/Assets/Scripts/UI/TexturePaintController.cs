@@ -13,8 +13,14 @@ public class TexturePaintController : MonoBehaviour
     // ---- 外部参照（AvatarEditController から設定） ----
 
     private VisualElement _contentTexture;
-    private AvatarPaintSession _session;
+    private IPaintSession _session;
     private Action _onHistoryChanged;
+
+    /// <summary>コンポジット更新のたびに呼ばれるコールバック（3D プレビュー反映用）。</summary>
+    private Action<Texture2D> _onPreviewUpdated;
+
+    /// <summary>保存時に呼ばれるコールバック（Atlas 反映用）。引数は RGBA byte[]。</summary>
+    private Action<byte[]> _onSaveRgba;
 
     // ---- ロジック ----
 
@@ -54,40 +60,86 @@ public class TexturePaintController : MonoBehaviour
     private VisualElement _colorHistory;
     private Button _btnCloseColorPicker;
 
+    // その他メニューパネル
+    private VisualElement _otherMenuPanel;
+    private Button _btnOtherMenu;
+    private Button _btnCloseOtherMenu;
+
+    // 選択範囲オーバーレイ
+    private VisualElement _selectionOverlay;
+    private Texture2D _selectionTexture;
+
+    // ---- レイヤーパネル展開状態 ----
+
+    private uint _expandedLayerId;
+
+    // ---- レイヤードラッグ並び替え ----
+
+    private bool _isDraggingLayer;
+    private uint _draggingLayerId;
+    private int _draggingOriginalIndex;
+    private VisualElement _dragGhost;
+    private int _dropTargetIndex;
+
     // ---- ストローク追跡 ----
 
     private bool _isStroking;
     private (int x, int y) _strokeStart;
     private uint _activeLayerId;
 
+    // ---- 変形ツール追跡 ----
+
+    private bool _isTransforming;
+    private (int x, int y) _transformStart;
+
     // ---- テクスチャ ----
 
     private Texture2D _compositeTexture;
+
+    /// <summary>レイヤー ID → サムネイル Texture2D キャッシュ。RefreshLayerPanel で作成・更新、OnDestroy で解放。</summary>
+    private readonly Dictionary<uint, Texture2D> _layerThumbnails = new();
 
     // ---- 初期化（AvatarEditController から呼び出す） ----
 
     /// <summary>
     /// テクスチャタブの VisualElement とセッションを受け取って初期化する。
     /// </summary>
-    public void Initialize(VisualElement contentTexture, AvatarPaintSession session, Action onHistoryChanged)
+    /// <param name="onPreviewUpdated">コンポジット更新時に Texture2D を受け取るコールバック（3D プレビュー反映用・任意）。</param>
+    /// <param name="onSaveRgba">保存時に RGBA byte[] を受け取るコールバック（Atlas 反映用・任意）。</param>
+    public void Initialize(
+        VisualElement contentTexture,
+        IPaintSession session,
+        Action onHistoryChanged,
+        Action<Texture2D> onPreviewUpdated = null,
+        Action<byte[]> onSaveRgba = null)
     {
         _contentTexture = contentTexture;
         _session = session;
         _onHistoryChanged = onHistoryChanged;
+        _onPreviewUpdated = onPreviewUpdated;
+        _onSaveRgba = onSaveRgba;
 
         _brush = new BrushSettingsLogic();
         _colorPicker = new ColorPickerLogic();
         _colorPicker.SetFromRgba(255, 0, 0, 255);
 
-        _canvasLogic = new PaintCanvasLogic(AvatarPaintSession.CanvasWidth, AvatarPaintSession.CanvasHeight);
+        _canvasLogic = new PaintCanvasLogic(session.CanvasWidth, session.CanvasHeight);
 
         _compositeTexture = new Texture2D(
-            (int)AvatarPaintSession.CanvasWidth,
-            (int)AvatarPaintSession.CanvasHeight,
+            (int)session.CanvasWidth,
+            (int)session.CanvasHeight,
             TextureFormat.RGBA32,
             false
         );
         _compositeTexture.filterMode = FilterMode.Point;
+
+        _selectionTexture = new Texture2D(
+            (int)session.CanvasWidth,
+            (int)session.CanvasHeight,
+            TextureFormat.RGBA32,
+            false
+        );
+        _selectionTexture.filterMode = FilterMode.Point;
 
         BindElements();
         RefreshComposite();
@@ -113,12 +165,15 @@ public class TexturePaintController : MonoBehaviour
         _btnSave = _contentTexture.Q<Button>("btn-save");
 
         // ツールボタン
-        BindToolButton(PaintTool.Brush,  "btn-tool-brush");
-        BindToolButton(PaintTool.Eraser, "btn-tool-eraser");
-        BindToolButton(PaintTool.Fill,   "btn-tool-fill");
-        BindToolButton(PaintTool.Rect,   "btn-tool-rect");
-        BindToolButton(PaintTool.Circle, "btn-tool-circle");
-        BindToolButton(PaintTool.Line,   "btn-tool-line");
+        BindToolButton(PaintTool.Brush,         "btn-tool-brush");
+        BindToolButton(PaintTool.Eraser,        "btn-tool-eraser");
+        BindToolButton(PaintTool.Fill,          "btn-tool-fill");
+        BindToolButton(PaintTool.Rect,          "btn-tool-rect");
+        BindToolButton(PaintTool.Circle,        "btn-tool-circle");
+        BindToolButton(PaintTool.Line,          "btn-tool-line");
+        BindToolButton(PaintTool.SelectRect,    "btn-tool-select-rect");
+        BindToolButton(PaintTool.SelectEllipse, "btn-tool-select-ellipse");
+        BindToolButton(PaintTool.Transform,     "btn-tool-transform");
 
         // レイヤーパネル
         _layerPanel = _contentTexture.Q<VisualElement>("layer-panel");
@@ -159,6 +214,21 @@ public class TexturePaintController : MonoBehaviour
         _btnAddLayer?.RegisterCallback<ClickEvent>(_ => OnAddLayer());
         _btnAddColorAdj?.RegisterCallback<ClickEvent>(_ => OnAddColorAdjLayer());
         _btnSave?.RegisterCallback<ClickEvent>(_ => OnSave());
+
+        // その他メニューパネル
+        _otherMenuPanel = _contentTexture.Q<VisualElement>("other-menu-panel");
+        _btnOtherMenu = _contentTexture.Q<Button>("btn-other-menu");
+        _btnCloseOtherMenu = _contentTexture.Q<Button>("btn-close-other-menu");
+        _btnOtherMenu?.RegisterCallback<ClickEvent>(_ => TogglePanel(_otherMenuPanel));
+        _btnCloseOtherMenu?.RegisterCallback<ClickEvent>(_ => ClosePanel(_otherMenuPanel));
+        _contentTexture.Q<Button>("btn-export-png")?.RegisterCallback<ClickEvent>(_ => OnExportPng());
+        _contentTexture.Q<Button>("btn-texture-resize")?.RegisterCallback<ClickEvent>(_ => OnTextureResize());
+        _contentTexture.Q<Button>("btn-import-layer")?.RegisterCallback<ClickEvent>(_ => OnImportLayerPng());
+        _contentTexture.Q<Button>("btn-texture-switch")?.RegisterCallback<ClickEvent>(_ =>
+            Debug.Log("[TexturePaintController] 簡単テクスチャ切り替え (Phase 4 保留: docs/phase4-deferred.md)"));
+
+        // 選択範囲オーバーレイ
+        _selectionOverlay = _contentTexture.Q<VisualElement>("selection-overlay");
 
         // カラーピッカー RGBA 入力
         _inputR?.RegisterValueChangedCallback(e => OnRgbaFieldChanged());
@@ -218,6 +288,14 @@ public class TexturePaintController : MonoBehaviour
 
     private void SelectTool(PaintTool tool)
     {
+        // 選択ツール以外に切り替えたとき選択範囲をクリア
+        bool wasSelectTool = _brush.Tool == PaintTool.SelectRect || _brush.Tool == PaintTool.SelectEllipse;
+        bool isSelectTool = tool == PaintTool.SelectRect || tool == PaintTool.SelectEllipse;
+        if (wasSelectTool && !isSelectTool)
+        {
+            _session?.SelectionClear();
+            RefreshSelectionOverlay();
+        }
         _brush.Tool = tool;
         UpdateToolUI();
     }
@@ -266,6 +344,7 @@ public class TexturePaintController : MonoBehaviour
         e.target.ReleasePointer(e.pointerId);
         var (cx, cy) = _canvasLogic.ScreenToCanvas(e.localPosition);
         ApplyTool(cx, cy, isFinalPoint: true);
+        RefreshActiveLayerThumbnail();
         _onHistoryChanged?.Invoke();
     }
 
@@ -344,6 +423,36 @@ public class TexturePaintController : MonoBehaviour
                     RefreshComposite();
                 }
                 break;
+
+            case PaintTool.SelectRect:
+                if (isFinalPoint)
+                {
+                    _session.SelectionSetRect(_strokeStart.x, _strokeStart.y, cx, cy);
+                    RefreshSelectionOverlay();
+                }
+                break;
+
+            case PaintTool.SelectEllipse:
+                if (isFinalPoint)
+                {
+                    _session.SelectionSetEllipse(_strokeStart.x, _strokeStart.y, cx, cy);
+                    RefreshSelectionOverlay();
+                }
+                break;
+
+            case PaintTool.Transform:
+                if (isFinalPoint && _activeLayerId != 0)
+                {
+                    int dx = cx - _strokeStart.x;
+                    int dy = cy - _strokeStart.y;
+                    if (dx != 0 || dy != 0)
+                    {
+                        _session.TranslateLayer(_activeLayerId, dx, dy);
+                        RefreshComposite();
+                        RefreshActiveLayerThumbnail();
+                    }
+                }
+                break;
         }
     }
 
@@ -361,6 +470,7 @@ public class TexturePaintController : MonoBehaviour
         _compositeTexture.SetPixelData(rgba, 0);
         _compositeTexture.Apply();
         _paintCanvas.style.backgroundImage = Background.FromTexture2D(_compositeTexture);
+        _onPreviewUpdated?.Invoke(_compositeTexture);
     }
 
     private void ApplyCanvasTransform()
@@ -398,51 +508,332 @@ public class TexturePaintController : MonoBehaviour
 
         _layerList.Clear();
 
+        // UV オーバーレイエントリ（最上段・編集不可）
+        if (_session.HasUvOverlay)
+            _layerList.Add(BuildUvOverlayItem());
+
+        // 色調補正レイヤー
+        if (_session.LayerStack.HasColorAdjustment)
+            _layerList.Add(BuildLayerItem(_session.LayerStack.ColorAdjustmentLayer));
+
         // 通常レイヤーを上から（スタックの末尾から）表示
         var layers = _session.LayerStack.Layers;
         for (int i = layers.Count - 1; i >= 0; i--)
             _layerList.Add(BuildLayerItem(layers[i]));
 
-        // 色調補正レイヤー
+        // ベースレイヤー（最下段・読み取り専用）
+        _layerList.Add(BuildBaseLayerItem());
+
+        // 削除済みレイヤーのサムネイルを解放
+        var currentIds = new HashSet<uint>();
+        foreach (var l in _session.LayerStack.Layers)
+            currentIds.Add(l.Id);
         if (_session.LayerStack.HasColorAdjustment)
-            _layerList.Add(BuildLayerItem(_session.LayerStack.ColorAdjustmentLayer));
+            currentIds.Add(_session.LayerStack.ColorAdjustmentLayer.Id);
+
+        var toRemove = new List<uint>();
+        foreach (var id in _layerThumbnails.Keys)
+            if (!currentIds.Contains(id))
+                toRemove.Add(id);
+        foreach (var id in toRemove)
+        {
+            if (_layerThumbnails[id] != null)
+                Destroy(_layerThumbnails[id]);
+            _layerThumbnails.Remove(id);
+        }
     }
 
-    private VisualElement BuildLayerItem(PaintLayer layer)
+    /// <summary>UV オーバーレイの表示切り替え専用アイテムを生成する（編集不可）。</summary>
+    private VisualElement BuildUvOverlayItem()
     {
         var item = new VisualElement();
         item.AddToClassList("layer-item");
-        if (layer.Id == _activeLayerId)
-            item.AddToClassList("layer-item--selected");
+        item.AddToClassList("layer-item--base");
+
+        var mainRow = new VisualElement();
+        mainRow.AddToClassList("layer-item-main-row");
 
         var thumb = new VisualElement();
         thumb.AddToClassList("layer-thumb");
 
+        var nameLabel = new Label("UV");
+        nameLabel.AddToClassList("layer-name");
+
+        var visBtn = new Button();
+        visBtn.AddToClassList("layer-visible-btn");
+        visBtn.text = _session.UvOverlayVisible ? "●" : "○";
+        if (!_session.UvOverlayVisible)
+            visBtn.AddToClassList("layer-visible-btn--hidden");
+        visBtn.RegisterCallback<ClickEvent>(e =>
+        {
+            e.StopPropagation();
+            _session.SetUvOverlayVisible(!_session.UvOverlayVisible);
+            RefreshLayerPanel();
+            RefreshComposite();
+        });
+
+        mainRow.Add(thumb);
+        mainRow.Add(nameLabel);
+        mainRow.Add(visBtn);
+        item.Add(mainRow);
+
+        return item;
+    }
+
+    /// <summary>ベースレイヤーの読み取り専用アイテムを生成する。</summary>
+    private VisualElement BuildBaseLayerItem()
+    {
+        var item = new VisualElement();
+        item.AddToClassList("layer-item");
+        item.AddToClassList("layer-item--base");
+
+        var mainRow = new VisualElement();
+        mainRow.AddToClassList("layer-item-main-row");
+
+        var thumb = new VisualElement();
+        thumb.AddToClassList("layer-thumb");
+
+        var nameLabel = new Label("ベース");
+        nameLabel.AddToClassList("layer-name");
+
+        var lockIcon = new Label("🔒");
+        lockIcon.style.color = new UnityEngine.UIElements.StyleColor(new UnityEngine.Color(0.6f, 0.6f, 0.6f));
+        lockIcon.style.fontSize = 11;
+
+        mainRow.Add(thumb);
+        mainRow.Add(nameLabel);
+        mainRow.Add(lockIcon);
+        item.Add(mainRow);
+
+        return item;
+    }
+
+    private VisualElement BuildLayerItem(PaintLayer layer)
+    {
+        uint layerId = layer.Id;
+
+        var item = new VisualElement();
+        item.AddToClassList("layer-item");
+        if (layerId == _activeLayerId)
+            item.AddToClassList("layer-item--selected");
+
+        // ---- 主行 ----
+        var mainRow = new VisualElement();
+        mainRow.AddToClassList("layer-item-main-row");
+
+        var thumb = new VisualElement();
+        thumb.AddToClassList("layer-thumb");
+        var thumbTex = GetOrCreateLayerThumbnail(layer);
+        if (thumbTex != null)
+            thumb.style.backgroundImage = Background.FromTexture2D(thumbTex);
+
         var nameLabel = new Label(layer.Name);
         nameLabel.AddToClassList("layer-name");
+        if (layer.Locked)
+            nameLabel.AddToClassList("layer-name--locked");
 
         var visBtn = new Button();
         visBtn.AddToClassList("layer-visible-btn");
         visBtn.text = layer.Visible ? "●" : "○";
         if (!layer.Visible)
             visBtn.AddToClassList("layer-visible-btn--hidden");
-
-        uint layerId = layer.Id;
-        visBtn.RegisterCallback<ClickEvent>(_ =>
+        visBtn.RegisterCallback<ClickEvent>(e =>
         {
+            e.StopPropagation();
             _session?.SetLayerVisible(layerId, !layer.Visible);
             RefreshLayerPanel();
             RefreshComposite();
         });
 
-        item.Add(thumb);
-        item.Add(nameLabel);
-        item.Add(visBtn);
-
-        item.RegisterCallback<ClickEvent>(_ =>
+        var expandBtn = new Button();
+        expandBtn.AddToClassList("layer-expand-btn");
+        expandBtn.text = layerId == _expandedLayerId ? "▾" : "▸";
+        expandBtn.RegisterCallback<ClickEvent>(e =>
         {
+            e.StopPropagation();
+            _expandedLayerId = _expandedLayerId == layerId ? 0 : layerId;
+            RefreshLayerPanel();
+        });
+
+        mainRow.Add(thumb);
+        mainRow.Add(nameLabel);
+        mainRow.Add(visBtn);
+        mainRow.Add(expandBtn);
+
+        // ---- アクション行（展開時のみ表示） ----
+        var actionsRow = new VisualElement();
+        actionsRow.AddToClassList("layer-item-actions");
+        if (layerId != _expandedLayerId)
+            actionsRow.AddToClassList("layer-item-actions--hidden");
+
+        // 不透明度行
+        var opacityRow = new VisualElement();
+        opacityRow.AddToClassList("layer-opacity-row");
+
+        var opacityLabel = new Label("不透明");
+        opacityLabel.AddToClassList("layer-opacity-label");
+
+        var opacitySlider = new Slider(0f, 100f) { value = layer.Opacity * 100f };
+        opacitySlider.AddToClassList("layer-opacity-slider");
+
+        var opacityValue = new Label($"{Mathf.RoundToInt(layer.Opacity * 100)}%");
+        opacityValue.AddToClassList("layer-opacity-value");
+
+        opacitySlider.RegisterValueChangedCallback(e =>
+        {
+            _session?.SetLayerOpacity(layerId, e.newValue / 100f);
+            opacityValue.text = $"{Mathf.RoundToInt(e.newValue)}%";
+            RefreshComposite();
+        });
+
+        opacityRow.Add(opacityLabel);
+        opacityRow.Add(opacitySlider);
+        opacityRow.Add(opacityValue);
+
+        // ボタン行（ロック / マスク / 削除）
+        var btnRow = new VisualElement();
+        btnRow.AddToClassList("layer-action-btn-row");
+
+        var lockBtn = new Button();
+        lockBtn.AddToClassList("layer-action-btn");
+        lockBtn.text = "L";
+        if (layer.Locked)
+            lockBtn.AddToClassList("layer-action-btn--active");
+        lockBtn.RegisterCallback<ClickEvent>(e =>
+        {
+            e.StopPropagation();
+            _session?.SetLayerLocked(layerId, !layer.Locked);
+            RefreshLayerPanel();
+        });
+
+        var maskBtn = new Button();
+        maskBtn.AddToClassList("layer-action-btn");
+        maskBtn.text = "M";
+        if (layer.MaskBelow)
+            maskBtn.AddToClassList("layer-action-btn--active");
+        maskBtn.RegisterCallback<ClickEvent>(e =>
+        {
+            e.StopPropagation();
+            _session?.SetLayerMaskBelow(layerId, !layer.MaskBelow);
+            RefreshLayerPanel();
+            RefreshComposite();
+        });
+
+        var deleteBtn = new Button();
+        deleteBtn.AddToClassList("layer-action-btn");
+        deleteBtn.AddToClassList("layer-action-btn--delete");
+        deleteBtn.text = "×";
+        deleteBtn.RegisterCallback<ClickEvent>(e =>
+        {
+            e.StopPropagation();
+            _session?.RemoveLayer(layerId);
+            if (_activeLayerId == layerId)
+            {
+                var remaining = _session?.LayerStack.Layers;
+                _activeLayerId = remaining is { Count: > 0 } ? remaining[^1].Id : 0;
+            }
+            if (_expandedLayerId == layerId)
+                _expandedLayerId = 0;
+            RefreshLayerPanel();
+            RefreshComposite();
+            _onHistoryChanged?.Invoke();
+        });
+
+        btnRow.Add(lockBtn);
+        btnRow.Add(maskBtn);
+        btnRow.Add(deleteBtn);
+
+        actionsRow.Add(opacityRow);
+        actionsRow.Add(btnRow);
+
+        item.Add(mainRow);
+        item.Add(actionsRow);
+
+        // 主行クリックでアクティブレイヤー変更（ボタン以外）
+        item.RegisterCallback<ClickEvent>(e =>
+        {
+            if (e.target is Button)
+                return;
             _activeLayerId = layerId;
             RefreshLayerPanel();
+        });
+
+        // ドラッグ並び替え: 主行の長押し/ドラッグで開始
+        mainRow.RegisterCallback<PointerDownEvent>(e =>
+        {
+            if (e.button != 0) return;
+            _isDraggingLayer = false;
+            _draggingLayerId = layerId;
+            var layers = _session?.LayerStack.Layers;
+            _draggingOriginalIndex = -1;
+            if (layers != null)
+                for (int idx = 0; idx < layers.Count; idx++)
+                    if (layers[idx].Id == layerId) { _draggingOriginalIndex = idx; break; }
+            mainRow.CapturePointer(e.pointerId);
+            e.StopPropagation();
+        });
+
+        mainRow.RegisterCallback<PointerMoveEvent>(e =>
+        {
+            if (_draggingLayerId != layerId || !mainRow.HasPointerCapture(e.pointerId)) return;
+            if (!_isDraggingLayer && e.deltaPosition.magnitude > 5f)
+            {
+                _isDraggingLayer = true;
+                if (_dragGhost == null)
+                {
+                    _dragGhost = new VisualElement();
+                    _dragGhost.AddToClassList("layer-drag-ghost");
+                    _dragGhost.style.width = _layerList.resolvedStyle.width;
+                    _dragGhost.style.height = 44;
+                    _layerPanel?.Add(_dragGhost);
+                }
+            }
+            if (_isDraggingLayer && _dragGhost != null)
+            {
+                var worldPos2D = new Vector2(e.position.x, e.position.y);
+                Vector2 localPos;
+                if (_layerPanel != null)
+                    localPos = _layerPanel.WorldToLocal(worldPos2D);
+                else
+                    localPos = e.localPosition;
+                _dragGhost.style.top = localPos.y - 22;
+                _dragGhost.style.left = 8;
+
+                // ドロップ先インデックス計算（レイヤーリスト内での位置）
+                var listPos = _layerList.WorldToLocal(worldPos2D);
+                var layerCount = _session?.LayerStack.Layers.Count ?? 0;
+                float itemH = 46f;
+                int rawIdx = Mathf.FloorToInt((float)(listPos.y / itemH));
+                _dropTargetIndex = Mathf.Clamp(layerCount - 1 - rawIdx, 0, layerCount - 1);
+            }
+            e.StopPropagation();
+        });
+
+        mainRow.RegisterCallback<PointerUpEvent>(e =>
+        {
+            if (_draggingLayerId != layerId || !mainRow.HasPointerCapture(e.pointerId)) return;
+            mainRow.ReleasePointer(e.pointerId);
+
+            if (_isDraggingLayer && _draggingOriginalIndex >= 0 && _dropTargetIndex != _draggingOriginalIndex)
+            {
+                _session?.MoveLayer(layerId, _dropTargetIndex);
+            }
+
+            _isDraggingLayer = false;
+            _draggingLayerId = 0;
+            if (_dragGhost != null)
+            {
+                _layerPanel?.Remove(_dragGhost);
+                _dragGhost = null;
+            }
+
+            if (_draggingOriginalIndex != _dropTargetIndex)
+            {
+                RefreshLayerPanel();
+                RefreshComposite();
+                _onHistoryChanged?.Invoke();
+            }
+            e.StopPropagation();
         });
 
         return item;
@@ -532,10 +923,139 @@ public class TexturePaintController : MonoBehaviour
         if (_session == null)
             return;
         _colorPicker.PushCurrentToHistory();
-        // TODO: PNG バイト列をサーバーへアップロード（Phase 9 API 実装後）
+
+        // Atlas 反映（ローカル即時）
+        var rgba = _session.CompositeRgba();
+        if (rgba != null)
+            _onSaveRgba?.Invoke(rgba);
+
+        // TODO: Phase 9 — PNG + レイヤー構造 JSON をサーバーへアップロード
         var png = _session.CompositePng();
         if (png != null)
+        {
+            _session.CleanupUndo();
             Debug.Log($"[TexturePaintController] 保存 PNG size={png.Length} bytes");
+        }
+    }
+
+    // ---- PNG 書き出し（その他メニュー） ----
+
+    private void OnExportPng()
+    {
+        if (_session == null) return;
+        var png = _session.CompositePng();
+        if (png == null) return;
+#if UNITY_EDITOR
+        string path = UnityEditor.EditorUtility.SaveFilePanel("PNG 書き出し", "", "texture_export.png", "png");
+        if (!string.IsNullOrEmpty(path))
+        {
+            System.IO.File.WriteAllBytes(path, png);
+            Debug.Log($"[TexturePaintController] PNG 書き出し完了: {path}");
+        }
+#else
+        Debug.Log($"[TexturePaintController] PNG 書き出し size={png.Length} bytes (実機: 保存処理は未実装)");
+#endif
+        ClosePanel(_otherMenuPanel);
+    }
+
+    // ---- テクスチャサイズ変更 ----
+
+    internal void OnTextureResize()
+    {
+        if (_session == null) return;
+        ClosePanel(_otherMenuPanel);
+
+#if UNITY_EDITOR
+        uint current = _session.CanvasWidth;
+        // サイズ候補を現在サイズより小さいもののみ提示
+        int choice = UnityEditor.EditorUtility.DisplayDialogComplex(
+            "テクスチャサイズ変更",
+            $"現在のサイズ: {current}×{current}\n変更後のサイズを選択してください。\nUndo 履歴・選択範囲はリセットされます。",
+            current > 64 ? "64×64" : "変更なし",
+            "キャンセル",
+            current > 128 ? "128×128" : "変更なし");
+
+        uint newSize = choice switch
+        {
+            0 when current > 64  => 64,
+            2 when current > 128 => 128,
+            _ => 0,
+        };
+        if (newSize == 0) return;
+        _session.ResizeCanvas(newSize, newSize);
+        RecreateCompositeTexture(newSize, newSize);
+        _canvasLogic = new PaintCanvasLogic(newSize, newSize);
+        RefreshComposite();
+        RefreshLayerPanel();
+        _onHistoryChanged?.Invoke();
+        Debug.Log($"[TexturePaintController] テクスチャリサイズ → {newSize}×{newSize}");
+#else
+        Debug.Log("[TexturePaintController] テクスチャサイズ変更は現在 Editor のみ対応");
+#endif
+    }
+
+    private void RecreateCompositeTexture(uint w, uint h)
+    {
+        if (_compositeTexture != null)
+            Destroy(_compositeTexture);
+        _compositeTexture = new Texture2D((int)w, (int)h, TextureFormat.RGBA32, false)
+        {
+            filterMode = FilterMode.Point
+        };
+        if (_selectionTexture != null)
+            Destroy(_selectionTexture);
+        _selectionTexture = new Texture2D((int)w, (int)h, TextureFormat.RGBA32, false)
+        {
+            filterMode = FilterMode.Point
+        };
+    }
+
+    // ---- レイヤー取り込み ----
+
+    internal void OnImportLayerPng()
+    {
+        if (_session == null || _activeLayerId == 0) return;
+        ClosePanel(_otherMenuPanel);
+
+#if UNITY_EDITOR
+        string path = UnityEditor.EditorUtility.OpenFilePanel("PNG を取り込む", "", "png");
+        if (string.IsNullOrEmpty(path)) return;
+        byte[] pngData = System.IO.File.ReadAllBytes(path);
+        bool ok = _session.ImportLayerPng(_activeLayerId, pngData);
+        if (ok)
+        {
+            RefreshComposite();
+            RefreshActiveLayerThumbnail();
+            _onHistoryChanged?.Invoke();
+            Debug.Log($"[TexturePaintController] PNG 取り込み完了: {path}");
+        }
+        else
+        {
+            Debug.LogWarning("[TexturePaintController] PNG 取り込み失敗（色調補正レイヤーへの書き込みは不可）");
+        }
+#else
+        Debug.Log("[TexturePaintController] レイヤー取り込みは現在 Editor のみ対応");
+#endif
+    }
+
+    // ---- 選択範囲オーバーレイ更新 ----
+
+    private void RefreshSelectionOverlay()
+    {
+        if (_selectionOverlay == null || _selectionTexture == null || _session == null)
+            return;
+
+        if (!_session.SelectionHas)
+        {
+            _selectionOverlay.AddToClassList("paint-panel--hidden");
+            return;
+        }
+
+        // キャンバス上の選択マスクを青い半透明オーバーレイとして表示
+        // NOTE: Rust の selection は 0/255 のマスク。ここでは青チャンネルで可視化する。
+        // 実際の選択マスクピクセルデータは Rust 側に持つため、ここでは composite に基づく
+        // ダミービジュアルとして「選択中は右上に小ラベルで通知」する簡略実装とする。
+        _selectionOverlay.RemoveFromClassList("paint-panel--hidden");
     }
 
     // ---- パネル表示切り替え ----
@@ -555,6 +1075,46 @@ public class TexturePaintController : MonoBehaviour
         panel?.AddToClassList("paint-panel--hidden");
     }
 
+    // ---- サムネイル ----
+
+    /// <summary>
+    /// 指定レイヤーのサムネイル Texture2D を生成・更新して返す。
+    /// 色調補正レイヤーなどピクセルデータがない場合は null。
+    /// </summary>
+    private Texture2D GetOrCreateLayerThumbnail(PaintLayer layer)
+    {
+        if (_session == null)
+            return null;
+        byte[] pixels = _session.GetLayerPixels(layer.Id);
+        if (pixels == null)
+            return null;
+
+        if (!_layerThumbnails.TryGetValue(layer.Id, out var tex) || tex == null)
+        {
+            tex = new Texture2D((int)_session.CanvasWidth, (int)_session.CanvasHeight, TextureFormat.RGBA32, false);
+            tex.filterMode = FilterMode.Bilinear;
+            _layerThumbnails[layer.Id] = tex;
+        }
+        tex.SetPixelData(pixels, 0);
+        tex.Apply();
+        return tex;
+    }
+
+    /// <summary>
+    /// アクティブレイヤーのサムネイルテクスチャだけを更新する（ストローク終了時に呼ぶ）。
+    /// パネルの再構築は行わず、既存 Texture2D のピクセルを上書きするだけ。
+    /// UIToolkit は Texture2D.Apply() 後に自動再描画する。
+    /// </summary>
+    private void RefreshActiveLayerThumbnail()
+    {
+        if (_session == null || _activeLayerId == 0)
+            return;
+        var layer = _session.LayerStack.FindLayer(_activeLayerId);
+        if (layer == null)
+            return;
+        GetOrCreateLayerThumbnail(layer);
+    }
+
     // ---- Unity ライフサイクル ----
 
     private void OnDestroy()
@@ -564,6 +1124,15 @@ public class TexturePaintController : MonoBehaviour
             Destroy(_compositeTexture);
             _compositeTexture = null;
         }
+        if (_selectionTexture != null)
+        {
+            Destroy(_selectionTexture);
+            _selectionTexture = null;
+        }
+        foreach (var tex in _layerThumbnails.Values)
+            if (tex != null)
+                Destroy(tex);
+        _layerThumbnails.Clear();
         _session?.Dispose();
     }
 }

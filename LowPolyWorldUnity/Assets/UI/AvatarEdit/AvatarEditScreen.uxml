@@ -29,9 +29,104 @@
             <!-- タブコンテンツ -->
             <ui:VisualElement name="tab-content" class="tab-content">
 
-                <!-- テクスチャタブ（Phase 4 で実装） -->
+                <!-- テクスチャタブ -->
                 <ui:VisualElement name="content-texture" class="content-texture">
-                    <ui:Label class="stub-label" text="テクスチャペイント（Phase 4 で実装）" />
+
+                    <!-- メイン作業エリア: 左バー + キャンバス + ツールバー -->
+                    <ui:VisualElement name="paint-main" class="paint-main">
+
+                        <!-- 左: ブラシサイズバー -->
+                        <ui:VisualElement name="paint-left-bar" class="paint-left-bar">
+                            <ui:Slider name="slider-brush-size" class="brush-size-slider" direction="Vertical"
+                                       low-value="1" high-value="255" value="16" />
+                            <ui:Label name="label-brush-size" class="brush-size-label" text="16" />
+                        </ui:VisualElement>
+
+                        <!-- 中央: キャンバス -->
+                        <ui:VisualElement name="paint-canvas-container" class="paint-canvas-container">
+                            <ui:VisualElement name="paint-canvas" class="paint-canvas" />
+                        </ui:VisualElement>
+
+                        <!-- 右: ツールバー -->
+                        <ui:VisualElement name="paint-toolbar" class="paint-toolbar">
+                            <ui:Button name="btn-tool-brush"          class="tool-btn tool-btn--active" text="&#x270F;" />
+                            <ui:Button name="btn-tool-eraser"         class="tool-btn" text="&#x25FB;" />
+                            <ui:Button name="btn-tool-fill"           class="tool-btn" text="&#x25BC;" />
+                            <ui:Button name="btn-tool-rect"           class="tool-btn" text="&#x25A1;" />
+                            <ui:Button name="btn-tool-circle"         class="tool-btn" text="&#x25CB;" />
+                            <ui:Button name="btn-tool-line"           class="tool-btn" text="&#x2571;" />
+                            <ui:VisualElement class="tool-separator" />
+                            <ui:Button name="btn-tool-select-rect"    class="tool-btn" text="&#x2B1C;" />
+                            <ui:Button name="btn-tool-select-ellipse" class="tool-btn" text="&#x2B2D;" />
+                            <ui:Button name="btn-tool-transform"      class="tool-btn" text="&#x2B62;" />
+                            <ui:VisualElement class="tool-separator" />
+                            <ui:Button name="btn-layer-panel" class="tool-btn" text="&#x2261;" />
+                            <ui:Button name="btn-other-menu"  class="tool-btn" text="&#x22EE;" />
+                        </ui:VisualElement>
+
+                    </ui:VisualElement>
+
+                    <!-- 下: カラースウォッチ + ツールオプション + 保存 -->
+                    <ui:VisualElement name="paint-bottom-bar" class="paint-bottom-bar">
+                        <ui:Button name="btn-color-swatch" class="color-swatch" />
+                        <ui:Label name="label-tool-hint" class="tool-hint-label" text="&#x30D6;&#x30E9;&#x30B7;" />
+                        <ui:Toggle name="toggle-antialias" class="antialias-toggle" label="AA" />
+                        <ui:VisualElement class="spacer" />
+                        <ui:Button name="btn-save" class="btn-paint-save" text="&#x4FDD;&#x5B58;" />
+                    </ui:VisualElement>
+
+                    <!-- オーバーレイ: カラーピッカーパネル -->
+                    <ui:VisualElement name="color-picker-panel" class="overlay-panel color-picker-panel paint-panel--hidden">
+                        <ui:VisualElement class="overlay-panel-header">
+                            <ui:Label class="overlay-panel-title" text="&#x30AB;&#x30E9;&#x30FC;" />
+                            <ui:Button name="btn-close-color-picker" class="overlay-close-btn" text="&#xD7;" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="color-wheel-area" class="color-wheel-area">
+                            <ui:VisualElement name="color-hue-ring" class="color-hue-ring">
+                                <ui:VisualElement name="color-sv-square" class="color-sv-square">
+                                    <ui:VisualElement name="color-cursor" class="color-cursor" />
+                                </ui:VisualElement>
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+                        <ui:VisualElement class="picker-slider-row">
+                            <ui:Label class="picker-row-label" text="A" />
+                            <ui:Slider name="slider-alpha" class="alpha-slider" low-value="0" high-value="255" value="255" />
+                        </ui:VisualElement>
+                        <ui:VisualElement class="rgba-row">
+                            <ui:IntegerField name="input-r" class="rgba-field" label="R" value="255" />
+                            <ui:IntegerField name="input-g" class="rgba-field" label="G" value="0" />
+                            <ui:IntegerField name="input-b" class="rgba-field" label="B" value="0" />
+                            <ui:IntegerField name="input-a" class="rgba-field" label="A" value="255" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="color-history" class="color-history" />
+                    </ui:VisualElement>
+
+                    <!-- オーバーレイ: レイヤーパネル -->
+                    <ui:VisualElement name="layer-panel" class="overlay-panel layer-panel paint-panel--hidden">
+                        <ui:VisualElement class="overlay-panel-header">
+                            <ui:Label class="overlay-panel-title" text="&#x30EC;&#x30A4;&#x30E4;&#x30FC;" />
+                            <ui:Button name="btn-add-color-adj"     class="layer-header-btn" text="&#x8272;&#x8ABF;" />
+                            <ui:Button name="btn-add-layer"         class="layer-header-btn" text="+" />
+                            <ui:Button name="btn-close-layer-panel" class="overlay-close-btn" text="&#xD7;" />
+                        </ui:VisualElement>
+                        <ui:ScrollView name="layer-list" class="layer-list" />
+                    </ui:VisualElement>
+
+                    <!-- オーバーレイ: その他メニュー -->
+                    <ui:VisualElement name="other-menu-panel" class="overlay-panel other-menu-panel paint-panel--hidden">
+                        <ui:VisualElement class="overlay-panel-header">
+                            <ui:Label class="overlay-panel-title" text="&#x305D;&#x306E;&#x4ED6;" />
+                            <ui:Button name="btn-close-other-menu" class="overlay-close-btn" text="&#xD7;" />
+                        </ui:VisualElement>
+                        <ui:Button name="btn-export-png"     class="other-menu-item" text="&#x753B;&#x50CF;&#x66F8;&#x304D;&#x51FA;&#x3057;" />
+                        <ui:Button name="btn-import-layer"   class="other-menu-item" text="&#x30EC;&#x30A4;&#x30E4;&#x30FC;&#x3068;&#x3057;&#x3066;&#x53D6;&#x308A;&#x8FBC;&#x307F;" />
+                        <ui:Button name="btn-texture-resize" class="other-menu-item" text="&#x30C6;&#x30AF;&#x30B9;&#x30C1;&#x30E3;&#x30B5;&#x30A4;&#x30BA;&#x5909;&#x66F4;" />
+                        <ui:Button name="btn-texture-switch" class="other-menu-item" text="&#x7C21;&#x5358;&#x30C6;&#x30AF;&#x30B9;&#x30C1;&#x30E3;&#x5207;&#x308A;&#x66FF;&#x3048;" />
+                    </ui:VisualElement>
+
+                    <!-- 選択範囲オーバーレイ（キャンバス上に重ねて表示） -->
+                    <ui:VisualElement name="selection-overlay" class="selection-overlay paint-panel--hidden" />
+
                 </ui:VisualElement>
 
                 <!-- アクセサリタブ -->

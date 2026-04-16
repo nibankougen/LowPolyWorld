@@ -18,7 +18,20 @@
       "Bash(uloop get-menu-items:*)",
       "Bash(uloop capture-window:*)",
       "Bash(xargs grep:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(rustc --version)",
+      "Bash(cargo --version)",
+      "Bash(cargo build:*)",
+      "Bash(uloop clear-console:*)",
+      "Bash(mkdir -p Common)",
+      "Bash(mv Idle.fbx Common/)",
+      "Bash(mv Idle.fbx.meta Common/)",
+      "Bash(mv Walk.fbx Common/)",
+      "Bash(mv Walk.fbx.meta Common/)",
+      "Bash(uloop launch:*)",
+      "Bash(cargo check:*)",
+      "Bash(cargo test:*)",
+      "Bash(uloop fix:*)"
     ]
   }
 }
