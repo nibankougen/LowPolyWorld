@@ -8,6 +8,10 @@
         <ui:VisualElement name="preview-area" class="preview-area">
             <ui:Button name="btn-back" class="btn-back" text="＜" />
             <ui:VisualElement name="preview-render" class="preview-render" />
+            <!-- D&D ドロップゾーンオーバーレイ（アクセサリドラッグ中のみ表示） -->
+            <ui:VisualElement name="dnd-drop-zone" class="dnd-drop-zone dnd-drop-zone--hidden">
+                <ui:Label class="dnd-drop-label" text="ここにドロップして装着" />
+            </ui:VisualElement>
         </ui:VisualElement>
 
         <!-- 下部パネル -->
@@ -138,12 +142,57 @@
                         <ui:Button name="subtab-shop" class="edit-subtab" text="ショップ購入" />
                         <ui:Button name="subtab-preset" class="edit-subtab" text="デフォルト" />
                     </ui:VisualElement>
-                    <!-- アクセサリグリッド -->
-                    <ui:ScrollView name="accessory-grid" class="accessory-grid" />
+
+                    <!-- 利用中サブタブ -->
+                    <ui:VisualElement name="subtab-content-active" class="subtab-content">
+                        <!-- 4 スロットカード（動的生成） -->
+                        <ui:VisualElement name="accessory-slots" class="accessory-slots" />
+                        <!-- 選択詳細パネル（アクセサリ選択時に表示） -->
+                        <ui:VisualElement name="accessory-selection-detail" class="accessory-selection-detail accessory-detail--hidden">
+                            <ui:DropdownField name="dropdown-accessory-bone" class="accessory-bone-dropdown" label="ボーン" />
+                            <ui:VisualElement class="accessory-transform-row">
+                                <ui:Label class="accessory-transform-label" text="オフセット X" />
+                                <ui:FloatField name="field-offset-x" class="accessory-transform-field" value="0" />
+                                <ui:Label class="accessory-transform-label" text="Y" />
+                                <ui:FloatField name="field-offset-y" class="accessory-transform-field" value="0" />
+                                <ui:Label class="accessory-transform-label" text="Z" />
+                                <ui:FloatField name="field-offset-z" class="accessory-transform-field" value="0" />
+                            </ui:VisualElement>
+                            <ui:VisualElement class="accessory-transform-row">
+                                <ui:Label class="accessory-transform-label" text="回転 X" />
+                                <ui:FloatField name="field-rot-x" class="accessory-transform-field" value="0" />
+                                <ui:Label class="accessory-transform-label" text="Y" />
+                                <ui:FloatField name="field-rot-y" class="accessory-transform-field" value="0" />
+                                <ui:Label class="accessory-transform-label" text="Z" />
+                                <ui:FloatField name="field-rot-z" class="accessory-transform-field" value="0" />
+                            </ui:VisualElement>
+                            <ui:VisualElement class="accessory-transform-row">
+                                <ui:Label class="accessory-transform-label" text="拡大縮小" />
+                                <ui:FloatField name="field-scale" class="accessory-transform-field" value="1" />
+                            </ui:VisualElement>
+                            <ui:Button name="btn-remove-accessory" class="btn-remove-accessory" text="取り外す" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+
+                    <!-- 保存・編集サブタブ（D&D ソース） -->
+                    <ui:ScrollView name="subtab-content-saved" class="subtab-content subtab-content--hidden subtab-content--grid" />
+
+                    <!-- ショップ購入スタブ -->
+                    <ui:VisualElement name="subtab-content-shop" class="subtab-content subtab-content--hidden">
+                        <ui:Label class="stub-label" text="ショップ購入（Phase 8 実装予定）" />
+                    </ui:VisualElement>
+
+                    <!-- デフォルトプリセット（D&D ソース） -->
+                    <ui:ScrollView name="subtab-content-preset" class="subtab-content subtab-content--hidden subtab-content--grid" />
                 </ui:VisualElement>
 
             </ui:VisualElement>
         </ui:VisualElement>
+
+    <!-- D&D ドラッグゴースト（pointer-events 無効・ルート直下に配置してスクリーン座標で移動） -->
+    <ui:VisualElement name="dnd-drag-ghost" class="dnd-drag-ghost dnd-drag-ghost--hidden" picking-mode="Ignore">
+        <ui:Label name="dnd-ghost-label" class="dnd-ghost-label" />
+    </ui:VisualElement>
 
     </ui:VisualElement>
 </ui:UXML>
