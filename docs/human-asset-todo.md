@@ -238,10 +238,10 @@ Phase 1 の動作確認に使う簡易シーン。
 
 | ✅ | ファイル名 | 称号 |
 |---|---|---|
-| ☐ | title_premium.png | プレミアム |
-| ☐ | title_shop_owner.png | ショップ開設者 |
-| ☐ | title_developer.png | 開発者 |
-| ☐ | title_staff.png | 運営関係者 |
+| ✅ | title_premium.png | プレミアム |
+| ✅ | title_shop_owner.png | ショップ開設者 |
+| ✅ | title_developer.png | 開発者 |
+| ✅ | title_staff.png | 運営関係者 |
 
 **仕様:**
 - サイズ: 64×64 px（ユーザー情報パネル内で小さく並んで表示される）
