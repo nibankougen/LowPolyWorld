@@ -80,7 +80,7 @@ uvs.Dispose(); indices.Dispose();
 - [x] テスト: `UvOverlayBakerTests` 9件追加・全通過
 
 ### 残り作業
-- [ ] ワールドオブジェクト編集コントローラー実装時に `MeshFilter.sharedMesh` から UV をベイクして渡す（Phase 4 ワールドオブジェクト編集実装時）
+- [ ] ワールドオブジェクト編集コントローラー実装時に `MeshFilter.sharedMesh` から UV をベイクして渡す（**Phase 12** — ワールドオブジェクトペイントUI と合わせて実装）
 - [x] `AvatarEditController._uvSourceRenderers` を VRM ロード後に動的にセットする配線 — `SetUvSourceRenderers(SkinnedMeshRenderer[])` メソッドを公開済み。Phase 5A で AvatarManager からの呼び出し配線を追加する
 
 ---
