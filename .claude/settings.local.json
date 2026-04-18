@@ -34,7 +34,8 @@
       "Bash(uloop fix:*)",
       "Bash(go mod *)",
       "Bash(go build *)",
-      "Bash(go vet *)"
+      "Bash(go vet *)",
+      "Bash(git commit -m ' *)"
     ]
   }
 }
