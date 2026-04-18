@@ -73,7 +73,7 @@ public class WorldDetailController
     {
         _nameLabel.text = _world.name;
         _likesLabel.text = $"♥ {_world.likesCount}";
-        _playersLabel.text = $"▶ {_world.maxPlayers}人";
+        _playersLabel.text = $"上限 {_world.maxPlayers}人";
 
         if (!string.IsNullOrEmpty(_world.thumbnailUrl))
         {
@@ -98,6 +98,7 @@ public class WorldDetailController
     private void OnJoinPublicClicked()
     {
         _cts?.Cancel();
+        _cts?.Dispose();
         _cts = new CancellationTokenSource();
         _ = JoinPublicRoomAsync(_cts.Token);
     }
@@ -141,6 +142,7 @@ public class WorldDetailController
         if (string.IsNullOrEmpty(_pendingEnglishRoomId)) return;
 
         _cts?.Cancel();
+        _cts?.Dispose();
         _cts = new CancellationTokenSource();
         _ = JoinSpecificRoomAsync(_pendingEnglishRoomId, _cts.Token);
     }
@@ -151,6 +153,7 @@ public class WorldDetailController
         _pendingEnglishRoomId = null;
 
         _cts?.Cancel();
+        _cts?.Dispose();
         _cts = new CancellationTokenSource();
         _ = CreateAndJoinRoomAsync("public", _cts.Token);
     }
@@ -179,6 +182,7 @@ public class WorldDetailController
     private void OnCreateFriendsClicked()
     {
         _cts?.Cancel();
+        _cts?.Dispose();
         _cts = new CancellationTokenSource();
         _ = CreateAndJoinRoomAsync("friends_only", _cts.Token);
     }

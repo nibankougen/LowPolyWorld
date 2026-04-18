@@ -117,6 +117,8 @@ public class HomeScreenController : MonoBehaviour
 
         _currentWorld = world;
 
+        _worldListController?.Dispose();
+        _worldListController = null;
         _worldDetailController?.Dispose();
         _worldDetailController = null;
         _contentArea.Clear();
@@ -146,6 +148,8 @@ public class HomeScreenController : MonoBehaviour
     {
         if (_roomListAsset == null || _currentWorld == null) return;
 
+        _worldDetailController?.Dispose();
+        _worldDetailController = null;
         _roomListController?.Dispose();
         _roomListController = null;
         _contentArea.Clear();

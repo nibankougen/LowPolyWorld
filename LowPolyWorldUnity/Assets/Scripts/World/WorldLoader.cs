@@ -32,6 +32,7 @@ public class WorldLoader : MonoBehaviour
     private void Start()
     {
         var glbUrl = WorldSessionData.WorldGlbUrl;
+        WorldSessionData.Clear();
         if (!string.IsNullOrEmpty(glbUrl))
             LoadFromUrl(glbUrl);
     }

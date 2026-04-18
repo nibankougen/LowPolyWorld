@@ -107,13 +107,6 @@ public class RoomListController
 
         var isFull = room.currentPlayers >= room.maxPlayers;
 
-        if (isFull)
-        {
-            var badge = new Label("満員");
-            badge.AddToClassList("room-card__badge");
-            card.Add(badge);
-        }
-
         var joinBtn = new Button();
         joinBtn.text = isFull ? "満員" : "参加";
         joinBtn.AddToClassList("room-card__join-btn");
@@ -131,6 +124,7 @@ public class RoomListController
     private void OnJoinRoom(string roomId)
     {
         _cts?.Cancel();
+        _cts?.Dispose();
         _cts = new CancellationTokenSource();
         _ = JoinRoomAsync(roomId, _cts.Token);
     }
@@ -156,6 +150,7 @@ public class RoomListController
     private void OnCreateRoom(string roomType)
     {
         _cts?.Cancel();
+        _cts?.Dispose();
         _cts = new CancellationTokenSource();
         _ = CreateAndJoinRoomAsync(roomType, _cts.Token);
     }
