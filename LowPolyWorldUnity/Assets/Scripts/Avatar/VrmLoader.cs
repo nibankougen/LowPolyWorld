@@ -16,33 +16,40 @@ public static class VrmLoader
     /// <summary>
     /// StreamingAssets/{relativePath} から VRM を非同期で読み込む。
     /// </summary>
-    /// <param name="relativePath">StreamingAssets 以下の相対パス（例: "avatars/test.vrm"）</param>
-    /// <param name="ct">キャンセルトークン</param>
-    /// <returns>ロード済みの VRM GameObject。失敗時は null。</returns>
     public static async Task<GameObject> LoadFromStreamingAssetsAsync(
         string relativePath,
         CancellationToken ct = default
     )
     {
         string fullPath = Path.Combine(Application.streamingAssetsPath, relativePath);
+        return await LoadFromLocalPathAsync(fullPath, ct);
+    }
 
-        if (!File.Exists(fullPath))
+    /// <summary>
+    /// 絶対パスから VRM を非同期で読み込む（CacheManager キャッシュパス用）。
+    /// </summary>
+    public static async Task<GameObject> LoadFromLocalPathAsync(
+        string absolutePath,
+        CancellationToken ct = default
+    )
+    {
+        if (!File.Exists(absolutePath))
         {
-            Debug.LogError($"[VrmLoader] VRM file not found: {fullPath}");
+            Debug.LogError($"[VrmLoader] VRM file not found: {absolutePath}");
             return null;
         }
 
         try
         {
             var instance = await Vrm10.LoadPathAsync(
-                fullPath,
+                absolutePath,
                 canLoadVrm0X: true,
                 ct: ct
             );
 
             if (instance == null)
             {
-                Debug.LogError($"[VrmLoader] Failed to load VRM: {fullPath}");
+                Debug.LogError($"[VrmLoader] Failed to load VRM: {absolutePath}");
                 return null;
             }
 

@@ -441,8 +441,8 @@
   - [x] アカウント作成モーダル: Google / Apple ソーシャルサインインボタン（縦並び）
   - [x] サインイン後分岐: 既存アカウント → ホーム遷移 / 新規 → @name 設定画面へ
 - [x] 初回セットアップ画面（@name 入力・バリデーション・`PUT /api/v1/me/name`）— タイトル画面内モーダルとして実装
-- [ ] HTTP経由でのアバター一覧取得・ダウンロード（`/startup` レスポンスから取得→ `CacheManager` 経由でローカルキャッシュ）
-- [ ] VRMアップロードUI
+- [x] HTTP経由でのアバター一覧取得・ダウンロード（`/startup` レスポンスから取得→ `CacheManager` 経由でローカルキャッシュ・先頭アバターを自動選択して `UserManager.SelectedAvatarLocalPath` にセット）
+- [ ] VRMアップロードUI（ネイティブファイルピッカー対応が必要なため Phase 2 に移管）
 - [x] ワールドデータ取得・`WorldLoader` 本番版実装（`WorldSessionData` → `CacheManager` 経由でダウンロード → `WorldLoader` に渡す）
 - [x] ワールド一覧画面（`WorldTab.uxml/uss` + `WorldListController.cs` — `HomeScreenController` から呼び出し）
   - [x] 4 タブ構成（ホーム / フォロー中 / 新着順 / いいね）

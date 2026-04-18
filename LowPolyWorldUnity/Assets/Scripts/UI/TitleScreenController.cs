@@ -153,6 +153,9 @@ public class TitleScreenController : MonoBehaviour
 
         UserManager.Instance.StoreStartupData(startupData);
         ApplyLanguageSetting(startupData.user.language);
+        await UserManager.Instance.DownloadAndCacheAvatarsAsync(ct);
+
+        if (ct.IsCancellationRequested) return;
 
         if (startupData.user.nameSetupRequired)
         {
