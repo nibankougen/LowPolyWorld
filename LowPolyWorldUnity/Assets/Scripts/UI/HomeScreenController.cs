@@ -25,6 +25,7 @@ public class HomeScreenController : MonoBehaviour
 
     private Button _activeTab;
     private SettingsTabController _settingsTabController;
+    private WorldListController _worldListController;
 
     private void Awake()
     {
@@ -54,25 +55,23 @@ public class HomeScreenController : MonoBehaviour
 
     private void OnDisable()
     {
-        _navWorld?.UnregisterCallback<ClickEvent>(_ => { });
-        _navAvatar?.UnregisterCallback<ClickEvent>(_ => { });
-        _navWorldManage?.UnregisterCallback<ClickEvent>(_ => { });
-        _navShop?.UnregisterCallback<ClickEvent>(_ => { });
-        _navSettings?.UnregisterCallback<ClickEvent>(_ => { });
+        _worldListController?.Dispose();
+        _worldListController = null;
     }
 
     private void SelectTab(Button tab, VisualTreeAsset contentAsset)
     {
         if (_activeTab != null)
-        {
             _activeTab.RemoveFromClassList("nav-tab--active");
-        }
 
         _activeTab = tab;
         _activeTab.AddToClassList("nav-tab--active");
 
-        _contentArea.Clear();
+        // Dispose previous tab controllers
         _settingsTabController = null;
+        _worldListController?.Dispose();
+        _worldListController = null;
+        _contentArea.Clear();
 
         if (contentAsset == null)
             return;
@@ -81,11 +80,15 @@ public class HomeScreenController : MonoBehaviour
         content.style.flexGrow = 1;
         _contentArea.Add(content);
 
-        // 設定タブの場合はコントローラーを初期化
         if (tab == _navSettings)
         {
             _settingsTabController = new SettingsTabController(content);
             _settingsTabController.Bind(AudioManager.Instance?.Settings);
+        }
+        else if (tab == _navWorld && UserManager.Instance != null)
+        {
+            _worldListController = new WorldListController(content, UserManager.Instance.Api);
+            _worldListController.Initialize();
         }
     }
 }

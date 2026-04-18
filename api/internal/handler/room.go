@@ -168,6 +168,104 @@ func (h *Handler) CreateRoom(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// JoinRoom handles POST /api/v1/rooms/{roomID}/join — joins a specific room by ID.
+// Returns 409 if the room is at capacity.
+func (h *Handler) JoinRoom(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.UserIDFromContext(r.Context())
+	roomID := chi.URLParam(r, "roomID")
+
+	// Fetch room info
+	var rm roomResponse
+	var createdAt time.Time
+	err := h.DB.QueryRow(r.Context(),
+		`SELECT r.id, r.world_id, r.room_type, r.language, r.max_players,
+		        (SELECT count(*) FROM room_members rm WHERE rm.room_id = r.id) AS current_players,
+		        r.created_at
+		 FROM rooms r WHERE r.id = $1`,
+		roomID,
+	).Scan(&rm.ID, &rm.WorldID, &rm.RoomType, &rm.Language,
+		&rm.MaxPlayers, &rm.CurrentPlayers, &createdAt)
+	if err != nil {
+		response.Error(w, r, http.StatusNotFound, "not_found", "room not found")
+		return
+	}
+	rm.CreatedAt = createdAt.UTC().Format(time.RFC3339)
+
+	if rm.CurrentPlayers >= rm.MaxPlayers {
+		response.Error(w, r, http.StatusConflict, "room_full", "room is at maximum capacity")
+		return
+	}
+
+	_, err = h.DB.Exec(r.Context(),
+		`INSERT INTO room_members (room_id, user_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+		roomID, userID,
+	)
+	if err != nil {
+		h.Logger.Error("join room", "error", err)
+		response.InternalError(w, r, h.Cfg.IsProduction())
+		return
+	}
+
+	// Re-read current count after insert
+	_ = h.DB.QueryRow(r.Context(),
+		`SELECT count(*) FROM room_members WHERE room_id = $1`, roomID,
+	).Scan(&rm.CurrentPlayers)
+
+	response.JSON(w, http.StatusOK, rm)
+}
+
+// LeaveRoom handles DELETE /api/v1/rooms/{roomID}/leave — removes the user from a room.
+func (h *Handler) LeaveRoom(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.UserIDFromContext(r.Context())
+	roomID := chi.URLParam(r, "roomID")
+
+	_, err := h.DB.Exec(r.Context(),
+		`DELETE FROM room_members WHERE room_id = $1 AND user_id = $2`,
+		roomID, userID,
+	)
+	if err != nil {
+		h.Logger.Error("leave room", "error", err)
+		response.InternalError(w, r, h.Cfg.IsProduction())
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// PatchRoomLanguage handles PATCH /api/v1/rooms/{roomID}/language — allows the room creator to change language.
+func (h *Handler) PatchRoomLanguage(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.UserIDFromContext(r.Context())
+	roomID := chi.URLParam(r, "roomID")
+
+	var req struct {
+		Language string `json:"language"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.Error(w, r, http.StatusBadRequest, "validation_error", "invalid request body")
+		return
+	}
+	if len(req.Language) < 2 || len(req.Language) > 10 {
+		response.Error(w, r, http.StatusBadRequest, "validation_error", "invalid language code")
+		return
+	}
+
+	tag, err := h.DB.Exec(r.Context(),
+		`UPDATE rooms SET language = $1 WHERE id = $2 AND creator_user_id = $3`,
+		req.Language, roomID, userID,
+	)
+	if err != nil {
+		h.Logger.Error("patch room language", "error", err)
+		response.InternalError(w, r, h.Cfg.IsProduction())
+		return
+	}
+	if tag.RowsAffected() == 0 {
+		response.Error(w, r, http.StatusForbidden, "forbidden", "only the room creator can change the language")
+		return
+	}
+
+	response.JSON(w, http.StatusOK, map[string]string{"language": req.Language})
+}
+
 type recommendedJoinResponse struct {
 	Action   string `json:"action"`             // "join" | "create" | "confirm_english"
 	RoomID   string `json:"roomId,omitempty"`   // set when action == "join" or "confirm_english"
@@ -216,16 +314,29 @@ func (h *Handler) RecommendedJoin(w http.ResponseWriter, r *http.Request) {
 	).Scan(&sameLanguageRoomID)
 
 	if sameLanguageRoomID != "" {
-		_, _ = h.DB.Exec(r.Context(),
-			`INSERT INTO room_members (room_id, user_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+		// Atomic capacity check: insert only if current count < max_players
+		var joined bool
+		_ = h.DB.QueryRow(r.Context(),
+			`WITH capacity AS (
+			    SELECT max_players, (SELECT count(*) FROM room_members WHERE room_id = $1) AS current
+			    FROM rooms WHERE id = $1
+			)
+			INSERT INTO room_members (room_id, user_id)
+			SELECT $1, $2 FROM capacity WHERE current < max_players
+			ON CONFLICT DO NOTHING
+			RETURNING TRUE`,
 			sameLanguageRoomID, userID,
-		)
-		response.JSON(w, http.StatusOK, recommendedJoinResponse{
-			Action:   "join",
-			RoomID:   sameLanguageRoomID,
-			Language: userLanguage,
-		})
-		return
+		).Scan(&joined)
+
+		if joined {
+			response.JSON(w, http.StatusOK, recommendedJoinResponse{
+				Action:   "join",
+				RoomID:   sameLanguageRoomID,
+				Language: userLanguage,
+			})
+			return
+		}
+		// Room filled up between query and insert — fall through to step 2
 	}
 
 	// Step 2: check if same-language rooms exist at all (all full)

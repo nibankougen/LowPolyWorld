@@ -1,0 +1,66 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="TitleScreen.uss" />
+    <ui:VisualElement name="title-root" class="title-root">
+
+        <!-- ロゴエリア -->
+        <ui:VisualElement name="logo-area" class="logo-area">
+            <ui:Label name="app-title" class="app-title" text="Lo-Res World" />
+            <ui:Label name="app-subtitle" class="app-subtitle" text="みんなとつながる、ちびキャラワールド" />
+        </ui:VisualElement>
+
+        <!-- ローディング -->
+        <ui:VisualElement name="loading-area" class="loading-area">
+            <ui:Label name="loading-label" class="loading-label" text="読み込み中..." />
+        </ui:VisualElement>
+
+        <!-- アカウント作成モーダル -->
+        <ui:VisualElement name="login-modal" class="login-modal" style="display: none;">
+            <ui:VisualElement class="login-modal__inner">
+                <ui:Label class="login-modal__title" text="はじめよう" />
+
+                <!-- 同意チェックボックス -->
+                <ui:VisualElement class="consent-row">
+                    <ui:Toggle name="terms-toggle" class="consent-toggle" />
+                    <ui:Label class="consent-label" text="利用規約に同意する" />
+                    <ui:Button name="terms-link" class="consent-link" text="確認" />
+                </ui:VisualElement>
+                <ui:VisualElement class="consent-row">
+                    <ui:Toggle name="privacy-toggle" class="consent-toggle" />
+                    <ui:Label class="consent-label" text="プライバシーポリシーに同意する" />
+                    <ui:Button name="privacy-link" class="consent-link" text="確認" />
+                </ui:VisualElement>
+
+                <!-- ソーシャルサインインボタン -->
+                <ui:Button name="btn-google" class="signin-btn signin-btn--google" text="Google でサインイン" />
+                <ui:Button name="btn-apple" class="signin-btn signin-btn--apple" text="Apple でサインイン" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- @name セットアップモーダル -->
+        <ui:VisualElement name="name-setup-modal" class="name-setup-modal" style="display: none;">
+            <ui:VisualElement class="name-setup-modal__inner">
+                <ui:Label class="name-setup-modal__title" text="@name を設定してください" />
+                <ui:Label class="name-setup-modal__desc" text="英数字・アンダースコア・3〜15文字" />
+                <ui:TextField name="name-input" class="name-input" max-length="15" />
+                <ui:Label name="name-error" class="name-error" style="display: none;" />
+                <ui:Button name="btn-name-confirm" class="btn-primary" text="決定" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- アップデート促進モーダル -->
+        <ui:VisualElement name="update-modal" class="update-modal" style="display: none;">
+            <ui:VisualElement class="update-modal__inner">
+                <ui:Label class="update-modal__title" text="アップデートが必要です" />
+                <ui:Label class="update-modal__desc" text="最新バージョンへアップデートしてから、もう一度お試しください。" />
+                <ui:Button name="btn-store" class="btn-primary" text="ストアへ" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- エラー表示 -->
+        <ui:VisualElement name="error-area" class="error-area" style="display: none;">
+            <ui:Label name="error-label" class="error-label" />
+            <ui:Button name="btn-retry" class="btn-secondary" text="再試行" />
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>

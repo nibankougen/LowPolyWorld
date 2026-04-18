@@ -292,7 +292,7 @@
   - PP の GDPR 請求窓口を `nibankougen@gmail.com` から `support@yourdomain.com` に更新する
 
 ### 開発環境設定
-- [ ] Unityに接続先URL設定（`ScriptableObject` またはシンボリック設定ファイルで切り替え）
+- [x] Unityに接続先URL設定（`ScriptableObject` またはシンボリック設定ファイルで切り替え）
   - 開発: `http://localhost:8080`
   - 本番: 環境変数で注入
 
@@ -356,12 +356,13 @@
   - 失敗ポリシー: 共通ポリシー準拠（Cloud Scheduler 3 回リトライ → Discord 通知）
   - 正常完了時に `{"event": "batch_completed", "batch": "cleanup-access-logs", "affected_count": N}` 構造化ログを出力
 - [ ] アカウント復元エンドポイント（管理画面用・`PATCH /admin/users/{id}/restore`・`active_users.deleted_at` をクリア・`active_users` レコードが存在する 30 日以内のみ有効）
-- [ ] VRMアップロードエンドポイント（optimizerへ転送）
-- [ ] アバター取得エンドポイント（最適化済みVRMを返す）
-- [ ] ワールドデータ取得エンドポイント（GLB URLを返す）
-- [ ] アバター一覧取得エンドポイント
-- [ ] アクセサリ一覧取得エンドポイント
-- [ ] アセットメタデータへの SHA-256 ハッシュフィールド追加（アバター VRM・テクスチャ統合画像・アクセサリ GLB・ワールドオブジェクト GLB・ワールドアトラス PNG のハッシュをレスポンスに含める。クライアントがダウンロード前に変更有無を判断するために使用）
+- [x] VRMアップロードエンドポイント（`POST /api/v1/me/avatars`・optimizer なしでローカルストレージに直接保存・Phase 5 polish で optimizer 統合）
+- [x] アバター取得・一覧エンドポイント（`GET /api/v1/me/avatars`・VRM/テクスチャ URL + hash を返す）
+- [x] アバターテクスチャ更新エンドポイント（`PUT /api/v1/me/avatars/{id}/texture`）
+- [x] アバター削除エンドポイント（`DELETE /api/v1/me/avatars/{id}`）
+- [x] アクセサリ一覧・アップロード・テクスチャ更新・削除エンドポイント（`GET/POST /api/v1/me/accessories`・`PUT /api/v1/me/accessories/{id}/texture`・`DELETE /api/v1/me/accessories/{id}`）
+- [x] ワールドデータ取得エンドポイント（`GET /api/v1/worlds/{id}`・GLB URL を返す）
+- [x] アセットメタデータへの SHA-256 ハッシュフィールド追加（アバター VRM・テクスチャ・アクセサリ GLB のハッシュをレスポンスに含める）
 - [ ] ワールドオブジェクト保存バリアント管理エンドポイント（`GET/POST /me/worldobjects/variants`・`DELETE /me/worldobjects/variants/{id}`・レスポンスに SHA-256 ハッシュフィールドを含める）
 - [ ] ワールドスコープカスタマイズのレイヤー画像・統合画像の保存エンドポイント（ワールド定義 JSON の `worldObjectCustomizations` と連動）
 - [x] ワールド一覧取得エンドポイント（4 タブ対応）
@@ -376,7 +377,7 @@
 - [x] `worlds` テーブルに `max_players INTEGER NOT NULL DEFAULT 6` カラムを追加
 - [x] ルーム一覧取得エンドポイント（ワールド別・公開/フレンドのみ種別・参加人数・ワールドの `maxPlayers`（人数上限）・言語）
   - [x] 公開ルームをビューワーの言語で優先ソート（言語一致を上位・不一致を下位に配置。新しい順/人気順はグループ内で維持）
-- [ ] ルーム参加時の人数上限チェック: 現在の参加人数 ≥ `room.max_players` の場合は参加を拒否（409 Conflict）
+- [x] ルーム参加時の人数上限チェック: 現在の参加人数 ≥ `room.max_players` の場合は参加を拒否（409 Conflict）。`POST /api/v1/rooms/{roomID}/join`・`POST /worlds/{worldID}/rooms/recommended-join` の両方で CTE で原子チェック
 - [ ] ワールド/ルーム検索エンドポイント（ワールドID・ルームID・ワールド名・タグで検索）
   - [x] `pg_trgm` 拡張を有効化し `worlds.name` に GIN インデックスを作成（ワールド名の部分一致検索）
   - [ ] `world_tags` テーブル実装（world_id・tag_text・tag_normalized）および AND 検索クエリ
@@ -384,7 +385,7 @@
   - [ ] タグ BAN リストテーブル実装・登録/取得時の除外処理
 - [x] ルーム作成エンドポイント（公開 / フレンドのみ / フォロワー限定 種別選択）
   - [x] 公開ルーム作成時: 言語コードを `language` フィールドに保存（未指定時は作成者のアカウント言語設定を自動適用）
-  - [ ] ルーム内からの言語変更エンドポイント（`PATCH /rooms/{id}/language`・作成者のみ変更可）
+  - [x] ルーム内からの言語変更エンドポイント（`PATCH /rooms/{id}/language`・作成者のみ変更可）
   - [x] `rooms` テーブルに `max_players INTEGER NOT NULL` カラムを追加
   - [x] ルーム作成時に `room.max_players` を自動計算して設定（通常ユーザー: `min(6, world.max_players)`・プレミアム: `world.max_players`）
 - [x] 推奨公開ルーム参加エンドポイント（`POST /worlds/{id}/rooms/recommended-join`）
@@ -394,7 +395,7 @@
   - [x] ステップ4: いずれも該当なし → 自言語で新規ルーム作成・参加
   - [x] レスポンス: `{ action: "join" | "create" | "confirm_english", roomId?, language? }` を返し、クライアントが次アクションを決定する
 - [ ] フレンドが参加中のルーム一覧取得エンドポイント（`GET /me/friends/rooms`・全ワールド横断・フレンドのいるルームを返す）
-- [ ] 言語設定の保存・取得エンドポイント（ユーザーアカウントに紐づけ）
+- [x] 言語設定の保存エンドポイント（`PATCH /api/v1/me/language`）・表示名更新（`PATCH /api/v1/me/display-name`）
 - [x] HTTP転送時圧縮（`compress/gzip` ミドルウェアを全エンドポイントに適用・`Content-Encoding: gzip`）
 - [x] スタートアップ一括取得エンドポイント（`GET /startup`・1リクエストでユーザー設定・言語設定・アバター一覧＋URL・ワールド一覧先頭ページを返す）
 - [x] 全リスト系 API へのページネーション実装（ワールド一覧・フレンド一覧・購入履歴・コイン取引履歴等）
@@ -424,44 +425,40 @@
 - [ ] 最適化済みVRMを保存・返却
 
 ### Unityクライアント
-- [ ] `Assets/Scripts/Constants.cs` 作成（`TermsOfServiceUrl`・`PrivacyPolicyUrl` 定数を定義）
-- [ ] タイトル画面実装（ホームと同一シーン・ナビゲーションバー非表示）
-  - [ ] 起動時 API バージョン互換性チェック（`GET /api/version`）
-  - [ ] 非互換時: アップデート促進モーダル表示（iOS: App Store / Android: Google Play への誘導ボタン・閉じ不可）
-  - [ ] 互換確認後: ローカルトークンの有無で自動ログインとアカウント作成モーダルを分岐
-  - [ ] 自動ログイン: ローディングインジケーター表示 → サーバーでトークン検証・ユーザー情報同期 → ホームへ遷移
-  - [ ] 自動ログイン失敗時: エラーメッセージ ＋ 再試行ボタン表示
-  - [ ] アカウント作成モーダル: 利用規約・プライバシーポリシー同意チェックボックス（両方 ON でサインインボタン有効化）・外部リンクをブラウザで開く
-  - [ ] アカウント作成モーダル: Google / X / Apple ソーシャルサインインボタン（縦並び）
-  - [ ] サインイン後分岐: 既存アカウント → ホーム遷移 / 新規 → @name 設定画面へ
-- [ ] 初回セットアップ画面（@name 入力・リアルタイムバリデーション・サーバー重複チェック）
-- [ ] HTTP経由でのアバター一覧取得・ダウンロード
+- [x] `AppConfig` ScriptableObject 作成（`ApiBaseUrl`・`TermsOfServiceUrl`・`PrivacyPolicyUrl` フィールド。`Assets/Scripts/API/AppConfig.cs`）
+- [x] `ApiTypes.cs` — API レスポンス DTO 定義（`Assets/Scripts/API/ApiTypes.cs`）
+- [x] `ApiClient.cs` — HTTP クライアント（GET/POST/PUT/PATCH/DELETE・認証ヘッダー自動付与・`Assets/Scripts/API/ApiClient.cs`）
+- [x] `UserManager.cs` — DontDestroyOnLoad JWT/リフレッシュトークン管理・プロフィール保持（`Assets/Scripts/API/UserManager.cs`）
+- [x] `CacheManager.cs` — DontDestroyOnLoad ハッシュベースアセットキャッシュ（own=永続/others=TTL7日・`Assets/Scripts/API/CacheManager.cs`）
+- [x] `Bootstrapper.cs` — HomeScene 起動時の DontDestroyOnLoad マネージャー一元初期化（`Assets/Scripts/Core/Bootstrapper.cs`）
+- [x] タイトル画面実装（`TitleScreen.uxml/uss` + `TitleScreenController.cs`）
+  - [x] 起動時 API バージョン互換性チェック（`GET /api/version`）
+  - [x] 非互換時: アップデート促進モーダル表示（iOS: App Store / Android: Google Play への誘導ボタン・閉じ不可）
+  - [x] 互換確認後: ローカルトークンの有無で自動ログインとアカウント作成モーダルを分岐
+  - [x] 自動ログイン: ローディングインジケーター表示 → リフレッシュ → `/startup` → ホームへ遷移
+  - [x] 自動ログイン失敗時: エラーメッセージ ＋ 再試行ボタン表示
+  - [x] アカウント作成モーダル: 利用規約・プライバシーポリシー同意チェックボックス（両方 ON でサインインボタン有効化）・外部リンクをブラウザで開く
+  - [x] アカウント作成モーダル: Google / Apple ソーシャルサインインボタン（縦並び）
+  - [x] サインイン後分岐: 既存アカウント → ホーム遷移 / 新規 → @name 設定画面へ
+- [x] 初回セットアップ画面（@name 入力・バリデーション・`PUT /api/v1/me/name`）— タイトル画面内モーダルとして実装
+- [ ] HTTP経由でのアバター一覧取得・ダウンロード（`/startup` レスポンスから取得→ `CacheManager` 経由でローカルキャッシュ）
 - [ ] VRMアップロードUI
-- [ ] ワールドデータ取得・`WorldLoader` 本番版実装
-- [ ] `CacheManager` 実装
-  - [ ] 自分のアセット（VRM・GLB・テクスチャ統合画像・レイヤー画像）を `Application.persistentDataPath` に永続保存
-  - [ ] 他人のアセットを `Application.temporaryCachePath` に一時保存（TTL管理・最終アクセス時刻記録）
-  - [ ] ハッシュベース更新チェック（ローカルに保存したハッシュとサーバーのハッシュを比較し、不一致のみ再ダウンロード）
-- [ ] ワールド一覧画面（ナビゲーションバー「ワールドタブ」内）
-  - [ ] 4 タブ構成（ホーム / フォロー中 / 新着順 / いいね）
-  - [ ] ホームタブ: 暫定的に新着順を表示（パーソナライズフィード本実装は Phase 14）・ワールド検索バー
-  - [ ] フォロー中タブ: フォロー中ユーザーのワールド（新着順）
-  - [ ] 新着順タブ: 全公開ワールド（新着順）
-  - [ ] いいねタブ: 自分がいいねしたワールド（いいねした日時降順）
-  - [ ] サムネイルグリッド・いいね数バッジ・無限スクロール（ID ベースカーソルページネーション）・サムネイル遅延読み込み
-- [ ] ワールド詳細・ルーム参加画面（サムネイル・参加中ユーザー一覧・いいね数・いいね/いいね解除ボタン・アクションボタン群）
+- [ ] ワールドデータ取得・`WorldLoader` 本番版実装（`/api/v1/worlds/{id}` → GLB URL → `CacheManager` 経由でダウンロード → `WorldLoader` に渡す）
+- [x] ワールド一覧画面（`WorldTab.uxml/uss` + `WorldListController.cs` — `HomeScreenController` から呼び出し）
+  - [x] 4 タブ構成（ホーム / フォロー中 / 新着順 / いいね）
+  - [x] ホームタブ: 暫定的に新着順を表示（パーソナライズフィード本実装は Phase 14）・ワールド検索バー
+  - [x] フォロー中タブ: スタブ（フォローシステムは後フェーズ）
+  - [x] 新着順タブ: 全公開ワールド（新着順・カーソルページネーション）
+  - [x] いいねタブ: 自分がいいねしたワールド（いいねした日時降順）
+  - [x] ワールドカード・無限スクロール（ID ベースカーソルページネーション）・サムネイル非同期読み込み
+- [ ] ワールド詳細・ルーム参加画面
   - [ ] 「公開ルームに参加」ボタン → 推奨ルーム参加 API 呼び出し → ローディング表示
-    - [ ] レスポンス `action: "join"` → 指定ルームへ参加
+    - [ ] レスポンス `action: "join"` → 指定ルームへ参加（`POST /api/v1/rooms/{roomID}/join`）
     - [ ] レスポンス `action: "create"` → 新規ルーム作成後参加
     - [ ] レスポンス `action: "confirm_english"` → 英語ルームのみ確認モーダル表示 → OK で参加確定 API を呼ぶ / キャンセルで新規ルーム作成
   - [ ] 「フレンドのみのルームを作成」ボタン → ルーム作成 API（種別: friends_only）呼び出し
   - [ ] 「その他のルームを見る」ボタン → その他ルーム画面へ遷移
 - [ ] その他ルーム画面
-  - [ ] 公開ルームの言語優先ソート一覧（言語一致上位・人数多い順）
-  - [ ] ルームカードに言語表示・参加人数 / 最大人数・満員バッジ・参加ボタン
-  - [ ] 「新しい公開ルームを作成」ボタン（言語自動設定。作成後ルーム内から変更可）
-  - [ ] 「フォロワー限定のルームを作成」ボタン → ルーム作成 API（種別: followers_only）呼び出し
-  - [ ] 「招待制ルームを作成」ボタン（プレミアム判定）
 - [ ] 起動時にサーバーから言語設定を取得し `LocalizationSettings.SelectedLocale` に反映
 
 ### テスト（EditMode）

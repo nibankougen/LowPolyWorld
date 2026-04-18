@@ -1,0 +1,33 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="WorldTab.uss" />
+    <ui:VisualElement name="world-tab-root" class="world-tab-root">
+
+        <!-- 検索バー（ホームタブのみ表示） -->
+        <ui:VisualElement name="search-bar" class="search-bar">
+            <ui:TextField name="search-input" class="search-input" placeholder-text="ワールドを検索..." />
+        </ui:VisualElement>
+
+        <!-- サブタブ -->
+        <ui:VisualElement name="sub-tab-bar" class="sub-tab-bar">
+            <ui:Button name="tab-home" class="sub-tab sub-tab--active" text="ホーム" />
+            <ui:Button name="tab-following" class="sub-tab" text="フォロー中" />
+            <ui:Button name="tab-new" class="sub-tab" text="新着順" />
+            <ui:Button name="tab-liked" class="sub-tab" text="いいね" />
+        </ui:VisualElement>
+
+        <!-- ワールドカードリスト -->
+        <ui:ScrollView name="world-scroll" class="world-scroll" mode="Vertical">
+            <ui:VisualElement name="world-list" class="world-list" />
+            <!-- ローディングインジケーター（スクロール末尾） -->
+            <ui:VisualElement name="load-more-area" class="load-more-area" style="display: none;">
+                <ui:Label class="load-more-label" text="読み込み中..." />
+            </ui:VisualElement>
+        </ui:ScrollView>
+
+        <!-- 空表示 -->
+        <ui:VisualElement name="empty-area" class="empty-area" style="display: none;">
+            <ui:Label class="empty-label" text="ワールドが見つかりません" />
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>

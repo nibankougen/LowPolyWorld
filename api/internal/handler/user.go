@@ -207,6 +207,70 @@ func (h *Handler) DeleteAccount(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+type setLanguageRequest struct {
+	Language string `json:"language"`
+}
+
+// SetLanguage handles PATCH /api/v1/me/language — updates the user's preferred language.
+func (h *Handler) SetLanguage(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.UserIDFromContext(r.Context())
+
+	var req setLanguageRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.Error(w, r, http.StatusBadRequest, "validation_error", "invalid request body")
+		return
+	}
+
+	if len(req.Language) < 2 || len(req.Language) > 10 {
+		response.Error(w, r, http.StatusBadRequest, "validation_error", "invalid language code")
+		return
+	}
+
+	_, err := h.DB.Exec(r.Context(),
+		`UPDATE active_users SET language = $1, updated_at = now() WHERE user_id = $2`,
+		req.Language, userID,
+	)
+	if err != nil {
+		h.Logger.Error("update language", "error", err)
+		response.InternalError(w, r, h.Cfg.IsProduction())
+		return
+	}
+
+	response.JSON(w, http.StatusOK, map[string]string{"language": req.Language})
+}
+
+type updateDisplayNameRequest struct {
+	DisplayName string `json:"displayName"`
+}
+
+// UpdateDisplayName handles PATCH /api/v1/me/display-name.
+func (h *Handler) UpdateDisplayName(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.UserIDFromContext(r.Context())
+
+	var req updateDisplayNameRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.Error(w, r, http.StatusBadRequest, "validation_error", "invalid request body")
+		return
+	}
+
+	if len(req.DisplayName) == 0 || len([]rune(req.DisplayName)) > 30 {
+		response.Error(w, r, http.StatusBadRequest, "validation_error", "display name must be 1-30 characters")
+		return
+	}
+
+	_, err := h.DB.Exec(r.Context(),
+		`UPDATE active_users SET display_name = $1, updated_at = now() WHERE user_id = $2`,
+		req.DisplayName, userID,
+	)
+	if err != nil {
+		h.Logger.Error("update display name", "error", err)
+		response.InternalError(w, r, h.Cfg.IsProduction())
+		return
+	}
+
+	response.JSON(w, http.StatusOK, map[string]string{"displayName": req.DisplayName})
+}
+
 // validateName returns validation error details for the given (already-lowercased) name.
 func validateName(name string) []response.ErrDetail {
 	var details []response.ErrDetail

@@ -144,6 +144,31 @@ func (h *Handler) ListFollowingWorlds(w http.ResponseWriter, r *http.Request) {
 	response.JSONCursor(w, http.StatusOK, []worldResponse{}, response.Cursor{Next: "", HasMore: false})
 }
 
+// GetWorld handles GET /api/v1/worlds/{worldID} — returns a single public world's details.
+func (h *Handler) GetWorld(w http.ResponseWriter, r *http.Request) {
+	worldID := chi.URLParam(r, "worldID")
+
+	var (
+		id, name, description string
+		thumbnailHash         *string
+		glbHash               *string
+		isPublic              bool
+		maxPlayers, likes     int
+		createdAt             time.Time
+	)
+	err := h.DB.QueryRow(r.Context(),
+		`SELECT id, name, description, thumbnail_hash, glb_hash, is_public, max_players, likes_count, created_at
+		 FROM worlds WHERE id = $1 AND is_public = TRUE`,
+		worldID,
+	).Scan(&id, &name, &description, &thumbnailHash, &glbHash, &isPublic, &maxPlayers, &likes, &createdAt)
+	if err != nil {
+		response.Error(w, r, http.StatusNotFound, "not_found", "world not found")
+		return
+	}
+
+	response.JSON(w, http.StatusOK, h.buildWorldResponse(id, name, description, thumbnailHash, glbHash, isPublic, maxPlayers, likes, createdAt))
+}
+
 // LikeWorld handles POST /api/v1/worlds/{worldID}/like.
 func (h *Handler) LikeWorld(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.UserIDFromContext(r.Context())

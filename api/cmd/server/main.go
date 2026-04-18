@@ -128,10 +128,27 @@ func main() {
 		r.Put("/me/name", h.SetupName)
 		r.Delete("/me", h.DeleteAccount)
 
+		// Me — extended
+		r.Patch("/me/language", h.SetLanguage)
+		r.Patch("/me/display-name", h.UpdateDisplayName)
+
+		// Me — avatars
+		r.Get("/me/avatars", h.ListMyAvatars)
+		r.Post("/me/avatars", h.UploadAvatar)
+		r.Delete("/me/avatars/{avatarID}", h.DeleteAvatar)
+		r.Put("/me/avatars/{avatarID}/texture", h.UpdateAvatarTexture)
+
+		// Me — accessories
+		r.Get("/me/accessories", h.ListMyAccessories)
+		r.Post("/me/accessories", h.UploadAccessory)
+		r.Delete("/me/accessories/{accessoryID}", h.DeleteAccessory)
+		r.Put("/me/accessories/{accessoryID}/texture", h.UpdateAccessoryTexture)
+
 		// Worlds
 		r.Get("/worlds/new", h.ListNewWorlds)
 		r.Get("/worlds/liked", h.ListLikedWorlds)
 		r.Get("/worlds/following", h.ListFollowingWorlds)
+		r.Get("/worlds/{worldID}", h.GetWorld)
 		r.Post("/worlds/{worldID}/like", h.LikeWorld)
 		r.Delete("/worlds/{worldID}/like", h.UnlikeWorld)
 
@@ -139,6 +156,9 @@ func main() {
 		r.Get("/worlds/{worldID}/rooms", h.ListRooms)
 		r.Post("/worlds/{worldID}/rooms", h.CreateRoom)
 		r.Post("/worlds/{worldID}/rooms/recommended-join", h.RecommendedJoin)
+		r.Post("/rooms/{roomID}/join", h.JoinRoom)
+		r.Delete("/rooms/{roomID}/leave", h.LeaveRoom)
+		r.Patch("/rooms/{roomID}/language", h.PatchRoomLanguage)
 	})
 
 	// Dev-only: serve local asset files

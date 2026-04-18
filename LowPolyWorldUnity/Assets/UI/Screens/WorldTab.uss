@@ -1,0 +1,128 @@
+.world-tab-root {
+    flex: 1;
+    flex-direction: column;
+    background-color: rgb(18, 18, 28);
+}
+
+/* ── Search bar ──────────────────────────────────── */
+
+.search-bar {
+    padding: 10px 12px 6px;
+}
+
+.search-input {
+    height: 40px;
+    border-radius: 20px;
+    background-color: rgb(40, 40, 60);
+    border-color: rgb(60, 60, 80);
+    color: rgb(220, 220, 240);
+    font-size: 14px;
+}
+
+/* ── Sub-tab bar ─────────────────────────────────── */
+
+.sub-tab-bar {
+    flex-direction: row;
+    background-color: rgb(22, 22, 34);
+    border-bottom-width: 1px;
+    border-bottom-color: rgb(50, 50, 70);
+}
+
+.sub-tab {
+    flex: 1;
+    height: 40px;
+    background-color: transparent;
+    border-width: 0;
+    border-bottom-width: 2px;
+    border-bottom-color: transparent;
+    color: rgb(150, 150, 180);
+    font-size: 13px;
+}
+
+.sub-tab--active {
+    color: rgb(255, 255, 255);
+    border-bottom-color: rgb(100, 140, 255);
+}
+
+/* ── World list ──────────────────────────────────── */
+
+.world-scroll {
+    flex: 1;
+}
+
+.world-list {
+    flex-direction: column;
+    padding: 8px;
+}
+
+/* ── World card ──────────────────────────────────── */
+
+.world-card {
+    flex-direction: row;
+    background-color: rgb(30, 30, 46);
+    border-radius: 12px;
+    margin-bottom: 10px;
+    height: 90px;
+    overflow: hidden;
+}
+
+.world-card__thumb {
+    width: 90px;
+    height: 90px;
+    background-color: rgb(50, 50, 70);
+}
+
+.world-card__info {
+    flex: 1;
+    padding: 10px 12px;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.world-card__name {
+    font-size: 15px;
+    -unity-font-style: bold;
+    color: rgb(240, 240, 255);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.world-card__meta {
+    flex-direction: row;
+    align-items: center;
+}
+
+.world-card__players {
+    font-size: 12px;
+    color: rgb(160, 200, 160);
+    margin-right: 12px;
+}
+
+.world-card__likes {
+    font-size: 12px;
+    color: rgb(200, 160, 160);
+}
+
+/* ── Load more / empty ───────────────────────────── */
+
+.load-more-area {
+    align-items: center;
+    padding: 16px;
+}
+
+.load-more-label {
+    font-size: 13px;
+    color: rgb(150, 150, 180);
+}
+
+.empty-area {
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+}
+
+.empty-label {
+    font-size: 15px;
+    color: rgb(120, 120, 150);
+}
