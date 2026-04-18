@@ -443,7 +443,7 @@
 - [x] 初回セットアップ画面（@name 入力・バリデーション・`PUT /api/v1/me/name`）— タイトル画面内モーダルとして実装
 - [ ] HTTP経由でのアバター一覧取得・ダウンロード（`/startup` レスポンスから取得→ `CacheManager` 経由でローカルキャッシュ）
 - [ ] VRMアップロードUI
-- [ ] ワールドデータ取得・`WorldLoader` 本番版実装（`/api/v1/worlds/{id}` → GLB URL → `CacheManager` 経由でダウンロード → `WorldLoader` に渡す）
+- [x] ワールドデータ取得・`WorldLoader` 本番版実装（`WorldSessionData` → `CacheManager` 経由でダウンロード → `WorldLoader` に渡す）
 - [x] ワールド一覧画面（`WorldTab.uxml/uss` + `WorldListController.cs` — `HomeScreenController` から呼び出し）
   - [x] 4 タブ構成（ホーム / フォロー中 / 新着順 / いいね）
   - [x] ホームタブ: 暫定的に新着順を表示（パーソナライズフィード本実装は Phase 14）・ワールド検索バー
@@ -459,7 +459,7 @@
   - [x] 「フレンドのみのルームを作成」ボタン → ルーム作成 API（種別: friends_only）呼び出し
   - [x] 「その他のルームを見る」ボタン → その他ルーム画面へ遷移
 - [x] その他ルーム画面（`RoomList.uxml/uss` + `RoomListController.cs`）
-- [ ] 起動時にサーバーから言語設定を取得し `LocalizationSettings.SelectedLocale` に反映
+- [x] 起動時にサーバーから言語設定を取得し `LocalizationSettings.SelectedLocale` に反映
 
 ### テスト（EditMode）
 - [ ] `AssetCacheStore`: ハッシュ一致 → キャッシュヒット / 不一致 → 再ダウンロード判定

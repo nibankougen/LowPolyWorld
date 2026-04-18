@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Localization.Settings;
 using UnityEngine.UIElements;
 
 /// <summary>
@@ -151,6 +152,7 @@ public class TitleScreenController : MonoBehaviour
         }
 
         UserManager.Instance.StoreStartupData(startupData);
+        ApplyLanguageSetting(startupData.user.language);
 
         if (startupData.user.nameSetupRequired)
         {
@@ -241,6 +243,16 @@ public class TitleScreenController : MonoBehaviour
 
         HideModal(_nameSetupModal);
         NavigateToHome();
+    }
+
+    // ── Language ──────────────────────────────────────────────────────────────
+
+    private static void ApplyLanguageSetting(string languageCode)
+    {
+        if (string.IsNullOrEmpty(languageCode)) return;
+        var locale = LocalizationSettings.AvailableLocales.GetLocale(languageCode);
+        if (locale != null)
+            LocalizationSettings.SelectedLocale = locale;
     }
 
     // ── UI helpers ────────────────────────────────────────────────────────────

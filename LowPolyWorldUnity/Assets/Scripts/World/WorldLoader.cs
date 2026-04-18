@@ -6,17 +6,14 @@ using GLTFast;
 using UnityEngine;
 
 /// <summary>
-/// GLTF/GLB をローカルパスから読み込む暫定版 WorldLoader。
-/// Phase 5 以降で API サーバー連携版に差し替える。
+/// GLTF/GLB をローカルパスまたはURL（CacheManager経由）から読み込む WorldLoader。
+/// WorldScene 起動時に WorldSessionData.WorldGlbUrl が設定されていれば自動ロードする。
 /// </summary>
 public class WorldLoader : MonoBehaviour
 {
     public static WorldLoader Instance { get; private set; }
 
-    /// <summary>ロード完了イベント。引数: ロードされたワールドのルート GameObject。</summary>
     public event Action<GameObject> OnWorldLoaded;
-
-    /// <summary>ロード失敗イベント。</summary>
     public event Action<string> OnWorldLoadFailed;
 
     private GameObject _currentWorld;
@@ -32,6 +29,13 @@ public class WorldLoader : MonoBehaviour
         Instance = this;
     }
 
+    private void Start()
+    {
+        var glbUrl = WorldSessionData.WorldGlbUrl;
+        if (!string.IsNullOrEmpty(glbUrl))
+            LoadFromUrl(glbUrl);
+    }
+
     private void OnDestroy()
     {
         if (Instance == this)
@@ -40,20 +44,51 @@ public class WorldLoader : MonoBehaviour
         _cts?.Dispose();
     }
 
+    // ── Public API ────────────────────────────────────────────────────────────
+
     /// <summary>
-    /// StreamingAssets/{relativePath} から GLB/GLTF をロードする。
+    /// CDN URL から GLB をダウンロード（CacheManager でキャッシュ）してロードする。
+    /// URL はコンテンツアドレス型（{sha256}.glb）で、ファイル名からハッシュを抽出する。
+    /// </summary>
+    public async void LoadFromUrl(string url)
+    {
+        ResetCts();
+        ClearCurrentWorld();
+
+        var hash = ExtractHashFromUrl(url);
+        if (string.IsNullOrEmpty(hash))
+        {
+            OnWorldLoadFailed?.Invoke($"Invalid GLB URL: {url}");
+            return;
+        }
+
+        if (CacheManager.Instance == null)
+        {
+            OnWorldLoadFailed?.Invoke("CacheManager not ready");
+            return;
+        }
+
+        var ct = _cts.Token;
+        var (localPath, error) = await CacheManager.Instance.GetOrDownloadAsync(url, hash, "glb", isOwn: false, ct);
+
+        if (ct.IsCancellationRequested) return;
+
+        if (error != null)
+        {
+            OnWorldLoadFailed?.Invoke($"Failed to download world: {error}");
+            return;
+        }
+
+        await LoadFromLocalPathAsync(localPath, ct);
+    }
+
+    /// <summary>
+    /// StreamingAssets/{relativePath} から GLB/GLTF をロードする（開発用）。
     /// </summary>
     public async void LoadFromStreamingAssets(string relativePath)
     {
-        _cts?.Cancel();
-        _cts?.Dispose();
-        _cts = new CancellationTokenSource();
-
-        if (_currentWorld != null)
-        {
-            Destroy(_currentWorld);
-            _currentWorld = null;
-        }
+        ResetCts();
+        ClearCurrentWorld();
 
         string fullPath = Path.Combine(Application.streamingAssetsPath, relativePath);
         if (!File.Exists(fullPath))
@@ -62,14 +97,21 @@ public class WorldLoader : MonoBehaviour
             return;
         }
 
+        await LoadFromLocalPathAsync(fullPath, _cts.Token);
+    }
+
+    // ── Private ───────────────────────────────────────────────────────────────
+
+    private async Task LoadFromLocalPathAsync(string localPath, CancellationToken ct)
+    {
         try
         {
             var go = new GameObject("World");
             var gltf = go.AddComponent<GltfAsset>();
-            var uri = new Uri(fullPath);
+            var uri = new Uri(localPath);
             bool success = await gltf.Load(uri.AbsoluteUri);
 
-            if (_cts.Token.IsCancellationRequested)
+            if (ct.IsCancellationRequested)
             {
                 Destroy(go);
                 return;
@@ -78,11 +120,10 @@ public class WorldLoader : MonoBehaviour
             if (!success)
             {
                 Destroy(go);
-                OnWorldLoadFailed?.Invoke($"Failed to load world: {relativePath}");
+                OnWorldLoadFailed?.Invoke($"Failed to load world from: {localPath}");
                 return;
             }
 
-            // World レイヤーを設定
             int worldLayer = LayerMask.NameToLayer("World");
             if (worldLayer >= 0)
                 SetLayerRecursive(go, worldLayer);
@@ -95,6 +136,36 @@ public class WorldLoader : MonoBehaviour
         {
             Debug.LogError($"[WorldLoader] Exception: {e}");
             OnWorldLoadFailed?.Invoke(e.Message);
+        }
+    }
+
+    private void ResetCts()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = new CancellationTokenSource();
+    }
+
+    private void ClearCurrentWorld()
+    {
+        if (_currentWorld != null)
+        {
+            Destroy(_currentWorld);
+            _currentWorld = null;
+        }
+    }
+
+    // Extracts SHA-256 hash from a content-addressed URL like https://cdn.example.com/abc123.glb
+    private static string ExtractHashFromUrl(string url)
+    {
+        try
+        {
+            var fileName = Path.GetFileNameWithoutExtension(new Uri(url).LocalPath);
+            return string.IsNullOrEmpty(fileName) ? null : fileName;
+        }
+        catch
+        {
+            return null;
         }
     }
 

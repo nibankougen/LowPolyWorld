@@ -6,7 +6,8 @@
         "VRM10",
         "UniGLTF",
         "glTFast",
-        "Unity.Netcode.Runtime"
+        "Unity.Netcode.Runtime",
+        "Unity.Localization"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
