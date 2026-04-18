@@ -120,7 +120,7 @@ public class AssetCacheStoreTests
     }
 
     [Test]
-    public void PurgeExpired_DeletesExpiredFiles_LeavesFreashFiles()
+    public void PurgeExpired_DeletesExpiredFiles_LeavesFreshFiles()
     {
         var expiredPath = Path.Combine(_tempOthers, "old.glb");
         var freshPath = Path.Combine(_tempOthers, "new.glb");

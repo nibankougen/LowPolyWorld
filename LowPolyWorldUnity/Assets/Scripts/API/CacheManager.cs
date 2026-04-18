@@ -66,7 +66,9 @@ public class CacheManager : MonoBehaviour
             if (!isOwn)
                 File.SetLastAccessTimeUtc(localPath, DateTime.UtcNow);
 
-            if (_store.HashMatchesFile(localPath, hash))
+            // Offload file read + SHA-256 to thread pool to avoid blocking the main thread
+            var hashMatches = await Task.Run(() => _store.HashMatchesFile(localPath, hash), ct);
+            if (hashMatches)
                 return (localPath, null);
 
             // Hash mismatch — delete stale file and re-download
