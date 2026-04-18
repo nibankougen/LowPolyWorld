@@ -116,6 +116,7 @@ public class UserManager : MonoBehaviour
     /// <summary>
     /// /startup で取得したアバター一覧の先頭を CacheManager 経由でダウンロードし、
     /// SelectedAvatarLocalPath にセットする。アバターがなければ何もしない。
+    /// 30 秒でタイムアウトし、失敗してもアバターなしで続行する。
     /// </summary>
     public async Task DownloadAndCacheAvatarsAsync(CancellationToken ct)
     {
@@ -125,15 +126,18 @@ public class UserManager : MonoBehaviour
         var first = Avatars[0];
         if (string.IsNullOrEmpty(first.vrmUrl) || string.IsNullOrEmpty(first.vrmHash)) return;
 
+        using var timeout = new CancellationTokenSource(System.TimeSpan.FromSeconds(30));
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(ct, timeout.Token);
+
         var (path, error) = await CacheManager.Instance.GetOrDownloadAsync(
-            first.vrmUrl, first.vrmHash, "vrm", isOwn: true, ct
+            first.vrmUrl, first.vrmHash, "vrm", isOwn: true, linked.Token
         );
 
         if (ct.IsCancellationRequested) return;
 
         if (error != null)
         {
-            Debug.LogWarning($"[UserManager] Avatar download failed: {error}");
+            Debug.LogWarning($"[UserManager] Avatar download failed (continuing without avatar): {error}");
             return;
         }
 

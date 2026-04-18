@@ -1,16 +1,18 @@
 using System.Threading;
+using System.Threading.Tasks;
 using UnityEngine;
 
 /// <summary>
 /// WorldScene 起動時にローカルプレイヤーの VRM を読み込んで AvatarManager に登録する。
 /// PlayerController と同じ GameObject にアタッチする。
+/// アバターが未選択（SelectedAvatarLocalPath == null）の場合はスキップする。
+/// デフォルトアバターのフォールバックは Phase 2 で実装予定。
 /// </summary>
 public class LocalAvatarSetup : MonoBehaviour
 {
     [SerializeField] private RuntimeAnimatorController _animatorController;
 
     private CancellationTokenSource _cts;
-    private GameObject _loadedVrm;
 
     private void Start()
     {
@@ -25,7 +27,7 @@ public class LocalAvatarSetup : MonoBehaviour
         _cts = null;
     }
 
-    private async System.Threading.Tasks.Task SetupLocalAvatarAsync(CancellationToken ct)
+    private async Task SetupLocalAvatarAsync(CancellationToken ct)
     {
         var path = UserManager.Instance?.SelectedAvatarLocalPath;
         if (string.IsNullOrEmpty(path))
@@ -35,7 +37,11 @@ public class LocalAvatarSetup : MonoBehaviour
         }
 
         var vrmRoot = await VrmLoader.LoadFromLocalPathAsync(path, ct);
-        if (ct.IsCancellationRequested) return;
+        if (ct.IsCancellationRequested)
+        {
+            if (vrmRoot != null) Destroy(vrmRoot);
+            return;
+        }
 
         if (vrmRoot == null)
         {
@@ -43,7 +49,6 @@ public class LocalAvatarSetup : MonoBehaviour
             return;
         }
 
-        // プレイヤーの原点に配置
         vrmRoot.transform.SetParent(transform, false);
         vrmRoot.transform.localPosition = Vector3.zero;
         vrmRoot.transform.localRotation = Quaternion.identity;
@@ -52,7 +57,5 @@ public class LocalAvatarSetup : MonoBehaviour
 
         var userId = UserManager.Instance?.Profile?.id ?? "local";
         AvatarManager.Instance?.RegisterAvatar(userId, vrmRoot, isLocal: true);
-
-        _loadedVrm = vrmRoot;
     }
 }
