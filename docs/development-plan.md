@@ -1,4 +1,4 @@
-# LowPolyWorld 開発計画
+# Lo-Res World 開発計画
 
 ## 方針
 
