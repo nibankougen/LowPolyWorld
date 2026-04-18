@@ -122,7 +122,20 @@ func (h *Handler) UnlinkAuthProvider(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Count currently linked providers
+	// Verify the provider is actually linked
+	var isLinked bool
+	switch provider {
+	case "google":
+		isLinked = googleSub != nil
+	case "apple":
+		isLinked = appleSub != nil
+	}
+	if !isLinked {
+		response.Error(w, r, http.StatusNotFound, "not_found", "provider not linked")
+		return
+	}
+
+	// Require at least one remaining provider after unlinking
 	linked := 0
 	if googleSub != nil {
 		linked++

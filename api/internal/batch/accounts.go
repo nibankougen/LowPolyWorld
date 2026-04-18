@@ -49,6 +49,16 @@ func DeleteExpiredAccounts(ctx context.Context, db *pgxpool.Pool, store storage.
 			logger.Warn("failed to delete assets for user, skipping", "user_id", userID, "error", err)
 		}
 
+		// Delete avatar and accessory rows (reference users.id ON DELETE NO ACTION, so not auto-cascaded)
+		if _, err := db.Exec(ctx, `DELETE FROM accessories WHERE user_id = $1`, userID); err != nil {
+			logger.Error("failed to delete accessories", "user_id", userID, "error", err)
+			return 0, err
+		}
+		if _, err := db.Exec(ctx, `DELETE FROM avatars WHERE user_id = $1`, userID); err != nil {
+			logger.Error("failed to delete avatars", "user_id", userID, "error", err)
+			return 0, err
+		}
+
 		if _, err := db.Exec(ctx,
 			`DELETE FROM active_users WHERE user_id = $1`, userID,
 		); err != nil {
