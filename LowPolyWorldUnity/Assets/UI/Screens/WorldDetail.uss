@@ -1,0 +1,204 @@
+.world-detail-root {
+    flex: 1;
+    flex-direction: column;
+    background-color: rgb(18, 18, 28);
+}
+
+/* ── Header ──────────────────────────────────────── */
+
+.detail-header {
+    flex-direction: row;
+    align-items: center;
+    height: 52px;
+    background-color: rgb(22, 22, 34);
+    border-bottom-width: 1px;
+    border-bottom-color: rgb(50, 50, 70);
+    padding: 0 8px;
+}
+
+.btn-back {
+    width: 44px;
+    height: 44px;
+    background-color: transparent;
+    border-width: 0;
+    font-size: 24px;
+    color: rgb(200, 200, 220);
+}
+
+.header-title {
+    flex: 1;
+    font-size: 16px;
+    -unity-font-style: bold;
+    color: rgb(240, 240, 255);
+    -unity-text-align: middle-center;
+}
+
+.header-spacer {
+    width: 44px;
+}
+
+/* ── Scroll content ──────────────────────────────── */
+
+.detail-scroll {
+    flex: 1;
+}
+
+/* ── Thumbnail ───────────────────────────────────── */
+
+.detail-thumb {
+    width: 100%;
+    height: 220px;
+    background-color: rgb(40, 40, 60);
+}
+
+/* ── Info ────────────────────────────────────────── */
+
+.detail-info {
+    padding: 16px;
+    flex-direction: column;
+}
+
+.detail-name {
+    font-size: 20px;
+    -unity-font-style: bold;
+    color: rgb(240, 240, 255);
+    white-space: normal;
+    margin-bottom: 8px;
+}
+
+.detail-meta {
+    flex-direction: row;
+    align-items: center;
+}
+
+.detail-likes {
+    font-size: 14px;
+    color: rgb(200, 160, 160);
+    margin-right: 16px;
+}
+
+.detail-players {
+    font-size: 14px;
+    color: rgb(160, 200, 160);
+}
+
+/* ── Divider ─────────────────────────────────────── */
+
+.detail-divider {
+    height: 1px;
+    background-color: rgb(50, 50, 70);
+    margin: 4px 16px;
+}
+
+/* ── Action area ─────────────────────────────────── */
+
+.action-area {
+    padding: 16px;
+    flex-direction: column;
+}
+
+.btn-action {
+    height: 52px;
+    border-radius: 26px;
+    font-size: 15px;
+    -unity-font-style: bold;
+    margin-bottom: 12px;
+}
+
+.btn-join-public {
+    background-color: rgb(100, 140, 255);
+    border-width: 0;
+    color: rgb(255, 255, 255);
+}
+
+.btn-action--secondary {
+    background-color: rgb(60, 80, 160);
+    border-width: 0;
+    color: rgb(220, 220, 255);
+}
+
+.btn-action--outline {
+    background-color: transparent;
+    border-width: 1px;
+    border-color: rgb(100, 100, 140);
+    color: rgb(180, 180, 220);
+}
+
+/* ── Loading overlay ─────────────────────────────── */
+
+.detail-loading {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    align-items: center;
+    justify-content: center;
+}
+
+.loading-label {
+    font-size: 16px;
+    color: rgb(200, 200, 255);
+}
+
+/* ── Modal ───────────────────────────────────────── */
+
+.modal-overlay {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-box {
+    background-color: rgb(30, 30, 46);
+    border-radius: 16px;
+    padding: 24px;
+    width: 300px;
+}
+
+.modal-title {
+    font-size: 17px;
+    -unity-font-style: bold;
+    color: rgb(240, 240, 255);
+    margin-bottom: 12px;
+    -unity-text-align: upper-center;
+}
+
+.modal-body {
+    font-size: 14px;
+    color: rgb(200, 200, 220);
+    white-space: normal;
+    margin-bottom: 20px;
+    -unity-text-align: upper-center;
+}
+
+.modal-buttons {
+    flex-direction: row;
+    justify-content: flex-end;
+}
+
+.modal-btn {
+    height: 40px;
+    border-radius: 8px;
+    font-size: 14px;
+    padding: 0 16px;
+    margin-left: 8px;
+}
+
+.modal-btn--cancel {
+    background-color: rgb(50, 50, 70);
+    border-width: 0;
+    color: rgb(180, 180, 200);
+}
+
+.modal-btn--ok {
+    background-color: rgb(100, 140, 255);
+    border-width: 0;
+    color: rgb(255, 255, 255);
+}

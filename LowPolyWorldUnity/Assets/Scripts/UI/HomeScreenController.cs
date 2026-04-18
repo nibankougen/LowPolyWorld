@@ -1,8 +1,10 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
 
 /// <summary>
 /// HomeScene のナビゲーションバーとタブ切り替えを管理する MonoBehaviour。
+/// ワールド一覧 → ワールド詳細 → その他ルーム の画面遷移スタックを管理する。
 /// </summary>
 [RequireComponent(typeof(UIDocument))]
 public class HomeScreenController : MonoBehaviour
@@ -13,6 +15,8 @@ public class HomeScreenController : MonoBehaviour
     [SerializeField] private VisualTreeAsset _worldManageTabAsset;
     [SerializeField] private VisualTreeAsset _shopTabAsset;
     [SerializeField] private VisualTreeAsset _settingsTabAsset;
+    [SerializeField] private VisualTreeAsset _worldDetailAsset;
+    [SerializeField] private VisualTreeAsset _roomListAsset;
 
     private UIDocument _document;
     private VisualElement _contentArea;
@@ -26,6 +30,10 @@ public class HomeScreenController : MonoBehaviour
     private Button _activeTab;
     private SettingsTabController _settingsTabController;
     private WorldListController _worldListController;
+    private WorldDetailController _worldDetailController;
+    private RoomListController _roomListController;
+
+    private WorldResponse _currentWorld;
 
     private void Awake()
     {
@@ -49,15 +57,26 @@ public class HomeScreenController : MonoBehaviour
         _navShop.clicked += () => SelectTab(_navShop, _shopTabAsset);
         _navSettings.clicked += () => SelectTab(_navSettings, _settingsTabAsset);
 
-        // デフォルトはワールドタブ
         SelectTab(_navWorld, _worldTabAsset);
     }
 
     private void OnDisable()
     {
+        DisposeAllControllers();
+    }
+
+    private void DisposeAllControllers()
+    {
         _worldListController?.Dispose();
         _worldListController = null;
+        _worldDetailController?.Dispose();
+        _worldDetailController = null;
+        _roomListController?.Dispose();
+        _roomListController = null;
+        _settingsTabController = null;
     }
+
+    // ── Tab switching ─────────────────────────────────────────────────────────
 
     private void SelectTab(Button tab, VisualTreeAsset contentAsset)
     {
@@ -67,10 +86,7 @@ public class HomeScreenController : MonoBehaviour
         _activeTab = tab;
         _activeTab.AddToClassList("nav-tab--active");
 
-        // Dispose previous tab controllers
-        _settingsTabController = null;
-        _worldListController?.Dispose();
-        _worldListController = null;
+        DisposeAllControllers();
         _contentArea.Clear();
 
         if (contentAsset == null)
@@ -88,7 +104,69 @@ public class HomeScreenController : MonoBehaviour
         else if (tab == _navWorld && UserManager.Instance != null)
         {
             _worldListController = new WorldListController(content, UserManager.Instance.Api);
+            _worldListController.OnWorldSelected += ShowWorldDetail;
             _worldListController.Initialize();
         }
+    }
+
+    // ── World detail ──────────────────────────────────────────────────────────
+
+    private void ShowWorldDetail(WorldResponse world)
+    {
+        if (_worldDetailAsset == null) return;
+
+        _currentWorld = world;
+
+        _worldDetailController?.Dispose();
+        _worldDetailController = null;
+        _contentArea.Clear();
+
+        var content = _worldDetailAsset.Instantiate();
+        content.style.flexGrow = 1;
+        _contentArea.Add(content);
+
+        _worldDetailController = new WorldDetailController(content, UserManager.Instance.Api, world);
+        _worldDetailController.OnBack += ShowWorldList;
+        _worldDetailController.OnShowRoomList += ShowRoomList;
+        _worldDetailController.OnEnterWorld += EnterWorld;
+    }
+
+    private void ShowWorldList()
+    {
+        _worldDetailController?.Dispose();
+        _worldDetailController = null;
+        _roomListController?.Dispose();
+        _roomListController = null;
+        SelectTab(_navWorld, _worldTabAsset);
+    }
+
+    // ── Room list ─────────────────────────────────────────────────────────────
+
+    private void ShowRoomList()
+    {
+        if (_roomListAsset == null || _currentWorld == null) return;
+
+        _roomListController?.Dispose();
+        _roomListController = null;
+        _contentArea.Clear();
+
+        var content = _roomListAsset.Instantiate();
+        content.style.flexGrow = 1;
+        _contentArea.Add(content);
+
+        var hasPremium = UserManager.Instance?.Capabilities?.invite_room_create ?? false;
+        _roomListController = new RoomListController(content, UserManager.Instance.Api, _currentWorld, hasPremium);
+        _roomListController.OnBack += () => ShowWorldDetail(_currentWorld);
+        _roomListController.OnEnterWorld += EnterWorld;
+        _roomListController.Initialize();
+    }
+
+    // ── Scene transition ──────────────────────────────────────────────────────
+
+    private void EnterWorld(string worldId, string roomId, string glbUrl)
+    {
+        WorldSessionData.Set(worldId, roomId, glbUrl);
+        DisposeAllControllers();
+        SceneManager.LoadScene("WorldScene");
     }
 }

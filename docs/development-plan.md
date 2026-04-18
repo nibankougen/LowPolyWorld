@@ -451,14 +451,14 @@
   - [x] 新着順タブ: 全公開ワールド（新着順・カーソルページネーション）
   - [x] いいねタブ: 自分がいいねしたワールド（いいねした日時降順）
   - [x] ワールドカード・無限スクロール（ID ベースカーソルページネーション）・サムネイル非同期読み込み
-- [ ] ワールド詳細・ルーム参加画面
-  - [ ] 「公開ルームに参加」ボタン → 推奨ルーム参加 API 呼び出し → ローディング表示
-    - [ ] レスポンス `action: "join"` → 指定ルームへ参加（`POST /api/v1/rooms/{roomID}/join`）
-    - [ ] レスポンス `action: "create"` → 新規ルーム作成後参加
-    - [ ] レスポンス `action: "confirm_english"` → 英語ルームのみ確認モーダル表示 → OK で参加確定 API を呼ぶ / キャンセルで新規ルーム作成
-  - [ ] 「フレンドのみのルームを作成」ボタン → ルーム作成 API（種別: friends_only）呼び出し
-  - [ ] 「その他のルームを見る」ボタン → その他ルーム画面へ遷移
-- [ ] その他ルーム画面
+- [x] ワールド詳細・ルーム参加画面（`WorldDetail.uxml/uss` + `WorldDetailController.cs`）
+  - [x] 「公開ルームに参加」ボタン → 推奨ルーム参加 API 呼び出し → ローディング表示
+    - [x] レスポンス `action: "join"` → 指定ルームへ参加（`POST /api/v1/rooms/{roomID}/join`）
+    - [x] レスポンス `action: "create"` → 新規ルーム作成後参加
+    - [x] レスポンス `action: "confirm_english"` → 英語ルームのみ確認モーダル表示 → OK で参加確定 API を呼ぶ / キャンセルで新規ルーム作成
+  - [x] 「フレンドのみのルームを作成」ボタン → ルーム作成 API（種別: friends_only）呼び出し
+  - [x] 「その他のルームを見る」ボタン → その他ルーム画面へ遷移
+- [x] その他ルーム画面（`RoomList.uxml/uss` + `RoomListController.cs`）
 - [ ] 起動時にサーバーから言語設定を取得し `LocalizationSettings.SelectedLocale` に反映
 
 ### テスト（EditMode）

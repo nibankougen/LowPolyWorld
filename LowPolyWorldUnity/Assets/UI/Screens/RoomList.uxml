@@ -1,0 +1,33 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="RoomList.uss" />
+    <ui:VisualElement name="room-list-root" class="room-list-root">
+
+        <!-- ヘッダー -->
+        <ui:VisualElement name="room-list-header" class="room-list-header">
+            <ui:Button name="btn-back" class="btn-back" text="‹" />
+            <ui:Label name="header-title" class="header-title" text="その他のルーム" />
+            <ui:VisualElement class="header-spacer" />
+        </ui:VisualElement>
+
+        <!-- ローディング -->
+        <ui:VisualElement name="room-loading" class="room-loading" style="display: none;">
+            <ui:Label class="loading-label" text="読み込み中..." />
+        </ui:VisualElement>
+
+        <!-- ルーム一覧 -->
+        <ui:ScrollView name="room-scroll" class="room-scroll" mode="Vertical">
+            <ui:VisualElement name="room-items" class="room-items" />
+            <ui:VisualElement name="room-empty" class="room-empty" style="display: none;">
+                <ui:Label class="room-empty-label" text="公開ルームがありません" />
+            </ui:VisualElement>
+        </ui:ScrollView>
+
+        <!-- 作成ボタンエリア -->
+        <ui:VisualElement name="create-area" class="create-area">
+            <ui:Button name="btn-create-public" class="btn-create btn-create--primary" text="新しい公開ルームを作成" />
+            <ui:Button name="btn-create-followers" class="btn-create btn-create--secondary" text="フォロワー限定のルームを作成" />
+            <ui:Button name="btn-create-invite" class="btn-create btn-create--outline" text="招待制ルームを作成（プレミアム）" />
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>

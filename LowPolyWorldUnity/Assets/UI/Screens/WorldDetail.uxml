@@ -1,0 +1,57 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="WorldDetail.uss" />
+    <ui:VisualElement name="world-detail-root" class="world-detail-root">
+
+        <!-- ヘッダー -->
+        <ui:VisualElement name="detail-header" class="detail-header">
+            <ui:Button name="btn-back" class="btn-back" text="‹" />
+            <ui:Label name="header-title" class="header-title" text="ワールド詳細" />
+            <ui:VisualElement class="header-spacer" />
+        </ui:VisualElement>
+
+        <!-- スクロール可能なコンテンツ -->
+        <ui:ScrollView name="detail-scroll" class="detail-scroll" mode="Vertical">
+
+            <!-- サムネイル -->
+            <ui:VisualElement name="detail-thumb" class="detail-thumb" />
+
+            <!-- ワールド情報 -->
+            <ui:VisualElement class="detail-info">
+                <ui:Label name="detail-name" class="detail-name" text="ワールド名" />
+                <ui:VisualElement class="detail-meta">
+                    <ui:Label name="detail-likes" class="detail-likes" text="♥ 0" />
+                    <ui:Label name="detail-players" class="detail-players" text="▶ 0人" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+            <!-- セパレーター -->
+            <ui:VisualElement class="detail-divider" />
+
+            <!-- アクションボタン -->
+            <ui:VisualElement name="action-area" class="action-area">
+                <ui:Button name="btn-join-public" class="btn-action btn-join-public" text="公開ルームに参加" />
+                <ui:Button name="btn-create-friends" class="btn-action btn-action--secondary" text="フレンドのみのルームを作成" />
+                <ui:Button name="btn-other-rooms" class="btn-action btn-action--outline" text="その他のルームを見る" />
+            </ui:VisualElement>
+
+        </ui:ScrollView>
+
+        <!-- ローディングオーバーレイ -->
+        <ui:VisualElement name="detail-loading" class="detail-loading" style="display: none;">
+            <ui:Label class="loading-label" text="参加中..." />
+        </ui:VisualElement>
+
+        <!-- 英語ルーム確認モーダル -->
+        <ui:VisualElement name="english-modal" class="modal-overlay" style="display: none;">
+            <ui:VisualElement class="modal-box">
+                <ui:Label class="modal-title" text="英語ルームに参加" />
+                <ui:Label class="modal-body" text="現在参加できるのは英語のルームのみです。参加しますか？" />
+                <ui:VisualElement class="modal-buttons">
+                    <ui:Button name="btn-english-cancel" class="modal-btn modal-btn--cancel" text="キャンセル" />
+                    <ui:Button name="btn-english-ok" class="modal-btn modal-btn--ok" text="参加する" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>

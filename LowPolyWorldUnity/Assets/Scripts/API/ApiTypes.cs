@@ -184,3 +184,10 @@ public class OAuthCallbackRequest
 {
     public string id_token;
 }
+
+[Serializable]
+public class CreateRoomRequest
+{
+    public string room_type;
+    public string language;
+}
