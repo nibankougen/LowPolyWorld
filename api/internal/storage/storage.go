@@ -13,4 +13,6 @@ type Storage interface {
 	URL(hash, ext string) string
 	// Exists checks whether the asset already exists in the store.
 	Exists(ctx context.Context, hash, ext string) (bool, error)
+	// Delete removes the asset identified by hash+ext. No-ops if already absent.
+	Delete(hash, ext string) error
 }

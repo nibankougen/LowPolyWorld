@@ -174,19 +174,23 @@ func (h *Handler) LikeWorld(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.UserIDFromContext(r.Context())
 	worldID := chi.URLParam(r, "worldID")
 
-	// Verify world exists and is public
-	var exists bool
-	_ = h.DB.QueryRow(r.Context(),
-		`SELECT EXISTS(SELECT 1 FROM worlds WHERE id = $1 AND is_public = TRUE)`, worldID,
-	).Scan(&exists)
-	if !exists {
+	// Verify world exists and is public; retrieve owner for self-like check
+	var ownerUserID string
+	err := h.DB.QueryRow(r.Context(),
+		`SELECT owner_user_id FROM worlds WHERE id = $1 AND is_public = TRUE`, worldID,
+	).Scan(&ownerUserID)
+	if err != nil {
 		response.Error(w, r, http.StatusNotFound, "not_found", "world not found")
 		return
 	}
 
-	_, err := h.DB.Exec(r.Context(),
-		`INSERT INTO world_likes (world_id, user_id) VALUES ($1, $2)
-		 ON CONFLICT DO NOTHING`,
+	if ownerUserID == userID {
+		response.Error(w, r, http.StatusForbidden, "forbidden", "cannot like your own world")
+		return
+	}
+
+	tag, err := h.DB.Exec(r.Context(),
+		`INSERT INTO world_likes (world_id, user_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
 		worldID, userID,
 	)
 	if err != nil {
@@ -194,13 +198,13 @@ func (h *Handler) LikeWorld(w http.ResponseWriter, r *http.Request) {
 		response.InternalError(w, r, h.Cfg.IsProduction())
 		return
 	}
+	if tag.RowsAffected() == 0 {
+		response.Error(w, r, http.StatusConflict, "already_liked", "already liked this world")
+		return
+	}
 
-	// Update denormalized count
 	_, _ = h.DB.Exec(r.Context(),
-		`UPDATE worlds SET likes_count = (
-			SELECT count(*) FROM world_likes WHERE world_id = $1
-		) WHERE id = $1`,
-		worldID,
+		`UPDATE worlds SET likes_count = likes_count + 1 WHERE id = $1`, worldID,
 	)
 
 	w.WriteHeader(http.StatusNoContent)
@@ -211,7 +215,7 @@ func (h *Handler) UnlikeWorld(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.UserIDFromContext(r.Context())
 	worldID := chi.URLParam(r, "worldID")
 
-	_, err := h.DB.Exec(r.Context(),
+	tag, err := h.DB.Exec(r.Context(),
 		`DELETE FROM world_likes WHERE world_id = $1 AND user_id = $2`,
 		worldID, userID,
 	)
@@ -220,13 +224,13 @@ func (h *Handler) UnlikeWorld(w http.ResponseWriter, r *http.Request) {
 		response.InternalError(w, r, h.Cfg.IsProduction())
 		return
 	}
+	if tag.RowsAffected() == 0 {
+		response.Error(w, r, http.StatusNotFound, "not_found", "like not found")
+		return
+	}
 
-	// Update denormalized count
 	_, _ = h.DB.Exec(r.Context(),
-		`UPDATE worlds SET likes_count = (
-			SELECT count(*) FROM world_likes WHERE world_id = $1
-		) WHERE id = $1`,
-		worldID,
+		`UPDATE worlds SET likes_count = GREATEST(0, likes_count - 1) WHERE id = $1`, worldID,
 	)
 
 	w.WriteHeader(http.StatusNoContent)

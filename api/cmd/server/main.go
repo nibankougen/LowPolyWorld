@@ -132,6 +132,14 @@ func main() {
 		r.Patch("/me/language", h.SetLanguage)
 		r.Patch("/me/display-name", h.UpdateDisplayName)
 
+		// Me — auth providers
+		r.Get("/me/auth-providers", h.ListAuthProviders)
+		r.Post("/me/auth-providers/{provider}", h.LinkAuthProvider)
+		r.Delete("/me/auth-providers/{provider}", h.UnlinkAuthProvider)
+
+		// Public user profiles
+		r.Get("/users/{userID}", h.GetPublicUser)
+
 		// Me — avatars
 		r.Get("/me/avatars", h.ListMyAvatars)
 		r.Post("/me/avatars", h.UploadAvatar)
@@ -160,6 +168,9 @@ func main() {
 		r.Delete("/rooms/{roomID}/leave", h.LeaveRoom)
 		r.Patch("/rooms/{roomID}/language", h.PatchRoomLanguage)
 	})
+
+	// Admin internal routes (triggered by Cloud Scheduler in production)
+	r.Post("/admin/internal/run-batch/{batchName}", h.RunBatch)
 
 	// Dev-only: serve local asset files
 	if !cfg.IsProduction() && localStorage != nil {

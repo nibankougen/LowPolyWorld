@@ -7,6 +7,7 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/nibankougen/LowPolyWorld/api/internal/middleware"
 	"github.com/nibankougen/LowPolyWorld/api/internal/plan"
 	"github.com/nibankougen/LowPolyWorld/api/internal/response"
@@ -269,6 +270,43 @@ func (h *Handler) UpdateDisplayName(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.JSON(w, http.StatusOK, map[string]string{"displayName": req.DisplayName})
+}
+
+type publicUserResponse struct {
+	ID          string `json:"id"`
+	DisplayName string `json:"displayName"`
+	Name        string `json:"name,omitempty"`
+	CreatedAt   string `json:"createdAt"`
+}
+
+// GetPublicUser handles GET /api/v1/users/{userID} — public profile, returns 404 for deleted accounts.
+func (h *Handler) GetPublicUser(w http.ResponseWriter, r *http.Request) {
+	targetID := chi.URLParam(r, "userID")
+
+	var resp publicUserResponse
+	var displayName, name *string
+	var createdAt time.Time
+
+	err := h.DB.QueryRow(r.Context(),
+		`SELECT au.user_id, au.display_name, au.name, u.created_at
+		 FROM active_users au
+		 JOIN users u ON u.id = au.user_id
+		 WHERE au.user_id = $1 AND au.deleted_at IS NULL`,
+		targetID,
+	).Scan(&resp.ID, &displayName, &name, &createdAt)
+	if err != nil {
+		response.Error(w, r, http.StatusNotFound, "not_found", "user not found")
+		return
+	}
+	if displayName != nil {
+		resp.DisplayName = *displayName
+	}
+	if name != nil {
+		resp.Name = *name
+	}
+	resp.CreatedAt = createdAt.UTC().Format(time.RFC3339)
+
+	response.JSON(w, http.StatusOK, resp)
 }
 
 // validateName returns validation error details for the given (already-lowercased) name.

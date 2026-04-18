@@ -56,6 +56,16 @@ func (s *LocalStorage) Exists(_ context.Context, hash, ext string) (bool, error)
 	return false, err
 }
 
+// Delete removes the file for hash+ext from disk. No-ops if the file is absent.
+func (s *LocalStorage) Delete(hash, ext string) error {
+	path := filepath.Join(s.basePath, hash+"."+ext)
+	err := os.Remove(path)
+	if err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("delete file: %w", err)
+	}
+	return nil
+}
+
 // ServeFile serves a local asset file by hash+ext with immutable caching headers.
 func (s *LocalStorage) ServeFile(w http.ResponseWriter, r *http.Request, hash, ext string) {
 	path := filepath.Join(s.basePath, hash+"."+ext)
