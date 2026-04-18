@@ -15,6 +15,7 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/go-chi/httprate"
 	"github.com/nibankougen/LowPolyWorld/api/internal/auth"
+	"github.com/nibankougen/LowPolyWorld/api/internal/cache"
 	"github.com/nibankougen/LowPolyWorld/api/internal/config"
 	"github.com/nibankougen/LowPolyWorld/api/internal/db"
 	"github.com/nibankougen/LowPolyWorld/api/internal/handler"
@@ -70,12 +71,22 @@ func main() {
 		os.Exit(1)
 	}
 
+	redisCache, err := cache.New(cfg.RedisURL)
+	if err != nil {
+		logger.Warn("redis unavailable, caching disabled", "error", err)
+		redisCache = nil
+	} else {
+		defer redisCache.Close()
+		logger.Info("redis connected", "url", cfg.RedisURL)
+	}
+
 	h := &handler.Handler{
 		DB:      pool,
 		Cfg:     cfg,
 		Storage: store,
 		AuthSvc: authSvc,
 		Logger:  logger,
+		Cache:   redisCache,
 	}
 
 	authMW := mw.NewAuthMiddleware(authSvc, pool)
@@ -85,7 +96,7 @@ func main() {
 	// Global middleware
 	r.Use(chimiddleware.RealIP)
 	r.Use(mw.RequestID)
-	r.Use(chimiddleware.Logger)
+	r.Use(mw.AccessLog(logger))
 	r.Use(chimiddleware.Recoverer)
 	r.Use(chimiddleware.Compress(5))
 	r.Use(cors.Handler(cors.Options{

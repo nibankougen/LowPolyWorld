@@ -12,6 +12,11 @@ import (
 	"golang.org/x/text/unicode/norm"
 )
 
+const (
+	ttlWorldDetail = 5 * time.Minute
+	ttlWorldsNew   = 2 * time.Minute
+)
+
 const defaultPageLimit = 20
 const maxPageLimit = 50
 
@@ -58,6 +63,14 @@ func (h *Handler) ListNewWorlds(w http.ResponseWriter, r *http.Request) {
 	limit := parseLimit(r)
 	after := r.URL.Query().Get("after")
 
+	cacheKey := "worlds:new:" + after
+	if h.Cache != nil {
+		if cached, ok := h.Cache.Get(r.Context(), cacheKey); ok {
+			response.WriteRaw(w, []byte(cached))
+			return
+		}
+	}
+
 	var err error
 	var pgrows worldRows
 
@@ -91,6 +104,13 @@ func (h *Handler) ListNewWorlds(w http.ResponseWriter, r *http.Request) {
 	defer pgrows.Close()
 
 	worlds, cursor := h.scanWorldRows(pgrows, limit)
+
+	if h.Cache != nil {
+		if body, err := response.MarshalCursorData(worlds, cursor); err == nil {
+			h.Cache.Set(r.Context(), cacheKey, string(body), ttlWorldsNew)
+		}
+	}
+
 	response.JSONCursor(w, http.StatusOK, worlds, cursor)
 }
 
@@ -283,6 +303,14 @@ func normalizeTag(raw string) string {
 func (h *Handler) GetWorld(w http.ResponseWriter, r *http.Request) {
 	worldID := chi.URLParam(r, "worldID")
 
+	cacheKey := "world:" + worldID
+	if h.Cache != nil {
+		if cached, ok := h.Cache.Get(r.Context(), cacheKey); ok {
+			response.WriteRaw(w, []byte(cached))
+			return
+		}
+	}
+
 	var (
 		id, name, description string
 		thumbnailHash         *string
@@ -301,7 +329,15 @@ func (h *Handler) GetWorld(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.JSON(w, http.StatusOK, h.buildWorldResponse(id, name, description, thumbnailHash, glbHash, isPublic, maxPlayers, likes, createdAt))
+	wr := h.buildWorldResponse(id, name, description, thumbnailHash, glbHash, isPublic, maxPlayers, likes, createdAt)
+
+	if h.Cache != nil {
+		if body, err := response.MarshalData(wr); err == nil {
+			h.Cache.Set(r.Context(), cacheKey, string(body), ttlWorldDetail)
+		}
+	}
+
+	response.JSON(w, http.StatusOK, wr)
 }
 
 // LikeWorld handles POST /api/v1/worlds/{worldID}/like.
@@ -342,6 +378,11 @@ func (h *Handler) LikeWorld(w http.ResponseWriter, r *http.Request) {
 		`UPDATE worlds SET likes_count = likes_count + 1 WHERE id = $1`, worldID,
 	)
 
+	if h.Cache != nil {
+		h.Cache.Del(r.Context(), "world:"+worldID)
+		h.Cache.ScanDel(r.Context(), "worlds:new:*")
+	}
+
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -367,6 +408,11 @@ func (h *Handler) UnlikeWorld(w http.ResponseWriter, r *http.Request) {
 	_, _ = h.DB.Exec(r.Context(),
 		`UPDATE worlds SET likes_count = GREATEST(0, likes_count - 1) WHERE id = $1`, worldID,
 	)
+
+	if h.Cache != nil {
+		h.Cache.Del(r.Context(), "world:"+worldID)
+		h.Cache.ScanDel(r.Context(), "worlds:new:*")
+	}
 
 	w.WriteHeader(http.StatusNoContent)
 }

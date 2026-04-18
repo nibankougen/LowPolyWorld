@@ -40,6 +40,23 @@ type ErrDetail struct {
 	Message string `json:"message"`
 }
 
+// MarshalData returns the standard data-envelope JSON.
+func MarshalData(data any) ([]byte, error) {
+	return json.Marshal(envelope{Data: data})
+}
+
+// MarshalCursorData returns the cursor-envelope JSON.
+func MarshalCursorData(data any, cursor Cursor) ([]byte, error) {
+	return json.Marshal(cursorEnvelope{Data: data, Cursor: cursor})
+}
+
+// WriteRaw writes pre-marshaled JSON with 200 OK.
+func WriteRaw(w http.ResponseWriter, body []byte) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(body)
+}
+
 func JSON(w http.ResponseWriter, status int, data any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)

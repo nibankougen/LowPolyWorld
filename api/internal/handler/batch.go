@@ -31,6 +31,15 @@ func (h *Handler) RunBatch(w http.ResponseWriter, r *http.Request) {
 			"affected_count", count,
 		)
 		response.JSON(w, http.StatusOK, map[string]any{"batch": batchName, "affected_count": count})
+	case "cleanup-access-logs":
+		// Access logs are stored in Cloud Logging with automatic 1-year retention configured
+		// at the bucket level. No DB records to purge.
+		h.Logger.Info("batch completed",
+			"event", "batch_completed",
+			"batch", "cleanup-access-logs",
+			"affected_count", 0,
+		)
+		response.JSON(w, http.StatusOK, map[string]any{"batch": batchName, "affected_count": 0})
 	default:
 		response.Error(w, r, http.StatusNotFound, "not_found", "unknown batch name")
 	}

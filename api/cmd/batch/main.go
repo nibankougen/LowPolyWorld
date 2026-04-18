@@ -17,6 +17,7 @@ func main() {
 		fmt.Fprintln(os.Stderr, "usage: batch <command>")
 		fmt.Fprintln(os.Stderr, "commands:")
 		fmt.Fprintln(os.Stderr, "  delete-expired-accounts")
+		fmt.Fprintln(os.Stderr, "  cleanup-access-logs")
 		os.Exit(1)
 	}
 
@@ -57,6 +58,13 @@ func main() {
 			"event", "batch_completed",
 			"batch", "delete-expired-accounts",
 			"affected_count", count,
+		)
+	case "cleanup-access-logs":
+		// Retention is enforced by Cloud Logging bucket policy (1-year TTL).
+		logger.Info("batch completed",
+			"event", "batch_completed",
+			"batch", "cleanup-access-logs",
+			"affected_count", 0,
 		)
 	default:
 		fmt.Fprintf(os.Stderr, "unknown command: %s\n", cmd)

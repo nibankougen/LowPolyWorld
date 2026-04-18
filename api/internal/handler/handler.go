@@ -5,6 +5,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/nibankougen/LowPolyWorld/api/internal/auth"
+	"github.com/nibankougen/LowPolyWorld/api/internal/cache"
 	"github.com/nibankougen/LowPolyWorld/api/internal/config"
 	"github.com/nibankougen/LowPolyWorld/api/internal/storage"
 )
@@ -16,4 +17,5 @@ type Handler struct {
 	Storage storage.Storage
 	AuthSvc *auth.Service
 	Logger  *slog.Logger
+	Cache   *cache.Client // nil when Redis is unavailable
 }
