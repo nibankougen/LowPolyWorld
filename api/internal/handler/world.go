@@ -3,11 +3,13 @@ package handler
 import (
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/nibankougen/LowPolyWorld/api/internal/middleware"
 	"github.com/nibankougen/LowPolyWorld/api/internal/response"
+	"golang.org/x/text/unicode/norm"
 )
 
 const defaultPageLimit = 20
@@ -142,6 +144,139 @@ func (h *Handler) ListLikedWorlds(w http.ResponseWriter, r *http.Request) {
 // ListFollowingWorlds handles GET /api/v1/worlds/following — stub (follow system in later phase).
 func (h *Handler) ListFollowingWorlds(w http.ResponseWriter, r *http.Request) {
 	response.JSONCursor(w, http.StatusOK, []worldResponse{}, response.Cursor{Next: "", HasMore: false})
+}
+
+// SearchWorlds handles GET /api/v1/worlds/search?q=<name>&tags=<t1,t2>&limit=n&after=<cursor>.
+// Searches public worlds by name (pg_trgm ILIKE) and/or tags (AND match across world_tags).
+// Both q and tags are optional; omitting both returns all public worlds newest-first.
+func (h *Handler) SearchWorlds(w http.ResponseWriter, r *http.Request) {
+	q := strings.TrimSpace(r.URL.Query().Get("q"))
+	tagsParam := r.URL.Query().Get("tags")
+	limit := parseLimit(r)
+	after := r.URL.Query().Get("after")
+
+	// Normalize and deduplicate tags
+	var tags []string
+	if tagsParam != "" {
+		seen := map[string]bool{}
+		for _, raw := range strings.Split(tagsParam, ",") {
+			t := normalizeTag(raw)
+			if t != "" && !seen[t] {
+				tags = append(tags, t)
+				seen[t] = true
+			}
+		}
+	}
+	tagCount := len(tags)
+
+	// Filter banned tags from query (don't error — silently ignore)
+	if tagCount > 0 {
+		bannedRows, err := h.DB.Query(r.Context(),
+			`SELECT tag_normalized FROM tag_ban_list WHERE tag_normalized = ANY($1)`,
+			tags,
+		)
+		if err == nil {
+			banned := map[string]bool{}
+			for bannedRows.Next() {
+				var b string
+				if bannedRows.Scan(&b) == nil {
+					banned[b] = true
+				}
+			}
+			bannedRows.Close()
+			filtered := tags[:0]
+			for _, t := range tags {
+				if !banned[t] {
+					filtered = append(filtered, t)
+				}
+			}
+			tags = filtered
+			tagCount = len(tags)
+		}
+	}
+
+	// Build WHERE conditions
+	// Cursor: (created_at, id) < cursor row
+	var (
+		pgrows worldRows
+		err    error
+	)
+
+	if tagCount == 0 {
+		// Name-only search (or no filter)
+		if after == "" {
+			pgrows, err = h.DB.Query(r.Context(),
+				`SELECT id, name, description, thumbnail_hash, glb_hash, is_public, max_players, likes_count, created_at
+				 FROM worlds
+				 WHERE is_public = TRUE
+				   AND ($1 = '' OR name ILIKE '%' || $1 || '%')
+				 ORDER BY created_at DESC, id DESC
+				 LIMIT $2`,
+				q, limit+1,
+			)
+		} else {
+			pgrows, err = h.DB.Query(r.Context(),
+				`SELECT id, name, description, thumbnail_hash, glb_hash, is_public, max_players, likes_count, created_at
+				 FROM worlds
+				 WHERE is_public = TRUE
+				   AND ($1 = '' OR name ILIKE '%' || $1 || '%')
+				   AND (created_at, id) < (SELECT created_at, id FROM worlds WHERE id = $2)
+				 ORDER BY created_at DESC, id DESC
+				 LIMIT $3`,
+				q, after, limit+1,
+			)
+		}
+	} else {
+		// Name + tag AND search
+		if after == "" {
+			pgrows, err = h.DB.Query(r.Context(),
+				`SELECT w.id, w.name, w.description, w.thumbnail_hash, w.glb_hash,
+				        w.is_public, w.max_players, w.likes_count, w.created_at
+				 FROM worlds w
+				 JOIN world_tags wt ON wt.world_id = w.id AND wt.tag_normalized = ANY($1)
+				 WHERE w.is_public = TRUE
+				   AND ($2 = '' OR w.name ILIKE '%' || $2 || '%')
+				 GROUP BY w.id, w.name, w.description, w.thumbnail_hash, w.glb_hash,
+				          w.is_public, w.max_players, w.likes_count, w.created_at
+				 HAVING COUNT(DISTINCT wt.tag_normalized) = $3
+				 ORDER BY w.created_at DESC, w.id DESC
+				 LIMIT $4`,
+				tags, q, tagCount, limit+1,
+			)
+		} else {
+			pgrows, err = h.DB.Query(r.Context(),
+				`SELECT w.id, w.name, w.description, w.thumbnail_hash, w.glb_hash,
+				        w.is_public, w.max_players, w.likes_count, w.created_at
+				 FROM worlds w
+				 JOIN world_tags wt ON wt.world_id = w.id AND wt.tag_normalized = ANY($1)
+				 WHERE w.is_public = TRUE
+				   AND ($2 = '' OR w.name ILIKE '%' || $2 || '%')
+				   AND (w.created_at, w.id) < (SELECT created_at, id FROM worlds WHERE id = $3)
+				 GROUP BY w.id, w.name, w.description, w.thumbnail_hash, w.glb_hash,
+				          w.is_public, w.max_players, w.likes_count, w.created_at
+				 HAVING COUNT(DISTINCT wt.tag_normalized) = $4
+				 ORDER BY w.created_at DESC, w.id DESC
+				 LIMIT $5`,
+				tags, q, after, tagCount, limit+1,
+			)
+		}
+	}
+	if err != nil {
+		h.Logger.Error("search worlds", "error", err)
+		response.InternalError(w, r, h.Cfg.IsProduction())
+		return
+	}
+	defer pgrows.Close()
+
+	worlds, cursor := h.scanWorldRows(pgrows, limit)
+	response.JSONCursor(w, http.StatusOK, worlds, cursor)
+}
+
+// normalizeTag applies NFKC normalization, lowercasing, and trimming to a tag string.
+// Returns empty string if the result is blank.
+func normalizeTag(raw string) string {
+	n := norm.NFKC.String(strings.TrimSpace(raw))
+	return strings.ToLower(n)
 }
 
 // GetWorld handles GET /api/v1/worlds/{worldID} — returns a single public world's details.

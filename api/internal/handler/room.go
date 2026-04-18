@@ -398,3 +398,11 @@ func (h *Handler) RecommendedJoin(w http.ResponseWriter, r *http.Request) {
 		Language: userLanguage,
 	})
 }
+
+
+// ListFriendsRooms handles GET /api/v1/me/friends/rooms.
+// Returns rooms where the user's friends are present.
+// Stub: friend system is implemented in a later phase.
+func (h *Handler) ListFriendsRooms(w http.ResponseWriter, r *http.Request) {
+	response.JSONCursor(w, http.StatusOK, []roomResponse{}, response.Cursor{})
+}

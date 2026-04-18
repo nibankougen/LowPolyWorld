@@ -140,6 +140,9 @@ func main() {
 		// Public user profiles
 		r.Get("/users/{userID}", h.GetPublicUser)
 
+		// Me — friends
+		r.Get("/me/friends/rooms", h.ListFriendsRooms)
+
 		// Me — avatars
 		r.Get("/me/avatars", h.ListMyAvatars)
 		r.Post("/me/avatars", h.UploadAvatar)
@@ -153,6 +156,7 @@ func main() {
 		r.Put("/me/accessories/{accessoryID}/texture", h.UpdateAccessoryTexture)
 
 		// Worlds
+		r.Get("/worlds/search", h.SearchWorlds)
 		r.Get("/worlds/new", h.ListNewWorlds)
 		r.Get("/worlds/liked", h.ListLikedWorlds)
 		r.Get("/worlds/following", h.ListFollowingWorlds)
@@ -171,6 +175,7 @@ func main() {
 
 	// Admin internal routes (triggered by Cloud Scheduler in production)
 	r.Post("/admin/internal/run-batch/{batchName}", h.RunBatch)
+	r.Patch("/admin/users/{userID}/restore", h.RestoreAccount)
 
 	// Dev-only: serve local asset files
 	if !cfg.IsProduction() && localStorage != nil {

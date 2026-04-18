@@ -22,8 +22,7 @@ public class CacheManager : MonoBehaviour
 
     [SerializeField] private AppConfig _config;
 
-    private string _ownPath;
-    private string _othersPath;
+    private AssetCacheStore _store;
     private ApiClient _anonClient;
 
     private void Awake()
@@ -36,11 +35,12 @@ public class CacheManager : MonoBehaviour
         Instance = this;
         DontDestroyOnLoad(gameObject);
 
-        _ownPath = Path.Combine(Application.persistentDataPath, OwnCacheDir);
-        _othersPath = Path.Combine(Application.temporaryCachePath, OthersCacheDir);
-        Directory.CreateDirectory(_ownPath);
-        Directory.CreateDirectory(_othersPath);
+        var ownPath = Path.Combine(Application.persistentDataPath, OwnCacheDir);
+        var othersPath = Path.Combine(Application.temporaryCachePath, OthersCacheDir);
+        Directory.CreateDirectory(ownPath);
+        Directory.CreateDirectory(othersPath);
 
+        _store = new AssetCacheStore(ownPath, othersPath, OthersTtl);
         _anonClient = new ApiClient(_config.ApiBaseUrl);
     }
 
@@ -58,7 +58,7 @@ public class CacheManager : MonoBehaviour
         CancellationToken ct = default
     )
     {
-        var localPath = GetLocalPath(hash, ext, isOwn);
+        var localPath = _store.GetLocalPath(hash, ext, isOwn);
 
         if (File.Exists(localPath))
         {
@@ -66,8 +66,7 @@ public class CacheManager : MonoBehaviour
             if (!isOwn)
                 File.SetLastAccessTimeUtc(localPath, DateTime.UtcNow);
 
-            // Verify hash on disk matches expected hash
-            if (await VerifyHashAsync(localPath, hash, ct))
+            if (_store.HashMatchesFile(localPath, hash))
                 return (localPath, null);
 
             // Hash mismatch — delete stale file and re-download
@@ -116,44 +115,10 @@ public class CacheManager : MonoBehaviour
     /// </summary>
     public void PurgeExpiredOthersCache()
     {
-        if (!Directory.Exists(_othersPath))
-            return;
-
-        var now = DateTime.UtcNow;
-        foreach (var file in Directory.GetFiles(_othersPath))
-        {
-            var lastAccess = File.GetLastAccessTimeUtc(file);
-            if (now - lastAccess > OthersTtl)
-            {
-                try { File.Delete(file); }
-                catch { }
-            }
-        }
+        _store.PurgeExpired(DateTime.UtcNow);
     }
 
     // ── Private helpers ──────────────────────────────────────────────────────
-
-    private string GetLocalPath(string hash, string ext, bool isOwn)
-    {
-        var dir = isOwn ? _ownPath : _othersPath;
-        return Path.Combine(dir, $"{hash}.{ext}");
-    }
-
-    private static async Task<bool> VerifyHashAsync(string path, string expectedHash, CancellationToken ct)
-    {
-        try
-        {
-            var data = await Task.Run(() => File.ReadAllBytes(path), ct);
-            using var sha = SHA256.Create();
-            var hashBytes = sha.ComputeHash(data);
-            var actual = BitConverter.ToString(hashBytes).Replace("-", "").ToLowerInvariant();
-            return string.Equals(actual, expectedHash, StringComparison.OrdinalIgnoreCase);
-        }
-        catch
-        {
-            return false;
-        }
-    }
 
     private async Task<(string localPath, string error)> DownloadAndCacheAsync(
         string url,
