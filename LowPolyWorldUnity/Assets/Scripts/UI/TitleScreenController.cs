@@ -184,10 +184,9 @@ public class TitleScreenController : MonoBehaviour
         HideModal(_loginModal);
 
         var anonClient = new ApiClient(_config.ApiBaseUrl);
-        var body = new { id_token = idToken };
         var (result, error) = await anonClient.PostJsonAsync<TokenResponse>(
             $"/auth/{provider}/callback",
-            body,
+            new OAuthCallbackRequest { id_token = idToken },
             ct
         );
 

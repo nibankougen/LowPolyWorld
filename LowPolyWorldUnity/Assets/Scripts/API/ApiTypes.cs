@@ -178,3 +178,9 @@ public class SetLanguageRequest
 {
     public string language;
 }
+
+[Serializable]
+public class OAuthCallbackRequest
+{
+    public string id_token;
+}

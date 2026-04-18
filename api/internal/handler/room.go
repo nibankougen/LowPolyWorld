@@ -169,44 +169,55 @@ func (h *Handler) CreateRoom(w http.ResponseWriter, r *http.Request) {
 }
 
 // JoinRoom handles POST /api/v1/rooms/{roomID}/join — joins a specific room by ID.
-// Returns 409 if the room is at capacity.
+// Returns 404 if the room doesn't exist, 409 if at capacity.
+// Uses a CTE for an atomic capacity check + insert to avoid TOCTOU races.
 func (h *Handler) JoinRoom(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.UserIDFromContext(r.Context())
 	roomID := chi.URLParam(r, "roomID")
 
-	// Fetch room info
+	// Verify room exists
 	var rm roomResponse
 	var createdAt time.Time
 	err := h.DB.QueryRow(r.Context(),
-		`SELECT r.id, r.world_id, r.room_type, r.language, r.max_players,
-		        (SELECT count(*) FROM room_members rm WHERE rm.room_id = r.id) AS current_players,
-		        r.created_at
+		`SELECT r.id, r.world_id, r.room_type, r.language, r.max_players, r.created_at
 		 FROM rooms r WHERE r.id = $1`,
 		roomID,
-	).Scan(&rm.ID, &rm.WorldID, &rm.RoomType, &rm.Language,
-		&rm.MaxPlayers, &rm.CurrentPlayers, &createdAt)
+	).Scan(&rm.ID, &rm.WorldID, &rm.RoomType, &rm.Language, &rm.MaxPlayers, &createdAt)
 	if err != nil {
 		response.Error(w, r, http.StatusNotFound, "not_found", "room not found")
 		return
 	}
 	rm.CreatedAt = createdAt.UTC().Format(time.RFC3339)
 
-	if rm.CurrentPlayers >= rm.MaxPlayers {
-		response.Error(w, r, http.StatusConflict, "room_full", "room is at maximum capacity")
-		return
-	}
-
-	_, err = h.DB.Exec(r.Context(),
-		`INSERT INTO room_members (room_id, user_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+	// Atomic capacity check + insert via CTE (same pattern as RecommendedJoin)
+	var joined bool
+	_ = h.DB.QueryRow(r.Context(),
+		`WITH capacity AS (
+		    SELECT max_players, (SELECT count(*) FROM room_members WHERE room_id = $1) AS current
+		    FROM rooms WHERE id = $1
+		)
+		INSERT INTO room_members (room_id, user_id)
+		SELECT $1, $2 FROM capacity WHERE current < max_players
+		ON CONFLICT DO NOTHING
+		RETURNING TRUE`,
 		roomID, userID,
-	)
-	if err != nil {
-		h.Logger.Error("join room", "error", err)
-		response.InternalError(w, r, h.Cfg.IsProduction())
-		return
+	).Scan(&joined)
+
+	// If no row was returned, either capacity was full or user was already a member.
+	// Distinguish by checking current count.
+	if !joined {
+		var current, max int
+		_ = h.DB.QueryRow(r.Context(),
+			`SELECT (SELECT count(*) FROM room_members WHERE room_id = $1), max_players FROM rooms WHERE id = $1`,
+			roomID,
+		).Scan(&current, &max)
+		if current >= max {
+			response.Error(w, r, http.StatusConflict, "room_full", "room is at maximum capacity")
+			return
+		}
+		// User was already a member — treat as success
 	}
 
-	// Re-read current count after insert
 	_ = h.DB.QueryRow(r.Context(),
 		`SELECT count(*) FROM room_members WHERE room_id = $1`, roomID,
 	).Scan(&rm.CurrentPlayers)

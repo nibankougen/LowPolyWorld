@@ -187,7 +187,11 @@ func (h *Handler) UpdateAvatarTexture(w http.ResponseWriter, r *http.Request) {
 	defer file.Close()
 
 	data, err := io.ReadAll(io.LimitReader(file, maxTextureSize+1))
-	if err != nil || len(data) > maxTextureSize {
+	if err != nil {
+		response.Error(w, r, http.StatusBadRequest, "validation_error", "failed to read texture file")
+		return
+	}
+	if len(data) > maxTextureSize {
 		response.Error(w, r, http.StatusRequestEntityTooLarge, "file_too_large", "texture file must be 512KB or smaller")
 		return
 	}

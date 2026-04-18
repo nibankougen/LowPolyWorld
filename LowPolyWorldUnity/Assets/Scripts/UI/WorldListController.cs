@@ -31,8 +31,10 @@ public class WorldListController
     private string _cursor;
     private bool _hasMore;
     private bool _isLoading;
+    private int _loadGeneration; // incremented on each SelectTab to detect stale task completions
 
     private CancellationTokenSource _cts;
+    private readonly List<Texture2D> _thumbTextures = new List<Texture2D>();
 
     // Called when user selects a world card
     public event Action<WorldResponse> OnWorldSelected;
@@ -78,6 +80,15 @@ public class WorldListController
         _cts?.Cancel();
         _cts?.Dispose();
         _cts = null;
+        DestroyThumbTextures();
+    }
+
+    private void DestroyThumbTextures()
+    {
+        foreach (var tex in _thumbTextures)
+            if (tex != null)
+                UnityEngine.Object.Destroy(tex);
+        _thumbTextures.Clear();
     }
 
     // ── Tab switching ─────────────────────────────────────────────────────────
@@ -87,6 +98,8 @@ public class WorldListController
         _activeTab = tab;
         _cursor = null;
         _hasMore = false;
+        _isLoading = false;
+        _loadGeneration++;
 
         // Update active class
         foreach (var btn in new[] { _tabHome, _tabFollowing, _tabNew, _tabLiked })
@@ -107,9 +120,11 @@ public class WorldListController
             _searchBar.style.display = tab == Tab.Home ? DisplayStyle.Flex : DisplayStyle.None;
 
         _worldList.Clear();
+        DestroyThumbTextures();
+
         _cts?.Cancel();
         _cts = new CancellationTokenSource();
-        _ = LoadNextPageAsync(_cts.Token);
+        _ = LoadNextPageAsync(_cts.Token, _loadGeneration);
     }
 
     // ── Infinite scroll ───────────────────────────────────────────────────────
@@ -124,22 +139,26 @@ public class WorldListController
         var scrollMax = contentHeight - viewportHeight;
 
         if (!_isLoading && _hasMore && value >= scrollMax - 100)
-            _ = LoadNextPageAsync(_cts?.Token ?? CancellationToken.None);
+            _ = LoadNextPageAsync(_cts?.Token ?? CancellationToken.None, _loadGeneration);
     }
 
     private void OnSearchChanged()
     {
-        // Debounce: reset and reload after 400ms of inactivity (simplified - reload immediately)
         _cursor = null;
         _worldList.Clear();
+        DestroyThumbTextures();
+        _isLoading = false;
+        _loadGeneration++;
         _cts?.Cancel();
         _cts = new CancellationTokenSource();
-        _ = LoadNextPageAsync(_cts.Token);
+        _ = LoadNextPageAsync(_cts.Token, _loadGeneration);
     }
 
     // ── Data loading ──────────────────────────────────────────────────────────
 
-    private async Task LoadNextPageAsync(CancellationToken ct)
+    // generation is captured at task start; if it differs from _loadGeneration when the
+    // task resumes, the tab has switched and we discard the result without touching _isLoading.
+    private async Task LoadNextPageAsync(CancellationToken ct, int generation)
     {
         if (_isLoading) return;
         _isLoading = true;
@@ -150,6 +169,7 @@ public class WorldListController
             var path = BuildPath();
             var (result, error) = await _api.GetAsync<WorldListResponse>(path, ct);
 
+            if (generation != _loadGeneration) return; // stale result — tab was switched
             if (ct.IsCancellationRequested) return;
 
             if (error != null || result == null)
@@ -169,8 +189,11 @@ public class WorldListController
         }
         finally
         {
-            _isLoading = false;
-            _loadMoreArea.style.display = DisplayStyle.None;
+            if (generation == _loadGeneration)
+            {
+                _isLoading = false;
+                _loadMoreArea.style.display = DisplayStyle.None;
+            }
         }
     }
 
@@ -219,23 +242,28 @@ public class WorldListController
 
         card.RegisterCallback<ClickEvent>(_ => OnWorldSelected?.Invoke(world));
 
-        // Async thumbnail load (no-op if thumbnailUrl is empty)
+        // Async thumbnail load — uses controller CTS so it cancels on tab switch / dispose
         if (!string.IsNullOrEmpty(world.thumbnailUrl))
-            _ = LoadThumbnailAsync(world.thumbnailUrl, thumb);
+            _ = LoadThumbnailAsync(world.thumbnailUrl, thumb, _cts?.Token ?? CancellationToken.None);
 
         return card;
     }
 
-    private static async Task LoadThumbnailAsync(string url, VisualElement target)
+    private async Task LoadThumbnailAsync(string url, VisualElement target, CancellationToken ct)
     {
-        var anonClient = new ApiClient(url.Contains("localhost") ? "" : "https://");
-        var (data, _) = await new ApiClient("").GetBytesAsync(url);
-        if (data == null || data.Length == 0) return;
+        var client = new ApiClient(""); // GetBytesAsync uses the url param directly (full URL)
+        var (data, _) = await client.GetBytesAsync(url, ct);
+        if (ct.IsCancellationRequested || data == null || data.Length == 0) return;
 
         var tex = new Texture2D(2, 2);
         if (tex.LoadImage(data))
+        {
+            _thumbTextures.Add(tex);
             target.style.backgroundImage = new StyleBackground(tex);
+        }
         else
+        {
             UnityEngine.Object.Destroy(tex);
+        }
     }
 }
