@@ -3,8 +3,63 @@ services:
     build: ./api
     ports:
       - "8080:8080"
+    environment:
+      - DATABASE_URL=postgres://user:password@db:5432/lowpolyworld?sslmode=disable
+      - REDIS_URL=redis://cache:6379
+      - OPTIMIZER_URL=http://optimizer:9090
+      - STORAGE_BACKEND=local
+      - STORAGE_LOCAL_PATH=/data/assets
+      - JWT_PRIVATE_KEY_PATH=/run/secrets/jwt_private_key
+      - JWT_PUBLIC_KEY_PATH=/run/secrets/jwt_public_key
+      - APP_ENV=development
+      - APP_VERSION=1
+      - MIN_APP_VERSION=1
+    volumes:
+      - asset_data:/data/assets
+      - ./api/secrets:/run/secrets:ro
     depends_on:
-      - optimizer
+      db:
+        condition: service_healthy
+      cache:
+        condition: service_started
 
   optimizer:
     build: ./optimizer
+    ports:
+      - "9090:9090"
+    environment:
+      - REDIS_URL=redis://cache:6379
+      - STORAGE_BACKEND=local
+      - STORAGE_LOCAL_PATH=/data/assets
+    volumes:
+      - asset_data:/data/assets
+    depends_on:
+      - cache
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=lowpolyworld
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  cache:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - cache_data:/data
+
+volumes:
+  db_data:
+  cache_data:
+  asset_data:

@@ -299,8 +299,8 @@
 ### `api/`（Go）
 
 #### クライアント向けAPI
-- [ ] API バージョンエンドポイント（`GET /api/version`）— `{ "min_compatible_version": <int>, "latest_version": <int> }` を返す。認証不要
-- [ ] 認証エンドポイント — ソーシャルサインイン（Google / Apple）OAuth コールバック処理・JWT 発行
+- [x] API バージョンエンドポイント（`GET /api/version`）— `{ "min_compatible_version": <int>, "latest_version": <int> }` を返す。認証不要
+- [x] 認証エンドポイント — ソーシャルサインイン（Google / Apple）OAuth コールバック処理・JWT 発行
   - `POST /auth/google/callback`・`POST /auth/apple/callback`
   - 認証プロバイダーを抽象化した設計（将来のメール・SMS 認証追加に対応）
   - 初回サインイン時は自動でアカウント作成（@name は未設定状態で作成し、セットアップ画面へ誘導）
@@ -311,8 +311,8 @@
     - SPF レコード追加: Resend ダッシュボードの指示に従って `TXT` レコードを DNS に追加
     - DMARC レコード追加（推奨）: `v=DMARC1; p=none; rua=mailto:nibankougen@gmail.com` を DNS に追加（監視モードから開始し、将来 `p=quarantine` へ強化）
     - 抑制リスト: ハードバウンス・迷惑メール報告は Resend が自動管理するため自前 DB への保持は不要
-  - [ ] `active_users` に `parental_email VARCHAR` カラムを追加（保護者同意フロー中のみ保持。検証完了または 14 日タイムアウト時に NULL 化）
-  - [ ] `active_users` に `age_group VARCHAR` カラムを追加（値: `adult` / `teen_13_15` / `child_under_13`）
+  - [x] `active_users` に `parental_email VARCHAR` カラムを追加（保護者同意フロー中のみ保持。検証完了または 14 日タイムアウト時に NULL 化）
+  - [x] `active_users` に `age_group VARCHAR` カラムを追加（値: `adult` / `teen_13_15` / `child_under_13`）
   - [ ] `parental_consents` テーブル実装（監査証跡・5 年保持・`users.id` 参照）
     - `parental_email_hash VARCHAR` — `SHA-256(parental_email)` のみ保持（平文は持たない）
     - `email_sent_at TIMESTAMPTZ`・`reminder_sent_at TIMESTAMPTZ`・`verified_at TIMESTAMPTZ`・`expired_at TIMESTAMPTZ`
@@ -332,9 +332,9 @@
   - [ ] Day 7 リマインドジョブ: 未検証の場合のみ Resend でリマインドメール送信・`parental_consents.reminder_sent_at` を記録
   - [ ] 14 日タイムアウトジョブ: 未検証の場合 → `active_users.parental_email` を NULL 化・`parental_consents.expired_at` を記録・アカウントを削除状態へ移行
   - [ ] `POST /admin/users/{id}/delete-underage`: 13 歳未満誤登録時の即時物理削除（2 段階確認・管理監査ログ記録）
-- [ ] @name 設定・更新エンドポイント（`PUT /me/name`・初回設定は全ユーザー可・変更はプレミアム会員のみ・90 日制限チェック）
+- [x] @name 設定・更新エンドポイント（`PUT /me/name`・初回設定は全ユーザー可・変更はプレミアム会員のみ・90 日制限チェック）
 - [ ] プロバイダー連携管理エンドポイント（`GET /me/auth-providers`・`POST /me/auth-providers`・`DELETE /me/auth-providers/{provider}`・最低 1 プロバイダー維持の制約）
-- [ ] アカウント削除エンドポイント（`DELETE /me`・`active_users.deleted_at` を設定してソフトデリート・セッション全無効化・公開ワールドを非公開へ変更・`vivox_id` を `gen_random_uuid()` で再生成）
+- [x] アカウント削除エンドポイント（`DELETE /me`・`active_users.deleted_at` を設定してソフトデリート・セッション全無効化・公開ワールドを非公開へ変更・`vivox_id` を `gen_random_uuid()` で再生成）
   - [ ] **削除ユーザー ID の公開 API 漏洩防止確認**（`api-abstract.md §13` 準拠・ソフトデリート後 30 日間の確認）
     - `deleted_at IS NOT NULL` のユーザーを参照しうる全パブリックエンドポイントで 404 を返すことを実装・テストで確認する
     - 対象エンドポイント（`deleted_at IS NOT NULL` チェックが必要）:
@@ -364,49 +364,49 @@
 - [ ] アセットメタデータへの SHA-256 ハッシュフィールド追加（アバター VRM・テクスチャ統合画像・アクセサリ GLB・ワールドオブジェクト GLB・ワールドアトラス PNG のハッシュをレスポンスに含める。クライアントがダウンロード前に変更有無を判断するために使用）
 - [ ] ワールドオブジェクト保存バリアント管理エンドポイント（`GET/POST /me/worldobjects/variants`・`DELETE /me/worldobjects/variants/{id}`・レスポンスに SHA-256 ハッシュフィールドを含める）
 - [ ] ワールドスコープカスタマイズのレイヤー画像・統合画像の保存エンドポイント（ワールド定義 JSON の `worldObjectCustomizations` と連動）
-- [ ] ワールド一覧取得エンドポイント（4 タブ対応）
+- [x] ワールド一覧取得エンドポイント（4 タブ対応）
   - `GET /worlds/new` — 新着順（全公開ワールド・新着順）
   - `GET /worlds/liked` — 自分がいいねしたワールド一覧（いいねした日時降順）
   - `GET /worlds/following` — フォロー中ユーザーのワールド一覧（新着順）
   - ホームタブ向けは Phase 5 では暫定的に `/worlds/new` を流用（パーソナライズフィード本実装は Phase 14）
   - レスポンス共通フィールド: サムネイル・ワールド名・総プレイヤー数・タグ・いいね数
   - ページネーション: ID ベースカーソル方式（`?after=<last_world_id>&limit=<n>`）— オフセット方式（`?page=&limit=`）は使用しない
-- [ ] `world_likes` テーブル実装（world_id / user_id / UNIQUE 制約）・`worlds.likes_count` デノームカラム追加（`CREATE INDEX idx_worlds_likes_count ON worlds(likes_count DESC)`）
+- [x] `world_likes` テーブル実装（world_id / user_id / UNIQUE 制約）・`worlds.likes_count` デノームカラム追加（`CREATE INDEX idx_worlds_likes_count ON worlds(likes_count DESC)`）
 - [ ] `POST /worlds/{id}/like` / `DELETE /worlds/{id}/like` エンドポイント（自己いいね禁止 403・重複いいね 409・likes_count インクリメント/デクリメント）
-- [ ] `worlds` テーブルに `max_players INTEGER NOT NULL DEFAULT 6` カラムを追加
-- [ ] ルーム一覧取得エンドポイント（ワールド別・公開/フレンドのみ種別・参加人数・ワールドの `maxPlayers`（人数上限）・言語）
-  - [ ] 公開ルームをビューワーの言語で優先ソート（言語一致を上位・不一致を下位に配置。新しい順/人気順はグループ内で維持）
+- [x] `worlds` テーブルに `max_players INTEGER NOT NULL DEFAULT 6` カラムを追加
+- [x] ルーム一覧取得エンドポイント（ワールド別・公開/フレンドのみ種別・参加人数・ワールドの `maxPlayers`（人数上限）・言語）
+  - [x] 公開ルームをビューワーの言語で優先ソート（言語一致を上位・不一致を下位に配置。新しい順/人気順はグループ内で維持）
 - [ ] ルーム参加時の人数上限チェック: 現在の参加人数 ≥ `room.max_players` の場合は参加を拒否（409 Conflict）
 - [ ] ワールド/ルーム検索エンドポイント（ワールドID・ルームID・ワールド名・タグで検索）
-  - [ ] `pg_trgm` 拡張を有効化し `worlds.name` に GIN インデックスを作成（ワールド名の部分一致検索）
+  - [x] `pg_trgm` 拡張を有効化し `worlds.name` に GIN インデックスを作成（ワールド名の部分一致検索）
   - [ ] `world_tags` テーブル実装（world_id・tag_text・tag_normalized）および AND 検索クエリ
   - [ ] タグ正規化処理（小文字化・全角半角統一・前後トリム・Unicode NFC）をサーバー側で実施
   - [ ] タグ BAN リストテーブル実装・登録/取得時の除外処理
-- [ ] ルーム作成エンドポイント（公開 / フレンドのみ / フォロワー限定 種別選択）
-  - [ ] 公開ルーム作成時: 言語コードを `language` フィールドに保存（未指定時は作成者のアカウント言語設定を自動適用）
+- [x] ルーム作成エンドポイント（公開 / フレンドのみ / フォロワー限定 種別選択）
+  - [x] 公開ルーム作成時: 言語コードを `language` フィールドに保存（未指定時は作成者のアカウント言語設定を自動適用）
   - [ ] ルーム内からの言語変更エンドポイント（`PATCH /rooms/{id}/language`・作成者のみ変更可）
-  - [ ] `rooms` テーブルに `max_players INTEGER NOT NULL` カラムを追加
-  - [ ] ルーム作成時に `room.max_players` を自動計算して設定（通常ユーザー: `min(6, world.max_players)`・プレミアム: `world.max_players`）
-- [ ] 推奨公開ルーム参加エンドポイント（`POST /worlds/{id}/rooms/recommended-join`）
-  - [ ] ステップ1: 自言語の公開ルームで 1人以上・空きあり → 最多人数ルームに参加
-  - [ ] ステップ2: 自言語ルームが満席のみ存在 → 自言語で新規ルーム作成・参加
-  - [ ] ステップ3: 英語ルームで 1人以上・空きあり → 最多人数を返却（クライアントが言語不一致時はモーダル表示後に確定 API を呼ぶ）
-  - [ ] ステップ4: いずれも該当なし → 自言語で新規ルーム作成・参加
-  - [ ] レスポンス: `{ action: "join" | "create" | "confirm_english", roomId?, language? }` を返し、クライアントが次アクションを決定する
+  - [x] `rooms` テーブルに `max_players INTEGER NOT NULL` カラムを追加
+  - [x] ルーム作成時に `room.max_players` を自動計算して設定（通常ユーザー: `min(6, world.max_players)`・プレミアム: `world.max_players`）
+- [x] 推奨公開ルーム参加エンドポイント（`POST /worlds/{id}/rooms/recommended-join`）
+  - [x] ステップ1: 自言語の公開ルームで 1人以上・空きあり → 最多人数ルームに参加
+  - [x] ステップ2: 自言語ルームが満席のみ存在 → 自言語で新規ルーム作成・参加
+  - [x] ステップ3: 英語ルームで 1人以上・空きあり → 最多人数を返却（クライアントが言語不一致時はモーダル表示後に確定 API を呼ぶ）
+  - [x] ステップ4: いずれも該当なし → 自言語で新規ルーム作成・参加
+  - [x] レスポンス: `{ action: "join" | "create" | "confirm_english", roomId?, language? }` を返し、クライアントが次アクションを決定する
 - [ ] フレンドが参加中のルーム一覧取得エンドポイント（`GET /me/friends/rooms`・全ワールド横断・フレンドのいるルームを返す）
 - [ ] 言語設定の保存・取得エンドポイント（ユーザーアカウントに紐づけ）
-- [ ] HTTP転送時圧縮（`compress/gzip` ミドルウェアを全エンドポイントに適用・`Content-Encoding: gzip`）
-- [ ] スタートアップ一括取得エンドポイント（`GET /startup`・1リクエストでユーザー設定・言語設定・アバター一覧＋URL・ワールド一覧先頭ページを返す）
-- [ ] 全リスト系 API へのページネーション実装（ワールド一覧・フレンド一覧・購入履歴・コイン取引履歴等）
+- [x] HTTP転送時圧縮（`compress/gzip` ミドルウェアを全エンドポイントに適用・`Content-Encoding: gzip`）
+- [x] スタートアップ一括取得エンドポイント（`GET /startup`・1リクエストでユーザー設定・言語設定・アバター一覧＋URL・ワールド一覧先頭ページを返す）
+- [x] 全リスト系 API へのページネーション実装（ワールド一覧・フレンド一覧・購入履歴・コイン取引履歴等）
   - ワールド一覧: ID ベースカーソル方式（`?after=<last_world_id>&limit=<n>`）
   - その他リスト: ID ベースカーソル方式を基本とし、用途に応じて選択
-- [ ] コンテンツアドレス型ファイル URL（ファイル名 = SHA-256 ハッシュ.ext）+ CDN 配信設定（`Cache-Control: immutable`）
+- [x] コンテンツアドレス型ファイル URL（ファイル名 = SHA-256 ハッシュ.ext）+ CDN 配信設定（`Cache-Control: immutable`）
 - [ ] サーバーサイドキャッシュ（Redis）導入: ワールド一覧・ショップ商品一覧など頻繁読み取り・低変更頻度のエンドポイントに適用
-- [ ] DB スキーマ基盤（`docs/unity-game-abstract.md` セクション 22・23 参照）
-  - [ ] `users` / `active_users` テーブル設計
+- [x] DB スキーマ基盤（`docs/unity-game-abstract.md` セクション 22・23 参照）
+  - [x] `users` / `active_users` テーブル設計
     - `users`（不変レコード）: `id`（PK）・`created_at` のみを持つ。購入履歴・消費履歴・違反報告・モデレーションログなど財務・監査レコードの外部キーは `users.id` を参照することで、アカウント削除後も参照整合性を維持する
     - `active_users`（個人情報レコード）: `user_id`（PK・`users.id` への FK・1対1）を持ち、表示名・@name・ソーシャルプロバイダー紐づけ・言語設定・信頼スコア・削除タイムスタンプなど個人情報と設定を格納する。アカウント削除時にこのレコードを削除することで個人データを消去できる
-  - [ ] `active_users` テーブルに以下のカラムを追加:
+  - [x] `active_users` テーブルに以下のカラムを追加:
     - `trust_level` VARCHAR DEFAULT `'visitor'`
     - `trust_points` FLOAT DEFAULT `0`
     - `trust_level_locked` BOOL DEFAULT `false`

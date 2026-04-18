@@ -31,7 +31,10 @@
       "Bash(uloop launch:*)",
       "Bash(cargo check:*)",
       "Bash(cargo test:*)",
-      "Bash(uloop fix:*)"
+      "Bash(uloop fix:*)",
+      "Bash(go mod *)",
+      "Bash(go build *)",
+      "Bash(go vet *)"
     ]
   }
 }
