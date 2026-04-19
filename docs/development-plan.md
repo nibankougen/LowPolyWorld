@@ -631,9 +631,10 @@
 - [x] 各商品への `collider_size_category` / `texture_cost` 設定 UI — `POST/PATCH /admin/products` で対応済み
 
 ### Unityクライアント
-- [ ] `ShopManager` 実装
+- [x] `ShopManager` 実装（DontDestroyOnLoad・CoinLedger保持・API呼び出しオーケストレーション）
 - [ ] Unity IAP 初期化・商品情報フェッチ（App Store / Google Play）
-  - [ ] コイン購入商品 20 種（100〜1000 を100単位 / 2000〜10000 を1000単位）の Product ID 定義
+  - [x] コイン購入商品 20 種 Product ID 定義（`IapProductIds.cs`）
+  - [ ] Unity IAP パッケージ追加・初期化・価格取得（要 com.unity.purchasing 導入）
   - [ ] 価格取得失敗時: 「価格を取得できませんでした」表示・購入ボタン無効化
 - [ ] ショップ画面固定ヘッダー（5タブ + コイン残高）
 - [ ] 商品一覧 UI（アバター / アクセサリ / オブジェクト / スタンプ 各タブ）

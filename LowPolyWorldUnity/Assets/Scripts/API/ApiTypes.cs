@@ -191,3 +191,88 @@ public class CreateRoomRequest
     public string room_type;
     public string language;
 }
+
+// ── Shop ─────────────────────────────────────────────────────────────────────
+
+[Serializable]
+public class ShopProductResponse
+{
+    public string id;
+    public string creatorId;
+    public string name;
+    public string description;
+    public string category; // avatar | accessory | world_object | stamp
+    public int priceCoins;
+    public string assetUrl;
+    public string assetHash;
+    public string thumbnailUrl;
+    public string thumbnailHash;
+    public int textureCost;           // 0 = not applicable
+    public string colliderSizeCategory; // null = not applicable
+    public bool editAllowed;
+    public int likesCount;
+    public bool likedByMe;
+    public bool purchasedByMe;
+    public string[] tags;
+    public string createdAt;
+}
+
+[Serializable]
+public class ShopProductListResponse
+{
+    public List<ShopProductResponse> products;
+    public CursorResponse cursor;
+}
+
+[Serializable]
+public class CoinLotResponse
+{
+    public string purchaseId;
+    public int coinsAmount;
+    public string validUntil; // ISO 8601
+}
+
+[Serializable]
+public class CoinBalanceResponse
+{
+    public int balance;
+    public List<CoinLotResponse> lots;
+    public int totalDeducted;
+    public int totalSpent;
+}
+
+[Serializable]
+public class PurchaseProductRequest
+{
+    public string idempotency_key;
+}
+
+[Serializable]
+public class MyProductEntry
+{
+    public string id;
+    public string productId;
+    public string purchasedAt;
+    public ShopProductResponse product;
+}
+
+[Serializable]
+public class MyProductListResponse
+{
+    public List<MyProductEntry> products;
+    public CursorResponse cursor;
+}
+
+[Serializable]
+public class RecordCoinPurchaseRequest
+{
+    public string platform;             // "ios" | "android"
+    public string platform_transaction_id;
+    public string storefront_country;
+    public string purchase_timestamp;   // ISO 8601
+    public string valid_until;          // ISO 8601
+    public int coins_amount;
+    public float local_amount;
+    public string local_currency;       // ISO 4217
+    public float fx_rate_to_jpy;
+}

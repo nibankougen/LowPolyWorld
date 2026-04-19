@@ -14,6 +14,7 @@ public class Bootstrapper : MonoBehaviour
     [Header("Phase B — API 後マネージャー")]
     [SerializeField] private GameObject _userManagerPrefab;
     [SerializeField] private GameObject _cacheManagerPrefab;
+    [SerializeField] private GameObject _shopManagerPrefab;
 
     private static bool _initialized;
 
@@ -37,6 +38,9 @@ public class Bootstrapper : MonoBehaviour
 
         if (_cacheManagerPrefab != null && CacheManager.Instance == null)
             Instantiate(_cacheManagerPrefab);
+
+        if (_shopManagerPrefab != null && ShopManager.Instance == null)
+            Instantiate(_shopManagerPrefab);
     }
 
     private void OnDestroy()
