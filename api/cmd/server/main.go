@@ -207,6 +207,20 @@ func main() {
 
 			// User management.
 			r.Patch("/users/{userID}/restore", h.RestoreAccount)
+			r.Get("/users", h.AdminListUsers)
+			r.Get("/users/{userID}", h.AdminGetUser)
+			r.Patch("/users/{userID}/restriction", h.AdminSetRestriction)
+			r.Patch("/users/{userID}/trust-level", h.AdminPatchTrustLevel)
+			r.Get("/users/{userID}/trust-level/history", h.AdminGetTrustLevelHistory)
+			r.Get("/users/{userID}/data-export", h.AdminGetUserDataExport)
+
+			// Moderation.
+			r.Get("/violation-reports", h.AdminListViolationReports)
+			r.Get("/audit-logs", h.AdminListAuditLogs)
+
+			// World management.
+			r.Get("/worlds", h.AdminListWorlds)
+			r.Patch("/worlds/{worldID}", h.AdminPatchWorld)
 		})
 	})
 
