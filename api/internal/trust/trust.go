@@ -186,7 +186,14 @@ func evaluateAndPromote(ctx context.Context, db *pgxpool.Pool, logger *slog.Logg
 		return
 	}
 
-	if _, err := db.Exec(ctx,
+	tx, err := db.Begin(ctx)
+	if err != nil {
+		logger.Error("trust: begin promotion tx", "error", err)
+		return
+	}
+	defer tx.Rollback(ctx) //nolint:errcheck
+
+	if _, err := tx.Exec(ctx,
 		`UPDATE active_users SET trust_level = $1, updated_at = now() WHERE user_id = $2`,
 		target, userID,
 	); err != nil {
@@ -194,11 +201,16 @@ func evaluateAndPromote(ctx context.Context, db *pgxpool.Pool, logger *slog.Logg
 		return
 	}
 
-	if _, err := db.Exec(ctx,
+	if _, err := tx.Exec(ctx,
 		`INSERT INTO trust_level_logs (user_id, before_level, after_level, reason)
 		 VALUES ($1, $2, $3, 'auto_promotion')`,
 		userID, currentLevel, target,
 	); err != nil {
 		logger.Error("trust: insert trust_level_log", "error", err)
+		return
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		logger.Error("trust: commit promotion", "error", err)
 	}
 }

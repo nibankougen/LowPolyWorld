@@ -363,15 +363,16 @@ func (h *Handler) RecommendedJoin(w http.ResponseWriter, r *http.Request) {
 	).Scan(&sameLanguageRoomID)
 
 	if sameLanguageRoomID != "" {
-		// Atomic capacity check: insert only if current count < max_players
+		// Atomic capacity check + record join_member_count
 		var joined bool
 		_ = h.DB.QueryRow(r.Context(),
 			`WITH capacity AS (
 			    SELECT max_players, (SELECT count(*) FROM room_members WHERE room_id = $1) AS current
 			    FROM rooms WHERE id = $1
 			)
-			INSERT INTO room_members (room_id, user_id)
-			SELECT $1, $2 FROM capacity WHERE current < max_players
+			INSERT INTO room_members (room_id, user_id, join_member_count)
+			SELECT $1, $2, (SELECT count(*) FROM room_members WHERE room_id = $1)
+			FROM capacity WHERE current < max_players
 			ON CONFLICT DO NOTHING
 			RETURNING TRUE`,
 			sameLanguageRoomID, userID,

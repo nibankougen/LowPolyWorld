@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"bytes"
 	"context"
 	"log/slog"
 	"net/http"
@@ -35,7 +34,6 @@ func SetAdminAuditEntry(ctx context.Context, entry AdminAuditEntry) context.Cont
 type adminAuditResponseWriter struct {
 	http.ResponseWriter
 	status int
-	buf    bytes.Buffer
 }
 
 func (a *adminAuditResponseWriter) WriteHeader(code int) {
@@ -58,16 +56,17 @@ func AdminAuditLog(db *pgxpool.Pool, logger *slog.Logger) func(http.Handler) htt
 			next.ServeHTTP(arw, r)
 
 			entry, _ := r.Context().Value(adminAuditKey{}).(*AdminAuditEntry)
+			method, path := r.Method, r.URL.Path
 
 			go func() {
 				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 				defer cancel()
 
 				adminID := ""
-				action := r.Method + " " + r.URL.Path
+				action := method + " " + path
 				targetType := ""
 				targetID := ""
-				var beforeValue, afterValue interface{}
+				var beforeValue, afterValue any
 				notes := ""
 				var errorCode *string
 
