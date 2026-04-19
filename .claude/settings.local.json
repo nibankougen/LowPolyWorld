@@ -36,7 +36,9 @@
       "Bash(go build *)",
       "Bash(go vet *)",
       "Bash(git commit -m ' *)",
-      "Bash(docker compose *)"
+      "Bash(docker compose *)",
+      "Bash(go test *)",
+      "Bash(curl -s http://localhost:8080/health)"
     ]
   }
 }
