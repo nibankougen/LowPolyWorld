@@ -40,6 +40,19 @@ func (h *Handler) RunBatch(w http.ResponseWriter, r *http.Request) {
 			"affected_count", 0,
 		)
 		response.JSON(w, http.StatusOK, map[string]any{"batch": batchName, "affected_count": 0})
+	case "expire-coins":
+		count, err := batch.ExpireCoins(r.Context(), h.DB, h.Logger)
+		if err != nil {
+			h.Logger.Error("batch failed", "batch", batchName, "error", err)
+			response.InternalError(w, r, h.Cfg.IsProduction())
+			return
+		}
+		h.Logger.Info("batch completed",
+			"event", "batch_completed",
+			"batch", "expire-coins",
+			"affected_count", count,
+		)
+		response.JSON(w, http.StatusOK, map[string]any{"batch": batchName, "affected_count": count})
 	default:
 		response.Error(w, r, http.StatusNotFound, "not_found", "unknown batch name")
 	}

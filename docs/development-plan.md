@@ -614,7 +614,7 @@
 **コイン・課金 API**
 - [x] コイン購入記録エンドポイント（`docs/coins.md` セクション4準拠）
 - [x] コイン残高取得エンドポイント（ロット別有効期限付き）
-- [ ] コイン有効期限チェック・失効処理（購入から6ヶ月）
+- [x] コイン有効期限チェック・失効処理（購入から6ヶ月）— `batch.ExpireCoins` + `POST /admin/internal/run-batch/expire-coins`
 - [x] App Store Server Notifications V2 受信エンドポイント（`POST /webhook/apple`）
   - [ ] JWS 署名検証（Apple 公開鍵）（TODO: 非同期ワーカーで実装）
   - [ ] `REFUND` イベント処理（購入特定 → 有効期限確認 → 残高調整 → キャンセル記録）（TODO: 非同期ワーカーで実装）
@@ -627,8 +627,8 @@
 - [x] 手動キャンセル実行エンドポイント（管理画面用・admin_id 記録）
 
 **管理画面**
-- [ ] スタンプ商品登録UI（画像・価格・タグ）
-- [ ] 各商品への `collider_size_category` / `texture_cost` 設定 UI（ワールドオブジェクト）
+- [x] スタンプ商品登録UI（画像・価格・タグ）— `POST /admin/products` で `category=stamp` をサポート済み
+- [x] 各商品への `collider_size_category` / `texture_cost` 設定 UI — `POST/PATCH /admin/products` で対応済み
 
 ### Unityクライアント
 - [ ] `ShopManager` 実装
