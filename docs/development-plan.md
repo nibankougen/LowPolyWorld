@@ -333,7 +333,7 @@
   - [ ] 14 日タイムアウトジョブ: 未検証の場合 → `active_users.parental_email` を NULL 化・`parental_consents.expired_at` を記録・アカウントを削除状態へ移行
   - [ ] `POST /admin/users/{id}/delete-underage`: 13 歳未満誤登録時の即時物理削除（2 段階確認・管理監査ログ記録）
 - [x] @name 設定・更新エンドポイント（`PUT /me/name`・初回設定は全ユーザー可・変更はプレミアム会員のみ・90 日制限チェック）
-- [ ] プロバイダー連携管理エンドポイント（`GET /me/auth-providers`・`POST /me/auth-providers`・`DELETE /me/auth-providers/{provider}`・最低 1 プロバイダー維持の制約）
+- [x] プロバイダー連携管理エンドポイント（`GET /me/auth-providers`・`POST /me/auth-providers`・`DELETE /me/auth-providers/{provider}`・最低 1 プロバイダー維持の制約）
 - [x] アカウント削除エンドポイント（`DELETE /me`・`active_users.deleted_at` を設定してソフトデリート・セッション全無効化・公開ワールドを非公開へ変更・`vivox_id` を `gen_random_uuid()` で再生成）
   - [ ] **削除ユーザー ID の公開 API 漏洩防止確認**（`api-abstract.md §13` 準拠・ソフトデリート後 30 日間の確認）
     - `deleted_at IS NOT NULL` のユーザーを参照しうる全パブリックエンドポイントで 404 を返すことを実装・テストで確認する
@@ -344,18 +344,18 @@
       - フレンド申請・フォロー・違反報告など対象ユーザーを指定する全操作
     - 実装方針: 認証済みエンドポイントは認証ミドルウェアで `deleted_at IS NOT NULL` → 403 を一元返却済み。ユーザー ID をパスパラメータに取る公開エンドポイントは個別に 404 を返す処理を追加する
     - テスト: 削除済みユーザー ID で上記エンドポイントを叩いて 404 が返ることを Go 統合テストで確認する
-- [ ] アカウント削除バッチ処理（`active_users.deleted_at` から 30 日後に `active_users` レコードを物理削除・関連アップロードリソースも物理削除。`users` レコードおよび財務・監査データは `users.id` への参照を維持したまま保持。匿名化処理は不要）
+- [x] アカウント削除バッチ処理（`active_users.deleted_at` から 30 日後に `active_users` レコードを物理削除・関連アップロードリソースも物理削除。`users` レコードおよび財務・監査データは `users.id` への参照を維持したまま保持。匿名化処理は不要）
   - 本番: Cloud Scheduler（毎日 JST 03:00）→ `POST /admin/internal/run-batch/delete-expired-accounts`
   - 失敗ポリシー（`api-abstract.md §13` 全バッチ共通ポリシー準拠）:
     - Cloud Scheduler リトライ設定: 最大 3 回・30 分間隔（コンソール設定）
     - 正常完了時に `{"event": "batch_completed", "batch": "delete-expired-accounts", "affected_count": N}` 構造化ログを出力
     - 3 回失敗後: Cloud Monitoring → Pub/Sub → Discord 通知（Phase 5B モニタリング設定で追加）
-- [ ] アクセスログ個人情報削除バッチ（GDPR 保持期間対応・`api-abstract.md` §13）: DB 上の IP アドレス・User-Agent カラムを記録から 1 年後に NULL 化する。Cloud Logging へのリアルタイム転送済みのため外部保全は完了している
+- [x] アクセスログ個人情報削除バッチ（GDPR 保持期間対応・`api-abstract.md` §13）: DB 上の IP アドレス・User-Agent カラムを記録から 1 年後に NULL 化する。Cloud Logging へのリアルタイム転送済みのため外部保全は完了している
   - 本番: Cloud Scheduler（毎日 JST 03:30）→ `POST /admin/internal/run-batch/cleanup-access-logs`（内部エンドポイント・認証必須）
   - 開発: `docker compose run api go run cmd/batch/main.go cleanup-access-logs` で手動実行
   - 失敗ポリシー: 共通ポリシー準拠（Cloud Scheduler 3 回リトライ → Discord 通知）
   - 正常完了時に `{"event": "batch_completed", "batch": "cleanup-access-logs", "affected_count": N}` 構造化ログを出力
-- [ ] アカウント復元エンドポイント（管理画面用・`PATCH /admin/users/{id}/restore`・`active_users.deleted_at` をクリア・`active_users` レコードが存在する 30 日以内のみ有効）
+- [x] アカウント復元エンドポイント（管理画面用・`PATCH /admin/users/{id}/restore`・`active_users.deleted_at` をクリア・`active_users` レコードが存在する 30 日以内のみ有効）
 - [x] VRMアップロードエンドポイント（`POST /api/v1/me/avatars`・optimizer なしでローカルストレージに直接保存・Phase 5 polish で optimizer 統合）
 - [x] アバター取得・一覧エンドポイント（`GET /api/v1/me/avatars`・VRM/テクスチャ URL + hash を返す）
 - [x] アバターテクスチャ更新エンドポイント（`PUT /api/v1/me/avatars/{id}/texture`）
@@ -373,16 +373,16 @@
   - レスポンス共通フィールド: サムネイル・ワールド名・総プレイヤー数・タグ・いいね数
   - ページネーション: ID ベースカーソル方式（`?after=<last_world_id>&limit=<n>`）— オフセット方式（`?page=&limit=`）は使用しない
 - [x] `world_likes` テーブル実装（world_id / user_id / UNIQUE 制約）・`worlds.likes_count` デノームカラム追加（`CREATE INDEX idx_worlds_likes_count ON worlds(likes_count DESC)`）
-- [ ] `POST /worlds/{id}/like` / `DELETE /worlds/{id}/like` エンドポイント（自己いいね禁止 403・重複いいね 409・likes_count インクリメント/デクリメント）
+- [x] `POST /worlds/{id}/like` / `DELETE /worlds/{id}/like` エンドポイント（自己いいね禁止 403・重複いいね 409・likes_count インクリメント/デクリメント）
 - [x] `worlds` テーブルに `max_players INTEGER NOT NULL DEFAULT 6` カラムを追加
 - [x] ルーム一覧取得エンドポイント（ワールド別・公開/フレンドのみ種別・参加人数・ワールドの `maxPlayers`（人数上限）・言語）
   - [x] 公開ルームをビューワーの言語で優先ソート（言語一致を上位・不一致を下位に配置。新しい順/人気順はグループ内で維持）
 - [x] ルーム参加時の人数上限チェック: 現在の参加人数 ≥ `room.max_players` の場合は参加を拒否（409 Conflict）。`POST /api/v1/rooms/{roomID}/join`・`POST /worlds/{worldID}/rooms/recommended-join` の両方で CTE で原子チェック
-- [ ] ワールド/ルーム検索エンドポイント（ワールドID・ルームID・ワールド名・タグで検索）
+- [x] ワールド/ルーム検索エンドポイント（ワールドID・ルームID・ワールド名・タグで検索）
   - [x] `pg_trgm` 拡張を有効化し `worlds.name` に GIN インデックスを作成（ワールド名の部分一致検索）
-  - [ ] `world_tags` テーブル実装（world_id・tag_text・tag_normalized）および AND 検索クエリ
-  - [ ] タグ正規化処理（小文字化・全角半角統一・前後トリム・Unicode NFC）をサーバー側で実施
-  - [ ] タグ BAN リストテーブル実装・登録/取得時の除外処理
+  - [x] `world_tags` テーブル実装（world_id・tag_text・tag_normalized）および AND 検索クエリ
+  - [x] タグ正規化処理（小文字化・全角半角統一・前後トリム・Unicode NFC）をサーバー側で実施
+  - [x] タグ BAN リストテーブル実装・登録/取得時の除外処理
 - [x] ルーム作成エンドポイント（公開 / フレンドのみ / フォロワー限定 種別選択）
   - [x] 公開ルーム作成時: 言語コードを `language` フィールドに保存（未指定時は作成者のアカウント言語設定を自動適用）
   - [x] ルーム内からの言語変更エンドポイント（`PATCH /rooms/{id}/language`・作成者のみ変更可）
@@ -402,7 +402,7 @@
   - ワールド一覧: ID ベースカーソル方式（`?after=<last_world_id>&limit=<n>`）
   - その他リスト: ID ベースカーソル方式を基本とし、用途に応じて選択
 - [x] コンテンツアドレス型ファイル URL（ファイル名 = SHA-256 ハッシュ.ext）+ CDN 配信設定（`Cache-Control: immutable`）
-- [ ] サーバーサイドキャッシュ（Redis）導入: ワールド一覧・ショップ商品一覧など頻繁読み取り・低変更頻度のエンドポイントに適用
+- [x] サーバーサイドキャッシュ（Redis）導入: ワールド一覧・ショップ商品一覧など頻繁読み取り・低変更頻度のエンドポイントに適用
 - [x] DB スキーマ基盤（`docs/unity-game-abstract.md` セクション 22・23 参照）
   - [x] `users` / `active_users` テーブル設計
     - `users`（不変レコード）: `id`（PK）・`created_at` のみを持つ。購入履歴・消費履歴・違反報告・モデレーションログなど財務・監査レコードの外部キーは `users.id` を参照することで、アカウント削除後も参照整合性を維持する
@@ -462,10 +462,10 @@
 - [x] 起動時にサーバーから言語設定を取得し `LocalizationSettings.SelectedLocale` に反映
 
 ### テスト（EditMode）
-- [ ] `AssetCacheStore`: ハッシュ一致 → キャッシュヒット / 不一致 → 再ダウンロード判定
-- [ ] `AssetCacheStore`: TTL 期限切れエントリの検出・削除
-- [ ] `AssetCacheStore`: 自分のアセット（永続）と他人のアセット（一時）の保存先分岐
-- [ ] `LikeLogic`（World）: 自己いいね禁止判定・重複いいね禁止判定・いいね解除の状態遷移
+- [x] `AssetCacheStore`: ハッシュ一致 → キャッシュヒット / 不一致 → 再ダウンロード判定
+- [x] `AssetCacheStore`: TTL 期限切れエントリの検出・削除
+- [x] `AssetCacheStore`: 自分のアセット（永続）と他人のアセット（一時）の保存先分岐
+- [x] `LikeLogic`（World）: 自己いいね禁止判定・重複いいね禁止判定・いいね解除の状態遷移
 
 ---
 
@@ -478,19 +478,19 @@
 ### `api/`（Go）
 
 #### トラストレベルシステム（`docs/unity-game-abstract.md` セクション 22 参照）
-- [ ] `trust_level_logs` テーブル実装（変更日時・変更前後レベル・理由・操作者 admin_id・`user_id` は `users.id` を参照）
-- [ ] `room_trust_events` テーブル実装（公開ルーム退室時の join_count / exit_count / duration_minutes を記録・`user_id` は `users.id` を参照）
-- [ ] トラストポイント加算処理（公開ルーム退室時: `floor((join+exit)/2 * floor(minutes))` を `trust_points` に加算）
-- [ ] トラストレベル昇格非同期ジョブ（**asynq** を使用・イベント駆動。トラストポイント更新・フレンド数変動・ワールドいいね変動・課金完了・プレミアム変更 の各イベント後にジョブをエンキューして実行。全条件を評価し最上位レベルを設定。ロック中はスキップ）
-- [ ] `user_violation_reports` テーブル実装（違反報告の保存・`reporter_id` と `target_id` は `users.id` を参照）
-- [ ] 違反報告の自動制限トリガー（`visitor`: 24h以内2件以上 または 累計4件以上で自動制限。`new_user`: 3件/10件）
+- [x] `trust_level_logs` テーブル実装（変更日時・変更前後レベル・理由・操作者 admin_id・`user_id` は `users.id` を参照）
+- [x] `room_trust_events` テーブル実装（公開ルーム退室時の join_count / exit_count / duration_minutes を記録・`user_id` は `users.id` を参照）
+- [x] トラストポイント加算処理（公開ルーム退室時: `floor((join+exit)/2 * floor(minutes))` を `trust_points` に加算）
+- [ ] トラストレベル昇格非同期ジョブ（**asynq** を使用・イベント駆動。トラストポイント更新・フレンド数変動・ワールドいいね変動・課金完了・プレミアム変更 の各イベント後にジョブをエンキューして実行。全条件を評価し最上位レベルを設定。ロック中はスキップ）※現在はゴルーチンで同期実行・asynq 移行は Phase 8/9 イベント追加時に対応
+- [x] `user_violation_reports` テーブル実装（違反報告の保存・`reporter_id` と `target_id` は `users.id` を参照）
+- [x] 違反報告の自動制限トリガー（`visitor`: 24h以内2件以上 または 累計4件以上で自動制限。`new_user`: 3件/10件）
 
 #### 管理者操作監査ログ
-- [ ] `admin_audit_logs` テーブル実装（詳細: `docs/api-abstract.md` セクション9参照）
-- [ ] すべての管理者操作エンドポイントで `admin_audit_logs` に自動記録するミドルウェア実装
+- [x] `admin_audit_logs` テーブル実装（詳細: `docs/api-abstract.md` セクション9参照）
+- [x] すべての管理者操作エンドポイントで `admin_audit_logs` に自動記録するミドルウェア実装
 
 #### 管理画面（`/admin`）
-- [ ] 管理者ログイン認証（セッションまたはJWT）
+- [x] 管理者ログイン認証（セッションまたはJWT）
 - [ ] ショップ商品登録UI（アバター・アクセサリのGLB・テクスチャ・価格・Edit OK/NGフラグ）
 - [ ] ショップクリエイター登録UI（クリエイター情報・ユーザーアカウント紐づけ）
 - [ ] アバター審査画面（前面/背面スクリーンショット＋テクスチャ一覧・承認/BAN操作）
@@ -548,8 +548,8 @@
   - DB への `admin_audit_logs` 書き込みは停止しない（監査記録自体は継続）
 
 ### テスト（EditMode）
-- [ ] `TrustPointCalculator`: 公開ルーム退室時のポイント計算（`floor((join+exit)/2 * floor(minutes))`）
-- [ ] `TrustLevelPromoter`: 全条件評価・最上位レベル設定・ロック中スキップ
+- [x] `TrustPointCalculator`: 公開ルーム退室時のポイント計算（`floor((join+exit)/2 * floor(minutes))`）
+- [x] `TrustLevelPromoter`: 全条件評価・最上位レベル設定・ロック中スキップ
 
 ---
 

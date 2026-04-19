@@ -182,14 +182,32 @@ func main() {
 		r.Post("/rooms/{roomID}/join", h.JoinRoom)
 		r.Delete("/rooms/{roomID}/leave", h.LeaveRoom)
 		r.Patch("/rooms/{roomID}/language", h.PatchRoomLanguage)
+
+		// Reports
+		r.Post("/users/{userID}/report", h.ReportUser)
 	})
 
-	// Admin routes — audit log middleware records every request.
+	// Admin routes.
 	adminAuditMW := mw.AdminAuditLog(pool, logger)
+	adminAuthMW := mw.AdminAuth(pool, logger)
 	r.Route("/admin", func(r chi.Router) {
 		r.Use(adminAuditMW)
-		r.Post("/internal/run-batch/{batchName}", h.RunBatch)
-		r.Patch("/users/{userID}/restore", h.RestoreAccount)
+
+		// Public admin endpoints (no token required).
+		r.Post("/auth/login", h.AdminLogin)
+
+		// Authenticated admin endpoints.
+		r.Group(func(r chi.Router) {
+			r.Use(adminAuthMW)
+			r.Post("/auth/logout", h.AdminLogout)
+			r.Get("/auth/me", h.AdminMe)
+
+			// Internal batch endpoints (still require admin auth in prod).
+			r.Post("/internal/run-batch/{batchName}", h.RunBatch)
+
+			// User management.
+			r.Patch("/users/{userID}/restore", h.RestoreAccount)
+		})
 	})
 
 	// Dev-only: serve local asset files

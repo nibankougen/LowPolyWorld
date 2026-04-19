@@ -143,6 +143,95 @@ func ProcessPublicRoomLeave(
 	evaluateAndPromote(ctx, db, logger, userID)
 }
 
+// CheckAndApplyViolationRestriction checks whether a target user has crossed a
+// violation threshold and, if so, sets active_users.is_restricted = true.
+//
+// Thresholds (unique-reporter count):
+//
+//	visitor:  24h >= 2  OR  total >= 4
+//	new_user: 24h >= 3  OR  total >= 10
+//
+// Called as a fire-and-forget goroutine after inserting a violation report.
+// Errors are logged but do not surface to the caller.
+func CheckAndApplyViolationRestriction(
+	ctx context.Context,
+	db *pgxpool.Pool,
+	logger *slog.Logger,
+	targetUserID string,
+) {
+	// Fetch current trust level and restriction flag in one query.
+	var trustLevel string
+	var isRestricted bool
+	err := db.QueryRow(ctx,
+		`SELECT trust_level, is_restricted FROM active_users WHERE user_id = $1 AND deleted_at IS NULL`,
+		targetUserID,
+	).Scan(&trustLevel, &isRestricted)
+	if err != nil {
+		logger.Error("violation_check: fetch user", "error", err, "target", targetUserID)
+		return
+	}
+	if isRestricted {
+		return // already restricted
+	}
+
+	// Thresholds vary by level; only visitor and new_user have auto-restriction.
+	var threshold24h, thresholdTotal int
+	switch trustLevel {
+	case LevelVisitor:
+		threshold24h, thresholdTotal = 2, 4
+	case LevelNewUser:
+		threshold24h, thresholdTotal = 3, 10
+	default:
+		return // user / trusted_user: no auto-restriction
+	}
+
+	// Count unique reporters in the last 24 hours.
+	var count24h int
+	err = db.QueryRow(ctx,
+		`SELECT COUNT(DISTINCT reporter_id) FROM user_violation_reports
+		 WHERE target_id = $1 AND created_at >= now() - INTERVAL '24 hours'`,
+		targetUserID,
+	).Scan(&count24h)
+	if err != nil {
+		logger.Error("violation_check: count 24h", "error", err)
+		return
+	}
+	if count24h >= threshold24h {
+		applyRestriction(ctx, db, logger, targetUserID, "auto_violation_24h")
+		return
+	}
+
+	// Count total unique reporters.
+	var countTotal int
+	err = db.QueryRow(ctx,
+		`SELECT COUNT(DISTINCT reporter_id) FROM user_violation_reports WHERE target_id = $1`,
+		targetUserID,
+	).Scan(&countTotal)
+	if err != nil {
+		logger.Error("violation_check: count total", "error", err)
+		return
+	}
+	if countTotal >= thresholdTotal {
+		applyRestriction(ctx, db, logger, targetUserID, "auto_violation_total")
+	}
+}
+
+func applyRestriction(
+	ctx context.Context,
+	db *pgxpool.Pool,
+	logger *slog.Logger,
+	targetUserID, reason string,
+) {
+	if _, err := db.Exec(ctx,
+		`UPDATE active_users SET is_restricted = TRUE, updated_at = now() WHERE user_id = $1`,
+		targetUserID,
+	); err != nil {
+		logger.Error("violation_check: apply restriction", "error", err, "reason", reason)
+		return
+	}
+	logger.Info("violation_check: user restricted", "target", targetUserID, "reason", reason)
+}
+
 // evaluateAndPromote fetches the user snapshot, computes the target level,
 // and updates active_users + inserts a trust_level_log if the level rises.
 func evaluateAndPromote(ctx context.Context, db *pgxpool.Pool, logger *slog.Logger, userID string) {
