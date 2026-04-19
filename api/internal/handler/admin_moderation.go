@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -62,7 +63,7 @@ func (h *Handler) AdminListViolationReports(w http.ResponseWriter, r *http.Reque
 }
 
 type auditLogRow struct {
-	ID             string    `json:"id"`
+	ID             int64     `json:"id"`
 	AdminID        string    `json:"admin_id"`
 	Action         string    `json:"action"`
 	TargetType     string    `json:"target_type"`
@@ -74,13 +75,19 @@ type auditLogRow struct {
 }
 
 // AdminListAuditLogs handles GET /admin/audit-logs.
-// Query params: admin_id, action, target_type, after (cursor by id).
+// Query params: admin_id, action, target_type, after (BIGINT cursor id).
 func (h *Handler) AdminListAuditLogs(w http.ResponseWriter, r *http.Request) {
 	adminFilter := r.URL.Query().Get("admin_id")
 	actionFilter := r.URL.Query().Get("action")
 	targetTypeFilter := r.URL.Query().Get("target_type")
-	after := r.URL.Query().Get("after")
+	afterStr := r.URL.Query().Get("after")
 	limit := 50
+
+	// after is a BIGINT cursor (id of last row seen).
+	var afterID int64
+	if afterStr != "" {
+		afterID, _ = strconv.ParseInt(afterStr, 10, 64)
+	}
 
 	rows, err := h.DB.Query(r.Context(),
 		`SELECT id, admin_id, action, target_type, target_id, notes,
@@ -89,10 +96,10 @@ func (h *Handler) AdminListAuditLogs(w http.ResponseWriter, r *http.Request) {
 		 WHERE ($1 = '' OR admin_id = $1)
 		   AND ($2 = '' OR action = $2)
 		   AND ($3 = '' OR target_type = $3)
-		   AND ($4 = '' OR created_at < (SELECT created_at FROM admin_audit_logs WHERE id = $4::UUID))
-		 ORDER BY created_at DESC
+		   AND ($4 = 0 OR id < $4)
+		 ORDER BY id DESC
 		 LIMIT $5`,
-		adminFilter, actionFilter, targetTypeFilter, after, limit+1,
+		adminFilter, actionFilter, targetTypeFilter, afterID, limit+1,
 	)
 	if err != nil {
 		h.Logger.Error("admin list audit logs", "error", err)
@@ -115,7 +122,7 @@ func (h *Handler) AdminListAuditLogs(w http.ResponseWriter, r *http.Request) {
 	var cursor response.Cursor
 	if len(logs) > limit {
 		logs = logs[:limit]
-		cursor.Next = logs[len(logs)-1].ID
+		cursor.Next = strconv.FormatInt(logs[len(logs)-1].ID, 10)
 	}
 	response.JSONCursor(w, http.StatusOK, logs, cursor)
 }
