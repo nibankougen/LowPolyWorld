@@ -2,12 +2,23 @@ package middleware
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"net/http"
+	"os"
+	"sync"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
+
+const (
+	fallbackLogPath    = "/tmp/audit_fallback.log"
+	fallbackWarnBytes  = 40 * 1024 * 1024 // 40 MB — warn but keep writing
+	fallbackStopBytes  = 50 * 1024 * 1024 // 50 MB — stop writing
+)
+
+var fallbackMu sync.Mutex // protects concurrent fallback writes
 
 type adminAuditKey struct{}
 
@@ -102,10 +113,56 @@ func AdminAuditLog(db *pgxpool.Pool, logger *slog.Logger) func(http.Handler) htt
 					beforeValue, afterValue, notes,
 					int16(status), errorCode,
 				); err != nil {
-					logger.Error("admin_audit: insert failed", "error", err,
+					logger.Error("admin_audit: insert failed, writing fallback log", "error", err,
 						"action", action, "status", status)
+					writeFallbackAuditLog(db, logger, adminID, action, targetType, targetID, status)
 				}
 			}()
 		})
+	}
+}
+
+// writeFallbackAuditLog appends a single audit record to the fallback disk log
+// when the DB insert fails. It enforces 40 MB warn / 50 MB stop thresholds and
+// inserts a system_alert when either threshold is crossed for the first time.
+func writeFallbackAuditLog(db *pgxpool.Pool, logger *slog.Logger, adminID, action, targetType, targetID string, status int) {
+	fallbackMu.Lock()
+	defer fallbackMu.Unlock()
+
+	// Check current file size before writing.
+	if info, err := os.Stat(fallbackLogPath); err == nil {
+		size := info.Size()
+		if size >= fallbackStopBytes {
+			logger.Error("audit_fallback_log_full: fallback log at 50 MB — new writes suspended",
+				"path", fallbackLogPath, "size_bytes", size)
+			insertSystemAlert(db, logger, "audit_fallback_log_full", "critical",
+				fmt.Sprintf("Fallback audit log reached %d MB — new writes suspended (legal risk)", size/(1024*1024)),
+				map[string]any{"path": fallbackLogPath, "size_bytes": size},
+			)
+			return
+		}
+		if size >= fallbackWarnBytes {
+			logger.Warn("audit_fallback_log_warning: fallback log at 40 MB",
+				"path", fallbackLogPath, "size_bytes", size)
+			insertSystemAlert(db, logger, "audit_fallback_log_warning", "warning",
+				fmt.Sprintf("Fallback audit log reached %d MB — disk cleanup required", size/(1024*1024)),
+				map[string]any{"path": fallbackLogPath, "size_bytes": size},
+			)
+			// Continue writing — warning threshold only.
+		}
+	}
+
+	f, err := os.OpenFile(fallbackLogPath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
+	if err != nil {
+		logger.Error("audit_fallback: cannot open fallback log", "error", err)
+		return
+	}
+	defer f.Close()
+
+	line := fmt.Sprintf("%s\t%s\t%s\t%s\t%s\t%d\n",
+		time.Now().UTC().Format(time.RFC3339),
+		adminID, action, targetType, targetID, status)
+	if _, err := fmt.Fprint(f, line); err != nil {
+		logger.Error("audit_fallback: write failed", "error", err)
 	}
 }

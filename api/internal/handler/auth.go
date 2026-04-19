@@ -208,6 +208,7 @@ func (h *Handler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 			`UPDATE refresh_tokens SET revoked_at = now() WHERE user_id = $1 AND revoked_at IS NULL`, userID)
 		_, _ = h.DB.Exec(r.Context(),
 			`UPDATE active_users SET token_revision = token_revision + 1 WHERE user_id = $1`, userID)
+		middleware.CheckMassTokenRevocation(r.Context(), h.DB, h.Logger, 100)
 		response.Error(w, r, http.StatusUnauthorized, "unauthorized", "refresh_token_invalid")
 		return
 	}

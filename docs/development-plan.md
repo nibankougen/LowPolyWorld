@@ -508,7 +508,7 @@
 - [x] 違反報告管理 API（報告一覧・target_id フィルター・カーソルページネーション）
 - [x] 売上管理（期間別確定売上登録・調整係数自動計算）— `POST/GET /admin/settled-revenues`（`docs/coins.md` セクション14.5参照）
 - [x] ワールド管理 API（一覧・名前検索・有効/無効切り替え）
-- [ ] 取引キャンセル管理画面（一覧・絞り込み・手動キャンセル操作）（`docs/coins.md` セクション17参照）
+- [x] 取引キャンセル管理画面（一覧・絞り込み・手動キャンセル操作）— `GET /admin/coin-purchases/cancellations`・`POST /admin/coin-purchases/{id}/cancel` 実装済み（`docs/coins.md` セクション17参照）
 - [x] 管理者操作ログ API（`admin_audit_logs` の一覧・管理者名/操作種別/対象で絞り込み・`docs/api-abstract.md` セクション9参照）
 
 #### 本番環境モニタリング設定（侵害検知アラート）
@@ -527,12 +527,12 @@
 - [ ] **レイヤー 2** Cloud Logging ログベースアラートを設定する（コンソール操作のみ）
   - `mass-admin-delete`: `admin_audit_logs` で 1 時間以内に 100 件超の `delete_*` アクション
   - `after-hours-admin-op`: 23:00〜7:00 JST に管理者操作が 1 件でも発生
-- [ ] **レイヤー 3** Go API 構造化ログを実装し Cloud Logging アラートを設定する（コード実装あり）
-  - 認証ミドルウェア: レートリミット発動時に `brute_force_attempt` ログを出力
-  - トークン無効化処理: `mass_token_revocation` ログを出力（1 時間 100 ユーザー超でアラート）
-  - レートリミットミドルウェア: `high_api_rate` ログを出力（同一ユーザー 500 req/分超）
-  - 上記 3 種を Cloud Logging ログベースアラートに設定し Pub/Sub トピックへ接続
-  - 上記 3 種を `system_alerts` テーブルにも挿入（管理画面に表示）
+- [x] **レイヤー 3** Go API 構造化ログを実装し Cloud Logging アラートを設定する（コード実装あり）
+  - [x] 認証ミドルウェア: レートリミット発動時に `brute_force_attempt` ログを出力 — `BruteForceLog` middleware
+  - [x] トークン無効化処理: `mass_token_revocation` ログを出力（1 時間 100 ユーザー超でアラート）— `CheckMassTokenRevocation`
+  - [x] レートリミットミドルウェア: `high_api_rate` ログを出力（同一ユーザー 500 req/分超）— `HighAPIRateLog` middleware
+  - [x] 上記 3 種を `system_alerts` テーブルにも挿入（`migration/006`）
+  - [ ] Cloud Logging ログベースアラート設定・Pub/Sub トピックへ接続（コンソール操作）
 - [ ] 全アラートポリシーに `lowpolyworld-security-alerts` Pub/Sub トピックを Notification Channel として追加する
 - [ ] **バッチ失敗監視** Cloud Scheduler 失敗メトリクスアラートを設定する（コンソール操作のみ）
   - 対象: アカウント物理削除・アクセスログ削除・通報者匿名化（全 3 バッチ）
@@ -541,11 +541,12 @@
 - [ ] **バッチ完了ログ監視** Cloud Logging ログベースアラートを設定する（コンソール操作のみ）
   - 条件: 各バッチの実行予定時刻から 26 時間以内に `batch_completed` ログが出力されない場合
   - 通知: 同上（部分失敗・HTTP 200 だが処理 0 件などのサイレント失敗を検知）
-- [ ] **フォールバックログのディスク保護** Go コードに 2 段階閾値チェックを実装する（`infra-abstract.md §9` 参照）
-  - 書き込みのたびにファイルサイズを確認する
-  - 40MB 到達（警告）: 書き込み継続 + `system_alerts` 記録（`audit_fallback_log_warning`）+ `lowpolyworld-security-alerts` Pub/Sub パブリッシュ → Discord 通知
-  - 50MB 到達（停止）: 新規書き込み停止 + `system_alerts` 記録（`audit_fallback_log_full`）+ Pub/Sub → Discord 通知（法的リスクあり・即時対応要求）
-  - DB への `admin_audit_logs` 書き込みは停止しない（監査記録自体は継続）
+- [x] **フォールバックログのディスク保護** Go コードに 2 段階閾値チェックを実装する（`infra-abstract.md §9` 参照）
+  - [x] DB insert 失敗時に `/tmp/audit_fallback.log` へ追記（`writeFallbackAuditLog`）
+  - [x] 40MB 到達（警告）: 書き込み継続 + `system_alerts` 記録（`audit_fallback_log_warning`）
+  - [x] 50MB 到達（停止）: 新規書き込み停止 + `system_alerts` 記録（`audit_fallback_log_full`）
+  - [x] DB への `admin_audit_logs` 書き込みは停止しない（監査記録自体は継続）
+  - [ ] Pub/Sub → Discord 通知（本番インフラ設定と連動）
 
 ### テスト（EditMode）
 - [x] `TrustPointCalculator`: 公開ルーム退室時のポイント計算（`floor((join+exit)/2 * floor(minutes))`）

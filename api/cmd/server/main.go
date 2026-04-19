@@ -117,9 +117,10 @@ func main() {
 	// Version endpoint
 	r.Get("/api/version", h.GetVersion)
 
-	// Auth endpoints (rate limited: 5 req/min per IP)
+	// Auth endpoints (rate limited: 5 req/min per IP + brute-force detection)
 	authRateLimiter := httprate.LimitByIP(5, time.Minute)
 	r.Route("/auth", func(r chi.Router) {
+		r.Use(mw.BruteForceLog(logger, pool))
 		r.Use(authRateLimiter)
 		r.Post("/google/callback", h.GoogleCallback)
 		r.Post("/apple/callback", h.AppleCallback)
@@ -133,6 +134,7 @@ func main() {
 	// Authenticated API v1 routes
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Use(authMW.Authenticate)
+		r.Use(mw.HighAPIRateLog(logger, pool, 500))
 
 		// Me (user profile)
 		r.Get("/me", h.GetMe)
