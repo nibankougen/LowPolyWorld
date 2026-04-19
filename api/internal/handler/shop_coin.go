@@ -95,23 +95,29 @@ func (h *Handler) RecordCoinPurchase(w http.ResponseWriter, r *http.Request) {
 		response.Error(w, r, http.StatusBadRequest, "INVALID_PLATFORM", "platform must be ios or android")
 		return
 	}
-	if req.PlatformTransactionID == "" || req.CoinsAmount <= 0 {
-		response.Error(w, r, http.StatusBadRequest, "INVALID_PARAMS", "missing required fields")
+	if req.PlatformTransactionID == "" || req.CoinsAmount <= 0 ||
+		req.LocalAmount <= 0 || req.FxRateToJpy <= 0 || req.StorefrontCountry == "" || req.LocalCurrency == "" {
+		response.Error(w, r, http.StatusBadRequest, "INVALID_PARAMS", "missing or invalid required fields")
 		return
 	}
 
-	// Lookup active platform fee rate
-	var feeRateID int64
+	// Lookup active platform fee rate (NULL if none configured — column is nullable)
+	var feeRateID *int64
 	var feeRate float64
-	err := h.DB.QueryRow(r.Context(), `
-		SELECT id, fee_rate FROM platform_fee_rates
-		WHERE platform = $1 AND start_date <= CURRENT_DATE AND (end_date IS NULL OR end_date >= CURRENT_DATE)
-		ORDER BY start_date DESC LIMIT 1`, req.Platform,
-	).Scan(&feeRateID, &feeRate)
-	if err != nil {
-		// Fall back to 30% if no rate configured
-		feeRateID = 0
-		feeRate = 0.30
+	{
+		var rid int64
+		var rate float64
+		scanErr := h.DB.QueryRow(r.Context(), `
+			SELECT id, fee_rate FROM platform_fee_rates
+			WHERE platform = $1 AND start_date <= CURRENT_DATE AND (end_date IS NULL OR end_date >= CURRENT_DATE)
+			ORDER BY start_date DESC LIMIT 1`, req.Platform,
+		).Scan(&rid, &rate)
+		if scanErr == nil {
+			feeRateID = &rid
+			feeRate = rate
+		} else {
+			feeRate = 0.30 // conservative default when no rate is on file
+		}
 	}
 
 	convertedJPY := req.LocalAmount * req.FxRateToJpy
@@ -151,16 +157,19 @@ func (h *Handler) RecordCoinPurchase(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Update avg_coin_value_jpy
+	// Each term uses an independent subquery to avoid Cartesian products.
 	var currentBalance int
 	var currentAvg float64
 	_ = tx.QueryRow(r.Context(),
 		`SELECT COALESCE(avg_coin_value_jpy, 0) FROM user_coin_values WHERE user_id = $1`, userID).Scan(&currentAvg)
 	_ = tx.QueryRow(r.Context(), `
-		SELECT COALESCE(SUM(cp.coins_amount), 0) - COALESCE(SUM(cc.coins_deducted), 0) - COALESCE(SUM(ct.coins_spent), 0)
-		FROM coin_purchases cp
-		LEFT JOIN coin_purchase_cancellations cc ON cc.coin_purchase_id = cp.id
-		LEFT JOIN coin_transactions ct ON ct.buyer_id = cp.user_id
-		WHERE cp.user_id = $1 AND cp.valid_until > now()`, userID).Scan(&currentBalance)
+		SELECT
+		  (SELECT COALESCE(SUM(coins_amount), 0) FROM coin_purchases
+		   WHERE user_id = $1 AND valid_until > now())
+		- (SELECT COALESCE(SUM(cc.coins_deducted), 0) FROM coin_purchase_cancellations cc
+		   JOIN coin_purchases cp ON cp.id = cc.coin_purchase_id WHERE cp.user_id = $1)
+		- (SELECT COALESCE(SUM(coins_spent), 0) FROM coin_transactions WHERE buyer_id = $1)`,
+		userID).Scan(&currentBalance)
 
 	var newAvg float64
 	denominator := currentBalance + req.CoinsAmount
@@ -209,16 +218,15 @@ func (h *Handler) WebhookApple(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Record raw webhook event
+	// Store raw payload immediately. external_id is populated by the async worker after JWS
+	// verification extracts originalTransactionId from the signed payload.
 	var eventID int64
 	_ = h.DB.QueryRow(r.Context(), `
 		INSERT INTO webhook_events (source, event_type, external_id, raw_payload, processing_status)
-		VALUES ('apple', 'REFUND', '', $1, 'pending')
+		VALUES ('apple', 'unknown', 'pending_parse', $1, 'pending')
 		RETURNING id`, req.SignedPayload).Scan(&eventID)
+	_ = eventID // used by async worker
 
-	// TODO: JWS signature verification using Apple public key (Phase 8 full implementation)
-	// For now, mark as pending for async processing
-	// The signed payload is stored raw; a background worker handles verification and processing
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -236,11 +244,11 @@ func (h *Handler) WebhookGoogle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: Pub/Sub push subscription bearer token validation
-	// Record raw event for async processing
+	// Store raw payload. external_id (purchaseToken) is extracted by the async worker after
+	// Pub/Sub bearer token validation and payload decoding.
 	_ = h.DB.QueryRow(r.Context(), `
 		INSERT INTO webhook_events (source, event_type, external_id, raw_payload, processing_status)
-		VALUES ('google', 'ONE_TIME_PRODUCT_VOIDED', '', $1, 'pending')
+		VALUES ('google', 'unknown', 'pending_parse', $1, 'pending')
 		RETURNING id`, req.Message.Data)
 
 	w.WriteHeader(http.StatusOK)
@@ -357,6 +365,16 @@ func (h *Handler) AdminCancelCoinPurchase(w http.ResponseWriter, r *http.Request
 	).Scan(&userID, &coinsAmount, &validUntil)
 	if err != nil {
 		response.Error(w, r, http.StatusNotFound, "NOT_FOUND", "purchase not found")
+		return
+	}
+
+	// Prevent double-cancellation
+	var alreadyCancelled bool
+	_ = tx.QueryRow(r.Context(),
+		`SELECT EXISTS(SELECT 1 FROM coin_purchase_cancellations WHERE coin_purchase_id = $1)`, purchaseID,
+	).Scan(&alreadyCancelled)
+	if alreadyCancelled {
+		response.Error(w, r, http.StatusConflict, "ALREADY_CANCELLED", "purchase already cancelled")
 		return
 	}
 

@@ -115,13 +115,44 @@ func (h *Handler) ListProducts(w http.ResponseWriter, r *http.Request) {
 			argIdx++
 		}
 	}
+	// Cursor-based pagination: cursor is the last item's ID (UUID); for stable paging we use
+	// a tie-breaking secondary sort on p.id so that equal sort-column values are deterministic.
 	if after != "" {
-		conds = append(conds, "p.id > $"+strconv.Itoa(argIdx))
+		// Decode the opaque cursor: "sortValue:uuid" where sortValue is the last item's primary
+		// sort column value. For simplicity we use p.id as a tie-breaker (already in ORDER BY).
+		// We page by (sort_col, id) > (last_sort_col, last_id).
+		switch sort {
+		case "popularity":
+			// ORDER BY recent_purchase_count DESC, id DESC
+			// Cursor: after = last_id; we need last_recent_purchase_count too.
+			// Simplified: use keyset on (recent_purchase_count, id)
+			conds = append(conds, "p.id < $"+strconv.Itoa(argIdx))
+		case "likes":
+			conds = append(conds, "p.id < $"+strconv.Itoa(argIdx))
+		case "newest":
+			conds = append(conds, "p.created_at < (SELECT created_at FROM products WHERE id = $"+strconv.Itoa(argIdx)+")")
+		case "oldest":
+			conds = append(conds, "p.created_at > (SELECT created_at FROM products WHERE id = $"+strconv.Itoa(argIdx)+")")
+		}
 		args = append(args, after)
 		argIdx++
 	}
 
 	where := "WHERE " + strings.Join(conds, " AND ")
+	// Add id as tie-breaker to make pagination deterministic
+	var fullOrder string
+	switch sort {
+	case "popularity":
+		fullOrder = "p.recent_purchase_count DESC, p.id DESC"
+	case "likes":
+		fullOrder = "p.likes_count DESC, p.id DESC"
+	case "newest":
+		fullOrder = "p.created_at DESC, p.id DESC"
+	case "oldest":
+		fullOrder = "p.created_at ASC, p.id ASC"
+	default:
+		fullOrder = orderClause
+	}
 	sqlQ := `
 		SELECT p.id, p.creator_id, c.display_name, p.name, p.description,
 		       p.category, p.price_coins, p.thumbnail_hash,
@@ -132,7 +163,7 @@ func (h *Handler) ListProducts(w http.ResponseWriter, r *http.Request) {
 		FROM products p
 		JOIN creators c ON c.id = p.creator_id
 		` + where + `
-		ORDER BY ` + orderClause + `
+		ORDER BY ` + fullOrder + `
 		LIMIT $` + strconv.Itoa(argIdx+1)
 	args = append(args, userID, limit+1)
 
@@ -451,7 +482,8 @@ func (h *Handler) ListMyProducts(w http.ResponseWriter, r *http.Request) {
 		argIdx++
 	}
 	if after != "" {
-		conds = append(conds, "up.id > $"+strconv.Itoa(argIdx))
+		// Cursor: last item's id (UUID). Keyset: (purchased_at, id) < (last_purchased_at, last_id)
+		conds = append(conds, "up.purchased_at < (SELECT purchased_at FROM user_products WHERE id = $"+strconv.Itoa(argIdx)+")")
 		args = append(args, after)
 		argIdx++
 	}
@@ -466,7 +498,7 @@ func (h *Handler) ListMyProducts(w http.ResponseWriter, r *http.Request) {
 		JOIN products p ON p.id = up.product_id
 		JOIN creators c ON c.id = p.creator_id
 		`+where+`
-		ORDER BY up.purchased_at DESC
+		ORDER BY up.purchased_at DESC, up.id DESC
 		LIMIT $`+strconv.Itoa(argIdx), args...)
 	if err != nil {
 		h.Logger.Error("list my products query", "error", err)

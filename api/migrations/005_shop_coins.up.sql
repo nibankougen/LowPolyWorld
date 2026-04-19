@@ -88,7 +88,7 @@ CREATE TABLE coin_purchases (
     local_currency             VARCHAR(3) NOT NULL,
     fx_rate_to_jpy             NUMERIC(12,4) NOT NULL,
     converted_jpy_amount       NUMERIC(12,2) NOT NULL,
-    platform_fee_rate_id       BIGINT NOT NULL REFERENCES platform_fee_rates(id),
+    platform_fee_rate_id       BIGINT REFERENCES platform_fee_rates(id),  -- NULL when no rate was configured at purchase time
     estimated_net_revenue_jpy  NUMERIC(12,2) NOT NULL,
     created_at                 TIMESTAMPTZ NOT NULL DEFAULT now()
 );
