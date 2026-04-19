@@ -491,10 +491,10 @@
 
 #### 管理画面（`/admin`）
 - [x] 管理者ログイン認証（セッションまたはJWT）
-- [ ] ショップ商品登録UI（アバター・アクセサリのGLB・テクスチャ・価格・Edit OK/NGフラグ）
-- [ ] ショップクリエイター登録UI（クリエイター情報・ユーザーアカウント紐づけ）
-- [ ] アバター審査画面（前面/背面スクリーンショット＋テクスチャ一覧・承認/BAN操作）
-  - 検疫キュー（`moderation_status = 'pending'`）のアバター・アクセサリを一覧表示
+- [x] ショップ商品登録UI（アバター・アクセサリのGLB・テクスチャ・価格・Edit OK/NGフラグ）— `POST/GET/PATCH /admin/products`
+- [x] ショップクリエイター登録UI（クリエイター情報・ユーザーアカウント紐づけ）— `POST/GET/PATCH /admin/creators`
+- [x] アバター審査画面（承認/拒否操作）— `GET /admin/avatars`・`PATCH /admin/avatars/{id}/moderation`
+  - 検疫キュー（`moderation_status = 'pending'`）のアバターを一覧表示（status クエリパラメータで切り替え）
   - CSAM アラート（`admin_alerts`）を優先表示・IHC 通報ガイダンスを管理画面内に記載
   - [ ] 3Dビューアコンポーネント（`@pixiv/three-vrm` + `THREE.OrbitControls`・クリック時 lazy load）
   - [ ] optimizer による前面/背面スクリーンショット生成（審査用・保存してAPIから配信）
@@ -506,7 +506,7 @@
     - 管理画面 UI: ユーザー詳細画面に「個人データを JSON でダウンロード」ボタン → ブラウザの `<a download>` でファイル保存
     - ユーザーからの請求メール受信後、このボタンで JSON を生成して返送する運用フロー
 - [x] 違反報告管理 API（報告一覧・target_id フィルター・カーソルページネーション）
-- [ ] 売上管理（期間別確定売上登録・ショップ別/クリエイター別集計表示）（`docs/coins.md` セクション14.5参照）
+- [x] 売上管理（期間別確定売上登録・調整係数自動計算）— `POST/GET /admin/settled-revenues`（`docs/coins.md` セクション14.5参照）
 - [x] ワールド管理 API（一覧・名前検索・有効/無効切り替え）
 - [ ] 取引キャンセル管理画面（一覧・絞り込み・手動キャンセル操作）（`docs/coins.md` セクション17参照）
 - [x] 管理者操作ログ API（`admin_audit_logs` の一覧・管理者名/操作種別/対象で絞り込み・`docs/api-abstract.md` セクション9参照）

@@ -242,6 +242,24 @@ func main() {
 			// Coin purchase cancellations.
 			r.Get("/coin-purchases/cancellations", h.AdminListCancellations)
 			r.Post("/coin-purchases/{purchaseID}/cancel", h.AdminCancelCoinPurchase)
+
+			// Shop — creator management.
+			r.Get("/creators", h.AdminListCreators)
+			r.Post("/creators", h.AdminCreateCreator)
+			r.Patch("/creators/{creatorID}", h.AdminUpdateCreator)
+
+			// Shop — product management.
+			r.Get("/products", h.AdminListProducts)
+			r.Post("/products", h.AdminCreateProduct)
+			r.Patch("/products/{productID}", h.AdminUpdateProduct)
+
+			// Avatar moderation.
+			r.Get("/avatars", h.AdminListPendingAvatars)
+			r.Patch("/avatars/{avatarID}/moderation", h.AdminModerateAvatar)
+
+			// Settled revenue.
+			r.Get("/settled-revenues", h.AdminListSettledRevenues)
+			r.Post("/settled-revenues", h.AdminRegisterSettledRevenue)
 		})
 	})
 
