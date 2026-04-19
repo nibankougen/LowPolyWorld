@@ -1,0 +1,17 @@
+DROP TABLE IF EXISTS tax_rates;
+DROP TABLE IF EXISTS creator_revenue_contracts;
+DROP TABLE IF EXISTS monthly_revenue_snapshots;
+DROP TABLE IF EXISTS revenue_adjustment_factors;
+DROP TABLE IF EXISTS settled_revenues;
+DROP TABLE IF EXISTS coin_expiry_notifications;
+DROP TABLE IF EXISTS coin_balance_snapshots;
+DROP TABLE IF EXISTS webhook_events;
+DROP TABLE IF EXISTS coin_purchase_cancellations;
+DROP TABLE IF EXISTS user_products;
+DROP TABLE IF EXISTS coin_transactions;
+DROP TABLE IF EXISTS user_coin_values;
+DROP TABLE IF EXISTS coin_purchases;
+DROP TABLE IF EXISTS platform_fee_rates;
+DROP TABLE IF EXISTS product_likes;
+DROP TABLE IF EXISTS products;
+DROP TABLE IF EXISTS creators;

@@ -185,6 +185,23 @@ func main() {
 
 		// Reports
 		r.Post("/users/{userID}/report", h.ReportUser)
+
+		// Shop — products
+		r.Get("/shop/products", h.ListProducts)
+		r.Get("/shop/products/{productID}", h.GetProduct)
+		r.Post("/shop/products/{productID}/like", h.LikeProduct)
+		r.Delete("/shop/products/{productID}/like", h.UnlikeProduct)
+		r.Post("/shop/products/{productID}/purchase", h.PurchaseProduct)
+
+		// Shop — creators
+		r.Get("/shop/creators/{creatorID}", h.GetCreator)
+
+		// Me — coin balance & purchases
+		r.Get("/me/coins", h.GetCoinBalance)
+		r.Post("/me/coins/purchases", h.RecordCoinPurchase)
+
+		// Me — purchased products
+		r.Get("/me/products", h.ListMyProducts)
 	})
 
 	// Admin routes.
@@ -221,8 +238,16 @@ func main() {
 			// World management.
 			r.Get("/worlds", h.AdminListWorlds)
 			r.Patch("/worlds/{worldID}", h.AdminPatchWorld)
+
+			// Coin purchase cancellations.
+			r.Get("/coin-purchases/cancellations", h.AdminListCancellations)
+			r.Post("/coin-purchases/{purchaseID}/cancel", h.AdminCancelCoinPurchase)
 		})
 	})
+
+	// Webhook endpoints (no auth — validated by payload signature)
+	r.Post("/webhook/apple", h.WebhookApple)
+	r.Post("/webhook/google", h.WebhookGoogle)
 
 	// Dev-only: serve local asset files
 	if !cfg.IsProduction() && localStorage != nil {

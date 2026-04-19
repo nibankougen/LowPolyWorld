@@ -594,36 +594,36 @@
 ### `api/`（Go）
 
 **DBスキーマ**
-- [ ] `products.recent_purchase_count` カラム追加（人気順ソート用キャッシュ）
+- [x] `products.recent_purchase_count` カラム追加（人気順ソート用キャッシュ）
   - 購入時にインクリメント、48時間バッチで期限切れ購入をデクリメント/リセット
   - `CREATE INDEX idx_products_popularity ON products(recent_purchase_count DESC) WHERE recent_purchase_count >= 3`
-- [ ] `product_likes` テーブル実装（product_id / user_id / UNIQUE 制約）・`products.likes_count` デノームカラム追加
-- [ ] スタンプ商品カテゴリ対応（`products.category` に `stamp` 追加）
+- [x] `product_likes` テーブル実装（product_id / user_id / UNIQUE 制約）・`products.likes_count` デノームカラム追加
+- [x] スタンプ商品カテゴリ対応（`products.category` に `stamp` 追加）
 
 **商品 API**
-- [ ] ショップ商品一覧取得エンドポイント（カテゴリ別・ソート4種・名前/タグ検索・IDベースカーソルページネーション）
+- [x] ショップ商品一覧取得エンドポイント（カテゴリ別・ソート4種・名前/タグ検索・IDベースカーソルページネーション）
   - ソート: `popularity`（`recent_purchase_count >= 3` の降順）/ `likes` / `newest` / `oldest`
   - フィルター: オブジェクトのみ `texture_cost` 範囲・`collider_size_category`（small/medium/large）
-- [ ] 商品詳細取得エンドポイント（Edit OK/NGフラグ・いいね数・自分がいいね済みかフラグ含む）
-- [ ] `POST /shop/products/{id}/like` / `DELETE /shop/products/{id}/like` エンドポイント（自己いいね禁止 403・重複いいね 409・likes_count インクリメント/デクリメント）
-- [ ] 商品購入エンドポイント（コイン消費記録・購入一覧への追加・残高 < 0 時は 402 を返す）
-- [ ] 購入済み商品一覧取得エンドポイント
-- [ ] クリエイター情報取得エンドポイント
+- [x] 商品詳細取得エンドポイント（Edit OK/NGフラグ・いいね数・自分がいいね済みかフラグ含む）
+- [x] `POST /shop/products/{id}/like` / `DELETE /shop/products/{id}/like` エンドポイント（自己いいね禁止 403・重複いいね 409・likes_count インクリメント/デクリメント）
+- [x] 商品購入エンドポイント（コイン消費記録・購入一覧への追加・残高 < 0 時は 402 を返す）
+- [x] 購入済み商品一覧取得エンドポイント
+- [x] クリエイター情報取得エンドポイント
 
 **コイン・課金 API**
-- [ ] コイン購入記録エンドポイント（`docs/coins.md` セクション4準拠）
-- [ ] コイン残高取得エンドポイント（ロット別有効期限付き）
+- [x] コイン購入記録エンドポイント（`docs/coins.md` セクション4準拠）
+- [x] コイン残高取得エンドポイント（ロット別有効期限付き）
 - [ ] コイン有効期限チェック・失効処理（購入から6ヶ月）
-- [ ] App Store Server Notifications V2 受信エンドポイント（`POST /webhook/apple`）
-  - [ ] JWS 署名検証（Apple 公開鍵）
-  - [ ] `REFUND` イベント処理（購入特定 → 有効期限確認 → 残高調整 → キャンセル記録）
-  - [ ] 冪等性保証（`originalTransactionId` の UNIQUE 制約）
-- [ ] Google Real-time Developer Notifications 受信エンドポイント（`POST /webhook/google`）
-  - [ ] Pub/Sub プッシュサブスクリプションのベアラートークン検証
-  - [ ] `ONE_TIME_PRODUCT_VOIDED` イベント処理（購入特定 → 有効期限確認 → 残高調整 → キャンセル記録）
-  - [ ] 冪等性保証（`purchaseToken` の UNIQUE 制約）
-- [ ] 取引キャンセル一覧取得エンドポイント（管理画面用）
-- [ ] 手動キャンセル実行エンドポイント（管理画面用・admin_id 記録）
+- [x] App Store Server Notifications V2 受信エンドポイント（`POST /webhook/apple`）
+  - [ ] JWS 署名検証（Apple 公開鍵）（TODO: 非同期ワーカーで実装）
+  - [ ] `REFUND` イベント処理（購入特定 → 有効期限確認 → 残高調整 → キャンセル記録）（TODO: 非同期ワーカーで実装）
+  - [x] 冪等性保証（`platform_transaction_id` の UNIQUE 制約）
+- [x] Google Real-time Developer Notifications 受信エンドポイント（`POST /webhook/google`）
+  - [ ] Pub/Sub プッシュサブスクリプションのベアラートークン検証（TODO: 非同期ワーカーで実装）
+  - [ ] `ONE_TIME_PRODUCT_VOIDED` イベント処理（購入特定 → 有効期限確認 → 残高調整 → キャンセル記録）（TODO: 非同期ワーカーで実装）
+  - [x] 冪等性保証（`purchaseToken` の UNIQUE 制約）
+- [x] 取引キャンセル一覧取得エンドポイント（管理画面用）
+- [x] 手動キャンセル実行エンドポイント（管理画面用・admin_id 記録）
 
 **管理画面**
 - [ ] スタンプ商品登録UI（画像・価格・タグ）
@@ -651,11 +651,11 @@
 - [ ] 購入後のアバター・アクセサリ・ワールドオブジェクト・スタンプ自動追加
 
 ### テスト（EditMode）
-- [ ] `CoinLedger`: 残高計算（複数取引の合算）・マイナス残高の判定
-- [ ] `CoinLedger`: 残高マイナス時のショップ購入ブロック / コイン購入は許可
-- [ ] `CoinLedger`: 返金キャンセル処理（coins_deducted 計算・有効期限切れ時は 0）
-- [ ] `ShopProductFilter`: 人気順で `recent_purchase_count < 3` の商品が除外されること
-- [ ] `ShopProductFilter`: オブジェクトのテクスチャコスト/コライダーサイズフィルターが正しく機能すること
+- [x] `CoinLedger`: 残高計算（複数取引の合算）・マイナス残高の判定
+- [x] `CoinLedger`: 残高マイナス時のショップ購入ブロック / コイン購入は許可
+- [x] `CoinLedger`: 返金キャンセル処理（coins_deducted 計算・有効期限切れ時は 0）
+- [x] `ShopProductFilter`: 人気順で `recent_purchase_count < 3` の商品が除外されること
+- [x] `ShopProductFilter`: オブジェクトのテクスチャコスト/コライダーサイズフィルターが正しく機能すること
 
 ---
 
