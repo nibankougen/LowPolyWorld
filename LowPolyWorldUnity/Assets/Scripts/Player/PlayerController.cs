@@ -123,6 +123,9 @@ public class PlayerController : MonoBehaviour
         _animator.SetBool(AnimIsGrounded, isGrounded);
         if (jumped)
             _animator.SetTrigger(AnimJump);
+
+        // Vivox 3D 位置通知
+        VoiceManager.Instance?.UpdateListenerPosition(gameObject);
     }
 
     private void FixedUpdate()

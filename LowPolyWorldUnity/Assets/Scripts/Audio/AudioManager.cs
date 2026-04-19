@@ -84,9 +84,9 @@ public class AudioManager : MonoBehaviour
 
     private void OnVoiceChanged(float value)
     {
-        // Phase 6 で Vivox SDK へ適用
         PlayerPrefs.SetFloat(KeyVoice, value);
         PlayerPrefs.Save();
+        VoiceManager.Instance?.SetReceiveVolume(value);
     }
 
     private void OnWorldSfxChanged(float value)

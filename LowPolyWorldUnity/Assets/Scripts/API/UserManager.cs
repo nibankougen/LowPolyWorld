@@ -28,6 +28,9 @@ public class UserManager : MonoBehaviour
     public List<StartupAvatar> Avatars { get; private set; } = new List<StartupAvatar>();
     public ApiClient Api => _apiClient;
 
+    /// <summary>Vivox ログイン用の仮名 ID（実 UUID ではない）。</summary>
+    public string VivoxId => Profile?.vivoxId ?? string.Empty;
+
     /// <summary>現在選択中のアバターのローカルキャッシュパス。null = 未ダウンロードまたはアバターなし。</summary>
     public string SelectedAvatarLocalPath { get; private set; }
 

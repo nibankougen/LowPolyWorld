@@ -558,11 +558,11 @@
 **目標**: ワールド内で3D位置音声が動作する状態
 
 ### Unityクライアント
-- [ ] Vivox SDK 初期化・ログイン（`/startup` レスポンスの `vivoxId` を Vivox ユーザー識別子として使用する。実ユーザー UUID は渡さない）
-- [ ] ワールド単位チャンネルの入退室管理
-- [ ] プレイヤー座標をVivox SDKへ通知
-- [ ] 距離減衰パラメータ調整
-- [ ] 通話音声スライダーの音量値を Vivox SDK 受話音量に反映（`WorldSettingsLogic.OnVoiceVolumeChanged` → Vivox SDK API）
+- [x] Vivox SDK 初期化・ログイン（`/startup` レスポンスの `vivoxId` を Vivox ユーザー識別子として使用する。実ユーザー UUID は渡さない）
+- [x] ワールド単位チャンネルの入退室管理
+- [x] プレイヤー座標をVivox SDKへ通知
+- [x] 距離減衰パラメータ調整
+- [x] 通話音声スライダーの音量値を Vivox SDK 受話音量に反映（`WorldSettingsLogic.OnVoiceVolumeChanged` → Vivox SDK API）
 
 ---
 
