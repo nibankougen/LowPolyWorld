@@ -7,18 +7,23 @@ import (
 	"net/http"
 	"os"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 const (
-	fallbackLogPath    = "/tmp/audit_fallback.log"
-	fallbackWarnBytes  = 40 * 1024 * 1024 // 40 MB — warn but keep writing
-	fallbackStopBytes  = 50 * 1024 * 1024 // 50 MB — stop writing
+	fallbackLogPath   = "/tmp/audit_fallback.log"
+	fallbackWarnBytes = 40 * 1024 * 1024 // 40 MB — warn but keep writing
+	fallbackStopBytes = 50 * 1024 * 1024 // 50 MB — stop writing
 )
 
-var fallbackMu sync.Mutex // protects concurrent fallback writes
+var (
+	fallbackMu          sync.Mutex  // protects concurrent fallback writes
+	fallbackWarnAlerted atomic.Bool // fires the 40 MB alert only once
+	fallbackStopAlerted atomic.Bool // fires the 50 MB alert only once
+)
 
 type adminAuditKey struct{}
 
@@ -133,21 +138,25 @@ func writeFallbackAuditLog(db *pgxpool.Pool, logger *slog.Logger, adminID, actio
 	if info, err := os.Stat(fallbackLogPath); err == nil {
 		size := info.Size()
 		if size >= fallbackStopBytes {
-			logger.Error("audit_fallback_log_full: fallback log at 50 MB — new writes suspended",
-				"path", fallbackLogPath, "size_bytes", size)
-			insertSystemAlert(db, logger, "audit_fallback_log_full", "critical",
-				fmt.Sprintf("Fallback audit log reached %d MB — new writes suspended (legal risk)", size/(1024*1024)),
-				map[string]any{"path": fallbackLogPath, "size_bytes": size},
-			)
+			if fallbackStopAlerted.CompareAndSwap(false, true) {
+				logger.Error("audit_fallback_log_full: fallback log at 50 MB — new writes suspended",
+					"path", fallbackLogPath, "size_bytes", size)
+				insertSystemAlert(db, logger, "audit_fallback_log_full", "critical",
+					fmt.Sprintf("Fallback audit log reached %d MB — new writes suspended (legal risk)", size/(1024*1024)),
+					map[string]any{"path": fallbackLogPath, "size_bytes": size},
+				)
+			}
 			return
 		}
 		if size >= fallbackWarnBytes {
-			logger.Warn("audit_fallback_log_warning: fallback log at 40 MB",
-				"path", fallbackLogPath, "size_bytes", size)
-			insertSystemAlert(db, logger, "audit_fallback_log_warning", "warning",
-				fmt.Sprintf("Fallback audit log reached %d MB — disk cleanup required", size/(1024*1024)),
-				map[string]any{"path": fallbackLogPath, "size_bytes": size},
-			)
+			if fallbackWarnAlerted.CompareAndSwap(false, true) {
+				logger.Warn("audit_fallback_log_warning: fallback log at 40 MB",
+					"path", fallbackLogPath, "size_bytes", size)
+				insertSystemAlert(db, logger, "audit_fallback_log_warning", "warning",
+					fmt.Sprintf("Fallback audit log reached %d MB — disk cleanup required", size/(1024*1024)),
+					map[string]any{"path": fallbackLogPath, "size_bytes": size},
+				)
+			}
 			// Continue writing — warning threshold only.
 		}
 	}

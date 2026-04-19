@@ -5,15 +5,34 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/go-chi/httprate"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// insertSystemAlert inserts a row into system_alerts in a background goroutine.
+// alertCooldown deduplicates system_alerts per alert_type: an alert of the same
+// type is suppressed if it was inserted less than alertCooldownDur ago.
+const alertCooldownDur = 5 * time.Minute
+
+var (
+	alertLastFiredMu sync.Mutex
+	alertLastFired   = map[string]time.Time{}
+)
+
+// insertSystemAlert inserts a row into system_alerts in a background goroutine
+// with a per-alert_type cooldown to prevent alert spam.
 // It is best-effort: failures are logged but do not affect the request.
 func insertSystemAlert(db *pgxpool.Pool, logger *slog.Logger, alertType, severity, message string, details map[string]any) {
+	alertLastFiredMu.Lock()
+	if last, ok := alertLastFired[alertType]; ok && time.Since(last) < alertCooldownDur {
+		alertLastFiredMu.Unlock()
+		return
+	}
+	alertLastFired[alertType] = time.Now()
+	alertLastFiredMu.Unlock()
+
 	var detailsJSON []byte
 	if details != nil {
 		detailsJSON, _ = json.Marshal(details)
@@ -114,6 +133,7 @@ func CheckMassTokenRevocation(ctx context.Context, db *pgxpool.Pool, logger *slo
 			 WHERE revoked_at > now() - interval '1 hour'`,
 		).Scan(&count)
 		if err != nil {
+			logger.Error("mass_token_revocation check failed", "error", err)
 			return
 		}
 		if count >= threshold {

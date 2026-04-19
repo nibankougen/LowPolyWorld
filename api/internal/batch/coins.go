@@ -3,6 +3,7 @@ package batch
 import (
 	"context"
 	"log/slog"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -126,7 +127,7 @@ func sendExpiryNotifications(ctx context.Context, db *pgxpool.Pool, logger *slog
 
 	type notifTarget struct {
 		userID     string
-		validUntil string
+		validUntil time.Time
 	}
 	var targets []notifTarget
 	for rows.Next() {

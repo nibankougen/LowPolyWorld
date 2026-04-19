@@ -121,9 +121,6 @@ public class ShopManager : MonoBehaviour
         string idempotencyKey = null,
         CancellationToken ct = default)
     {
-        if (!Ledger.CanPurchaseProduct(0, DateTime.UtcNow))
-            return "insufficient_coins";
-
         var body = new PurchaseProductRequest
         {
             idempotency_key = idempotencyKey ?? Guid.NewGuid().ToString(),
