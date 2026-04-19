@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"time"
@@ -9,6 +10,7 @@ import (
 	"github.com/nibankougen/LowPolyWorld/api/internal/middleware"
 	"github.com/nibankougen/LowPolyWorld/api/internal/plan"
 	"github.com/nibankougen/LowPolyWorld/api/internal/response"
+	"github.com/nibankougen/LowPolyWorld/api/internal/trust"
 )
 
 type roomResponse struct {
@@ -151,9 +153,9 @@ func (h *Handler) CreateRoom(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Auto-join creator
+	// Auto-join creator (join_member_count = 0 since creator is always first)
 	_, _ = h.DB.Exec(r.Context(),
-		`INSERT INTO room_members (room_id, user_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+		`INSERT INTO room_members (room_id, user_id, join_member_count) VALUES ($1, $2, 0) ON CONFLICT DO NOTHING`,
 		roomID, userID,
 	)
 
@@ -189,15 +191,17 @@ func (h *Handler) JoinRoom(w http.ResponseWriter, r *http.Request) {
 	}
 	rm.CreatedAt = createdAt.UTC().Format(time.RFC3339)
 
-	// Atomic capacity check + insert via CTE (same pattern as RecommendedJoin)
+	// Atomic capacity check + insert via CTE; records the other-member count at join
+	// time for trust point calculation on leave.
 	var joined bool
 	_ = h.DB.QueryRow(r.Context(),
 		`WITH capacity AS (
 		    SELECT max_players, (SELECT count(*) FROM room_members WHERE room_id = $1) AS current
 		    FROM rooms WHERE id = $1
 		)
-		INSERT INTO room_members (room_id, user_id)
-		SELECT $1, $2 FROM capacity WHERE current < max_players
+		INSERT INTO room_members (room_id, user_id, join_member_count)
+		SELECT $1, $2, (SELECT count(*) FROM room_members WHERE room_id = $1)
+		FROM capacity WHERE current < max_players
 		ON CONFLICT DO NOTHING
 		RETURNING TRUE`,
 		roomID, userID,
@@ -226,18 +230,52 @@ func (h *Handler) JoinRoom(w http.ResponseWriter, r *http.Request) {
 }
 
 // LeaveRoom handles DELETE /api/v1/rooms/{roomID}/leave — removes the user from a room.
+// For public rooms it also fires an async trust-point calculation.
 func (h *Handler) LeaveRoom(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.UserIDFromContext(r.Context())
 	roomID := chi.URLParam(r, "roomID")
 
-	_, err := h.DB.Exec(r.Context(),
+	// Fetch membership info and room type before deleting.
+	var joinedAt time.Time
+	var joinMemberCount int
+	var roomType string
+	_ = h.DB.QueryRow(r.Context(),
+		`SELECT rm.joined_at, rm.join_member_count, r.room_type
+		 FROM room_members rm
+		 JOIN rooms r ON r.id = rm.room_id
+		 WHERE rm.room_id = $1 AND rm.user_id = $2`,
+		roomID, userID,
+	).Scan(&joinedAt, &joinMemberCount, &roomType)
+
+	// Count other members before this user leaves (used as exit_count).
+	var totalBeforeLeave int
+	_ = h.DB.QueryRow(r.Context(),
+		`SELECT count(*) FROM room_members WHERE room_id = $1`, roomID,
+	).Scan(&totalBeforeLeave)
+	exitCount := totalBeforeLeave - 1 // exclude self
+	if exitCount < 0 {
+		exitCount = 0
+	}
+
+	if _, err := h.DB.Exec(r.Context(),
 		`DELETE FROM room_members WHERE room_id = $1 AND user_id = $2`,
 		roomID, userID,
-	)
-	if err != nil {
+	); err != nil {
 		h.Logger.Error("leave room", "error", err)
 		response.InternalError(w, r, h.Cfg.IsProduction())
 		return
+	}
+
+	// Fire trust processing asynchronously for public rooms only.
+	if roomType == "public" && !joinedAt.IsZero() {
+		db := h.DB
+		logger := h.Logger
+		go trust.ProcessPublicRoomLeave(
+			context.Background(), db, logger,
+			userID, roomID,
+			joinMemberCount, exitCount,
+			joinedAt,
+		)
 	}
 
 	w.WriteHeader(http.StatusNoContent)

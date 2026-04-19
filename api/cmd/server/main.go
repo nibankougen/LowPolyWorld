@@ -184,9 +184,13 @@ func main() {
 		r.Patch("/rooms/{roomID}/language", h.PatchRoomLanguage)
 	})
 
-	// Admin internal routes (triggered by Cloud Scheduler in production)
-	r.Post("/admin/internal/run-batch/{batchName}", h.RunBatch)
-	r.Patch("/admin/users/{userID}/restore", h.RestoreAccount)
+	// Admin routes — audit log middleware records every request.
+	adminAuditMW := mw.AdminAuditLog(pool, logger)
+	r.Route("/admin", func(r chi.Router) {
+		r.Use(adminAuditMW)
+		r.Post("/internal/run-batch/{batchName}", h.RunBatch)
+		r.Patch("/users/{userID}/restore", h.RestoreAccount)
+	})
 
 	// Dev-only: serve local asset files
 	if !cfg.IsProduction() && localStorage != nil {
