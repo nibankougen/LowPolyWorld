@@ -1,0 +1,118 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="ShopTab.uss" />
+    <ui:VisualElement name="shop-tab-root" class="shop-tab-root">
+
+        <!-- 固定ヘッダー: カテゴリタブ + コイン残高 -->
+        <ui:VisualElement name="shop-header" class="shop-header">
+            <ui:VisualElement name="category-tab-bar" class="category-tab-bar">
+                <ui:Button name="tab-premium"  class="category-tab" text="プレミアム" />
+                <ui:Button name="tab-avatar"   class="category-tab" text="アバター" />
+                <ui:Button name="tab-accessory" class="category-tab" text="アクセサリ" />
+                <ui:Button name="tab-object"   class="category-tab" text="オブジェクト" />
+                <ui:Button name="tab-stamp"    class="category-tab" text="スタンプ" />
+            </ui:VisualElement>
+
+            <ui:VisualElement name="coin-area" class="coin-area">
+                <ui:Label name="coin-icon" class="coin-icon" text="🪙" />
+                <ui:Label name="coin-balance" class="coin-balance" text="---" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- 検索・フィルター・ソート行（プレミアムタブ選択中は非表示） -->
+        <ui:VisualElement name="search-filter-bar" class="search-filter-bar">
+            <ui:TextField name="search-input" class="search-input" placeholder-text="名前・タグで検索..." />
+            <ui:VisualElement name="filter-sort-row" class="filter-sort-row">
+                <ui:Button name="sort-popularity" class="sort-btn sort-btn--active" text="人気順" />
+                <ui:Button name="sort-likes"      class="sort-btn" text="いいね順" />
+                <ui:Button name="sort-newest"     class="sort-btn" text="新しい順" />
+                <ui:Button name="sort-oldest"     class="sort-btn" text="古い順" />
+            </ui:VisualElement>
+            <!-- オブジェクトタブのみ表示するフィルター -->
+            <ui:VisualElement name="object-filter-row" class="object-filter-row" style="display: none;">
+                <ui:Button name="filter-size-all"    class="filter-btn filter-btn--active" text="全サイズ" />
+                <ui:Button name="filter-size-small"  class="filter-btn" text="小" />
+                <ui:Button name="filter-size-medium" class="filter-btn" text="中" />
+                <ui:Button name="filter-size-large"  class="filter-btn" text="大" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- プレミアムタブコンテンツ -->
+        <ui:ScrollView name="premium-scroll" class="tab-scroll" style="display: none;">
+            <ui:VisualElement name="premium-features" class="premium-features">
+                <ui:Label class="premium-title" text="プレミアムプランの特典" />
+                <ui:VisualElement class="premium-feature-item">
+                    <ui:Label class="premium-feature-icon" text="👥" />
+                    <ui:VisualElement class="premium-feature-text">
+                        <ui:Label class="premium-feature-name" text="ルーム人数上限 最大24人" />
+                        <ui:Label class="premium-feature-desc" text="通常は最大6人まで" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement class="premium-feature-item">
+                    <ui:Label class="premium-feature-icon" text="🎨" />
+                    <ui:VisualElement class="premium-feature-text">
+                        <ui:Label class="premium-feature-name" text="@name 変更（90日に1回）" />
+                        <ui:Label class="premium-feature-desc" text="通常は変更不可" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement class="premium-feature-item">
+                    <ui:Label class="premium-feature-icon" text="🔒" />
+                    <ui:VisualElement class="premium-feature-text">
+                        <ui:Label class="premium-feature-name" text="招待制ルーム作成" />
+                        <ui:Label class="premium-feature-desc" text="招待リンクで参加者を限定できます" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement class="premium-feature-item">
+                    <ui:Label class="premium-feature-icon" text="⏱" />
+                    <ui:VisualElement class="premium-feature-text">
+                        <ui:Label class="premium-feature-name" text="ルーム滞在時間無制限" />
+                        <ui:Label class="premium-feature-desc" text="通常は90分 / 放置退室あり" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement class="premium-feature-item">
+                    <ui:Label class="premium-feature-icon" text="💾" />
+                    <ui:VisualElement class="premium-feature-text">
+                        <ui:Label class="premium-feature-name" text="保存バリアント 100スロット" />
+                        <ui:Label class="premium-feature-desc" text="通常は10スロット" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+            <!-- プラン購入エリア -->
+            <ui:VisualElement name="plan-purchase-area" class="plan-purchase-area">
+                <ui:VisualElement name="plan-annual" class="plan-card plan-card--recommended">
+                    <ui:VisualElement class="plan-badge-row">
+                        <ui:Label class="plan-badge" text="最もお得" />
+                    </ui:VisualElement>
+                    <ui:Label class="plan-name" text="年額プラン" />
+                    <ui:Label name="plan-annual-price" class="plan-price" text="価格を取得中..." />
+                    <ui:Label name="plan-annual-monthly" class="plan-monthly" text="" />
+                    <ui:Button name="btn-buy-annual" class="plan-buy-btn" text="購入する" />
+                </ui:VisualElement>
+                <ui:VisualElement name="plan-monthly" class="plan-card">
+                    <ui:Label class="plan-name" text="月額プラン" />
+                    <ui:Label name="plan-monthly-price" class="plan-price" text="価格を取得中..." />
+                    <ui:Button name="btn-buy-monthly" class="plan-buy-btn plan-buy-btn--secondary" text="購入する" />
+                </ui:VisualElement>
+                <!-- 現在プレミアム会員の場合に表示 -->
+                <ui:VisualElement name="current-plan-area" class="current-plan-area" style="display: none;">
+                    <ui:Label name="current-plan-label" class="current-plan-label" text="" />
+                    <ui:Label name="next-renewal-label" class="next-renewal-label" text="" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:ScrollView>
+
+        <!-- 商品一覧（プレミアム以外のタブ） -->
+        <ui:ScrollView name="product-scroll" class="tab-scroll" style="display: none;">
+            <ui:VisualElement name="product-list" class="product-list" />
+            <ui:VisualElement name="load-more-area" class="load-more-area" style="display: none;">
+                <ui:Label class="load-more-label" text="読み込み中..." />
+            </ui:VisualElement>
+        </ui:ScrollView>
+
+        <!-- 空表示 -->
+        <ui:VisualElement name="empty-area" class="empty-area" style="display: none;">
+            <ui:Label class="empty-label" text="商品が見つかりません" />
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>

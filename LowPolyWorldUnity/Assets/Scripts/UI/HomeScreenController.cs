@@ -32,6 +32,7 @@ public class HomeScreenController : MonoBehaviour
     private WorldListController _worldListController;
     private WorldDetailController _worldDetailController;
     private RoomListController _roomListController;
+    private ShopTabController _shopTabController;
 
     private WorldResponse _currentWorld;
 
@@ -73,6 +74,8 @@ public class HomeScreenController : MonoBehaviour
         _worldDetailController = null;
         _roomListController?.Dispose();
         _roomListController = null;
+        _shopTabController?.Dispose();
+        _shopTabController = null;
         _settingsTabController = null;
     }
 
@@ -106,6 +109,10 @@ public class HomeScreenController : MonoBehaviour
             _worldListController = new WorldListController(content, UserManager.Instance.Api);
             _worldListController.OnWorldSelected += ShowWorldDetail;
             _worldListController.Initialize();
+        }
+        else if (tab == _navShop)
+        {
+            _shopTabController = new ShopTabController(content);
         }
     }
 
