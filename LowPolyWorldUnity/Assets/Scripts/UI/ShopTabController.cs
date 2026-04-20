@@ -473,7 +473,7 @@ public class ShopTabController : IDisposable
 
     // ── Product card ──────────────────────────────────────────────────────────
 
-    private static VisualElement CreateProductCard(ShopProductResponse product)
+    private VisualElement CreateProductCard(ShopProductResponse product)
     {
         var card = new VisualElement();
         card.AddToClassList("product-card");
@@ -485,9 +485,9 @@ public class ShopTabController : IDisposable
         var info = new VisualElement();
         info.AddToClassList("product-card__info");
 
-        var name = new Label { text = product.name ?? "" };
-        name.AddToClassList("product-card__name");
-        info.Add(name);
+        var nameLabel = new Label { text = product.name ?? "" };
+        nameLabel.AddToClassList("product-card__name");
+        info.Add(nameLabel);
 
         var meta = new VisualElement();
         meta.AddToClassList("product-card__meta");
@@ -496,14 +496,79 @@ public class ShopTabController : IDisposable
         price.AddToClassList("product-card__price");
         meta.Add(price);
 
-        var likes = new Label { text = $"♥ {product.likesCount}" };
-        likes.AddToClassList("product-card__likes");
-        meta.Add(likes);
+        // いいね数 + いいね/いいね解除ボタン
+        var likeState = new LikeState
+        {
+            LikedByMe  = product.likedByMe,
+            LikesCount = product.likesCount,
+        };
+
+        var likesLabel = new Label();
+        likesLabel.AddToClassList("product-card__likes");
+
+        var likeBtn = new Button();
+        likeBtn.AddToClassList("product-card__like-btn");
+
+        RefreshLikeUI(likesLabel, likeBtn, likeState);
+
+        likeBtn.clicked += () => OnLikeBtnClicked(product.id, likeState, likesLabel, likeBtn);
+
+        meta.Add(likesLabel);
+        meta.Add(likeBtn);
 
         info.Add(meta);
         card.Add(info);
 
         return card;
+    }
+
+    private static void RefreshLikeUI(Label likesLabel, Button likeBtn, LikeState state)
+    {
+        likesLabel.text = $"♥ {state.LikesCount}";
+        if (state.LikedByMe)
+        {
+            likeBtn.text = "♥";
+            likeBtn.AddToClassList("product-card__like-btn--active");
+        }
+        else
+        {
+            likeBtn.text = "♡";
+            likeBtn.RemoveFromClassList("product-card__like-btn--active");
+        }
+    }
+
+    private async void OnLikeBtnClicked(string productId, LikeState state, Label likesLabel, Button likeBtn)
+    {
+        if (ShopManager.Instance == null) return;
+
+        bool wasLiked = state.LikedByMe;
+
+        // 楽観的 UI 更新
+        state.LikedByMe  = !wasLiked;
+        state.LikesCount += wasLiked ? -1 : 1;
+        RefreshLikeUI(likesLabel, likeBtn, state);
+        likeBtn.SetEnabled(false);
+
+        string err = wasLiked
+            ? await ShopManager.Instance.UnlikeProductAsync(productId, _cts.Token)
+            : await ShopManager.Instance.LikeProductAsync(productId, _cts.Token);
+
+        likeBtn.SetEnabled(true);
+
+        if (err != null)
+        {
+            // エラー時は元の状態に戻す
+            state.LikedByMe  = wasLiked;
+            state.LikesCount += wasLiked ? 1 : -1;
+            RefreshLikeUI(likesLabel, likeBtn, state);
+            Debug.LogWarning($"[ShopTabController] Like toggle failed: {err}");
+        }
+    }
+
+    private sealed class LikeState
+    {
+        public bool LikedByMe;
+        public int  LikesCount;
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
