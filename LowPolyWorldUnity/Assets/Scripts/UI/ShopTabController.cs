@@ -549,19 +549,25 @@ public class ShopTabController : IDisposable
         RefreshLikeUI(likesLabel, likeBtn, state);
         likeBtn.SetEnabled(false);
 
-        string err = wasLiked
-            ? await ShopManager.Instance.UnlikeProductAsync(productId, _cts.Token)
-            : await ShopManager.Instance.LikeProductAsync(productId, _cts.Token);
-
-        likeBtn.SetEnabled(true);
-
-        if (err != null)
+        try
         {
-            // エラー時は元の状態に戻す
-            state.LikedByMe  = wasLiked;
-            state.LikesCount += wasLiked ? 1 : -1;
-            RefreshLikeUI(likesLabel, likeBtn, state);
-            Debug.LogWarning($"[ShopTabController] Like toggle failed: {err}");
+            string err = wasLiked
+                ? await ShopManager.Instance.UnlikeProductAsync(productId, _cts.Token)
+                : await ShopManager.Instance.LikeProductAsync(productId, _cts.Token);
+
+            if (err != null)
+            {
+                // API エラー時は元の状態に戻す
+                state.LikedByMe  = wasLiked;
+                state.LikesCount += wasLiked ? 1 : -1;
+                RefreshLikeUI(likesLabel, likeBtn, state);
+                Debug.LogWarning($"[ShopTabController] Like toggle failed: {err}");
+            }
+        }
+        catch (OperationCanceledException) { }
+        finally
+        {
+            likeBtn.SetEnabled(true);
         }
     }
 
