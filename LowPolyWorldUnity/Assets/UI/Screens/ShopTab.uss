@@ -351,3 +351,148 @@
     font-size: 15px;
     color: rgb(120, 120, 150);
 }
+
+/* ── Coin detail panel (bottom sheet) ────────────── */
+
+.coin-detail-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.55);
+    justify-content: flex-end;
+}
+
+.coin-detail-panel {
+    background-color: rgb(28, 28, 42);
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+    padding: 0 0 16px;
+    max-height: 70%;
+    flex-direction: column;
+}
+
+.coin-detail-header {
+    flex-direction: row;
+    align-items: center;
+    padding: 16px 16px 12px;
+    border-bottom-width: 1px;
+    border-bottom-color: rgb(50, 50, 70);
+}
+
+.coin-detail-title {
+    flex: 1;
+    font-size: 17px;
+    -unity-font-style: bold;
+    color: rgb(240, 240, 255);
+}
+
+.coin-detail-close-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 16px;
+    background-color: rgb(50, 50, 70);
+    border-width: 0;
+    color: rgb(200, 200, 220);
+    font-size: 18px;
+    padding: 0;
+}
+
+.coin-detail-balance-row {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    padding: 20px 16px 8px;
+}
+
+.coin-detail-icon {
+    font-size: 32px;
+    margin-right: 8px;
+}
+
+.coin-detail-balance {
+    font-size: 38px;
+    -unity-font-style: bold;
+    color: rgb(240, 200, 80);
+}
+
+.coin-detail-balance--negative {
+    color: rgb(255, 80, 80);
+}
+
+.coin-detail-warning {
+    background-color: rgba(200, 60, 60, 0.15);
+    border-radius: 8px;
+    margin: 0 16px 8px;
+    padding: 10px 12px;
+    border-width: 1px;
+    border-color: rgba(200, 80, 80, 0.4);
+}
+
+.coin-detail-warning-text {
+    font-size: 12px;
+    color: rgb(220, 120, 120);
+    white-space: normal;
+}
+
+.coin-detail-section-title {
+    font-size: 13px;
+    color: rgb(140, 140, 170);
+    padding: 8px 16px 4px;
+}
+
+.coin-lot-scroll {
+    flex: 1;
+    min-height: 80px;
+}
+
+.coin-lot-list {
+    flex-direction: column;
+    padding: 0 16px;
+}
+
+.coin-lot-row {
+    flex-direction: row;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom-width: 1px;
+    border-bottom-color: rgb(40, 40, 60);
+}
+
+.coin-lot-expiry {
+    flex: 1;
+    font-size: 13px;
+    color: rgb(180, 180, 200);
+}
+
+.coin-lot-expiry--soon {
+    color: rgb(240, 160, 60);
+}
+
+.coin-lot-amount {
+    font-size: 14px;
+    -unity-font-style: bold;
+    color: rgb(240, 200, 80);
+}
+
+.coin-lot-empty {
+    align-items: center;
+    padding: 20px;
+}
+
+.coin-lot-empty-label {
+    font-size: 13px;
+    color: rgb(120, 120, 150);
+}
+
+.coin-buy-btn {
+    height: 48px;
+    border-radius: 24px;
+    background-color: rgb(100, 140, 255);
+    border-width: 0;
+    color: rgb(255, 255, 255);
+    font-size: 16px;
+    -unity-font-style: bold;
+    margin: 12px 16px 4px;
+}

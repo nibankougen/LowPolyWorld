@@ -114,5 +114,40 @@
             <ui:Label class="empty-label" text="商品が見つかりません" />
         </ui:VisualElement>
 
+        <!-- コイン詳細パネル（ボトムシート） -->
+        <ui:VisualElement name="coin-detail-backdrop" class="coin-detail-backdrop" style="display: none;">
+            <ui:VisualElement name="coin-detail-panel" class="coin-detail-panel">
+                <!-- ヘッダー -->
+                <ui:VisualElement class="coin-detail-header">
+                    <ui:Label class="coin-detail-title" text="コイン残高" />
+                    <ui:Button name="btn-coin-detail-close" class="coin-detail-close-btn" text="×" />
+                </ui:VisualElement>
+
+                <!-- 残高表示 -->
+                <ui:VisualElement class="coin-detail-balance-row">
+                    <ui:Label class="coin-detail-icon" text="🪙" />
+                    <ui:Label name="coin-detail-balance" class="coin-detail-balance" text="0" />
+                </ui:VisualElement>
+
+                <!-- マイナス残高警告 -->
+                <ui:VisualElement name="coin-detail-warning" class="coin-detail-warning" style="display: none;">
+                    <ui:Label class="coin-detail-warning-text"
+                        text="残高がマイナスです。コインを購入して残高を回復してください。" />
+                </ui:VisualElement>
+
+                <!-- ロット一覧 -->
+                <ui:Label class="coin-detail-section-title" text="保有コインの内訳" />
+                <ui:ScrollView name="coin-lot-scroll" class="coin-lot-scroll">
+                    <ui:VisualElement name="coin-lot-list" class="coin-lot-list" />
+                    <ui:VisualElement name="coin-lot-empty" class="coin-lot-empty" style="display: none;">
+                        <ui:Label class="coin-lot-empty-label" text="保有コインはありません" />
+                    </ui:VisualElement>
+                </ui:ScrollView>
+
+                <!-- 購入ボタン -->
+                <ui:Button name="btn-buy-coins" class="coin-buy-btn" text="コインを購入" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
     </ui:VisualElement>
 </ui:UXML>

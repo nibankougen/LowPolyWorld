@@ -16,6 +16,7 @@ public class ShopTabController : IDisposable
 
     // ── UI references ─────────────────────────────────────────────────────────
 
+    private readonly VisualElement _root;
     private readonly Button _tabPremium;
     private readonly Button _tabAvatar;
     private readonly Button _tabAccessory;
@@ -51,6 +52,12 @@ public class ShopTabController : IDisposable
     private readonly VisualElement _loadMoreArea;
     private readonly VisualElement _emptyArea;
 
+    private readonly VisualElement _coinDetailBackdrop;
+    private readonly Label _coinDetailBalance;
+    private readonly VisualElement _coinDetailWarning;
+    private readonly VisualElement _coinLotList;
+    private readonly VisualElement _coinLotEmpty;
+
     // ── State ─────────────────────────────────────────────────────────────────
 
     private Category _currentCategory;
@@ -68,6 +75,7 @@ public class ShopTabController : IDisposable
 
     public ShopTabController(VisualElement root)
     {
+        _root = root;
         _tabPremium   = root.Q<Button>("tab-premium");
         _tabAvatar    = root.Q<Button>("tab-avatar");
         _tabAccessory = root.Q<Button>("tab-accessory");
@@ -102,6 +110,12 @@ public class ShopTabController : IDisposable
         _productList   = root.Q<VisualElement>("product-list");
         _loadMoreArea  = root.Q<VisualElement>("load-more-area");
         _emptyArea     = root.Q<VisualElement>("empty-area");
+
+        _coinDetailBackdrop = root.Q<VisualElement>("coin-detail-backdrop");
+        _coinDetailBalance  = root.Q<Label>("coin-detail-balance");
+        _coinDetailWarning  = root.Q<VisualElement>("coin-detail-warning");
+        _coinLotList        = root.Q<VisualElement>("coin-lot-list");
+        _coinLotEmpty       = root.Q<VisualElement>("coin-lot-empty");
 
         BindButtons();
         UpdateCoinBalance();
@@ -140,6 +154,16 @@ public class ShopTabController : IDisposable
 
         _btnBuyAnnual.clicked  += OnBuyAnnualClicked;
         _btnBuyMonthly.clicked += OnBuyMonthlyClicked;
+
+        // コイン詳細パネル
+        _root.Q<VisualElement>("coin-area").RegisterCallback<ClickEvent>(_ => ShowCoinDetail());
+        _root.Q<Button>("btn-coin-detail-close").clicked += HideCoinDetail;
+        _coinDetailBackdrop.RegisterCallback<ClickEvent>(evt =>
+        {
+            if (evt.target == _coinDetailBackdrop)
+                HideCoinDetail();
+        });
+        _root.Q<Button>("btn-buy-coins").clicked += OnBuyCoinsClicked;
 
         if (ShopManager.Instance != null)
             ShopManager.Instance.OnCoinBalanceChanged += UpdateCoinBalance;
@@ -230,6 +254,75 @@ public class ShopTabController : IDisposable
             _coinBalance.AddToClassList("coin-balance--negative");
         else
             _coinBalance.RemoveFromClassList("coin-balance--negative");
+    }
+
+    // ── Coin detail panel ────────────────────────────────────────────────────
+
+    private void ShowCoinDetail()
+    {
+        RefreshCoinDetailPanel();
+        _coinDetailBackdrop.style.display = DisplayStyle.Flex;
+    }
+
+    private void HideCoinDetail()
+    {
+        _coinDetailBackdrop.style.display = DisplayStyle.None;
+    }
+
+    private void RefreshCoinDetailPanel()
+    {
+        if (ShopManager.Instance == null) return;
+
+        var now = DateTime.UtcNow;
+        int balance = ShopManager.Instance.CoinBalance;
+
+        _coinDetailBalance.text = balance.ToString("N0");
+
+        bool isNegative = balance < 0;
+        if (isNegative)
+            _coinDetailBalance.AddToClassList("coin-detail-balance--negative");
+        else
+            _coinDetailBalance.RemoveFromClassList("coin-detail-balance--negative");
+
+        _coinDetailWarning.style.display = isNegative ? DisplayStyle.Flex : DisplayStyle.None;
+
+        // ロット一覧（有効なもののみ・有効期限が近い順）
+        _coinLotList.Clear();
+        var lots = new List<CoinLedger.CoinLot>(ShopManager.Instance.Ledger.Lots);
+        lots.RemoveAll(l => l.ValidUntil <= now);
+        lots.Sort((a, b) => a.ValidUntil.CompareTo(b.ValidUntil));
+
+        bool hasLots = lots.Count > 0;
+        _coinLotEmpty.style.display = hasLots ? DisplayStyle.None : DisplayStyle.Flex;
+
+        foreach (var lot in lots)
+        {
+            var row = new VisualElement();
+            row.AddToClassList("coin-lot-row");
+
+            var expiryLabel = new Label
+            {
+                text = $"有効期限: {lot.ValidUntil.ToLocalTime():yyyy/MM/dd}",
+            };
+            expiryLabel.AddToClassList("coin-lot-expiry");
+
+            // 7日以内に期限切れになるロットを強調
+            if ((lot.ValidUntil - now).TotalDays <= 7)
+                expiryLabel.AddToClassList("coin-lot-expiry--soon");
+
+            var amountLabel = new Label { text = $"🪙 {lot.Coins:N0}" };
+            amountLabel.AddToClassList("coin-lot-amount");
+
+            row.Add(expiryLabel);
+            row.Add(amountLabel);
+            _coinLotList.Add(row);
+        }
+    }
+
+    private void OnBuyCoinsClicked()
+    {
+        // コイン購入画面への遷移（Unity IAP 実装後に接続）
+        Debug.Log("[ShopTabController] Buy coins: Unity IAP not yet initialized.");
     }
 
     // ── Premium tab ───────────────────────────────────────────────────────────
