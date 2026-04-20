@@ -67,6 +67,7 @@ public class ShopTabController : IDisposable
     private string _cursor = null;
     private bool _hasMore = false;
     private bool _isLoading = false;
+    private bool _coinDetailVisible = false;
     private readonly List<ShopProductResponse> _loadedProducts = new();
 
     private CancellationTokenSource _cts = new();
@@ -254,18 +255,23 @@ public class ShopTabController : IDisposable
             _coinBalance.AddToClassList("coin-balance--negative");
         else
             _coinBalance.RemoveFromClassList("coin-balance--negative");
+
+        if (_coinDetailVisible)
+            RefreshCoinDetailPanel();
     }
 
     // ── Coin detail panel ────────────────────────────────────────────────────
 
     private void ShowCoinDetail()
     {
+        _coinDetailVisible = true;
         RefreshCoinDetailPanel();
         _coinDetailBackdrop.style.display = DisplayStyle.Flex;
     }
 
     private void HideCoinDetail()
     {
+        _coinDetailVisible = false;
         _coinDetailBackdrop.style.display = DisplayStyle.None;
     }
 
