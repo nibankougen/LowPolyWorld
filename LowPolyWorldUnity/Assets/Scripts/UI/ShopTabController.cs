@@ -485,9 +485,27 @@ public class ShopTabController : IDisposable
         var info = new VisualElement();
         info.AddToClassList("product-card__info");
 
+        var nameRow = new VisualElement();
+        nameRow.AddToClassList("product-card__name-row");
+
         var nameLabel = new Label { text = product.name ?? "" };
         nameLabel.AddToClassList("product-card__name");
-        info.Add(nameLabel);
+        nameRow.Add(nameLabel);
+
+        // Edit OK/NG バッジ（スタンプ以外のカテゴリに表示）
+        if (!string.Equals(product.category, "stamp", StringComparison.OrdinalIgnoreCase))
+        {
+            var editBadge = new Label { text = product.editAllowed ? "編集可" : "編集不可" };
+            editBadge.AddToClassList("product-card__edit-badge");
+            editBadge.AddToClassList(
+                product.editAllowed
+                    ? "product-card__edit-badge--ok"
+                    : "product-card__edit-badge--ng"
+            );
+            nameRow.Add(editBadge);
+        }
+
+        info.Add(nameRow);
 
         var meta = new VisualElement();
         meta.AddToClassList("product-card__meta");
