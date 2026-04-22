@@ -58,6 +58,9 @@ public class ShopTabController : IDisposable
     private readonly VisualElement _coinLotList;
     private readonly VisualElement _coinLotEmpty;
 
+    private readonly VisualElement _errorToast;
+    private readonly Label _errorToastLabel;
+
     // ── State ─────────────────────────────────────────────────────────────────
 
     private Category _currentCategory;
@@ -69,8 +72,10 @@ public class ShopTabController : IDisposable
     private bool _isLoading = false;
     private bool _coinDetailVisible = false;
     private readonly List<ShopProductResponse> _loadedProducts = new();
+    private readonly List<(ShopProductResponse product, Button btn)> _purchaseBtns = new();
 
     private CancellationTokenSource _cts = new();
+    private IVisualElementScheduledItem _toastSchedule;
 
     // ── Constructor ───────────────────────────────────────────────────────────
 
@@ -117,6 +122,9 @@ public class ShopTabController : IDisposable
         _coinDetailWarning  = root.Q<VisualElement>("coin-detail-warning");
         _coinLotList        = root.Q<VisualElement>("coin-lot-list");
         _coinLotEmpty       = root.Q<VisualElement>("coin-lot-empty");
+
+        _errorToast      = root.Q<VisualElement>("error-toast");
+        _errorToastLabel = root.Q<Label>("error-toast-label");
 
         BindButtons();
         UpdateCoinBalance();
@@ -258,6 +266,20 @@ public class ShopTabController : IDisposable
 
         if (_coinDetailVisible)
             RefreshCoinDetailPanel();
+
+        RefreshAllPurchaseButtons();
+    }
+
+    // ── Error toast ───────────────────────────────────────────────────────────
+
+    private void ShowErrorToast(string message)
+    {
+        _errorToastLabel.text = message;
+        _errorToast.style.display = DisplayStyle.Flex;
+        _toastSchedule?.Pause();
+        _toastSchedule = _errorToast.schedule
+            .Execute(() => _errorToast.style.display = DisplayStyle.None)
+            .StartingIn(3000);
     }
 
     // ── Coin detail panel ────────────────────────────────────────────────────
@@ -372,6 +394,7 @@ public class ShopTabController : IDisposable
         _cts = new CancellationTokenSource();
 
         _loadedProducts.Clear();
+        _purchaseBtns.Clear();
         _productList.Clear();
         _cursor = null;
         _hasMore = false;
@@ -535,10 +558,106 @@ public class ShopTabController : IDisposable
         meta.Add(likeBtn);
 
         info.Add(meta);
+
+        // 購入ボタン / 購入済みバッジ
+        var purchaseRow = new VisualElement();
+        purchaseRow.AddToClassList("product-card__purchase-row");
+
+        var purchaseBtn = new Button();
+        purchaseBtn.AddToClassList("product-card__purchase-btn");
+        SetPurchaseBtnState(purchaseBtn, product.purchasedByMe);
+        if (!product.purchasedByMe)
+        {
+            bool isNeg = ShopManager.Instance != null && ShopManager.Instance.CoinBalance < 0;
+            SetPurchaseBtnBalanceNegative(purchaseBtn, isNeg);
+        }
+        purchaseBtn.clicked += () => OnPurchaseBtnClicked(product, purchaseBtn);
+        _purchaseBtns.Add((product, purchaseBtn));
+
+        purchaseRow.Add(purchaseBtn);
+        info.Add(purchaseRow);
+
         card.Add(info);
 
         return card;
     }
+
+    private static void SetPurchaseBtnState(Button btn, bool purchased)
+    {
+        if (purchased)
+        {
+            btn.text = "購入済み";
+            btn.AddToClassList("product-card__purchase-btn--purchased");
+            btn.RemoveFromClassList("product-card__purchase-btn--balance-negative");
+            btn.SetEnabled(false);
+        }
+        else
+        {
+            btn.text = "購入する";
+            btn.RemoveFromClassList("product-card__purchase-btn--purchased");
+            btn.SetEnabled(true);
+        }
+    }
+
+    private static void SetPurchaseBtnBalanceNegative(Button btn, bool isNegative)
+    {
+        if (isNegative)
+            btn.AddToClassList("product-card__purchase-btn--balance-negative");
+        else
+            btn.RemoveFromClassList("product-card__purchase-btn--balance-negative");
+    }
+
+    private void RefreshAllPurchaseButtons()
+    {
+        bool isNegative = ShopManager.Instance != null && ShopManager.Instance.CoinBalance < 0;
+        foreach (var (product, btn) in _purchaseBtns)
+        {
+            if (!product.purchasedByMe)
+                SetPurchaseBtnBalanceNegative(btn, isNegative);
+        }
+    }
+
+    private async void OnPurchaseBtnClicked(ShopProductResponse product, Button purchaseBtn)
+    {
+        if (ShopManager.Instance == null) return;
+
+        if (ShopManager.Instance.CoinBalance < 0)
+        {
+            ShowErrorToast("コイン残高が不足しています。コインを購入して残高を回復してください。");
+            return;
+        }
+
+        purchaseBtn.SetEnabled(false);
+        purchaseBtn.RemoveFromClassList("product-card__purchase-btn--balance-negative");
+        purchaseBtn.text = "処理中...";
+
+        try
+        {
+            string err = await ShopManager.Instance.PurchaseProductAsync(product, ct: _cts.Token);
+
+            if (err != null)
+            {
+                SetPurchaseBtnState(purchaseBtn, purchased: false);
+                bool isNeg = ShopManager.Instance != null && ShopManager.Instance.CoinBalance < 0;
+                SetPurchaseBtnBalanceNegative(purchaseBtn, isNeg);
+                ShowErrorToast(PurchaseErrorMessage(err));
+                Debug.LogWarning($"[ShopTabController] Purchase failed: {err}");
+            }
+            else
+            {
+                product.purchasedByMe = true;
+                SetPurchaseBtnState(purchaseBtn, purchased: true);
+            }
+        }
+        catch (OperationCanceledException) { }
+    }
+
+    private static string PurchaseErrorMessage(string errorCode) => errorCode switch
+    {
+        "insufficient_coins" => "コインが不足しています。",
+        "already_purchased"  => "この商品は購入済みです。",
+        _                    => "購入に失敗しました。時間をおいて再試行してください。",
+    };
 
     private static void RefreshLikeUI(Label likesLabel, Button likeBtn, LikeState state)
     {
@@ -611,6 +730,8 @@ public class ShopTabController : IDisposable
     {
         _cts.Cancel();
         _cts.Dispose();
+        _toastSchedule?.Pause();
+        _purchaseBtns.Clear();
 
         _productScroll.verticalScroller.valueChanged -= OnScrollChanged;
 

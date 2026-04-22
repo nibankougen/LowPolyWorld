@@ -22,6 +22,9 @@ public class ShopManager : MonoBehaviour
     /// <summary>コイン残高が変化したときに発火する。</summary>
     public event Action OnCoinBalanceChanged;
 
+    /// <summary>商品の購入が成功したときに発火する。引数は購入した商品情報。</summary>
+    public event Action<ShopProductResponse> OnProductPurchased;
+
     // ── Lifecycle ────────────────────────────────────────────────────────────
 
     private void Awake()
@@ -113,11 +116,12 @@ public class ShopManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 商品を購入する。成功時はコイン残高を即時更新する。
+    /// 商品を購入する。成功時はコイン残高を即時更新し、OnProductPurchased を発火する。
     /// </summary>
+    /// <param name="product">購入する商品情報（イベント発火と購入済み状態の反映に使用）。</param>
     /// <returns>null = 成功 / エラーコード文字列</returns>
     public async Task<string> PurchaseProductAsync(
-        string productId,
+        ShopProductResponse product,
         string idempotencyKey = null,
         CancellationToken ct = default)
     {
@@ -127,10 +131,13 @@ public class ShopManager : MonoBehaviour
         };
 
         var err = await UserManager.Instance.Api.PostJsonNoBodyAsync(
-            $"/api/v1/shop/products/{productId}/purchase", body, ct);
+            $"/api/v1/shop/products/{product.id}/purchase", body, ct);
 
         if (err == null)
+        {
             await RefreshCoinBalanceAsync(ct);
+            OnProductPurchased?.Invoke(product);
+        }
 
         return err;
     }

@@ -114,6 +114,11 @@
             <ui:Label class="empty-label" text="商品が見つかりません" />
         </ui:VisualElement>
 
+        <!-- エラートースト（購入失敗・残高不足時） -->
+        <ui:VisualElement name="error-toast" class="error-toast" style="display: none;">
+            <ui:Label name="error-toast-label" class="error-toast-label" />
+        </ui:VisualElement>
+
         <!-- コイン詳細パネル（ボトムシート） -->
         <ui:VisualElement name="coin-detail-backdrop" class="coin-detail-backdrop" style="display: none;">
             <ui:VisualElement name="coin-detail-panel" class="coin-detail-panel">
