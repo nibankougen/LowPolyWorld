@@ -21,6 +21,7 @@ import (
 	"github.com/nibankougen/LowPolyWorld/api/internal/handler"
 	mw "github.com/nibankougen/LowPolyWorld/api/internal/middleware"
 	"github.com/nibankougen/LowPolyWorld/api/internal/storage"
+	"github.com/nibankougen/LowPolyWorld/api/internal/worker"
 )
 
 func main() {
@@ -284,6 +285,17 @@ func main() {
 			localStorage.ServeFile(w, r, hash, ext)
 		})
 	}
+
+	// Start webhook event processor in the background.
+	go func() {
+		ww := &worker.WebhookWorker{
+			DB:                pool,
+			Logger:            logger,
+			AppleBundleID:     cfg.AppleBundleID,
+			GooglePackageName: cfg.GooglePackageName,
+		}
+		ww.Start(context.Background())
+	}()
 
 	addr := fmt.Sprintf(":%s", cfg.Port)
 	logger.Info("server starting", "addr", addr, "env", cfg.AppEnv)

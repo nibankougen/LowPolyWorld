@@ -26,6 +26,10 @@ type Config struct {
 	ResendAPIKey string
 	BatchSecret  string
 
+	AppleBundleID     string
+	GooglePackageName string
+	PubSubAudience    string
+
 	AppVersion    int
 	MinAppVersion int
 }
@@ -55,6 +59,9 @@ func Load() (*Config, error) {
 		AppleClientID:     getEnv("APPLE_CLIENT_ID", ""),
 		ResendAPIKey:      getEnv("RESEND_API_KEY", ""),
 		BatchSecret:       getEnv("BATCH_SECRET", ""),
+		AppleBundleID:     getEnv("APPLE_BUNDLE_ID", ""),
+		GooglePackageName: getEnv("GOOGLE_PACKAGE_NAME", ""),
+		PubSubAudience:    getEnv("PUBSUB_AUDIENCE", ""),
 		AppVersion:        appVersion,
 		MinAppVersion:     minAppVersion,
 	}, nil

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -234,6 +235,22 @@ func (h *Handler) WebhookApple(w http.ResponseWriter, r *http.Request) {
 
 // POST /webhook/google
 func (h *Handler) WebhookGoogle(w http.ResponseWriter, r *http.Request) {
+	// Verify the Pub/Sub OIDC bearer token when PubSubAudience is configured.
+	// In development (PubSubAudience == ""), validation is skipped.
+	if h.Cfg.PubSubAudience != "" {
+		authHeader := r.Header.Get("Authorization")
+		token, ok := strings.CutPrefix(authHeader, "Bearer ")
+		if !ok || token == "" {
+			response.Error(w, r, http.StatusUnauthorized, "MISSING_TOKEN", "bearer token required")
+			return
+		}
+		if err := h.AuthSvc.VerifyPubSubToken(r.Context(), token, h.Cfg.PubSubAudience); err != nil {
+			h.Logger.Warn("webhook google: invalid pubsub token", "error", err)
+			response.Error(w, r, http.StatusUnauthorized, "INVALID_TOKEN", "invalid bearer token")
+			return
+		}
+	}
+
 	var req struct {
 		Message struct {
 			Data string `json:"data"`
@@ -244,8 +261,7 @@ func (h *Handler) WebhookGoogle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Store raw payload. external_id (purchaseToken) is extracted by the async worker after
-	// Pub/Sub bearer token validation and payload decoding.
+	// Store raw payload for async worker to decode and process.
 	_ = h.DB.QueryRow(r.Context(), `
 		INSERT INTO webhook_events (source, event_type, external_id, raw_payload, processing_status)
 		VALUES ('google', 'unknown', 'pending_parse', $1, 'pending')

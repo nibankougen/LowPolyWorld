@@ -164,6 +164,36 @@ func (s *Service) VerifyGoogleIDToken(ctx context.Context, idToken string) (stri
 	return tok.Subject(), nil
 }
 
+// VerifyPubSubToken verifies a Google Cloud Pub/Sub push subscription OIDC bearer token.
+// audience must match the push endpoint URL configured on the subscription; pass "" to skip
+// audience validation (useful in development).
+func (s *Service) VerifyPubSubToken(ctx context.Context, tokenStr, audience string) error {
+	keyset, err := s.jwksCache.Get(ctx, googleJWKSURL)
+	if err != nil {
+		return fmt.Errorf("fetch google jwks: %w", err)
+	}
+	tok, err := jwt.Parse([]byte(tokenStr), jwt.WithKeySet(keyset), jwt.WithValidate(true))
+	if err != nil {
+		return fmt.Errorf("parse pubsub oidc token: %w", err)
+	}
+	if tok.Issuer() != "https://accounts.google.com" {
+		return fmt.Errorf("invalid issuer: %s", tok.Issuer())
+	}
+	if audience != "" {
+		audOK := false
+		for _, a := range tok.Audience() {
+			if a == audience {
+				audOK = true
+				break
+			}
+		}
+		if !audOK {
+			return fmt.Errorf("audience mismatch")
+		}
+	}
+	return nil
+}
+
 // VerifyAppleIDToken verifies an Apple ID token and returns the provider sub.
 func (s *Service) VerifyAppleIDToken(ctx context.Context, idToken string) (string, error) {
 	keyset, err := s.jwksCache.Get(ctx, appleJWKSURL)

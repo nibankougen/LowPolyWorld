@@ -616,12 +616,12 @@
 - [x] コイン残高取得エンドポイント（ロット別有効期限付き）
 - [x] コイン有効期限チェック・失効処理（購入から6ヶ月）— `batch.ExpireCoins` + `POST /admin/internal/run-batch/expire-coins`
 - [x] App Store Server Notifications V2 受信エンドポイント（`POST /webhook/apple`）
-  - [ ] JWS 署名検証（Apple 公開鍵）（TODO: 非同期ワーカーで実装）
-  - [ ] `REFUND` イベント処理（購入特定 → 有効期限確認 → 残高調整 → キャンセル記録）（TODO: 非同期ワーカーで実装）
+  - [x] JWS 署名検証（x5c リーフ証明書の ECDSA/ES256 署名を `WebhookWorker` で検証）
+  - [x] `REFUND` イベント処理（購入特定 → 有効期限確認 → 残高調整 → キャンセル記録）— `worker.WebhookWorker`
   - [x] 冪等性保証（`platform_transaction_id` の UNIQUE 制約）
 - [x] Google Real-time Developer Notifications 受信エンドポイント（`POST /webhook/google`）
-  - [ ] Pub/Sub プッシュサブスクリプションのベアラートークン検証（TODO: 非同期ワーカーで実装）
-  - [ ] `ONE_TIME_PRODUCT_VOIDED` イベント処理（購入特定 → 有効期限確認 → 残高調整 → キャンセル記録）（TODO: 非同期ワーカーで実装）
+  - [x] Pub/Sub プッシュサブスクリプションのベアラートークン検証（`PUBSUB_AUDIENCE` 設定時に `WebhookGoogle` ハンドラで同期検証）
+  - [x] `ONE_TIME_PRODUCT_CANCELED` イベント処理（購入特定 → 有効期限確認 → 残高調整 → キャンセル記録）— `worker.WebhookWorker`
   - [x] 冪等性保証（`purchaseToken` の UNIQUE 制約）
 - [x] 取引キャンセル一覧取得エンドポイント（管理画面用）
 - [x] 手動キャンセル実行エンドポイント（管理画面用・admin_id 記録）
@@ -632,10 +632,10 @@
 
 ### Unityクライアント
 - [x] `ShopManager` 実装（DontDestroyOnLoad・CoinLedger保持・API呼び出しオーケストレーション）
-- [ ] Unity IAP 初期化・商品情報フェッチ（App Store / Google Play）
+- [x] Unity IAP 初期化・商品情報フェッチ（App Store / Google Play）
   - [x] コイン購入商品 20 種 Product ID 定義（`IapProductIds.cs`）
-  - [ ] Unity IAP パッケージ追加・初期化・価格取得（要 com.unity.purchasing 導入）
-  - [ ] 価格取得失敗時: 「価格を取得できませんでした」表示・購入ボタン無効化
+  - [x] Unity IAP パッケージ追加・初期化・価格取得（`IapManager.cs` + `com.unity.purchasing` 4.12.2）
+  - [x] 価格取得失敗時: 「価格を取得できませんでした」表示・購入ボタン無効化
 - [x] ショップ画面固定ヘッダー（5タブ + コイン残高）
 - [x] 商品一覧 UI（アバター / アクセサリ / オブジェクト / スタンプ 各タブ）
   - [x] ソート4種（人気順デフォルト / いいね順 / 新しい順 / 古い順）
@@ -645,10 +645,10 @@
   - [x] いいね数表示・いいね/いいね解除ボタン（自分の商品にはボタン非表示は creator ID がスタートアップ API に含まれ次第対応）
 - [x] プレミアムタブ UI（機能説明 + プラン選択購入。実際の課金バックエンドは Phase 10 で実装）
   - [x] 年額プラン（上段・月換算価格目立て）・月額プラン（下段）表示（価格表示は IAP 導入後）
-  - [ ] Unity IAP のサブスクリプション Product ID 定義（購入フローは Phase 10 で配線）
+  - [x] Unity IAP のサブスクリプション Product ID 定義（`IapProductIds.PremiumMonthly/Yearly` + `IapManager` 登録済み。購入フローは Phase 10 で配線）
 - [x] コイン残高表示（マイナス時は赤字）・タップでコイン詳細画面へ
 - [x] コイン詳細画面（残高・ロット別有効期限一覧・「コインを購入」ボタン）
-- [ ] コイン購入画面（20種選択 → IAP 購入 → 残高即時更新）
+- [x] コイン購入画面（20種選択 → IAP 購入 → 残高即時更新）
 - [x] Edit OK/NG バッジ表示
 - [x] 購入後のアバター・アクセサリ・ワールドオブジェクト・スタンプ自動追加（`ShopManager.OnProductPurchased` イベント発火・商品カード購入ボタン追加・購入済み状態の即時反映）
 
@@ -658,6 +658,7 @@
 - [x] `CoinLedger`: 返金キャンセル処理（coins_deducted 計算・有効期限切れ時は 0）
 - [x] `ShopProductFilter`: 人気順で `recent_purchase_count < 3` の商品が除外されること
 - [x] `ShopProductFilter`: オブジェクトのテクスチャコスト/コライダーサイズフィルターが正しく機能すること
+- [x] `IapProductIds`: 全20種のProduct IDが正しいコイン数にマッピングされること・サブスクリプションIDは0を返すこと・AllCoinProductIdsに重複なし
 
 ---
 
@@ -711,11 +712,11 @@
   - [ ] アプリ未起動時: 起動後にリンク処理を継続
   - [ ] アプリ起動中: フォアグラウンドでリンクを受け取りルーム参加フローへ
 - [ ] 招待リンクエラー表示（有効期限切れ / 使用回数上限 / ルーム入室不可 / 無効リンク）
-- [ ] `HideListLogic` 実装
-  - [ ] 非表示リストをローカルに保持（ルーム参加時にサーバーから取得）
-  - [ ] 非表示ユーザーのアバター描画スキップ（`AvatarManager` 連携）
-  - [ ] 非表示ユーザーの Vivox 音声ミュート（`VoiceManager` 連携）
-  - [ ] 非表示ユーザーの物理・ギミック処理は通常通り維持（ゲーム状態に影響しない）
+- [x] `HideListLogic` 実装
+  - [x] 非表示リストをローカルに保持（ルーム参加時にサーバーから取得）
+  - [x] 非表示ユーザーのアバター描画スキップ（`AvatarManager` 連携）
+  - [x] 非表示ユーザーの Vivox 音声ミュート（`VoiceManager` 連携）
+  - [x] 非表示ユーザーの物理・ギミック処理は通常通り維持（ゲーム状態に影響しない）
 - [ ] ユーザー非表示リスト管理画面（設定画面から遷移・非表示解除ボタン）
 - [ ] 通報モーダル共通UI（通報理由8種・必須詳細テキスト・非表示チェックボックス（デフォルトON）・通報/キャンセルボタン）
 - [ ] ワールド詳細画面: クイックいいねボタン（サムネイル右下ハートアイコン）・いいねボタン・その他アクションボタン（…）→ 非表示/通報
@@ -753,9 +754,9 @@
 - [ ] `FriendListLogic`: 申請状態遷移（未申請→申請中→承認済み / 未申請→申請中→拒否）
 - [ ] `FriendListLogic`: 相互承認の成立条件・解除処理
 - [ ] `FollowListLogic`: フォロー/フォロー解除の状態遷移
-- [ ] `HideListLogic`: 非表示追加・解除・一覧取得
+- [x] `HideListLogic`: 非表示追加・解除・一覧取得
 - [ ] `InviteRoomLogic`: ルーム状態遷移（OPEN → LOCKED → CLOSED）・入室可否判定
-- [ ] `HideListLogic`: 非表示ユーザーの描画・音声フィルタリング判定（リストにいる場合のみ true）
+- [x] `HideListLogic`: 非表示ユーザーの描画・音声フィルタリング判定（リストにいる場合のみ true）
 - [ ] `NotificationStore`: 未読件数カウント・既読マーク・種別フィルタリング
 - [ ] `StampColorPickerLogic`: 色選択・スポイト確定タイマー（0.4 秒）・再タップでリセット
 - [ ] `TextStampLogic`: テキスト編集状態遷移（未編集 → 編集中 → 完了 → 再編集）
