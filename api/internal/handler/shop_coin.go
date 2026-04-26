@@ -33,9 +33,9 @@ func (h *Handler) GetCoinBalance(w http.ResponseWriter, r *http.Request) {
 	defer rows.Close()
 
 	type lot struct {
-		PurchaseID string `json:"purchase_id"`
-		Coins      int    `json:"coins"`
-		ValidUntil string `json:"valid_until"`
+		PurchaseID string `json:"purchaseId"`
+		Coins      int    `json:"coinsAmount"`
+		ValidUntil string `json:"validUntil"`
 	}
 	lots := []lot{}
 	rawTotal := 0
@@ -67,11 +67,11 @@ func (h *Handler) GetCoinBalance(w http.ResponseWriter, r *http.Request) {
 
 	balance := rawTotal - deducted - spent
 
-	response.JSON(w, http.StatusOK, map[string]any{
+	response.ClientJSON(w, http.StatusOK, map[string]any{
 		"balance":        balance,
 		"lots":           lots,
-		"total_deducted": deducted,
-		"total_spent":    spent,
+		"totalDeducted":  deducted,
+		"totalSpent":     spent,
 	})
 }
 
@@ -162,7 +162,7 @@ func (h *Handler) RecordCoinPurchase(w http.ResponseWriter, r *http.Request) {
 		_ = h.DB.QueryRow(r.Context(),
 			`SELECT id FROM coin_purchases WHERE platform_transaction_id = $1`,
 			req.PlatformTransactionID).Scan(&existingID)
-		response.JSON(w, http.StatusOK, map[string]string{"purchase_id": existingID})
+		response.ClientJSON(w, http.StatusOK, map[string]string{"purchase_id": existingID})
 		return
 	}
 
@@ -213,7 +213,7 @@ func (h *Handler) RecordCoinPurchase(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.JSON(w, http.StatusOK, map[string]string{"purchase_id": purchaseID})
+	response.ClientJSON(w, http.StatusOK, map[string]string{"purchase_id": purchaseID})
 }
 
 // ── Webhook: Apple Refund ─────────────────────────────────────────────────────

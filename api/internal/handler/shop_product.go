@@ -16,22 +16,22 @@ import (
 
 type productResponse struct {
 	ID                   string   `json:"id"`
-	CreatorID            string   `json:"creator_id"`
-	CreatorName          string   `json:"creator_name"`
+	CreatorID            string   `json:"creatorId"`
+	CreatorName          string   `json:"creatorName"`
 	Name                 string   `json:"name"`
 	Description          string   `json:"description"`
 	Category             string   `json:"category"`
-	PriceCoins           int      `json:"price_coins"`
-	ThumbnailURL         *string  `json:"thumbnail_url"`
-	TextureCost          *int     `json:"texture_cost,omitempty"`
-	ColliderSizeCategory *string  `json:"collider_size_category,omitempty"`
-	EditAllowed          bool     `json:"edit_allowed"`
-	LikesCount           int      `json:"likes_count"`
-	RecentPurchaseCount  int      `json:"recent_purchase_count"`
+	PriceCoins           int      `json:"priceCoins"`
+	ThumbnailURL         *string  `json:"thumbnailUrl"`
+	TextureCost          *int     `json:"textureCost,omitempty"`
+	ColliderSizeCategory *string  `json:"colliderSizeCategory,omitempty"`
+	EditAllowed          bool     `json:"editAllowed"`
+	LikesCount           int      `json:"likesCount"`
+	RecentPurchaseCount  int      `json:"recentPurchaseCount"`
 	Tags                 []string `json:"tags"`
-	LikedByMe            bool     `json:"liked_by_me"`
-	PurchasedByMe        bool     `json:"purchased_by_me"`
-	CreatedAt            string   `json:"created_at"`
+	LikedByMe            bool     `json:"likedByMe"`
+	PurchasedByMe        bool     `json:"purchasedByMe"`
+	CreatedAt            string   `json:"createdAt"`
 }
 
 // ── List Products ─────────────────────────────────────────────────────────────
@@ -203,12 +203,11 @@ func (h *Handler) ListProducts(w http.ResponseWriter, r *http.Request) {
 	if hasNext {
 		products = products[:limit]
 	}
-	var nextCursor *string
+	cursor := map[string]any{"next": nil, "hasMore": false}
 	if hasNext && len(products) > 0 {
-		c := products[len(products)-1].ID
-		nextCursor = &c
+		cursor = map[string]any{"next": products[len(products)-1].ID, "hasMore": true}
 	}
-	response.JSON(w, http.StatusOK, map[string]any{"products": products, "next_cursor": nextCursor})
+	response.ClientJSON(w, http.StatusOK, map[string]any{"products": products, "cursor": cursor})
 }
 
 // ── Get Product ───────────────────────────────────────────────────────────────
@@ -249,7 +248,7 @@ func (h *Handler) GetProduct(w http.ResponseWriter, r *http.Request) {
 		u := h.Storage.URL(*thumbnailHash, "png")
 		p.ThumbnailURL = &u
 	}
-	response.JSON(w, http.StatusOK, p)
+	response.ClientJSON(w, http.StatusOK, p)
 }
 
 // ── Like / Unlike ─────────────────────────────────────────────────────────────
@@ -357,7 +356,7 @@ func (h *Handler) PurchaseProduct(w http.ResponseWriter, r *http.Request) {
 		err := h.DB.QueryRow(r.Context(),
 			`SELECT id FROM coin_transactions WHERE idempotency_key = $1`, *req.IdempotencyKey).Scan(&txID)
 		if err == nil {
-			response.JSON(w, http.StatusOK, map[string]string{"transaction_id": txID})
+			response.ClientJSON(w, http.StatusOK, map[string]string{"transaction_id": txID})
 			return
 		}
 	}
@@ -455,7 +454,7 @@ func (h *Handler) PurchaseProduct(w http.ResponseWriter, r *http.Request) {
 		response.Error(w, r, http.StatusInternalServerError, "DB_ERROR", "database error")
 		return
 	}
-	response.JSON(w, http.StatusOK, map[string]string{"transaction_id": coinTxID})
+	response.ClientJSON(w, http.StatusOK, map[string]string{"transaction_id": coinTxID})
 }
 
 // ── List Purchased Products ───────────────────────────────────────────────────
@@ -482,7 +481,6 @@ func (h *Handler) ListMyProducts(w http.ResponseWriter, r *http.Request) {
 		argIdx++
 	}
 	if after != "" {
-		// Cursor: last item's id (UUID). Keyset: (purchased_at, id) < (last_purchased_at, last_id)
 		conds = append(conds, "up.purchased_at < (SELECT purchased_at FROM user_products WHERE id = $"+strconv.Itoa(argIdx)+")")
 		args = append(args, after)
 		argIdx++
@@ -492,8 +490,12 @@ func (h *Handler) ListMyProducts(w http.ResponseWriter, r *http.Request) {
 	args = append(args, limit+1)
 
 	rows, err := h.DB.Query(r.Context(), `
-		SELECT up.id, p.id, p.creator_id, c.display_name, p.name, p.category,
-		       p.price_coins, p.thumbnail_hash, p.edit_allowed, up.purchased_at
+		SELECT up.id, p.id, p.creator_id, c.display_name, p.name, p.description,
+		       p.category, p.price_coins, p.thumbnail_hash,
+		       p.texture_cost, p.collider_size_category,
+		       p.edit_allowed, p.likes_count, p.recent_purchase_count, p.tags, p.created_at,
+		       (SELECT COUNT(*) > 0 FROM product_likes pl WHERE pl.product_id = p.id AND pl.user_id = $1),
+		       up.purchased_at
 		FROM user_products up
 		JOIN products p ON p.id = up.product_id
 		JOIN creators c ON c.id = p.creator_id
@@ -507,34 +509,38 @@ func (h *Handler) ListMyProducts(w http.ResponseWriter, r *http.Request) {
 	}
 	defer rows.Close()
 
-	type item struct {
-		RowID       string  `json:"row_id"`
-		ID          string  `json:"id"`
-		CreatorID   string  `json:"creator_id"`
-		CreatorName string  `json:"creator_name"`
-		Name        string  `json:"name"`
-		Category    string  `json:"category"`
-		PriceCoins  int     `json:"price_coins"`
-		ThumbnailURL *string `json:"thumbnail_url"`
-		EditAllowed bool    `json:"edit_allowed"`
-		PurchasedAt string  `json:"purchased_at"`
+	type myProductItem struct {
+		ID          string          `json:"id"`
+		ProductID   string          `json:"productId"`
+		PurchasedAt string          `json:"purchasedAt"`
+		Product     productResponse `json:"product"`
 	}
 
-	items := []item{}
+	items := []myProductItem{}
 	for rows.Next() {
-		var it item
+		var it myProductItem
 		var thumbnailHash *string
-		var purchasedAt time.Time
-		if err := rows.Scan(&it.RowID, &it.ID, &it.CreatorID, &it.CreatorName, &it.Name, &it.Category,
-			&it.PriceCoins, &thumbnailHash, &it.EditAllowed, &purchasedAt); err != nil {
+		var purchasedAt, createdAt time.Time
+		if err := rows.Scan(
+			&it.ID, &it.Product.ID, &it.Product.CreatorID, &it.Product.CreatorName,
+			&it.Product.Name, &it.Product.Description, &it.Product.Category,
+			&it.Product.PriceCoins, &thumbnailHash,
+			&it.Product.TextureCost, &it.Product.ColliderSizeCategory,
+			&it.Product.EditAllowed, &it.Product.LikesCount, &it.Product.RecentPurchaseCount,
+			&it.Product.Tags, &createdAt,
+			&it.Product.LikedByMe, &purchasedAt,
+		); err != nil {
 			h.Logger.Error("scan my product", "error", err)
 			response.Error(w, r, http.StatusInternalServerError, "DB_ERROR", "database error")
 			return
 		}
+		it.ProductID = it.Product.ID
+		it.Product.PurchasedByMe = true
+		it.Product.CreatedAt = createdAt.UTC().Format(time.RFC3339)
 		it.PurchasedAt = purchasedAt.UTC().Format(time.RFC3339)
 		if thumbnailHash != nil {
 			u := h.Storage.URL(*thumbnailHash, "png")
-			it.ThumbnailURL = &u
+			it.Product.ThumbnailURL = &u
 		}
 		items = append(items, it)
 	}
@@ -543,12 +549,11 @@ func (h *Handler) ListMyProducts(w http.ResponseWriter, r *http.Request) {
 	if hasNext {
 		items = items[:limit]
 	}
-	var nextCursor *string
+	cursor := map[string]any{"next": nil, "hasMore": false}
 	if hasNext && len(items) > 0 {
-		c := items[len(items)-1].RowID
-		nextCursor = &c
+		cursor = map[string]any{"next": items[len(items)-1].ID, "hasMore": true}
 	}
-	response.JSON(w, http.StatusOK, map[string]any{"products": items, "next_cursor": nextCursor})
+	response.ClientJSON(w, http.StatusOK, map[string]any{"products": items, "cursor": cursor})
 }
 
 // ── Creator Info ──────────────────────────────────────────────────────────────
@@ -573,5 +578,5 @@ func (h *Handler) GetCreator(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	resp.CreatedAt = createdAt.UTC().Format(time.RFC3339)
-	response.JSON(w, http.StatusOK, resp)
+	response.ClientJSON(w, http.StatusOK, resp)
 }

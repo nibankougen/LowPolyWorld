@@ -155,7 +155,7 @@ func (h *Handler) handleOAuthCallback(w http.ResponseWriter, r *http.Request, pr
 		return
 	}
 
-	response.JSON(w, http.StatusOK, authResponse{
+	response.ClientJSON(w, http.StatusOK, authResponse{
 		AccessToken:       accessToken,
 		RefreshToken:      plain,
 		ExpiresIn:         int(7 * 24 * time.Hour / time.Second),
@@ -249,7 +249,7 @@ func (h *Handler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.JSON(w, http.StatusOK, authResponse{
+	response.ClientJSON(w, http.StatusOK, authResponse{
 		AccessToken:  newAccess,
 		RefreshToken: newPlain,
 		ExpiresIn:    int(7 * 24 * time.Hour / time.Second),

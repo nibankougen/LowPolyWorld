@@ -132,7 +132,7 @@ func (h *Handler) GetStartup(w http.ResponseWriter, r *http.Request) {
 		worlds = append(worlds, h.buildWorldResponse(id, name, description, thumbnailHash, glbHash, isPublic, maxPlayers, likes, createdAt))
 	}
 
-	response.JSON(w, http.StatusOK, startupResponse{
+	response.ClientJSON(w, http.StatusOK, startupResponse{
 		User:             user,
 		PlanCapabilities: caps,
 		SecurityNotice:   nil,

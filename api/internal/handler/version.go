@@ -13,7 +13,7 @@ type versionResponse struct {
 
 // GetVersion returns the API version compatibility information.
 func (h *Handler) GetVersion(w http.ResponseWriter, r *http.Request) {
-	response.JSON(w, http.StatusOK, versionResponse{
+	response.ClientJSON(w, http.StatusOK, versionResponse{
 		MinCompatibleVersion: h.Cfg.MinAppVersion,
 		LatestVersion:        h.Cfg.AppVersion,
 	})

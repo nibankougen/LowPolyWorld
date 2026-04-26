@@ -20,7 +20,7 @@ type cursorEnvelope struct {
 
 type Cursor struct {
 	Next    string `json:"next"`
-	HasMore bool   `json:"has_more"`
+	HasMore bool   `json:"hasMore"`
 }
 
 type errEnvelope struct {
@@ -61,6 +61,14 @@ func JSON(w http.ResponseWriter, status int, data any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(envelope{Data: data})
+}
+
+// ClientJSON writes JSON without the data-envelope wrapper.
+// Use this for all endpoints consumed by the Unity game client.
+func ClientJSON(w http.ResponseWriter, status int, data any) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	_ = json.NewEncoder(w).Encode(data)
 }
 
 func JSONCursor(w http.ResponseWriter, status int, data any, cursor Cursor) {
