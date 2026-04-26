@@ -10,6 +10,7 @@ public class Bootstrapper : MonoBehaviour
 {
     [Header("Phase A — API 不要マネージャー")]
     [SerializeField] private GameObject _audioManagerPrefab;
+    [SerializeField] private GameObject _iapManagerPrefab;
 
     [Header("Phase B — API 後マネージャー")]
     [SerializeField] private GameObject _userManagerPrefab;
@@ -31,6 +32,9 @@ public class Bootstrapper : MonoBehaviour
         // Phase A managers
         if (_audioManagerPrefab != null && AudioManager.Instance == null)
             Instantiate(_audioManagerPrefab);
+
+        if (_iapManagerPrefab != null && IapManager.Instance == null)
+            Instantiate(_iapManagerPrefab);
 
         // Phase B managers — instantiate here so they persist before API calls
         if (_userManagerPrefab != null && UserManager.Instance == null)

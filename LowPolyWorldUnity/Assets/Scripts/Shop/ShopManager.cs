@@ -88,20 +88,29 @@ public class ShopManager : MonoBehaviour
     /// <param name="sort">null = "popularity" / "likes" / "newest" / "oldest"</param>
     /// <param name="search">名前またはタグ検索文字列（null = 検索なし）</param>
     /// <param name="after">カーソル（null = 先頭）</param>
+    /// <param name="colliderSizeCategory">コライダーサイズフィルター（null = すべて / "small" / "medium" / "large"）</param>
+    /// <param name="textureCostMin">テクスチャコスト下限（null = 制限なし）</param>
+    /// <param name="textureCostMax">テクスチャコスト上限（null = 制限なし）</param>
     public async Task<(ShopProductListResponse result, string error)> FetchProductsAsync(
         string category = null,
         string sort = null,
         string search = null,
         string after = null,
         int limit = 20,
+        string colliderSizeCategory = null,
+        int? textureCostMin = null,
+        int? textureCostMax = null,
         CancellationToken ct = default)
     {
         var sb = new System.Text.StringBuilder("/api/v1/shop/products?limit=");
         sb.Append(limit);
-        if (!string.IsNullOrEmpty(category)) sb.Append("&category=").Append(Uri.EscapeDataString(category));
-        if (!string.IsNullOrEmpty(sort))     sb.Append("&sort=").Append(Uri.EscapeDataString(sort));
-        if (!string.IsNullOrEmpty(search))   sb.Append("&search=").Append(Uri.EscapeDataString(search));
-        if (!string.IsNullOrEmpty(after))    sb.Append("&after=").Append(Uri.EscapeDataString(after));
+        if (!string.IsNullOrEmpty(category))           sb.Append("&category=").Append(Uri.EscapeDataString(category));
+        if (!string.IsNullOrEmpty(sort))               sb.Append("&sort=").Append(Uri.EscapeDataString(sort));
+        if (!string.IsNullOrEmpty(search))             sb.Append("&search=").Append(Uri.EscapeDataString(search));
+        if (!string.IsNullOrEmpty(after))              sb.Append("&after=").Append(Uri.EscapeDataString(after));
+        if (!string.IsNullOrEmpty(colliderSizeCategory)) sb.Append("&collider_size_category=").Append(Uri.EscapeDataString(colliderSizeCategory));
+        if (textureCostMin.HasValue)                   sb.Append("&texture_cost_min=").Append(textureCostMin.Value);
+        if (textureCostMax.HasValue)                   sb.Append("&texture_cost_max=").Append(textureCostMax.Value);
 
         return await UserManager.Instance.Api.GetAsync<ShopProductListResponse>(sb.ToString(), ct);
     }

@@ -104,8 +104,14 @@
 }
 
 .object-filter-row {
-    flex-direction: row;
+    flex-direction: column;
     margin-top: 2px;
+}
+
+.object-subfilter-row {
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin-bottom: 2px;
 }
 
 .filter-btn {
@@ -586,4 +592,87 @@
     font-size: 16px;
     -unity-font-style: bold;
     margin: 12px 16px 4px;
+}
+
+/* ── Coin purchase panel (bottom sheet) ──────────── */
+
+.coin-purchase-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.55);
+    justify-content: flex-end;
+}
+
+.coin-purchase-panel {
+    background-color: rgb(28, 28, 42);
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+    padding: 0 0 16px;
+    max-height: 80%;
+    flex-direction: column;
+}
+
+.coin-purchase-header {
+    flex-direction: row;
+    align-items: center;
+    padding: 16px 16px 12px;
+    border-bottom-width: 1px;
+    border-bottom-color: rgb(50, 50, 70);
+}
+
+.coin-purchase-title {
+    flex: 1;
+    font-size: 17px;
+    -unity-font-style: bold;
+    color: rgb(240, 240, 255);
+}
+
+.coin-pack-scroll {
+    flex: 1;
+}
+
+.coin-pack-list {
+    flex-direction: column;
+    padding: 0 16px;
+}
+
+.coin-pack-row {
+    flex-direction: row;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom-width: 1px;
+    border-bottom-color: rgb(40, 40, 60);
+}
+
+.coin-pack-label {
+    flex: 1;
+    font-size: 14px;
+    -unity-font-style: bold;
+    color: rgb(240, 200, 80);
+}
+
+.coin-pack-price {
+    font-size: 13px;
+    color: rgb(180, 180, 200);
+    margin-right: 12px;
+}
+
+.coin-pack-buy-btn {
+    width: 64px;
+    height: 32px;
+    border-radius: 16px;
+    background-color: rgb(100, 140, 255);
+    border-width: 0;
+    color: rgb(255, 255, 255);
+    font-size: 13px;
+    -unity-font-style: bold;
+    padding: 0;
+}
+
+.coin-pack-buy-btn:disabled {
+    background-color: rgb(50, 55, 80);
+    color: rgb(100, 100, 130);
 }

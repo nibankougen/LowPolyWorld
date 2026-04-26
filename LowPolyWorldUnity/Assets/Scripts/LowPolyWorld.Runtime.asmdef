@@ -8,7 +8,9 @@
         "glTFast",
         "Unity.Netcode.Runtime",
         "Unity.Localization",
-        "Unity.Services.Vivox"
+        "Unity.Services.Vivox",
+        "UnityEngine.Purchasing",
+        "UnityEngine.Purchasing.Stores"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -68,8 +68,10 @@ func (h *Handler) GetCoinBalance(w http.ResponseWriter, r *http.Request) {
 	balance := rawTotal - deducted - spent
 
 	response.JSON(w, http.StatusOK, map[string]any{
-		"balance": balance,
-		"lots":    lots,
+		"balance":        balance,
+		"lots":           lots,
+		"total_deducted": deducted,
+		"total_spent":    spent,
 	})
 }
 
@@ -97,9 +99,16 @@ func (h *Handler) RecordCoinPurchase(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if req.PlatformTransactionID == "" || req.CoinsAmount <= 0 ||
-		req.LocalAmount <= 0 || req.FxRateToJpy <= 0 || req.StorefrontCountry == "" || req.LocalCurrency == "" {
+		req.LocalAmount <= 0 || req.LocalCurrency == "" {
 		response.Error(w, r, http.StatusBadRequest, "INVALID_PARAMS", "missing or invalid required fields")
 		return
+	}
+	if req.StorefrontCountry == "" {
+		req.StorefrontCountry = "unknown"
+	}
+	if req.FxRateToJpy <= 0 {
+		// Default to 1.0 when client cannot obtain exchange rate (e.g. JPY storefronts)
+		req.FxRateToJpy = 1.0
 	}
 
 	// Lookup active platform fee rate (NULL if none configured — column is nullable)

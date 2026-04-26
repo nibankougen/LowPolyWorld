@@ -29,10 +29,18 @@
             </ui:VisualElement>
             <!-- オブジェクトタブのみ表示するフィルター -->
             <ui:VisualElement name="object-filter-row" class="object-filter-row" style="display: none;">
-                <ui:Button name="filter-size-all"    class="filter-btn filter-btn--active" text="全サイズ" />
-                <ui:Button name="filter-size-small"  class="filter-btn" text="小" />
-                <ui:Button name="filter-size-medium" class="filter-btn" text="中" />
-                <ui:Button name="filter-size-large"  class="filter-btn" text="大" />
+                <ui:VisualElement class="object-subfilter-row">
+                    <ui:Button name="filter-size-all"    class="filter-btn filter-btn--active" text="全サイズ" />
+                    <ui:Button name="filter-size-small"  class="filter-btn" text="小" />
+                    <ui:Button name="filter-size-medium" class="filter-btn" text="中" />
+                    <ui:Button name="filter-size-large"  class="filter-btn" text="大" />
+                </ui:VisualElement>
+                <ui:VisualElement class="object-subfilter-row">
+                    <ui:Button name="filter-cost-all"  class="filter-btn filter-btn--active" text="全コスト" />
+                    <ui:Button name="filter-cost-low"  class="filter-btn" text="低(〜4)" />
+                    <ui:Button name="filter-cost-mid"  class="filter-btn" text="中(〜64)" />
+                    <ui:Button name="filter-cost-high" class="filter-btn" text="高(256〜)" />
+                </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
 
@@ -151,6 +159,19 @@
 
                 <!-- 購入ボタン -->
                 <ui:Button name="btn-buy-coins" class="coin-buy-btn" text="コインを購入" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- コイン購入パネル（ボトムシート） -->
+        <ui:VisualElement name="coin-purchase-backdrop" class="coin-purchase-backdrop" style="display: none;">
+            <ui:VisualElement name="coin-purchase-panel" class="coin-purchase-panel">
+                <ui:VisualElement class="coin-purchase-header">
+                    <ui:Label class="coin-purchase-title" text="コインを購入" />
+                    <ui:Button name="btn-coin-purchase-close" class="coin-detail-close-btn" text="×" />
+                </ui:VisualElement>
+                <ui:ScrollView name="coin-pack-scroll" class="coin-pack-scroll">
+                    <ui:VisualElement name="coin-pack-list" class="coin-pack-list" />
+                </ui:ScrollView>
             </ui:VisualElement>
         </ui:VisualElement>
 

@@ -310,15 +310,24 @@ Unity Localization の String Table に取り込む CSV 形式で用意する。
 
 | ✅ | ファイル名 | 配置先 |
 |---|---|---|
-| ☐ | NotoSansCJK-Regular.otf（または .ttf） | `LowPolyWorldUnity/Assets/Fonts/NotoSansCJK-Regular.otf` |
-| ☐ | NotoSansCJK-Bold.otf（任意・太字用） | `LowPolyWorldUnity/Assets/Fonts/NotoSansCJK-Bold.otf` |
+| ☐ | NotoSansJP-Regular.otf | `LowPolyWorldUnity/Assets/Fonts/NotoSansJP-Regular.otf` |
+| ☐ | NotoSansSC-Regular.otf | `LowPolyWorldUnity/Assets/Fonts/NotoSansSC-Regular.otf` |
+| ☐ | NotoSansTC-Regular.otf | `LowPolyWorldUnity/Assets/Fonts/NotoSansTC-Regular.otf` |
+| ☐ | NotoSansKR-Regular.otf | `LowPolyWorldUnity/Assets/Fonts/NotoSansKR-Regular.otf` |
 
 **推奨フォント:**
-- **Noto Sans CJK**（Google Fonts / SIL Open Font License・無償）
-  - https://fonts.google.com/noto/specimen/Noto+Sans+JP
-  - 日本語・簡体字・繁体字・韓国語・ラテン文字を 1 フォントでカバー
+- **Noto Sans CJK — Region Specific Subset OTFs**（SIL Open Font License・無償）
+  - https://github.com/googlefonts/noto-cjk/releases から **Noto Sans CJK** のリリースを選ぶ（Noto Serif CJK は別物なので注意）
+  - 「Region Specific Subset OTFs」の各言語分（Japanese / Simplified Chinese / Traditional Chinese Taiwan / Korean）を個別にダウンロード
+  - ※ Noto Sans JP 単体は日本語のみのため不可。4 言語セットで揃えること
 
-**注意:** Unity の TextMeshPro で使用するため、フォントインポート後に TMP Font Asset を生成すること。
+**TextMeshPro での使い方:**
+1. 4 つの OTF を Unity にインポートする
+2. 各言語ごとに TMP Font Asset Creator で Font Asset を生成する（事前に必要文字セット CSV を用意するか Dynamic Atlas を使用）
+3. TextMeshPro の Fallback Font Assets リストを `JP → SC → TC → KR` の順で設定する
+4. デフォルト TMP Settings の Fallback にも同じリストを登録する
+
+**注意:** TextMeshPro は Font Asset を事前生成するためソースファイル（35〜66 MB）はビルドに含まれない。Font Asset のサイズは収録文字数によって変わる。
 
 ---
 

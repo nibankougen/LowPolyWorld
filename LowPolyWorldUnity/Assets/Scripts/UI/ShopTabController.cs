@@ -36,6 +36,10 @@ public class ShopTabController : IDisposable
     private readonly Button _filterSizeSmall;
     private readonly Button _filterSizeMedium;
     private readonly Button _filterSizeLarge;
+    private readonly Button _filterCostAll;
+    private readonly Button _filterCostLow;
+    private readonly Button _filterCostMid;
+    private readonly Button _filterCostHigh;
 
     private readonly ScrollView _premiumScroll;
     private readonly Button _btnBuyAnnual;
@@ -58,6 +62,9 @@ public class ShopTabController : IDisposable
     private readonly VisualElement _coinLotList;
     private readonly VisualElement _coinLotEmpty;
 
+    private readonly VisualElement _coinPurchaseBackdrop;
+    private readonly VisualElement _coinPackList;
+
     private readonly VisualElement _errorToast;
     private readonly Label _errorToastLabel;
 
@@ -65,14 +72,18 @@ public class ShopTabController : IDisposable
 
     private Category _currentCategory;
     private SortMode _currentSort = SortMode.Popularity;
-    private string _currentColliderFilter = null; // null = all
+    private string _currentColliderFilter = null;   // null = all
+    private int? _currentTextureCostMin = null;
+    private int? _currentTextureCostMax = null;
     private string _searchText = "";
     private string _cursor = null;
     private bool _hasMore = false;
     private bool _isLoading = false;
     private bool _coinDetailVisible = false;
+    private bool _coinPurchaseVisible = false;
     private readonly List<ShopProductResponse> _loadedProducts = new();
     private readonly List<(ShopProductResponse product, Button btn)> _purchaseBtns = new();
+    private readonly List<(string productId, Label priceLabel, Button buyBtn)> _coinPackRows = new();
 
     private CancellationTokenSource _cts = new();
     private IVisualElementScheduledItem _toastSchedule;
@@ -101,6 +112,10 @@ public class ShopTabController : IDisposable
         _filterSizeSmall   = root.Q<Button>("filter-size-small");
         _filterSizeMedium  = root.Q<Button>("filter-size-medium");
         _filterSizeLarge   = root.Q<Button>("filter-size-large");
+        _filterCostAll     = root.Q<Button>("filter-cost-all");
+        _filterCostLow     = root.Q<Button>("filter-cost-low");
+        _filterCostMid     = root.Q<Button>("filter-cost-mid");
+        _filterCostHigh    = root.Q<Button>("filter-cost-high");
 
         _premiumScroll     = root.Q<ScrollView>("premium-scroll");
         _btnBuyAnnual      = root.Q<Button>("btn-buy-annual");
@@ -122,6 +137,9 @@ public class ShopTabController : IDisposable
         _coinDetailWarning  = root.Q<VisualElement>("coin-detail-warning");
         _coinLotList        = root.Q<VisualElement>("coin-lot-list");
         _coinLotEmpty       = root.Q<VisualElement>("coin-lot-empty");
+
+        _coinPurchaseBackdrop = root.Q<VisualElement>("coin-purchase-backdrop");
+        _coinPackList         = root.Q<VisualElement>("coin-pack-list");
 
         _errorToast      = root.Q<VisualElement>("error-toast");
         _errorToastLabel = root.Q<Label>("error-toast-label");
@@ -153,6 +171,11 @@ public class ShopTabController : IDisposable
         _filterSizeMedium.clicked += () => SelectColliderFilter("medium");
         _filterSizeLarge.clicked  += () => SelectColliderFilter("large");
 
+        _filterCostAll.clicked  += () => SelectTextureCostFilter(null, null);
+        _filterCostLow.clicked  += () => SelectTextureCostFilter(null, 4);
+        _filterCostMid.clicked  += () => SelectTextureCostFilter(16, 64);
+        _filterCostHigh.clicked += () => SelectTextureCostFilter(256, null);
+
         _searchInput.RegisterValueChangedCallback(evt =>
         {
             _searchText = evt.newValue ?? "";
@@ -174,8 +197,24 @@ public class ShopTabController : IDisposable
         });
         _root.Q<Button>("btn-buy-coins").clicked += OnBuyCoinsClicked;
 
+        // コイン購入パネル
+        _root.Q<Button>("btn-coin-purchase-close").clicked += HideCoinPurchasePanel;
+        _coinPurchaseBackdrop.RegisterCallback<ClickEvent>(evt =>
+        {
+            if (evt.target == _coinPurchaseBackdrop)
+                HideCoinPurchasePanel();
+        });
+
         if (ShopManager.Instance != null)
             ShopManager.Instance.OnCoinBalanceChanged += UpdateCoinBalance;
+
+        if (IapManager.Instance != null)
+        {
+            IapManager.Instance.OnStoreReady           += OnIapStoreReady;
+            IapManager.Instance.OnStoreFailed          += OnIapStoreFailed;
+            IapManager.Instance.OnCoinPurchaseCompleted += OnCoinPurchaseCompleted;
+            IapManager.Instance.StorePurchaseFailed     += OnStorePurchaseFailed;
+        }
     }
 
     // ── Category ──────────────────────────────────────────────────────────────
@@ -240,6 +279,19 @@ public class ShopTabController : IDisposable
         SetFilterActive(_filterSizeSmall,  size == "small");
         SetFilterActive(_filterSizeMedium, size == "medium");
         SetFilterActive(_filterSizeLarge,  size == "large");
+        ReloadProducts();
+    }
+
+    // ── Texture cost filter (object tab only) ─────────────────────────────────
+
+    private void SelectTextureCostFilter(int? min, int? max)
+    {
+        _currentTextureCostMin = min;
+        _currentTextureCostMax = max;
+        SetFilterActive(_filterCostAll,  min == null && max == null);
+        SetFilterActive(_filterCostLow,  min == null && max == 4);
+        SetFilterActive(_filterCostMid,  min == 16 && max == 64);
+        SetFilterActive(_filterCostHigh, min == 256 && max == null);
         ReloadProducts();
     }
 
@@ -349,8 +401,112 @@ public class ShopTabController : IDisposable
 
     private void OnBuyCoinsClicked()
     {
-        // コイン購入画面への遷移（Unity IAP 実装後に接続）
-        Debug.Log("[ShopTabController] Buy coins: Unity IAP not yet initialized.");
+        HideCoinDetail();
+        ShowCoinPurchasePanel();
+    }
+
+    // ── Coin purchase panel ───────────────────────────────────────────────────
+
+    private void ShowCoinPurchasePanel()
+    {
+        _coinPurchaseVisible = true;
+        PopulateCoinPackList();
+        _coinPurchaseBackdrop.style.display = DisplayStyle.Flex;
+    }
+
+    private void HideCoinPurchasePanel()
+    {
+        _coinPurchaseVisible = false;
+        _coinPurchaseBackdrop.style.display = DisplayStyle.None;
+    }
+
+    private void PopulateCoinPackList()
+    {
+        _coinPackList.Clear();
+        _coinPackRows.Clear();
+
+        bool iapFailed = IapManager.Instance?.IsInitializeFailed ?? false;
+
+        foreach (var productId in IapProductIds.AllCoinProductIds)
+        {
+            int coins = IapProductIds.CoinsForProductId(productId);
+            string price = IapManager.Instance?.GetLocalizedPrice(productId);
+
+            var row = new VisualElement();
+            row.AddToClassList("coin-pack-row");
+
+            var coinLabel = new Label { text = $"🪙 {coins:N0}" };
+            coinLabel.AddToClassList("coin-pack-label");
+
+            var priceLabel = new Label
+            {
+                text = price ?? (iapFailed ? "価格を取得できませんでした" : "取得中..."),
+            };
+            priceLabel.AddToClassList("coin-pack-price");
+
+            var buyBtn = new Button { text = "購入" };
+            buyBtn.AddToClassList("coin-pack-buy-btn");
+            buyBtn.SetEnabled(price != null);
+
+            string captured = productId;
+            buyBtn.clicked += () => OnCoinPackBuyClicked(captured);
+
+            row.Add(coinLabel);
+            row.Add(priceLabel);
+            row.Add(buyBtn);
+            _coinPackList.Add(row);
+            _coinPackRows.Add((productId, priceLabel, buyBtn));
+        }
+    }
+
+    private void RefreshCoinPackPrices()
+    {
+        bool iapFailed = IapManager.Instance?.IsInitializeFailed ?? false;
+        foreach (var (productId, priceLabel, buyBtn) in _coinPackRows)
+        {
+            string price = IapManager.Instance?.GetLocalizedPrice(productId);
+            priceLabel.text = price ?? (iapFailed ? "価格を取得できませんでした" : "取得中...");
+            buyBtn.SetEnabled(price != null);
+        }
+    }
+
+    private void OnCoinPackBuyClicked(string productId)
+    {
+        if (IapManager.Instance == null || !IapManager.Instance.IsInitialized) return;
+
+        // 購入中は全ボタンを無効化（重複タップ防止）
+        foreach (var (_, _, btn) in _coinPackRows)
+            btn.SetEnabled(false);
+
+        IapManager.Instance.BuyProduct(productId);
+    }
+
+    private void OnIapStoreReady()
+    {
+        if (_coinPurchaseVisible)
+            RefreshCoinPackPrices();
+        if (_currentCategory == Category.Premium)
+            RefreshPremiumTab();
+    }
+
+    private void OnIapStoreFailed()
+    {
+        if (_coinPurchaseVisible)
+            RefreshCoinPackPrices();
+        if (_currentCategory == Category.Premium)
+            RefreshPremiumTab();
+    }
+
+    private void OnCoinPurchaseCompleted(int coins)
+    {
+        HideCoinPurchasePanel();
+        // コイン残高は ShopManager.OnCoinBalanceChanged 経由で自動更新される
+    }
+
+    private void OnStorePurchaseFailed(string productId)
+    {
+        // 購入失敗時はボタンを再有効化
+        RefreshCoinPackPrices();
     }
 
     // ── Premium tab ───────────────────────────────────────────────────────────
@@ -366,10 +522,21 @@ public class ShopTabController : IDisposable
             _nextRenewalLabel.text = "";
         }
 
-        // 価格は Unity IAP 実装後に設定する（Phase 8 後続タスク）
-        _planAnnualPrice.text   = "価格を取得できませんでした";
-        _planMonthlyPrice.text  = "価格を取得できませんでした";
+        bool iapReady  = IapManager.Instance?.IsInitialized ?? false;
+        bool iapFailed = IapManager.Instance?.IsInitializeFailed ?? false;
+        string fallback = iapFailed ? "価格を取得できませんでした" : "価格を取得中...";
+
+        _planAnnualPrice.text  = (iapReady
+            ? IapManager.Instance.GetLocalizedPrice(IapProductIds.PremiumYearly)
+            : null) ?? fallback;
+
+        _planMonthlyPrice.text = (iapReady
+            ? IapManager.Instance.GetLocalizedPrice(IapProductIds.PremiumMonthly)
+            : null) ?? fallback;
+
         _planAnnualMonthly.text = "";
+
+        // サブスクリプション購入フローは Phase 10 で配線
         _btnBuyAnnual.SetEnabled(false);
         _btnBuyMonthly.SetEnabled(false);
     }
@@ -430,14 +597,15 @@ public class ShopTabController : IDisposable
             };
             string search = string.IsNullOrWhiteSpace(_searchText) ? null : _searchText.Trim();
 
-            // コライダーフィルターはサーバー側クエリパラメータで絞り込む
-            // （ShopManager が collider_size_category パラメータを追加する必要があるが、
-            //  現バージョンは FetchProductsAsync がまだ対応していないため、取得後クライアント側で絞る）
+            bool isObjectTab = _currentCategory == Category.Object;
             var (res, err) = await ShopManager.Instance.FetchProductsAsync(
                 category: categoryParam,
                 sort: sortParam,
                 search: search,
                 after: _cursor,
+                colliderSizeCategory: isObjectTab ? _currentColliderFilter : null,
+                textureCostMin: isObjectTab ? _currentTextureCostMin : null,
+                textureCostMax: isObjectTab ? _currentTextureCostMax : null,
                 ct: ct);
 
             if (ct.IsCancellationRequested) return;
@@ -449,14 +617,6 @@ public class ShopTabController : IDisposable
             }
 
             var items = res.products ?? new List<ShopProductResponse>();
-
-            // オブジェクトタブのコライダーサイズフィルタリング（クライアント側）
-            if (_currentCategory == Category.Object && _currentColliderFilter != null)
-            {
-                items = items.FindAll(p =>
-                    string.Equals(p.colliderSizeCategory, _currentColliderFilter,
-                        StringComparison.OrdinalIgnoreCase));
-            }
 
             foreach (var product in items)
             {
@@ -732,10 +892,19 @@ public class ShopTabController : IDisposable
         _cts.Dispose();
         _toastSchedule?.Pause();
         _purchaseBtns.Clear();
+        _coinPackRows.Clear();
 
         _productScroll.verticalScroller.valueChanged -= OnScrollChanged;
 
         if (ShopManager.Instance != null)
             ShopManager.Instance.OnCoinBalanceChanged -= UpdateCoinBalance;
+
+        if (IapManager.Instance != null)
+        {
+            IapManager.Instance.OnStoreReady            -= OnIapStoreReady;
+            IapManager.Instance.OnStoreFailed           -= OnIapStoreFailed;
+            IapManager.Instance.OnCoinPurchaseCompleted -= OnCoinPurchaseCompleted;
+            IapManager.Instance.StorePurchaseFailed      -= OnStorePurchaseFailed;
+        }
     }
 }
