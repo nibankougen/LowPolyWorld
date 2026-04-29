@@ -50,12 +50,18 @@ public class RefreshRequest
 [Serializable]
 public class PlanCapabilities
 {
-    public int max_avatars;
-    public int max_accessories;
-    public int max_players_limit;
-    public int saved_world_object_variants;
-    public bool name_change;
-    public bool invite_room_create;
+    public int avatarSlots;
+    public int accessorySlots;
+    public int worldSlots;
+    public int variantSlots;
+    public int myObjectSlots;
+    public int friendLimit;
+    public int maxPlayersLimit;
+    public int sessionMinutes;
+    public bool afkEnabled;
+    public bool backgroundCall;
+    public bool inviteRoomCreate;
+    public bool nameChange;
 }
 
 [Serializable]

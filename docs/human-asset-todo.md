@@ -287,14 +287,14 @@ Unity Localization の String Table に取り込む CSV 形式で用意する。
 
 | ✅ | 言語コード | 言語 |
 |---|---|---|
-| ☐ | zh-Hans | 中国語（簡体字） |
-| ☐ | zh-Hant | 中国語（繁体字） |
-| ☐ | ko | 韓国語 |
-| ☐ | fr | フランス語 |
-| ☐ | es | スペイン語 |
-| ☐ | it | イタリア語 |
-| ☐ | de | ドイツ語 |
-| ☐ | pt-BR | ポルトガル語（ブラジル） |
+| ✅ | zh-Hans | 中国語（簡体字） |
+| ✅ | zh-Hant | 中国語（繁体字） |
+| ✅ | ko | 韓国語 |
+| ✅ | fr | フランス語 |
+| ✅ | es | スペイン語 |
+| ✅ | it | イタリア語 |
+| ✅ | de | ドイツ語 |
+| ✅ | pt-BR | ポルトガル語（ブラジル） |
 
 **作業手順:**
 1. Unity Localization の String Table から全キーと日本語・英語テキストを CSV エクスポート
@@ -310,10 +310,10 @@ Unity Localization の String Table に取り込む CSV 形式で用意する。
 
 | ✅ | ファイル名 | 配置先 |
 |---|---|---|
-| ☐ | NotoSansJP-Regular.otf | `LowPolyWorldUnity/Assets/Fonts/NotoSansJP-Regular.otf` |
-| ☐ | NotoSansSC-Regular.otf | `LowPolyWorldUnity/Assets/Fonts/NotoSansSC-Regular.otf` |
-| ☐ | NotoSansTC-Regular.otf | `LowPolyWorldUnity/Assets/Fonts/NotoSansTC-Regular.otf` |
-| ☐ | NotoSansKR-Regular.otf | `LowPolyWorldUnity/Assets/Fonts/NotoSansKR-Regular.otf` |
+| ✅ | NotoSansJP-Regular.otf | `LowPolyWorldUnity/Assets/Fonts/NotoSansJP-Regular.otf` |
+| ✅ | NotoSansSC-Regular.otf | `LowPolyWorldUnity/Assets/Fonts/NotoSansSC-Regular.otf` |
+| ✅ | NotoSansTC-Regular.otf | `LowPolyWorldUnity/Assets/Fonts/NotoSansTC-Regular.otf` |
+| ✅ | NotoSansKR-Regular.otf | `LowPolyWorldUnity/Assets/Fonts/NotoSansKR-Regular.otf` |
 
 **推奨フォント:**
 - **Noto Sans CJK — Region Specific Subset OTFs**（SIL Open Font License・無償）
@@ -339,13 +339,12 @@ Unity Localization の String Table に取り込む CSV 形式で用意する。
 
 | ✅ | ファイル名 | 用途 |
 |---|---|---|
-| ☐ | StampFont_Regular.otf | スタンプ用フォント（通常） |
-| ☐ | StampFont_Bold.otf（任意） | スタンプ用フォント（太字） |
+| ✅ | rounded-mplus-2m-regular.ttf | スタンプ用フォント（通常） |
+| ✅ | rounded-mplus-2m-bold.ttf | スタンプ用フォント（太字） |
 
 **仕様:**
 - 日本語・英数字・記号を含むこと（CJK 対応必須）
 - ライセンス: 商用利用可・アプリへの同梱可のもの
-- 推奨: **Noto Sans JP**（CJKフォントと同じファミリーで代用可）または装飾的な和文フォント
 - Unity の TextMeshPro で使用するため、インポート後に TMP Font Asset を生成すること
 
 ---
@@ -358,12 +357,11 @@ Unity Localization の String Table に取り込む CSV 形式で用意する。
 
 | ✅ | ファイル名（例） | 内容 |
 |---|---|---|
-| ☐ | stamp_heart.png | ハートマーク |
-| ☐ | stamp_star.png | 星 |
-| ☐ | stamp_speech_bubble.png | 吹き出し（空白） |
-| ☐ | stamp_crown.png | 王冠 |
-| ☐ | stamp_rainbow.png | 虹 |
-| ☐ | （プレミアム限定） stamp_premium_*.png | プレミアム限定スタンプ（種類は任意） |
+| ✅ | stamp_heart.png | ハートマーク |
+| ✅ | stamp_speech_bubble.png | 吹き出し（空白） |
+| ✅ | stamp_crown.png | 王冠 |
+| ✅ | stamp_rainbow.png | 虹 |
+| ✅ | （プレミアム限定） stamp_premium_*.png | プレミアム限定スタンプ（種類は任意） |
 
 **仕様:**
 - 形式: PNG（アルファチャンネルあり・背景透明）

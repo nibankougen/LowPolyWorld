@@ -71,7 +71,7 @@ public static class IapProductIds
         _ => 0,
     };
 
-    // ── Subscriptions (non-consumable) ────────────────────────────────────────
+    // ── Subscriptions ─────────────────────────────────────────────────────────
 
     public const string PremiumMonthly = Prefix + ".premium_monthly";
     public const string PremiumYearly  = Prefix + ".premium_yearly";

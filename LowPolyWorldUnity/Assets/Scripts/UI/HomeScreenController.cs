@@ -165,7 +165,7 @@ public class HomeScreenController : MonoBehaviour
         content.style.flexGrow = 1;
         _contentArea.Add(content);
 
-        var hasPremium = UserManager.Instance?.Capabilities?.invite_room_create ?? false;
+        var hasPremium = UserManager.Instance?.Capabilities?.inviteRoomCreate ?? false;
         _roomListController = new RoomListController(content, UserManager.Instance.Api, _currentWorld, hasPremium);
         _roomListController.OnBack += () => ShowWorldDetail(_currentWorld);
         _roomListController.OnEnterWorld += EnterWorld;
