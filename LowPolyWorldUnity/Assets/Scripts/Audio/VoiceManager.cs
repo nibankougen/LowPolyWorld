@@ -154,6 +154,13 @@ public class VoiceManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 指定 vivoxId のユーザーが現在発話中か（Vivox SpeechDetected を参照）。
+    /// VoiceIndicatorController から毎フレーム呼び出す。
+    /// </summary>
+    public bool IsTalking(string vivoxId)
+        => _participants.TryGetValue(vivoxId, out var p) && p.SpeechDetected;
+
     // ── Vivox 参加者イベント ─────────────────────────────────────────────────
 
     private void SubscribeParticipantEvents()
