@@ -15,6 +15,7 @@ public class Bootstrapper : MonoBehaviour
     [Header("Phase B — API 後マネージャー")]
     [SerializeField] private GameObject _userManagerPrefab;
     [SerializeField] private GameObject _cacheManagerPrefab;
+    [SerializeField] private GameObject _notificationManagerPrefab;
     [SerializeField] private GameObject _hideManagerPrefab;
     [SerializeField] private GameObject _followManagerPrefab;
     [SerializeField] private GameObject _friendManagerPrefab;
@@ -45,6 +46,9 @@ public class Bootstrapper : MonoBehaviour
 
         if (_cacheManagerPrefab != null && CacheManager.Instance == null)
             Instantiate(_cacheManagerPrefab);
+
+        if (_notificationManagerPrefab != null && NotificationManager.Instance == null)
+            Instantiate(_notificationManagerPrefab);
 
         if (_hideManagerPrefab != null && HideManager.Instance == null)
             Instantiate(_hideManagerPrefab);

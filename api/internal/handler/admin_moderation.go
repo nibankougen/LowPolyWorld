@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"strconv"
@@ -200,6 +201,13 @@ func (h *Handler) AdminPatchWorld(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Fetch current is_public and world info before updating
+	var wasPublic bool
+	var worldName, ownerUserID string
+	_ = h.DB.QueryRow(r.Context(),
+		`SELECT is_public, name, owner_user_id::text FROM worlds WHERE id = $1`, worldID,
+	).Scan(&wasPublic, &worldName, &ownerUserID)
+
 	tag, err := h.DB.Exec(r.Context(),
 		`UPDATE worlds SET is_public = $1, updated_at = now() WHERE id = $2`,
 		*body.IsPublic, worldID,
@@ -207,6 +215,11 @@ func (h *Handler) AdminPatchWorld(w http.ResponseWriter, r *http.Request) {
 	if err != nil || tag.RowsAffected() == 0 {
 		response.Error(w, r, http.StatusNotFound, "not_found", "world not found")
 		return
+	}
+
+	// Notify followers when a world is published for the first time in this session
+	if *body.IsPublic && !wasPublic && ownerUserID != "" {
+		go notifyFollowersWorldPublished(context.Background(), h, ownerUserID, worldID, worldName)
 	}
 
 	action := "admin_disable_world"

@@ -198,7 +198,7 @@ public class CreateRoomRequest
     public string language;
 }
 
-// ── Social ────────────────────────────────────────────────────────────────────
+// ── Social / Invite / Notification ───────────────────────────────────────────
 
 [Serializable]
 public class UserSummaryResponse
@@ -231,6 +231,51 @@ public class RoomListResponse
 {
     public List<RoomResponse> data;
     public CursorResponse cursor;
+}
+
+[Serializable]
+public class HiddenWorldsResponse
+{
+    public List<string> worldIds;
+}
+
+[Serializable]
+public class PublicUserResponse
+{
+    public string id;
+    public string displayName;
+    public string name;
+    public int followerCount;
+    public int followingCount;
+    public string createdAt;
+}
+
+[Serializable]
+public class InviteLinkResponse
+{
+    public string token;
+    public string roomId;
+    public int maxUses;
+    public int useCount;
+    public string expiresAt;
+    public string createdAt;
+}
+
+[Serializable]
+public class NotificationResponse
+{
+    public string id;
+    public string type; // "friend_request" | "world_published" | "product_released" | "coin_expiry_30d" | "coin_expiry_7d"
+    public string body;
+    public string refId;
+    public bool isRead;
+    public string createdAt;
+}
+
+[Serializable]
+public class NotificationListResponse
+{
+    public List<NotificationResponse> notifications;
 }
 
 // ── Shop ─────────────────────────────────────────────────────────────────────

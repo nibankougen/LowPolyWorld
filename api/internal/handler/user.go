@@ -273,10 +273,12 @@ func (h *Handler) UpdateDisplayName(w http.ResponseWriter, r *http.Request) {
 }
 
 type publicUserResponse struct {
-	ID          string `json:"id"`
-	DisplayName string `json:"displayName"`
-	Name        string `json:"name,omitempty"`
-	CreatedAt   string `json:"createdAt"`
+	ID             string `json:"id"`
+	DisplayName    string `json:"displayName"`
+	Name           string `json:"name,omitempty"`
+	FollowerCount  int    `json:"followerCount"`
+	FollowingCount int    `json:"followingCount"`
+	CreatedAt      string `json:"createdAt"`
 }
 
 // GetPublicUser handles GET /api/v1/users/{userID} — public profile, returns 404 for deleted accounts.
@@ -288,12 +290,14 @@ func (h *Handler) GetPublicUser(w http.ResponseWriter, r *http.Request) {
 	var createdAt time.Time
 
 	err := h.DB.QueryRow(r.Context(),
-		`SELECT au.user_id, au.display_name, au.name, u.created_at
+		`SELECT au.user_id, au.display_name, au.name, u.created_at,
+		        (SELECT count(*) FROM follows WHERE followee_id = au.user_id) AS follower_count,
+		        (SELECT count(*) FROM follows WHERE follower_id = au.user_id) AS following_count
 		 FROM active_users au
 		 JOIN users u ON u.id = au.user_id
 		 WHERE au.user_id = $1 AND au.deleted_at IS NULL`,
 		targetID,
-	).Scan(&resp.ID, &displayName, &name, &createdAt)
+	).Scan(&resp.ID, &displayName, &name, &createdAt, &resp.FollowerCount, &resp.FollowingCount)
 	if err != nil {
 		response.Error(w, r, http.StatusNotFound, "not_found", "user not found")
 		return
@@ -306,7 +310,7 @@ func (h *Handler) GetPublicUser(w http.ResponseWriter, r *http.Request) {
 	}
 	resp.CreatedAt = createdAt.UTC().Format(time.RFC3339)
 
-	response.JSON(w, http.StatusOK, resp)
+	response.ClientJSON(w, http.StatusOK, resp)
 }
 
 // validateName returns validation error details for the given (already-lowercased) name.

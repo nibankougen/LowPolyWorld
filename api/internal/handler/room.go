@@ -52,7 +52,7 @@ func (h *Handler) ListRooms(w http.ResponseWriter, r *http.Request) {
 		        (SELECT count(*) FROM room_members rm WHERE rm.room_id = r.id) AS current_players,
 		        r.created_at
 		 FROM rooms r
-		 WHERE r.world_id = $1 AND r.room_type = 'public'
+		 WHERE r.world_id = $1 AND r.room_type = 'public' AND r.state = 'open'
 		 ORDER BY (r.language = $2) DESC, r.created_at ASC`,
 		worldID, userLanguage,
 	)
@@ -171,25 +171,69 @@ func (h *Handler) CreateRoom(w http.ResponseWriter, r *http.Request) {
 }
 
 // JoinRoom handles POST /api/v1/rooms/{roomID}/join — joins a specific room by ID.
-// Returns 404 if the room doesn't exist, 409 if at capacity.
+// Returns 404 if the room doesn't exist, 409 if at capacity or locked/closed.
 // Uses a CTE for an atomic capacity check + insert to avoid TOCTOU races.
 func (h *Handler) JoinRoom(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.UserIDFromContext(r.Context())
 	roomID := chi.URLParam(r, "roomID")
 
-	// Verify room exists
+	// Verify room exists and fetch state + creator
 	var rm roomResponse
 	var createdAt time.Time
+	var roomState, creatorUserID string
 	err := h.DB.QueryRow(r.Context(),
-		`SELECT r.id, r.world_id, r.room_type, r.language, r.max_players, r.created_at
+		`SELECT r.id, r.world_id, r.room_type, r.language, r.max_players, r.created_at,
+		        r.state, r.creator_user_id
 		 FROM rooms r WHERE r.id = $1`,
 		roomID,
-	).Scan(&rm.ID, &rm.WorldID, &rm.RoomType, &rm.Language, &rm.MaxPlayers, &createdAt)
+	).Scan(&rm.ID, &rm.WorldID, &rm.RoomType, &rm.Language, &rm.MaxPlayers, &createdAt,
+		&roomState, &creatorUserID)
 	if err != nil {
 		response.Error(w, r, http.StatusNotFound, "not_found", "room not found")
 		return
 	}
 	rm.CreatedAt = createdAt.UTC().Format(time.RFC3339)
+
+	// Reject locked/closed rooms
+	if roomState != "open" {
+		response.Error(w, r, http.StatusConflict, "room_not_open", "room is no longer accepting new members")
+		return
+	}
+
+	// invite_only rooms must be joined via invite link
+	if rm.RoomType == "invite_only" {
+		response.Error(w, r, http.StatusForbidden, "invite_only", "this room requires an invite link to join")
+		return
+	}
+
+	// friends_only: joiner must be friends with creator (or is the creator)
+	if rm.RoomType == "friends_only" && userID != creatorUserID {
+		var isFriend bool
+		_ = h.DB.QueryRow(r.Context(),
+			`SELECT EXISTS(
+			     SELECT 1 FROM friend_requests
+			     WHERE requester_id = $1 AND addressee_id = $2 AND status = 'accepted'
+			 )`,
+			userID, creatorUserID,
+		).Scan(&isFriend)
+		if !isFriend {
+			response.Error(w, r, http.StatusForbidden, "friends_only", "you must be friends with the room creator to join")
+			return
+		}
+	}
+
+	// followers_only: joiner must follow the creator (or is the creator)
+	if rm.RoomType == "followers_only" && userID != creatorUserID {
+		var isFollowing bool
+		_ = h.DB.QueryRow(r.Context(),
+			`SELECT EXISTS(SELECT 1 FROM follows WHERE follower_id = $1 AND followee_id = $2)`,
+			userID, creatorUserID,
+		).Scan(&isFollowing)
+		if !isFollowing {
+			response.Error(w, r, http.StatusForbidden, "followers_only", "you must follow the room creator to join")
+			return
+		}
+	}
 
 	// Atomic capacity check + insert via CTE; records the other-member count at join
 	// time for trust point calculation on leave.
@@ -235,17 +279,17 @@ func (h *Handler) LeaveRoom(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.UserIDFromContext(r.Context())
 	roomID := chi.URLParam(r, "roomID")
 
-	// Fetch membership info and room type before deleting.
+	// Fetch membership info, room type, creator, and current state before deleting.
 	var joinedAt time.Time
 	var joinMemberCount int
-	var roomType string
+	var roomType, roomCreatorID string
 	_ = h.DB.QueryRow(r.Context(),
-		`SELECT rm.joined_at, rm.join_member_count, r.room_type
+		`SELECT rm.joined_at, rm.join_member_count, r.room_type, r.creator_user_id
 		 FROM room_members rm
 		 JOIN rooms r ON r.id = rm.room_id
 		 WHERE rm.room_id = $1 AND rm.user_id = $2`,
 		roomID, userID,
-	).Scan(&joinedAt, &joinMemberCount, &roomType)
+	).Scan(&joinedAt, &joinMemberCount, &roomType, &roomCreatorID)
 
 	// Count other members before this user leaves (used as exit_count).
 	var totalBeforeLeave int
@@ -264,6 +308,19 @@ func (h *Handler) LeaveRoom(w http.ResponseWriter, r *http.Request) {
 		h.Logger.Error("leave room", "error", err)
 		response.InternalError(w, r, h.Cfg.IsProduction())
 		return
+	}
+
+	// Update room state: all gone → closed; creator left → locked.
+	var remaining int
+	_ = h.DB.QueryRow(r.Context(),
+		`SELECT count(*) FROM room_members WHERE room_id = $1`, roomID,
+	).Scan(&remaining)
+	if remaining == 0 {
+		_, _ = h.DB.Exec(r.Context(),
+			`UPDATE rooms SET state = 'closed' WHERE id = $1`, roomID)
+	} else if userID == roomCreatorID {
+		_, _ = h.DB.Exec(r.Context(),
+			`UPDATE rooms SET state = 'locked' WHERE id = $1`, roomID)
 	}
 
 	// Fire trust processing asynchronously for public rooms only.

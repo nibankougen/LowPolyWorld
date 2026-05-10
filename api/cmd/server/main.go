@@ -159,6 +159,16 @@ func main() {
 		r.Post("/me/hidden-users/{targetID}", h.HideUser)
 		r.Delete("/me/hidden-users/{targetID}", h.UnhideUser)
 
+		// Me — hidden worlds
+		r.Get("/me/hidden-worlds", h.ListHiddenWorlds)
+		r.Post("/me/hidden-worlds/{worldID}", h.HideWorld)
+		r.Delete("/me/hidden-worlds/{worldID}", h.UnhideWorld)
+
+		// Me — notifications
+		r.Get("/me/notifications", h.ListNotifications)
+		r.Patch("/me/notifications/read-all", h.MarkAllNotificationsRead)
+		r.Patch("/me/notifications/{notificationID}/read", h.MarkNotificationRead)
+
 		// Me — friends
 		r.Get("/me/friends", h.ListFriends)
 		r.Get("/me/friends/rooms", h.ListFriendsRooms)
@@ -206,6 +216,13 @@ func main() {
 		r.Post("/rooms/{roomID}/join", h.JoinRoom)
 		r.Delete("/rooms/{roomID}/leave", h.LeaveRoom)
 		r.Patch("/rooms/{roomID}/language", h.PatchRoomLanguage)
+
+		// Rooms — invite links (creator-only)
+		r.Post("/rooms/{roomID}/invite-link", h.CreateOrRenewInviteLink)
+		r.Get("/rooms/{roomID}/invite-link", h.GetInviteLink)
+
+		// Join via invite token
+		r.Post("/invite/{token}/join", h.JoinViaInviteLink)
 
 		// Reports
 		r.Post("/users/{userID}/report", h.ReportUser)

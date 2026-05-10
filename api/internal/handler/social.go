@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -356,6 +357,20 @@ func (h *Handler) SendFriendRequest(w http.ResponseWriter, r *http.Request) {
 		response.InternalError(w, r, h.Cfg.IsProduction())
 		return
 	}
+
+	// Notify addressee about the new friend request (async, pending only)
+	if resultStatus == "pending" {
+		var displayName string
+		_ = h.DB.QueryRow(r.Context(),
+			`SELECT COALESCE(display_name, '') FROM active_users WHERE user_id = $1`, requesterID,
+		).Scan(&displayName)
+		if displayName == "" {
+			displayName = "ユーザー"
+		}
+		go createNotification(context.Background(), h, addresseeID,
+			"friend_request", displayName+"さんからフレンド申請が届きました", requesterID)
+	}
+
 	response.ClientJSON(w, http.StatusOK, sendFriendRequestResponse{Status: resultStatus})
 }
 
@@ -510,3 +525,65 @@ func (h *Handler) RemoveFriend(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// ── Hidden worlds ─────────────────────────────────────────────────────────────
+
+// ListHiddenWorlds handles GET /api/v1/me/hidden-worlds.
+func (h *Handler) ListHiddenWorlds(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.UserIDFromContext(r.Context())
+
+	rows, err := h.DB.Query(r.Context(),
+		`SELECT world_id::text FROM hidden_worlds WHERE user_id = $1 ORDER BY created_at DESC`,
+		userID,
+	)
+	if err != nil {
+		h.Logger.Error("list hidden worlds", "error", err)
+		response.InternalError(w, r, h.Cfg.IsProduction())
+		return
+	}
+	defer rows.Close()
+
+	ids := []string{}
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			continue
+		}
+		ids = append(ids, id)
+	}
+	response.ClientJSON(w, http.StatusOK, struct {
+		WorldIDs []string `json:"worldIds"`
+	}{WorldIDs: ids})
+}
+
+// HideWorld handles POST /api/v1/me/hidden-worlds/{worldID}.
+func (h *Handler) HideWorld(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.UserIDFromContext(r.Context())
+	worldID := chi.URLParam(r, "worldID")
+
+	var exists bool
+	_ = h.DB.QueryRow(r.Context(),
+		`SELECT EXISTS(SELECT 1 FROM worlds WHERE id = $1 AND is_public = TRUE)`, worldID,
+	).Scan(&exists)
+	if !exists {
+		response.Error(w, r, http.StatusNotFound, "not_found", "world not found")
+		return
+	}
+
+	_, _ = h.DB.Exec(r.Context(),
+		`INSERT INTO hidden_worlds (user_id, world_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+		userID, worldID,
+	)
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// UnhideWorld handles DELETE /api/v1/me/hidden-worlds/{worldID}.
+func (h *Handler) UnhideWorld(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.UserIDFromContext(r.Context())
+	worldID := chi.URLParam(r, "worldID")
+
+	_, _ = h.DB.Exec(r.Context(),
+		`DELETE FROM hidden_worlds WHERE user_id = $1 AND world_id = $2`,
+		userID, worldID,
+	)
+	w.WriteHeader(http.StatusNoContent)
+}
