@@ -67,3 +67,15 @@
     color: rgb(120, 200, 255);
     -unity-text-align: middle-right;
 }
+
+.settings-link-btn {
+    background-color: rgb(32, 32, 40);
+    color: rgb(200, 200, 215);
+    font-size: 26px;
+    height: 68px;
+    border-radius: 12px;
+    border-width: 0;
+    margin-bottom: 12px;
+    -unity-text-align: middle-left;
+    padding: 0 20px;
+}

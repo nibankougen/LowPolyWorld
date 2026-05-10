@@ -1,0 +1,21 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="NotificationCenter.uss" />
+    <ui:VisualElement name="notif-panel" class="notif-panel">
+
+        <!-- ヘッダー -->
+        <ui:VisualElement class="notif-header">
+            <ui:Label class="notif-title" text="通知" />
+            <ui:Button name="btn-mark-all-read" class="btn-mark-all" text="すべて既読" />
+            <ui:Button name="btn-close" class="btn-close" text="×" />
+        </ui:VisualElement>
+
+        <!-- 通知一覧 -->
+        <ui:ScrollView name="notif-list" class="notif-list" />
+
+        <!-- 空状態 -->
+        <ui:VisualElement name="notif-empty" class="notif-empty overlay-hidden">
+            <ui:Label class="notif-empty-label" text="通知はありません" />
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>

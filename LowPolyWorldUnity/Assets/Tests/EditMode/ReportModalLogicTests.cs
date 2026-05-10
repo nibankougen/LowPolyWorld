@@ -65,10 +65,11 @@ public class ReportModalLogicTests
     }
 
     [TestCase(ReportReason.Spam)]
+    [TestCase(ReportReason.Harassment)]
     [TestCase(ReportReason.HateSpeech)]
-    [TestCase(ReportReason.IllegalActivity)]
-    [TestCase(ReportReason.SexualContent)]
-    [TestCase(ReportReason.HarmToChildren)]
+    [TestCase(ReportReason.Inappropriate)]
+    [TestCase(ReportReason.Violence)]
+    [TestCase(ReportReason.Misinformation)]
     public void SelectReason_NonRequiredDetailReasons_CanSubmitWithoutDetail(ReportReason reason)
     {
         var logic = new ReportModalLogic();
@@ -79,7 +80,6 @@ public class ReportModalLogicTests
 
     // ── 理由選択（詳細テキスト必須） ──────────────────────────────────────────
 
-    [TestCase(ReportReason.UnauthorizedRepro)]
     [TestCase(ReportReason.Impersonation)]
     [TestCase(ReportReason.Other)]
     public void SelectReason_RequiredDetail_CanSubmit_IsFalse_WithoutDetail(ReportReason reason)
@@ -90,7 +90,6 @@ public class ReportModalLogicTests
         Assert.IsTrue(logic.IsDetailRequired);
     }
 
-    [TestCase(ReportReason.UnauthorizedRepro)]
     [TestCase(ReportReason.Impersonation)]
     [TestCase(ReportReason.Other)]
     public void SelectReason_RequiredDetail_WithDetail_CanSubmit_IsTrue(ReportReason reason)
@@ -144,7 +143,7 @@ public class ReportModalLogicTests
     public void SetHideUser_WhenAlreadyHidden_DoesNothing()
     {
         var logic = new ReportModalLogic(isAlreadyHidden: true);
-        logic.SetHideUser(true); // 呼んでも変わらない
+        logic.SetHideUser(true);
         Assert.IsFalse(logic.HideUser);
     }
 
@@ -158,5 +157,22 @@ public class ReportModalLogicTests
         logic.SelectReason(ReportReason.Spam);  // 不要に変更
         Assert.IsTrue(logic.CanSubmit);
         Assert.IsFalse(logic.IsDetailRequired);
+    }
+
+    // ── API 文字列変換 ─────────────────────────────────────────────────────────
+
+    [TestCase(ReportReason.Spam, "spam")]
+    [TestCase(ReportReason.Harassment, "harassment")]
+    [TestCase(ReportReason.HateSpeech, "hate_speech")]
+    [TestCase(ReportReason.Impersonation, "impersonation")]
+    [TestCase(ReportReason.Inappropriate, "inappropriate")]
+    [TestCase(ReportReason.Violence, "violence")]
+    [TestCase(ReportReason.Misinformation, "misinformation")]
+    [TestCase(ReportReason.Other, "other")]
+    public void SelectedReasonApiString_ReturnsCorrectString(ReportReason reason, string expected)
+    {
+        var logic = new ReportModalLogic();
+        logic.SelectReason(reason);
+        Assert.AreEqual(expected, logic.SelectedReasonApiString());
     }
 }

@@ -1,0 +1,104 @@
+.overlay-hidden {
+    display: none;
+}
+
+.notif-panel {
+    position: absolute;
+    top: 40px;
+    right: 0;
+    width: 520px;
+    max-height: 1000px;
+    background-color: rgb(28, 28, 32);
+    border-radius: 16px;
+    border-width: 1px;
+    border-color: rgb(60, 60, 70);
+    overflow: hidden;
+}
+
+.notif-header {
+    flex-direction: row;
+    align-items: center;
+    padding: 20px 24px 16px 24px;
+    border-bottom-width: 1px;
+    border-color: rgb(50, 50, 60);
+}
+
+.notif-title {
+    flex-grow: 1;
+    color: white;
+    font-size: 30px;
+    -unity-font-style: bold;
+}
+
+.btn-mark-all {
+    background-color: transparent;
+    color: rgb(100, 170, 255);
+    font-size: 22px;
+    border-width: 0;
+    padding: 4px 8px;
+    margin-right: 8px;
+}
+
+.btn-close {
+    width: 52px;
+    height: 52px;
+    background-color: rgb(60, 60, 70);
+    color: white;
+    font-size: 28px;
+    border-radius: 8px;
+    border-width: 0;
+}
+
+.notif-list {
+    max-height: 900px;
+}
+
+.notif-row {
+    flex-direction: row;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom-width: 1px;
+    border-color: rgb(44, 44, 54);
+}
+
+.notif-row--unread {
+    background-color: rgb(36, 36, 48);
+}
+
+.notif-icon {
+    width: 44px;
+    height: 44px;
+    font-size: 28px;
+    -unity-text-align: middle-center;
+    margin-right: 14px;
+    flex-shrink: 0;
+}
+
+.notif-body {
+    flex-grow: 1;
+    color: rgb(220, 220, 220);
+    font-size: 24px;
+    white-space: normal;
+}
+
+.notif-body--read {
+    color: rgb(140, 140, 150);
+}
+
+.notif-time {
+    color: rgb(100, 100, 110);
+    font-size: 20px;
+    margin-left: 10px;
+    flex-shrink: 0;
+}
+
+.notif-empty {
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+}
+
+.notif-empty-label {
+    color: rgb(120, 120, 130);
+    font-size: 26px;
+}

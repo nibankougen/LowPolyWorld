@@ -1,0 +1,34 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="FriendScreen.uss" />
+    <ui:VisualElement class="screen-root">
+
+        <!-- ヘッダー -->
+        <ui:VisualElement class="screen-header">
+            <ui:Button name="btn-back" class="btn-back" text="‹" />
+            <ui:Label class="screen-title" text="フレンド管理" />
+            <ui:VisualElement style="width: 60px;" />
+        </ui:VisualElement>
+
+        <!-- タブバー -->
+        <ui:VisualElement class="tab-bar">
+            <ui:Button name="tab-friends" class="tab-btn tab-btn--active" text="フレンド" />
+            <ui:Button name="tab-sent" class="tab-btn" text="申請中" />
+            <ui:Button name="tab-received" class="tab-btn" text="申請受信" />
+        </ui:VisualElement>
+
+        <!-- @name 検索バー（フレンドタブのみ表示） -->
+        <ui:VisualElement name="search-bar" class="search-bar">
+            <ui:TextField name="field-search" class="search-field" placeholder-text="@name で検索" />
+            <ui:Button name="btn-search" class="btn-search" text="検索" />
+        </ui:VisualElement>
+
+        <!-- コンテンツ -->
+        <ui:ScrollView name="friend-list" class="user-list" />
+
+        <!-- 空状態 -->
+        <ui:VisualElement name="empty-state" class="empty-state overlay-hidden">
+            <ui:Label name="empty-label" class="empty-label" text="フレンドはいません" />
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>

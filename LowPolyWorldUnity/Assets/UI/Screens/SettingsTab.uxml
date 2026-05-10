@@ -36,5 +36,33 @@
             <ui:Toggle name="toggle-control-buttons" value="false" />
         </ui:VisualElement>
 
+        <ui:Label class="settings-section-title" text="通知設定" />
+
+        <ui:VisualElement class="volume-row">
+            <ui:Label class="volume-label" text="フレンド申請通知" />
+            <ui:Toggle name="toggle-notif-friend" value="true" />
+        </ui:VisualElement>
+
+        <ui:VisualElement class="volume-row">
+            <ui:Label class="volume-label" text="フォロー: ワールド公開" />
+            <ui:Toggle name="toggle-notif-world-pub" value="true" />
+        </ui:VisualElement>
+
+        <ui:VisualElement class="volume-row">
+            <ui:Label class="volume-label" text="フォロー: 商品販売開始" />
+            <ui:Toggle name="toggle-notif-product" value="true" />
+        </ui:VisualElement>
+
+        <ui:VisualElement class="volume-row">
+            <ui:Label class="volume-label" text="コイン失効通知" />
+            <ui:Toggle name="toggle-notif-coin" value="true" />
+        </ui:VisualElement>
+
+        <ui:Label class="settings-section-title" text="ソーシャル" />
+
+        <ui:Button name="btn-friend-screen" class="settings-link-btn" text="フレンド管理 ›" />
+        <ui:Button name="btn-follow-screen" class="settings-link-btn" text="フォロー管理 ›" />
+        <ui:Button name="btn-hidden-users" class="settings-link-btn" text="非表示ユーザー管理 ›" />
+
     </ui:ScrollView>
 </ui:UXML>

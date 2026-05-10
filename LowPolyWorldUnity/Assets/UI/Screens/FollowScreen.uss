@@ -1,0 +1,2 @@
+/* FollowScreen uses the same base styles as FriendScreen */
+@import url("FriendScreen.uss");

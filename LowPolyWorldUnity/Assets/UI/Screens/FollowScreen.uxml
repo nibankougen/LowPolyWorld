@@ -1,0 +1,27 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="FollowScreen.uss" />
+    <ui:VisualElement class="screen-root">
+
+        <!-- ヘッダー -->
+        <ui:VisualElement class="screen-header">
+            <ui:Button name="btn-back" class="btn-back" text="‹" />
+            <ui:Label name="screen-title" class="screen-title" text="フォロー管理" />
+            <ui:VisualElement style="width: 60px;" />
+        </ui:VisualElement>
+
+        <!-- タブバー -->
+        <ui:VisualElement class="tab-bar">
+            <ui:Button name="tab-following" class="tab-btn tab-btn--active" text="フォロー中" />
+            <ui:Button name="tab-followers" class="tab-btn" text="フォロワー" />
+        </ui:VisualElement>
+
+        <!-- ユーザー一覧 -->
+        <ui:ScrollView name="follow-list" class="user-list" />
+
+        <!-- 空状態 -->
+        <ui:VisualElement name="empty-state" class="empty-state overlay-hidden">
+            <ui:Label name="empty-label" class="empty-label" text="フォロー中のユーザーはいません" />
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>

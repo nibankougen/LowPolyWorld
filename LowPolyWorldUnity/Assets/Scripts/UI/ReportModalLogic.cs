@@ -1,16 +1,16 @@
 using System.Collections.Generic;
 
-/// <summary>通報理由の種別。</summary>
+/// <summary>通報理由の種別。API の validViolationReasons と一致させること。</summary>
 public enum ReportReason
 {
     Spam,
+    Harassment,
     HateSpeech,
-    IllegalActivity,
-    SexualContent,
-    HarmToChildren,
-    UnauthorizedRepro, // 詳細テキスト必須
-    Impersonation,     // 詳細テキスト必須
-    Other,             // 詳細テキスト必須
+    Impersonation,    // 詳細テキスト必須
+    Inappropriate,
+    Violence,
+    Misinformation,
+    Other,            // 詳細テキスト必須
 }
 
 /// <summary>
@@ -22,7 +22,6 @@ public class ReportModalLogic
 {
     private static readonly HashSet<ReportReason> RequiredDetailReasons = new()
     {
-        ReportReason.UnauthorizedRepro,
         ReportReason.Impersonation,
         ReportReason.Other,
     };
@@ -43,11 +42,11 @@ public class ReportModalLogic
     public bool CanSubmit =>
         SelectedReason.HasValue && (!IsDetailRequired || !string.IsNullOrEmpty(DetailText));
 
-    /// <param name="isAlreadyHidden">対象ユーザー/コンテンツが既に非表示の場合 true。チェックボックスを非表示にし HideUser を false に固定する。</param>
+    /// <param name="isAlreadyHidden">対象ユーザー/コンテンツが既に非表示の場合 true。</param>
     public ReportModalLogic(bool isAlreadyHidden = false)
     {
         IsAlreadyHidden = isAlreadyHidden;
-        HideUser = !isAlreadyHidden; // 非表示済みでなければデフォルト ON
+        HideUser = !isAlreadyHidden;
     }
 
     /// <summary>通報理由を選択する。</summary>
@@ -70,5 +69,22 @@ public class ReportModalLogic
     {
         if (!IsAlreadyHidden)
             HideUser = hide;
+    }
+
+    /// <summary>選択中の理由を API 送信用の snake_case 文字列に変換する。</summary>
+    public string SelectedReasonApiString()
+    {
+        return SelectedReason switch
+        {
+            ReportReason.Spam => "spam",
+            ReportReason.Harassment => "harassment",
+            ReportReason.HateSpeech => "hate_speech",
+            ReportReason.Impersonation => "impersonation",
+            ReportReason.Inappropriate => "inappropriate",
+            ReportReason.Violence => "violence",
+            ReportReason.Misinformation => "misinformation",
+            ReportReason.Other => "other",
+            _ => "other",
+        };
     }
 }

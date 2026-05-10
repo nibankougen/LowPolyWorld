@@ -1,12 +1,19 @@
 using System;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 /// <summary>
-/// 音量3スライダー・コントロールボタントグルの表示・操作を管理するコントローラー。
+/// 音量3スライダー・コントロールボタントグル・通知設定トグルを管理するコントローラー。
 /// HomeScreen 設定タブおよびインワールドメニュー設定タブの両方から使用する。
 /// </summary>
 public class SettingsTabController
 {
+    // PlayerPrefs キー (通知設定)
+    private const string KeyNotifFriend = "Notif_FriendRequest";
+    private const string KeyNotifWorldPub = "Notif_WorldPublished";
+    private const string KeyNotifProduct = "Notif_ProductReleased";
+    private const string KeyNotifCoin = "Notif_CoinExpiry";
+
     private readonly Slider _sliderVoice;
     private readonly Slider _sliderWorldSfx;
     private readonly Slider _sliderSystemSfx;
@@ -17,6 +24,10 @@ public class SettingsTabController
 
     private WorldSettingsLogic _settings;
     private Action<bool> _onControlButtonsChanged;
+
+    public event Action OnFriendScreenRequested;
+    public event Action OnFollowScreenRequested;
+    public event Action OnHiddenUsersRequested;
 
     public SettingsTabController(VisualElement root)
     {
@@ -36,7 +47,34 @@ public class SettingsTabController
             _sliderSystemSfx.RegisterValueChangedCallback(e => _settings?.SetSystemSfxVolume(e.newValue));
         if (_toggleControlButtons != null)
             _toggleControlButtons.RegisterValueChangedCallback(e => _onControlButtonsChanged?.Invoke(e.newValue));
+
+        // 通知設定トグル
+        BindNotifToggle(root, "toggle-notif-friend", KeyNotifFriend);
+        BindNotifToggle(root, "toggle-notif-world-pub", KeyNotifWorldPub);
+        BindNotifToggle(root, "toggle-notif-product", KeyNotifProduct);
+        BindNotifToggle(root, "toggle-notif-coin", KeyNotifCoin);
+
+        // ソーシャルリンクボタン
+        root.Q<Button>("btn-friend-screen")?.RegisterCallback<ClickEvent>(_ => OnFriendScreenRequested?.Invoke());
+        root.Q<Button>("btn-follow-screen")?.RegisterCallback<ClickEvent>(_ => OnFollowScreenRequested?.Invoke());
+        root.Q<Button>("btn-hidden-users")?.RegisterCallback<ClickEvent>(_ => OnHiddenUsersRequested?.Invoke());
     }
+
+    private static void BindNotifToggle(VisualElement root, string toggleName, string prefsKey)
+    {
+        var toggle = root.Q<Toggle>(toggleName);
+        if (toggle == null) return;
+        toggle.SetValueWithoutNotify(PlayerPrefs.GetInt(prefsKey, 1) == 1);
+        toggle.RegisterValueChangedCallback(e =>
+        {
+            PlayerPrefs.SetInt(prefsKey, e.newValue ? 1 : 0);
+            PlayerPrefs.Save();
+        });
+    }
+
+    /// <summary>通知種別が有効かどうかを返す。</summary>
+    public static bool IsNotifEnabled(string prefsKey) =>
+        PlayerPrefs.GetInt(prefsKey, 1) == 1;
 
     /// <summary>コントロールボタントグルの初期値とコールバックを設定する。</summary>
     public void BindControlButtons(bool initialValue, Action<bool> onChange)
@@ -64,7 +102,6 @@ public class SettingsTabController
         _settings.OnWorldSfxVolumeChanged += OnWorldSfxChanged;
         _settings.OnSystemSfxVolumeChanged += OnSystemSfxChanged;
 
-        // 現在値でスライダーを初期化
         SetSlider(_sliderVoice, _labelVoice, _settings.VoiceVolume);
         SetSlider(_sliderWorldSfx, _labelWorldSfx, _settings.WorldSfxVolume);
         SetSlider(_sliderSystemSfx, _labelSystemSfx, _settings.SystemSfxVolume);

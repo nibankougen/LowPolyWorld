@@ -1,6 +1,11 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements">
     <ui:Style src="HomeScreen.uss" />
     <ui:VisualElement name="safe-area-root" class="safe-area-root">
+        <!-- フラッシュメッセージ（上部トースト） -->
+        <ui:VisualElement name="flash-root" class="flash-root overlay-hidden">
+            <ui:Label name="flash-label" class="flash-label flash-type-info" />
+        </ui:VisualElement>
+
         <!-- コンテンツエリア（タブ切り替えで内容が変わる） -->
         <ui:VisualElement name="content-area" class="content-area" />
 

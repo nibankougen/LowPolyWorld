@@ -18,6 +18,11 @@ public class HomeScreenController : MonoBehaviour
     [SerializeField] private VisualTreeAsset _worldDetailAsset;
     [SerializeField] private VisualTreeAsset _roomListAsset;
 
+    [Header("Social Screens (UXML)")]
+    [SerializeField] private VisualTreeAsset _friendScreenAsset;
+    [SerializeField] private VisualTreeAsset _followScreenAsset;
+    [SerializeField] private VisualTreeAsset _userInfoPanelAsset;
+
     private UIDocument _document;
     private VisualElement _contentArea;
 
@@ -33,6 +38,12 @@ public class HomeScreenController : MonoBehaviour
     private WorldDetailController _worldDetailController;
     private RoomListController _roomListController;
     private ShopTabController _shopTabController;
+    private FriendScreenController _friendScreenController;
+    private FollowScreenController _followScreenController;
+    private UserInfoPanelController _userInfoController;
+
+    // ユーザー情報パネルオーバーレイ
+    private VisualElement _userInfoOverlay;
 
     private WorldResponse _currentWorld;
 
@@ -58,12 +69,33 @@ public class HomeScreenController : MonoBehaviour
         _navShop.clicked += () => SelectTab(_navShop, _shopTabAsset);
         _navSettings.clicked += () => SelectTab(_navSettings, _settingsTabAsset);
 
+        // ユーザー情報パネル（フラッシュメッセージ + オーバーレイ）
+        var flashRoot = root.Q<VisualElement>("flash-root");
+        if (flashRoot != null)
+            _ = new FlashMessageController(flashRoot);
+
+        if (_userInfoPanelAsset != null)
+        {
+            _userInfoOverlay = _userInfoPanelAsset.Instantiate();
+            _userInfoOverlay.style.position = Position.Absolute;
+            _userInfoOverlay.style.top = 0;
+            _userInfoOverlay.style.left = 0;
+            _userInfoOverlay.style.right = 0;
+            _userInfoOverlay.style.bottom = 0;
+            root.Add(_userInfoOverlay);
+            _userInfoController = new UserInfoPanelController(_userInfoOverlay.Q<VisualElement>("uip-backdrop"));
+            _userInfoController.OnFollowersRequested += userId => ShowFollowScreen(userId, followersTab: true);
+            _userInfoController.OnFollowingRequested += userId => ShowFollowScreen(userId, followersTab: false);
+        }
+
         SelectTab(_navWorld, _worldTabAsset);
     }
 
     private void OnDisable()
     {
         DisposeAllControllers();
+        _userInfoController?.Dispose();
+        _userInfoController = null;
     }
 
     private void DisposeAllControllers()
@@ -76,6 +108,10 @@ public class HomeScreenController : MonoBehaviour
         _roomListController = null;
         _shopTabController?.Dispose();
         _shopTabController = null;
+        _friendScreenController?.Dispose();
+        _friendScreenController = null;
+        _followScreenController?.Dispose();
+        _followScreenController = null;
         _settingsTabController = null;
     }
 
@@ -103,6 +139,8 @@ public class HomeScreenController : MonoBehaviour
         {
             _settingsTabController = new SettingsTabController(content);
             _settingsTabController.Bind(AudioManager.Instance?.Settings);
+            _settingsTabController.OnFriendScreenRequested += ShowFriendScreen;
+            _settingsTabController.OnFollowScreenRequested += () => ShowFollowScreen(null);
         }
         else if (tab == _navWorld && UserManager.Instance != null)
         {
@@ -170,6 +208,40 @@ public class HomeScreenController : MonoBehaviour
         _roomListController.OnBack += () => ShowWorldDetail(_currentWorld);
         _roomListController.OnEnterWorld += EnterWorld;
         _roomListController.Initialize();
+    }
+
+    // ── Social screens ────────────────────────────────────────────────────────
+
+    private void ShowFriendScreen()
+    {
+        if (_friendScreenAsset == null) return;
+
+        DisposeAllControllers();
+        _contentArea.Clear();
+
+        var content = _friendScreenAsset.Instantiate();
+        content.style.flexGrow = 1;
+        _contentArea.Add(content);
+
+        _friendScreenController = new FriendScreenController(content);
+        _friendScreenController.OnBackRequested += () => SelectTab(_navSettings, _settingsTabAsset);
+        _friendScreenController.OnUserTapped += userId => _userInfoController?.ShowAsync(userId);
+    }
+
+    private void ShowFollowScreen(string targetUserId, bool followersTab = false)
+    {
+        if (_followScreenAsset == null) return;
+
+        DisposeAllControllers();
+        _contentArea.Clear();
+
+        var content = _followScreenAsset.Instantiate();
+        content.style.flexGrow = 1;
+        _contentArea.Add(content);
+
+        _followScreenController = new FollowScreenController(content, targetUserId);
+        _followScreenController.OnBackRequested += () => SelectTab(_navSettings, _settingsTabAsset);
+        _followScreenController.OnUserTapped += userId => _userInfoController?.ShowAsync(userId);
     }
 
     // ── Scene transition ──────────────────────────────────────────────────────

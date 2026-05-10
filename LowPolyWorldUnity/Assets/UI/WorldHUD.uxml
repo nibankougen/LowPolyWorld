@@ -2,10 +2,19 @@
     <ui:Style src="WorldHUD.uss" />
     <ui:VisualElement name="hud-root" class="hud-root">
 
+        <!-- フラッシュメッセージ（上部トースト） -->
+        <ui:VisualElement name="flash-root" class="flash-root overlay-hidden">
+            <ui:Label name="flash-label" class="flash-label flash-type-info" />
+        </ui:VisualElement>
+
         <!-- 右上ボタン群 -->
         <ui:VisualElement class="hud-top-right">
             <ui:Button name="btn-camera" class="hud-icon-btn" text="📷" />
-            <ui:Button name="btn-bell" class="hud-icon-btn" text="🔔" />
+            <!-- ベルボタン + 未読バッジ -->
+            <ui:VisualElement class="hud-icon-btn-wrap">
+                <ui:Button name="btn-bell" class="hud-icon-btn" text="🔔" />
+                <ui:Label name="badge-bell" class="hud-badge overlay-hidden" text="0" />
+            </ui:VisualElement>
             <ui:Button name="btn-menu" class="hud-icon-btn" text="☰" />
         </ui:VisualElement>
 

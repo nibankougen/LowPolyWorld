@@ -350,6 +350,13 @@ public class MyProductListResponse
 }
 
 [Serializable]
+public class ReportUserRequest
+{
+    public string reason;
+    public string detail;
+}
+
+[Serializable]
 public class RecordCoinPurchaseRequest
 {
     public string platform;             // "ios" | "android"

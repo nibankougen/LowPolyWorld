@@ -1,0 +1,60 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="UserInfoPanel.uss" />
+
+    <!-- 背景クリックで閉じる -->
+    <ui:VisualElement name="uip-backdrop" class="uip-backdrop">
+
+        <ui:VisualElement name="uip-panel" class="uip-panel">
+
+            <!-- 閉じるボタン -->
+            <ui:Button name="btn-close" class="uip-close-btn" text="×" />
+
+            <!-- アバターアイコン（プレースホルダー） -->
+            <ui:VisualElement name="uip-avatar-icon" class="uip-avatar-icon">
+                <ui:Label class="uip-avatar-placeholder" text="♟" />
+            </ui:VisualElement>
+
+            <!-- 表示名 -->
+            <ui:Label name="uip-display-name" class="uip-display-name" text="" />
+
+            <!-- @name -->
+            <ui:Label name="uip-at-name" class="uip-at-name" text="" />
+
+            <!-- フォロワー数 / フォロー中数 -->
+            <ui:VisualElement class="uip-social-row">
+                <ui:Button name="btn-followers" class="uip-social-btn">
+                    <ui:Label name="uip-follower-count" class="uip-social-count" text="0" />
+                    <ui:Label class="uip-social-label" text="フォロワー" />
+                </ui:Button>
+                <ui:Button name="btn-following" class="uip-social-btn">
+                    <ui:Label name="uip-following-count" class="uip-social-count" text="0" />
+                    <ui:Label class="uip-social-label" text="フォロー中" />
+                </ui:Button>
+            </ui:VisualElement>
+
+            <!-- アクションボタン（自分には非表示） -->
+            <ui:VisualElement name="uip-actions" class="uip-actions">
+                <!-- フォローボタン / フォロー解除ボタン -->
+                <ui:Button name="btn-follow" class="uip-action-btn uip-action-btn--primary" text="フォローする" />
+                <ui:Button name="btn-unfollow" class="uip-action-btn uip-action-btn--secondary overlay-hidden" text="フォロー中" />
+
+                <!-- フレンド申請 / 申請中 / フレンド解除 -->
+                <ui:Button name="btn-friend-request" class="uip-action-btn uip-action-btn--primary" text="フレンド申請" />
+                <ui:Button name="btn-friend-pending" class="uip-action-btn uip-action-btn--secondary overlay-hidden" text="申請中" />
+                <ui:Button name="btn-friend-received" class="uip-action-btn uip-action-btn--accent overlay-hidden" text="申請を承認" />
+                <ui:Button name="btn-remove-friend" class="uip-action-btn uip-action-btn--secondary overlay-hidden" text="フレンド" />
+
+                <!-- … ボタン（非表示・通報） -->
+                <ui:Button name="btn-more" class="uip-action-btn uip-action-btn--more" text="…" />
+            </ui:VisualElement>
+
+            <!-- … メニュー -->
+            <ui:VisualElement name="uip-more-menu" class="uip-more-menu overlay-hidden">
+                <ui:Button name="btn-hide-user" class="uip-more-item" text="非表示にする" />
+                <ui:Button name="btn-unhide-user" class="uip-more-item overlay-hidden" text="非表示を解除" />
+                <ui:Button name="btn-report-user" class="uip-more-item uip-more-item--danger" text="通報する" />
+            </ui:VisualElement>
+
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
