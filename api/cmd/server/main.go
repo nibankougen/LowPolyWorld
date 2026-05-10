@@ -154,8 +154,29 @@ func main() {
 		// Public user profiles
 		r.Get("/users/{userID}", h.GetPublicUser)
 
+		// Me — hidden users
+		r.Get("/me/hidden-users", h.ListHiddenUsers)
+		r.Post("/me/hidden-users/{targetID}", h.HideUser)
+		r.Delete("/me/hidden-users/{targetID}", h.UnhideUser)
+
 		// Me — friends
+		r.Get("/me/friends", h.ListFriends)
 		r.Get("/me/friends/rooms", h.ListFriendsRooms)
+		r.Delete("/me/friends/{friendID}", h.RemoveFriend)
+
+		// Me — friend requests
+		r.Get("/me/friend-requests/received", h.ListFriendRequestsReceived)
+		r.Get("/me/friend-requests/sent", h.ListFriendRequestsSent)
+		r.Post("/me/friend-requests/{requesterID}/accept", h.AcceptFriendRequest)
+		r.Post("/me/friend-requests/{requesterID}/reject", h.RejectFriendRequest)
+		r.Delete("/me/friend-requests/sent/{addresseeID}", h.CancelFriendRequest)
+
+		// Users — follow / unfollow / social graph
+		r.Post("/users/{userID}/follow", h.FollowUser)
+		r.Delete("/users/{userID}/follow", h.UnfollowUser)
+		r.Get("/users/{userID}/followers", h.ListFollowers)
+		r.Get("/users/{userID}/following", h.ListFollowing)
+		r.Post("/users/{userID}/friend-request", h.SendFriendRequest)
 
 		// Me — avatars
 		r.Get("/me/avatars", h.ListMyAvatars)

@@ -440,8 +440,42 @@ func (h *Handler) RecommendedJoin(w http.ResponseWriter, r *http.Request) {
 
 
 // ListFriendsRooms handles GET /api/v1/me/friends/rooms.
-// Returns rooms where the user's friends are present.
-// Stub: friend system is implemented in a later phase.
+// Returns rooms where the current user's friends are present.
 func (h *Handler) ListFriendsRooms(w http.ResponseWriter, r *http.Request) {
-	response.JSONCursor(w, http.StatusOK, []roomResponse{}, response.Cursor{})
+	userID := middleware.UserIDFromContext(r.Context())
+
+	rows, err := h.DB.Query(r.Context(),
+		`SELECT r.id, r.world_id, r.room_type, r.language, r.max_players,
+		        (SELECT count(*) FROM room_members rm2 WHERE rm2.room_id = r.id) AS current_players,
+		        r.created_at
+		 FROM rooms r
+		 WHERE EXISTS (
+		     SELECT 1 FROM room_members rm
+		     JOIN friend_requests fr ON fr.addressee_id = rm.user_id
+		     WHERE rm.room_id = r.id
+		       AND fr.requester_id = $1
+		       AND fr.status = 'accepted'
+		 )
+		 ORDER BY r.created_at DESC`,
+		userID,
+	)
+	if err != nil {
+		h.Logger.Error("list friends rooms", "error", err)
+		response.InternalError(w, r, h.Cfg.IsProduction())
+		return
+	}
+	defer rows.Close()
+
+	rooms := []roomResponse{}
+	for rows.Next() {
+		var rm roomResponse
+		var createdAt time.Time
+		if err := rows.Scan(&rm.ID, &rm.WorldID, &rm.RoomType, &rm.Language,
+			&rm.MaxPlayers, &rm.CurrentPlayers, &createdAt); err != nil {
+			continue
+		}
+		rm.CreatedAt = createdAt.UTC().Format(time.RFC3339)
+		rooms = append(rooms, rm)
+	}
+	response.JSONCursor(w, http.StatusOK, rooms, response.Cursor{})
 }

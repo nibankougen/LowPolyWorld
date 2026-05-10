@@ -198,6 +198,41 @@ public class CreateRoomRequest
     public string language;
 }
 
+// ── Social ────────────────────────────────────────────────────────────────────
+
+[Serializable]
+public class UserSummaryResponse
+{
+    public string id;
+    public string displayName;
+    public string name;
+}
+
+[Serializable]
+public class UserSummaryListResponse
+{
+    public List<UserSummaryResponse> users;
+}
+
+[Serializable]
+public class HiddenUsersResponse
+{
+    public List<string> userIds;
+}
+
+[Serializable]
+public class FriendRequestStatusResponse
+{
+    public string status; // "pending" | "friends"
+}
+
+[Serializable]
+public class RoomListResponse
+{
+    public List<RoomResponse> data;
+    public CursorResponse cursor;
+}
+
 // ── Shop ─────────────────────────────────────────────────────────────────────
 
 [Serializable]
