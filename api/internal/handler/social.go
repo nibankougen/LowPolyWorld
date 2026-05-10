@@ -26,6 +26,7 @@ type hiddenUsersListResponse struct {
 func scanUserSummaryRows(rows interface {
 	Next() bool
 	Scan(...any) error
+	Err() error
 	Close()
 }) []userSummary {
 	defer rows.Close()
@@ -43,6 +44,9 @@ func scanUserSummaryRows(rows interface {
 			u.Name = *name
 		}
 		users = append(users, u)
+	}
+	if rows.Err() != nil {
+		return []userSummary{}
 	}
 	return users
 }
@@ -270,7 +274,7 @@ func (h *Handler) SendFriendRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Return early if already sent or already friends
+	// Return early if already sent or already friends; reset if previously rejected
 	var existingStatus string
 	_ = h.DB.QueryRow(r.Context(),
 		`SELECT status FROM friend_requests WHERE requester_id = $1 AND addressee_id = $2`,
@@ -284,6 +288,7 @@ func (h *Handler) SendFriendRequest(w http.ResponseWriter, r *http.Request) {
 		response.ClientJSON(w, http.StatusOK, sendFriendRequestResponse{Status: "pending"})
 		return
 	}
+	// existingStatus == "rejected": reset to pending so re-send works
 
 	// Check for reverse pending request (mutual approval)
 	var reversePending bool
@@ -332,13 +337,17 @@ func (h *Handler) SendFriendRequest(w http.ResponseWriter, r *http.Request) {
 		} else {
 			// Addressee at capacity — fall back to pending
 			_, _ = tx.Exec(r.Context(),
-				`INSERT INTO friend_requests (requester_id, addressee_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+				`INSERT INTO friend_requests (requester_id, addressee_id, status)
+				 VALUES ($1, $2, 'pending')
+				 ON CONFLICT (requester_id, addressee_id) DO UPDATE SET status = 'pending', updated_at = now()`,
 				requesterID, addresseeID,
 			)
 		}
 	} else {
 		_, _ = tx.Exec(r.Context(),
-			`INSERT INTO friend_requests (requester_id, addressee_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+			`INSERT INTO friend_requests (requester_id, addressee_id, status)
+			 VALUES ($1, $2, 'pending')
+			 ON CONFLICT (requester_id, addressee_id) DO UPDATE SET status = 'pending', updated_at = now()`,
 			requesterID, addresseeID,
 		)
 	}

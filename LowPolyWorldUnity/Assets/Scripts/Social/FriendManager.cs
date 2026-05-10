@@ -77,9 +77,9 @@ public class FriendManager : MonoBehaviour
             null,
             ct
         );
-        if (err != null)
+        if (err != null || res == null)
         {
-            Debug.LogWarning($"[FriendManager] SendFriendRequest failed: {err}");
+            Debug.LogWarning($"[FriendManager] SendFriendRequest failed: {err ?? "empty response"}");
             return null;
         }
 
