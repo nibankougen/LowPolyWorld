@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -24,6 +25,9 @@ public class VoiceManager : MonoBehaviour
     private CancellationTokenSource _cts;
     private bool _joined;
 
+    // vivoxId (LoginOptions.DisplayName) → VivoxParticipant
+    private readonly Dictionary<string, VivoxParticipant> _participants = new();
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -40,6 +44,8 @@ public class VoiceManager : MonoBehaviour
             Instance = null;
         _cts?.Cancel();
         _cts?.Dispose();
+        UnsubscribeParticipantEvents();
+        _participants.Clear();
     }
 
     // ── 公開 API ────────────────────────────────────────────────────────────
@@ -68,6 +74,7 @@ public class VoiceManager : MonoBehaviour
                 props
             );
             _joined = true;
+            SubscribeParticipantEvents();
         }
         catch (OperationCanceledException) { }
         catch (Exception e)
@@ -82,6 +89,8 @@ public class VoiceManager : MonoBehaviour
     public async Task ShutdownAsync()
     {
         _cts?.Cancel();
+        UnsubscribeParticipantEvents();
+        _participants.Clear();
         if (!_joined) return;
         try
         {
@@ -125,5 +134,48 @@ public class VoiceManager : MonoBehaviour
         {
             Debug.LogWarning($"[VoiceManager] SetReceiveVolume error: {e.Message}");
         }
+    }
+
+    /// <summary>
+    /// 特定ユーザーの音声をローカルでミュート/アンミュートする。
+    /// vivoxId は /startup の User.vivoxId（他プレイヤーは PlayerNetworkSync 等で伝搬）。
+    /// </summary>
+    public void SetUserMuted(string vivoxId, bool muted)
+    {
+        if (!_joined || !_participants.TryGetValue(vivoxId, out var participant)) return;
+        try
+        {
+            // VivoxParticipant.SetLocalVolume: -50 (無音) 〜 50 (最大), 0 がデフォルト
+            participant.SetLocalVolume(muted ? VivoxVolMin : 0);
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning($"[VoiceManager] SetUserMuted({vivoxId}) error: {e.Message}");
+        }
+    }
+
+    // ── Vivox 参加者イベント ─────────────────────────────────────────────────
+
+    private void SubscribeParticipantEvents()
+    {
+        VivoxService.Instance.ParticipantAddedToChannel += OnParticipantAdded;
+        VivoxService.Instance.ParticipantRemovedFromChannel += OnParticipantRemoved;
+    }
+
+    private void UnsubscribeParticipantEvents()
+    {
+        if (VivoxService.Instance == null) return;
+        VivoxService.Instance.ParticipantAddedToChannel -= OnParticipantAdded;
+        VivoxService.Instance.ParticipantRemovedFromChannel -= OnParticipantRemoved;
+    }
+
+    private void OnParticipantAdded(VivoxParticipant participant)
+    {
+        _participants[participant.DisplayName] = participant;
+    }
+
+    private void OnParticipantRemoved(VivoxParticipant participant)
+    {
+        _participants.Remove(participant.DisplayName);
     }
 }

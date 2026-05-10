@@ -750,16 +750,16 @@
   - [ ] フォント対応（CJK 文字対応フォントの組み込み）
 
 ### テスト（EditMode）
-- [ ] `FriendListLogic`: フレンド上限チェック（通常100・プレミアム1000）
-- [ ] `FriendListLogic`: 申請状態遷移（未申請→申請中→承認済み / 未申請→申請中→拒否）
-- [ ] `FriendListLogic`: 相互承認の成立条件・解除処理
-- [ ] `FollowListLogic`: フォロー/フォロー解除の状態遷移
+- [x] `FriendListLogic`: フレンド上限チェック（通常100・プレミアム1000）
+- [x] `FriendListLogic`: 申請状態遷移（未申請→申請中→承認済み / 未申請→申請中→拒否）
+- [x] `FriendListLogic`: 相互承認の成立条件・解除処理
+- [x] `FollowListLogic`: フォロー/フォロー解除の状態遷移
 - [x] `HideListLogic`: 非表示追加・解除・一覧取得
-- [ ] `InviteRoomLogic`: ルーム状態遷移（OPEN → LOCKED → CLOSED）・入室可否判定
+- [x] `InviteRoomLogic`: ルーム状態遷移（OPEN → LOCKED → CLOSED）・入室可否判定
 - [x] `HideListLogic`: 非表示ユーザーの描画・音声フィルタリング判定（リストにいる場合のみ true）
-- [ ] `NotificationStore`: 未読件数カウント・既読マーク・種別フィルタリング
-- [ ] `StampColorPickerLogic`: 色選択・スポイト確定タイマー（0.4 秒）・再タップでリセット
-- [ ] `TextStampLogic`: テキスト編集状態遷移（未編集 → 編集中 → 完了 → 再編集）
+- [x] `NotificationStore`: 未読件数カウント・既読マーク・種別フィルタリング
+- [x] `StampColorPickerLogic`: 色選択・スポイト確定タイマー（0.4 秒）・再タップでリセット
+- [x] `TextStampLogic`: テキスト編集状態遷移（未編集 → 編集中 → 完了 → 再編集）
 
 ---
 

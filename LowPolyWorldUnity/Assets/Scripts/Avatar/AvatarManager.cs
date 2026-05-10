@@ -16,6 +16,10 @@ public class AvatarManager : MonoBehaviour
     private readonly Dictionary<string, AvatarInstance> _avatars = new();
 
     private AtlasManager _atlasManager;
+    private HideListLogic _hideList;
+
+    /// <summary>ルーム参加時に HideListLogic を注入する。</summary>
+    public void SetHideList(HideListLogic hideList) => _hideList = hideList;
 
     private void Awake()
     {
@@ -50,6 +54,8 @@ public class AvatarManager : MonoBehaviour
 
         if (isLocal)
             LocalAvatar = instance;
+        else if (_hideList != null && _hideList.ShouldSkipRendering(userId))
+            vrmRoot.SetActive(false);
 
         return instance;
     }
@@ -81,6 +87,16 @@ public class AvatarManager : MonoBehaviour
         _avatars.TryGetValue(userId, out instance);
 
     public IReadOnlyDictionary<string, AvatarInstance> AllAvatars => _avatars;
+
+    /// <summary>
+    /// 非表示状態の変化をアバターの描画に反映する（HideListLogic から呼び出す）。
+    /// </summary>
+    public void ApplyHideState(string userId, bool shouldHide)
+    {
+        if (!_avatars.TryGetValue(userId, out var instance)) return;
+        if (instance.Root != null)
+            instance.Root.SetActive(!shouldHide);
+    }
 }
 
 /// <summary>
