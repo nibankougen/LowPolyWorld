@@ -78,6 +78,11 @@ public class PhotoModeController : MonoBehaviour
     // 2 本指追跡
     private bool _twoFingerActive;
 
+    // スポイトサンプリング（毎フレーム全画面 readback を避けるためスロットル）
+    private Texture2D _eyedropTex;
+    private float _lastSampleTime = -1f;
+    private const float SampleInterval = 0.05f; // 50ms ≒ 20Hz
+
     // パレット色
     private static readonly Color[] PaletteColors =
     {
@@ -703,21 +708,27 @@ public class PhotoModeController : MonoBehaviour
         }
     }
 
-    private static Color SampleScreenColor(Vector2 screenPos)
+    private Color SampleScreenColor(Vector2 screenPos)
     {
-        // ScreenCapture を毎フレーム呼ぶのはコストが高いため Texture2D.GetPixel を使う
-        // 実装コスト的に near-accurate なスクリーンカラーを取得する
+        // 50ms スロットル: 毎フレームの全画面 GPU readback を避ける
+        if (Time.realtimeSinceStartup - _lastSampleTime < SampleInterval)
+            return _eyedropTex != null ? _eyedropTex.GetPixel(0, 0) : Color.black;
+
+        _lastSampleTime = Time.realtimeSinceStartup;
+
         var rt = RenderTexture.GetTemporary(Screen.width, Screen.height, 0);
         ScreenCapture.CaptureScreenshotIntoRenderTexture(rt);
         RenderTexture.active = rt;
-        var tex = new Texture2D(1, 1, TextureFormat.RGB24, false);
-        tex.ReadPixels(new Rect((int)screenPos.x, (int)screenPos.y, 1, 1), 0, 0);
-        tex.Apply();
-        var col = tex.GetPixel(0, 0);
+
+        if (_eyedropTex == null)
+            _eyedropTex = new Texture2D(1, 1, TextureFormat.RGB24, false);
+
+        _eyedropTex.ReadPixels(new Rect((int)screenPos.x, (int)screenPos.y, 1, 1), 0, 0);
+        _eyedropTex.Apply();
+
         RenderTexture.active = null;
         RenderTexture.ReleaseTemporary(rt);
-        UnityEngine.Object.Destroy(tex);
-        return col;
+        return _eyedropTex.GetPixel(0, 0);
     }
 
     // ── ゴミ箱 ──────────────────────────────────────────────────────────
@@ -778,40 +789,17 @@ public class PhotoModeController : MonoBehaviour
             _twoFingerActive = false;
         }
 
-        // 1 本指上半分 → カメラ回転（PlayerController が無効なので直接適用）
-        if (activeTouches.Count == 1)
-        {
-            var t = activeTouches[0];
-            if (t.screenPosition.y > Screen.height * 0.5f &&
-                _draggingStampFromMenu == false && _draggingPlacedStamp == null)
-            {
-                if (_cameraFollow != null && (
-                    t.phase == UnityEngine.InputSystem.TouchPhase.Moved))
-                {
-                    _cameraFollow.GetComponent<CameraFollowController>(); // reference check
-                    // CameraFollowController へ直接 look delta を送る
-                    // LateUpdate の前に logic.ApplyLookDelta を呼ぶ
-                    float sx = _cameraFollow
-                        .GetType()
-                        .GetField("_touchSensitivity",
-                            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-                        ?.GetValue(_cameraFollow) is float sv ? sv : 0.1f;
+        // 1 本指上半分ドラッグ → PlayerController 経由でカメラ回転を 1 フレーム遅延で通す
+        // IsPhotoMode=false にすると次フレームの PlayerController.Update() が LookDelta を読み、
+        // CameraFollowController.LateUpdate() がカメラを回転させる。
+        bool wantCameraRotation = activeTouches.Count == 1
+            && activeTouches[0].screenPosition.y > Screen.height * 0.5f
+            && activeTouches[0].phase == UnityEngine.InputSystem.TouchPhase.Moved
+            && !_draggingStampFromMenu
+            && _draggingPlacedStamp == null;
 
-                    // 内部ロジックに直接アクセスできないため、PlayerController.LookDelta 経由で伝達
-                    // LateUpdate が IsPhotoMode チェックしているため PhotoMode 中は PlayerController 経由は無効
-                    // → CameraFollowController に ApplyExternalLook を追加済みの場合はそちらを使う
-                    // 暫定: IsPhotoMode を false にして 1 フレームだけルック入力を通す（副作用なし）
-                    if (_playerController != null)
-                    {
-                        _playerController.IsPhotoMode = false;
-                    }
-                }
-            }
-        }
-        else if (_playerController != null && !_playerController.IsPhotoMode)
-        {
-            _playerController.IsPhotoMode = true;
-        }
+        if (_playerController != null)
+            _playerController.IsPhotoMode = !wantCameraRotation;
     }
 
     private void ApplyCameraOffset()
@@ -876,5 +864,7 @@ public class PhotoModeController : MonoBehaviour
     {
         if (_lastPhoto != null)
             Destroy(_lastPhoto);
+        if (_eyedropTex != null)
+            Destroy(_eyedropTex);
     }
 }

@@ -46,6 +46,8 @@ public class WorldHUDController : MonoBehaviour
         if (flashRoot != null)
             _flashController = new FlashMessageController(flashRoot);
 
+        _photoModeController?.Initialize(root);
+
         root.Q<Button>("btn-menu")?.RegisterCallback<ClickEvent>(_ => OpenMenu());
         root.Q<Button>("btn-camera")?.RegisterCallback<ClickEvent>(_ => OnCameraButtonClicked());
         root.Q<Button>("btn-bell")?.RegisterCallback<ClickEvent>(_ => OnBellButtonClicked());

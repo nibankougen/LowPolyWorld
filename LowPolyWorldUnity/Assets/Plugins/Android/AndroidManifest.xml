@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="com.nibankougen.lowpolyworld">
+
+    <!-- API 28 以下でカメラロール保存に必要。API 29+ は MediaStore で不要 -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+                     android:maxSdkVersion="28" />
+
     <application>
         <activity
             android:name="com.unity3d.player.UnityPlayerGameActivity"
