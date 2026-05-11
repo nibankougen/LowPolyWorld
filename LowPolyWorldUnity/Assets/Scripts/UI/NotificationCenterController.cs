@@ -12,6 +12,7 @@ public class NotificationCenterController : IDisposable
     private readonly VisualElement _panel;
     private readonly ScrollView _list;
     private readonly VisualElement _empty;
+    private readonly System.Threading.CancellationTokenSource _cts = new();
 
     public event Action OnCloseRequested;
 
@@ -87,21 +88,27 @@ public class NotificationCenterController : IDisposable
         return row;
     }
 
-    private void OnRowClicked(NotificationItem item)
+    private async void OnRowClicked(NotificationItem item)
     {
         if (item.IsRead) return;
-        _ = NotificationManager.Instance?.MarkReadAsync(item.Id);
+        if (NotificationManager.Instance == null) return;
+        await NotificationManager.Instance.MarkReadAsync(item.Id, _cts.Token);
+        if (_cts.IsCancellationRequested) return;
         Refresh();
     }
 
-    private void OnMarkAllReadClicked()
+    private async void OnMarkAllReadClicked()
     {
-        _ = NotificationManager.Instance?.MarkAllReadAsync();
+        if (NotificationManager.Instance == null) return;
+        await NotificationManager.Instance.MarkAllReadAsync(_cts.Token);
+        if (_cts.IsCancellationRequested) return;
         Refresh();
     }
 
     public void Dispose()
     {
+        _cts.Cancel();
+        _cts.Dispose();
         _list?.Clear();
     }
 }
