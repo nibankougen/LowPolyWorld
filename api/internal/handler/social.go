@@ -20,9 +20,6 @@ type userListResponse struct {
 	Users []userSummary `json:"users"`
 }
 
-type hiddenUsersListResponse struct {
-	UserIDs []string `json:"userIds"`
-}
 
 func scanUserSummaryRows(rows interface {
 	Next() bool
@@ -55,11 +52,25 @@ func scanUserSummaryRows(rows interface {
 // ── Hidden users ──────────────────────────────────────────────────────────────
 
 // ListHiddenUsers handles GET /api/v1/me/hidden-users.
+type hiddenUserEntry struct {
+	ID          string `json:"id"`
+	DisplayName string `json:"displayName"`
+	Name        string `json:"name,omitempty"`
+}
+
+type hiddenUsersDetailResponse struct {
+	Users []hiddenUserEntry `json:"users"`
+}
+
 func (h *Handler) ListHiddenUsers(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.UserIDFromContext(r.Context())
 
 	rows, err := h.DB.Query(r.Context(),
-		`SELECT target_id::text FROM hidden_users WHERE user_id = $1 ORDER BY created_at DESC`,
+		`SELECT hu.target_id::text, COALESCE(au.display_name, ''), COALESCE(au.name, '')
+		 FROM hidden_users hu
+		 LEFT JOIN active_users au ON au.user_id = hu.target_id AND au.deleted_at IS NULL
+		 WHERE hu.user_id = $1
+		 ORDER BY hu.created_at DESC`,
 		userID,
 	)
 	if err != nil {
@@ -69,15 +80,15 @@ func (h *Handler) ListHiddenUsers(w http.ResponseWriter, r *http.Request) {
 	}
 	defer rows.Close()
 
-	ids := []string{}
+	users := []hiddenUserEntry{}
 	for rows.Next() {
-		var id string
-		if err := rows.Scan(&id); err != nil {
+		var u hiddenUserEntry
+		if err := rows.Scan(&u.ID, &u.DisplayName, &u.Name); err != nil {
 			continue
 		}
-		ids = append(ids, id)
+		users = append(users, u)
 	}
-	response.ClientJSON(w, http.StatusOK, hiddenUsersListResponse{UserIDs: ids})
+	response.ClientJSON(w, http.StatusOK, hiddenUsersDetailResponse{Users: users})
 }
 
 // HideUser handles POST /api/v1/me/hidden-users/{targetID}.
@@ -527,12 +538,25 @@ func (h *Handler) RemoveFriend(w http.ResponseWriter, r *http.Request) {
 
 // ── Hidden worlds ─────────────────────────────────────────────────────────────
 
+type hiddenWorldEntry struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+type hiddenWorldsDetailResponse struct {
+	Worlds []hiddenWorldEntry `json:"worlds"`
+}
+
 // ListHiddenWorlds handles GET /api/v1/me/hidden-worlds.
 func (h *Handler) ListHiddenWorlds(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.UserIDFromContext(r.Context())
 
 	rows, err := h.DB.Query(r.Context(),
-		`SELECT world_id::text FROM hidden_worlds WHERE user_id = $1 ORDER BY created_at DESC`,
+		`SELECT hw.world_id::text, COALESCE(w.name, '')
+		 FROM hidden_worlds hw
+		 LEFT JOIN worlds w ON w.id = hw.world_id
+		 WHERE hw.user_id = $1
+		 ORDER BY hw.created_at DESC`,
 		userID,
 	)
 	if err != nil {
@@ -542,17 +566,15 @@ func (h *Handler) ListHiddenWorlds(w http.ResponseWriter, r *http.Request) {
 	}
 	defer rows.Close()
 
-	ids := []string{}
+	worlds := []hiddenWorldEntry{}
 	for rows.Next() {
-		var id string
-		if err := rows.Scan(&id); err != nil {
+		var w hiddenWorldEntry
+		if err := rows.Scan(&w.ID, &w.Name); err != nil {
 			continue
 		}
-		ids = append(ids, id)
+		worlds = append(worlds, w)
 	}
-	response.ClientJSON(w, http.StatusOK, struct {
-		WorldIDs []string `json:"worldIds"`
-	}{WorldIDs: ids})
+	response.ClientJSON(w, http.StatusOK, hiddenWorldsDetailResponse{Worlds: worlds})
 }
 
 // HideWorld handles POST /api/v1/me/hidden-worlds/{worldID}.

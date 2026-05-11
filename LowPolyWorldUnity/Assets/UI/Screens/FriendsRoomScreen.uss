@@ -1,0 +1,109 @@
+.overlay-hidden {
+    display: none;
+}
+
+.screen-root {
+    flex-grow: 1;
+    background-color: rgb(18, 18, 22);
+}
+
+.screen-header {
+    flex-direction: row;
+    align-items: center;
+    padding: 20px 16px 12px 16px;
+    background-color: rgb(24, 24, 30);
+    border-bottom-width: 1px;
+    border-color: rgb(44, 44, 54);
+}
+
+.btn-back {
+    width: 60px;
+    height: 60px;
+    background-color: transparent;
+    color: rgb(100, 170, 255);
+    font-size: 36px;
+    border-width: 0;
+}
+
+.screen-title {
+    flex-grow: 1;
+    color: white;
+    font-size: 30px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+}
+
+.loading-state {
+    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+}
+
+.loading-label {
+    color: rgb(130, 130, 145);
+    font-size: 26px;
+}
+
+.room-list {
+    flex-grow: 1;
+}
+
+.room-card {
+    padding: 16px 20px;
+    border-bottom-width: 1px;
+    border-color: rgb(36, 36, 46);
+}
+
+.room-card__world-name {
+    color: rgb(160, 160, 180);
+    font-size: 22px;
+    margin-bottom: 4px;
+}
+
+.room-card__room-type {
+    color: rgb(100, 150, 220);
+    font-size: 20px;
+    margin-bottom: 8px;
+}
+
+.room-card__bottom {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.room-card__players {
+    color: rgb(180, 220, 180);
+    font-size: 24px;
+    -unity-font-style: bold;
+}
+
+.room-card__join-btn {
+    height: 56px;
+    min-width: 120px;
+    background-color: rgb(80, 140, 220);
+    color: white;
+    font-size: 24px;
+    border-radius: 10px;
+    border-width: 0;
+    padding: 0 20px;
+}
+
+.room-card__join-btn--full {
+    background-color: rgb(60, 60, 75);
+    color: rgb(120, 120, 135);
+}
+
+.empty-state {
+    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 20px;
+}
+
+.empty-label {
+    color: rgb(120, 120, 135);
+    font-size: 26px;
+    white-space: normal;
+    -unity-text-align: upper-center;
+}

@@ -6,7 +6,7 @@
         <ui:VisualElement class="screen-header">
             <ui:Button name="btn-back" class="btn-back" text="‹" />
             <ui:Label class="screen-title" text="フレンド管理" />
-            <ui:VisualElement style="width: 60px;" />
+            <ui:Button name="btn-friends-rooms" class="btn-friends-rooms" text="ルーム一覧" />
         </ui:VisualElement>
 
         <!-- タブバー -->

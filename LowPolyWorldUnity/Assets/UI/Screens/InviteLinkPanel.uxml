@@ -1,0 +1,37 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="InviteLinkPanel.uss" />
+    <!-- 全画面オーバーレイ背景 -->
+    <ui:VisualElement name="invite-overlay" class="invite-overlay">
+        <ui:VisualElement class="invite-panel">
+
+            <!-- タイトル -->
+            <ui:Label class="invite-title" text="招待リンク" />
+
+            <!-- ルーム情報 -->
+            <ui:Label name="lbl-room-info" class="invite-room-info" text="招待制ルームを作成しました" />
+
+            <!-- リンクエリア -->
+            <ui:VisualElement class="invite-link-area">
+                <ui:Label name="lbl-link" class="invite-link-text" text="..." />
+            </ui:VisualElement>
+
+            <!-- コピーボタン -->
+            <ui:Button name="btn-copy" class="btn-copy" text="リンクをコピー" />
+
+            <!-- 使用回数 / 有効期限 -->
+            <ui:Label name="lbl-usage" class="invite-meta" text="使用回数: 0 / 0" />
+            <ui:Label name="lbl-expires" class="invite-meta" text="有効期限: —" />
+
+            <!-- 再発行ボタン -->
+            <ui:Button name="btn-renew" class="btn-renew" text="再発行" />
+
+            <!-- 区切り線 -->
+            <ui:VisualElement class="invite-divider" />
+
+            <!-- アクションボタン -->
+            <ui:Button name="btn-enter" class="btn-enter" text="ルームに入る" />
+            <ui:Button name="btn-close" class="btn-close" text="閉じる" />
+
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

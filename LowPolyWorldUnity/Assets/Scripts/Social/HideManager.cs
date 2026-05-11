@@ -33,7 +33,8 @@ public class HideManager : MonoBehaviour
             Debug.LogWarning($"[HideManager] failed to load hidden users: {err}");
             return;
         }
-        Logic.SetAll(res?.userIds ?? new System.Collections.Generic.List<string>());
+        var ids = res?.users?.ConvertAll(u => u.id) ?? new System.Collections.Generic.List<string>();
+        Logic.SetAll(ids);
     }
 
     /// <summary>ユーザーを非表示にする。API 呼び出し後にローカル状態を更新する。</summary>

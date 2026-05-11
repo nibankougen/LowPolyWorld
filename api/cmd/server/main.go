@@ -226,6 +226,7 @@ func main() {
 
 		// Reports
 		r.Post("/users/{userID}/report", h.ReportUser)
+		r.Post("/worlds/{worldID}/report", h.ReportWorld)
 
 		// Shop — products
 		r.Get("/shop/products", h.ListProducts)

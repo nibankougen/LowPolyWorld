@@ -26,6 +26,7 @@ public class RoomListController
 
     public event Action OnBack;
     public event Action<string, string, string> OnEnterWorld; // worldId, roomId, glbUrl
+    public event Action<string, int> OnInviteRoomCreated; // roomId, maxPlayers
 
     public RoomListController(VisualElement root, ApiClient api, WorldResponse world, bool hasPremium)
     {
@@ -177,7 +178,15 @@ public class RoomListController
             return;
         }
 
-        OnEnterWorld?.Invoke(_world.id, result.id, _world.glbUrl);
+        if (roomType == "invite_only")
+        {
+            SetButtonsEnabled(true);
+            OnInviteRoomCreated?.Invoke(result.id, result.maxPlayers);
+        }
+        else
+        {
+            OnEnterWorld?.Invoke(_world.id, result.id, _world.glbUrl);
+        }
     }
 
     private void SetButtonsEnabled(bool enabled)

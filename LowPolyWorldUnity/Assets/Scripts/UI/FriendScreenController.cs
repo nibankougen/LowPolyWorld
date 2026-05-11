@@ -38,6 +38,9 @@ public class FriendScreenController : IDisposable
     /// <summary>ユーザー行タップ時に発火する（userId）。</summary>
     public event Action<string> OnUserTapped;
 
+    /// <summary>「フレンドがいるルーム」ボタン押下時に発火する。</summary>
+    public event Action OnFriendsRoomsRequested;
+
     public FriendScreenController(VisualElement root)
     {
         _root = root;
@@ -52,6 +55,7 @@ public class FriendScreenController : IDisposable
         _fieldSearch = root.Q<TextField>("field-search");
 
         root.Q<Button>("btn-back")?.RegisterCallback<ClickEvent>(_ => OnBackRequested?.Invoke());
+        root.Q<Button>("btn-friends-rooms")?.RegisterCallback<ClickEvent>(_ => OnFriendsRoomsRequested?.Invoke());
         root.Q<Button>("btn-search")?.RegisterCallback<ClickEvent>(_ => OnSearchClicked());
 
         _tabFriends?.RegisterCallback<ClickEvent>(_ => SelectTab(Tab.Friends));

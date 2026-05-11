@@ -101,6 +101,7 @@ public class WorldResponse
     public bool isPublic;
     public int maxPlayers;
     public int likesCount;
+    public bool isLiked;
     public string createdAt;
 }
 
@@ -215,9 +216,17 @@ public class UserSummaryListResponse
 }
 
 [Serializable]
+public class HiddenUserEntry
+{
+    public string id;
+    public string displayName;
+    public string name;
+}
+
+[Serializable]
 public class HiddenUsersResponse
 {
-    public List<string> userIds;
+    public List<HiddenUserEntry> users;
 }
 
 [Serializable]
@@ -234,9 +243,16 @@ public class RoomListResponse
 }
 
 [Serializable]
+public class HiddenWorldEntry
+{
+    public string id;
+    public string name;
+}
+
+[Serializable]
 public class HiddenWorldsResponse
 {
-    public List<string> worldIds;
+    public List<HiddenWorldEntry> worlds;
 }
 
 [Serializable]

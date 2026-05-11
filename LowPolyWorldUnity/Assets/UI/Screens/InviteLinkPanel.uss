@@ -1,0 +1,105 @@
+.invite-overlay {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.75);
+    align-items: center;
+    justify-content: center;
+}
+
+.invite-panel {
+    background-color: rgb(24, 24, 34);
+    border-radius: 20px;
+    padding: 32px 24px;
+    width: 340px;
+    border-width: 1px;
+    border-color: rgb(60, 80, 140);
+}
+
+.invite-title {
+    color: white;
+    font-size: 32px;
+    -unity-font-style: bold;
+    -unity-text-align: upper-center;
+    margin-bottom: 12px;
+}
+
+.invite-room-info {
+    color: rgb(160, 200, 255);
+    font-size: 22px;
+    -unity-text-align: upper-center;
+    margin-bottom: 20px;
+    white-space: normal;
+}
+
+.invite-link-area {
+    background-color: rgb(14, 14, 22);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 12px;
+    border-width: 1px;
+    border-color: rgb(50, 70, 120);
+}
+
+.invite-link-text {
+    color: rgb(180, 210, 255);
+    font-size: 18px;
+    white-space: normal;
+    -unity-text-align: middle-left;
+}
+
+.btn-copy {
+    height: 60px;
+    background-color: rgb(80, 140, 220);
+    color: white;
+    font-size: 26px;
+    border-radius: 12px;
+    border-width: 0;
+    margin-bottom: 16px;
+}
+
+.invite-meta {
+    color: rgb(140, 150, 170);
+    font-size: 22px;
+    margin-bottom: 6px;
+}
+
+.btn-renew {
+    height: 52px;
+    background-color: rgb(40, 50, 80);
+    color: rgb(160, 190, 240);
+    font-size: 22px;
+    border-radius: 10px;
+    border-width: 1px;
+    border-color: rgb(60, 80, 130);
+    margin-top: 8px;
+    margin-bottom: 16px;
+}
+
+.invite-divider {
+    height: 1px;
+    background-color: rgb(44, 50, 70);
+    margin-bottom: 16px;
+}
+
+.btn-enter {
+    height: 60px;
+    background-color: rgb(60, 160, 100);
+    color: white;
+    font-size: 26px;
+    border-radius: 12px;
+    border-width: 0;
+    margin-bottom: 10px;
+}
+
+.btn-close {
+    height: 52px;
+    background-color: transparent;
+    color: rgb(140, 140, 160);
+    font-size: 24px;
+    border-radius: 10px;
+    border-width: 1px;
+    border-color: rgb(60, 60, 80);
+}

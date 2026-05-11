@@ -33,8 +33,61 @@
     -unity-text-align: middle-center;
 }
 
-.header-spacer {
-    width: 44px;
+.btn-like {
+    width: 40px;
+    height: 40px;
+    background-color: transparent;
+    border-width: 0;
+    font-size: 20px;
+    color: rgb(160, 120, 140);
+}
+
+.btn-like--active {
+    color: rgb(240, 80, 120);
+}
+
+.btn-more {
+    width: 40px;
+    height: 40px;
+    background-color: transparent;
+    border-width: 0;
+    font-size: 22px;
+    color: rgb(180, 180, 200);
+}
+
+/* ── More menu ───────────────────────────────────── */
+
+.more-menu {
+    position: absolute;
+    right: 8px;
+    top: 52px;
+    background-color: rgb(30, 30, 46);
+    border-radius: 10px;
+    border-width: 1px;
+    border-color: rgb(60, 60, 90);
+    min-width: 180px;
+    z-index: 100;
+}
+
+.more-menu__item {
+    height: 44px;
+    background-color: transparent;
+    border-width: 0;
+    border-radius: 0;
+    color: rgb(220, 220, 240);
+    font-size: 14px;
+    -unity-text-align: middle-left;
+    padding: 0 16px;
+}
+
+.more-menu__item--danger {
+    color: rgb(240, 100, 100);
+}
+
+/* ── Report reason dropdown ──────────────────────── */
+
+.report-reason {
+    margin-bottom: 16px;
 }
 
 /* ── Scroll content ──────────────────────────────── */

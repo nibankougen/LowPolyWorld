@@ -1,0 +1,26 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="HiddenUsersScreen.uss" />
+    <ui:VisualElement class="screen-root">
+
+        <!-- ヘッダー -->
+        <ui:VisualElement class="screen-header">
+            <ui:Button name="btn-back" class="btn-back" text="‹" />
+            <ui:Label class="screen-title" text="非表示ユーザー管理" />
+            <ui:VisualElement style="width: 60px;" />
+        </ui:VisualElement>
+
+        <!-- ローディング -->
+        <ui:VisualElement name="loading-state" class="loading-state overlay-hidden">
+            <ui:Label class="loading-label" text="読み込み中..." />
+        </ui:VisualElement>
+
+        <!-- 一覧 -->
+        <ui:ScrollView name="user-list" class="user-list" />
+
+        <!-- 空状態 -->
+        <ui:VisualElement name="empty-state" class="empty-state overlay-hidden">
+            <ui:Label class="empty-label" text="非表示にしたユーザーはいません" />
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>
