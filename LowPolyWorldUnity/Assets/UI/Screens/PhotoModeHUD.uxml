@@ -1,0 +1,66 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="PhotoModeHUD.uss" />
+
+    <!-- 撮影モード全画面オーバーレイ（PhotoModeController が show/hide する） -->
+    <ui:VisualElement name="photo-mode-root" class="photo-mode-root">
+
+        <!-- ───── 右上: 終了ボタン ───── -->
+        <ui:Button name="btn-photo-exit" class="photo-btn btn-exit" text="×" />
+
+        <!-- ───── スタンプ配置レイヤー（タッチ透過 + スタンプ VisualElement を動的追加） ───── -->
+        <ui:VisualElement name="stamp-overlay" class="stamp-overlay" />
+
+        <!-- ───── ゴミ箱（スタンプドラッグ中のみ表示） ───── -->
+        <ui:VisualElement name="stamp-trash" class="stamp-trash photo-hidden">
+            <ui:Label name="trash-icon" class="trash-icon" text="🗑" />
+        </ui:VisualElement>
+
+        <!-- ───── 下部バー: サムネイル / シャッター / スタンプ ───── -->
+        <ui:VisualElement class="photo-bottom-bar">
+
+            <!-- 左下: 直近撮影サムネイル（撮影後に表示） -->
+            <ui:Button name="btn-thumbnail" class="photo-thumbnail photo-hidden" />
+
+            <!-- 下中央: シャッターボタン -->
+            <ui:Button name="btn-shutter" class="photo-btn btn-shutter" text="●" />
+
+            <!-- 右下: スタンプメニュー開くボタン -->
+            <ui:Button name="btn-stamp-open" class="photo-btn btn-stamp" text="🎭" />
+
+        </ui:VisualElement>
+
+        <!-- ───── スタンプ選択メニュー（下から出るシート、デフォルト hidden） ───── -->
+        <ui:VisualElement name="stamp-menu" class="stamp-menu photo-hidden">
+            <!-- タブバー -->
+            <ui:VisualElement class="stamp-menu-tabs">
+                <ui:Button name="stamp-tab-0" class="stamp-tab stamp-tab--active" text="デフォルト" />
+                <ui:Button name="stamp-tab-1" class="stamp-tab" text="プレミアム" />
+                <ui:Button name="stamp-tab-2" class="stamp-tab" text="購入済み" />
+            </ui:VisualElement>
+            <!-- スタンプグリッド（動的に行を追加） -->
+            <ui:ScrollView name="stamp-grid" class="stamp-grid" horizontal-scroller-visibility="Hidden" />
+        </ui:VisualElement>
+
+        <!-- ───── カラーパレット（色変えスタンプ選択時に表示） ───── -->
+        <ui:VisualElement name="color-picker-bar" class="color-picker-bar photo-hidden">
+            <ui:ScrollView name="color-scroll" class="color-scroll"
+                           mode="Horizontal"
+                           vertical-scroller-visibility="Hidden"
+                           horizontal-scroller-visibility="Hidden" />
+        </ui:VisualElement>
+
+        <!-- ───── スポイトオーバーレイ（スポイトモード中に全画面表示） ───── -->
+        <ui:VisualElement name="eyedropper-overlay" class="eyedropper-overlay photo-hidden">
+            <ui:VisualElement name="eyedropper-cursor" class="eyedropper-cursor">
+                <ui:VisualElement name="eyedropper-color-circle" class="eyedropper-color-circle" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- ───── 撮影サムネイル拡大プレビュー（タップ時フルスクリーン） ───── -->
+        <ui:VisualElement name="photo-preview-modal" class="photo-preview-modal photo-hidden">
+            <ui:VisualElement name="preview-image" class="preview-image" />
+            <ui:Button name="btn-preview-close" class="btn-preview-close" text="×" />
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>

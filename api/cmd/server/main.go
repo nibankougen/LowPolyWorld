@@ -118,6 +118,10 @@ func main() {
 	// Version endpoint
 	r.Get("/api/version", h.GetVersion)
 
+	// .well-known (public — domain verification for iOS Universal Links / Android App Links)
+	r.Get("/.well-known/apple-app-site-association", h.ServeAppleAppSiteAssociation)
+	r.Get("/.well-known/assetlinks.json", h.ServeAssetLinks)
+
 	// Auth endpoints (rate limited: 5 req/min per IP + brute-force detection)
 	authRateLimiter := httprate.LimitByIP(5, time.Minute)
 	r.Route("/auth", func(r chi.Router) {

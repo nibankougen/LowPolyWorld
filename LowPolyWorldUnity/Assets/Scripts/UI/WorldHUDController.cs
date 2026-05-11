@@ -11,6 +11,7 @@ public class WorldHUDController : MonoBehaviour
     [SerializeField] private RoomSessionController _sessionController;
     [SerializeField] private VisualTreeAsset _notificationCenterAsset;
     [SerializeField] private VisualTreeAsset _userInfoPanelAsset;
+    [SerializeField] private PhotoModeController _photoModeController;
 
     private UIDocument _document;
     private VisualElement _inWorldMenuRoot;
@@ -237,7 +238,7 @@ public class WorldHUDController : MonoBehaviour
         }
     }
 
-    private void OnCameraButtonClicked() => Debug.Log("[HUD] Camera button clicked");
+    private void OnCameraButtonClicked() => _photoModeController?.Enter();
     private void OnActionButtonClicked() => Debug.Log("[HUD] Action button clicked");
     private void OnJumpButtonClicked() => Debug.Log("[HUD] Jump button clicked");
     private void OnSprintButtonClicked() => Debug.Log("[HUD] Sprint button clicked");

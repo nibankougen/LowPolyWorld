@@ -37,6 +37,12 @@ public class PlayerController : MonoBehaviour
     /// <summary>CameraFollowController が参照するルック入力（度/フレーム）。</summary>
     public Vector2 LookDelta { get; private set; }
 
+    /// <summary>
+    /// 撮影モード中は true。移動・ジャンプ入力を無効化する。
+    /// カメラ回転は PhotoModeController が直接 CameraFollowController に渡す。
+    /// </summary>
+    public bool IsPhotoMode { get; set; }
+
     private void Awake()
     {
         _rigidbody = GetComponent<Rigidbody>();
@@ -86,7 +92,15 @@ public class PlayerController : MonoBehaviour
         bool jumpRequested;
         Vector2 lookDelta;
 
-        if (Application.isMobilePlatform)
+        if (IsPhotoMode)
+        {
+            // 撮影モード: 移動・ジャンプを無効化。カメラルックは PhotoModeController が担当。
+            moveInput = Vector2.zero;
+            sprint = false;
+            jumpRequested = false;
+            lookDelta = Vector2.zero;
+        }
+        else if (Application.isMobilePlatform)
         {
             ProcessTouches();
             _touchInput.Tick(Time.deltaTime);

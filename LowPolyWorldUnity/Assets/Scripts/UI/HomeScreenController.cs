@@ -1,3 +1,4 @@
+using System.Threading;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
@@ -53,6 +54,9 @@ public class HomeScreenController : MonoBehaviour
     private VisualElement _inviteLinkOverlay;
     private InviteLinkPanelController _inviteLinkController;
 
+    private FlashMessageController _flashController;
+    private CancellationTokenSource _cts;
+
     // ユーザー情報パネルオーバーレイ
     private VisualElement _userInfoOverlay;
 
@@ -65,6 +69,8 @@ public class HomeScreenController : MonoBehaviour
 
     private void OnEnable()
     {
+        _cts = new CancellationTokenSource();
+
         var root = _document.rootVisualElement;
         _contentArea = root.Q<VisualElement>("content-area");
 
@@ -82,7 +88,7 @@ public class HomeScreenController : MonoBehaviour
 
         var flashRoot = root.Q<VisualElement>("flash-root");
         if (flashRoot != null)
-            _ = new FlashMessageController(flashRoot);
+            _flashController = new FlashMessageController(flashRoot);
 
         if (_userInfoPanelAsset != null)
         {
@@ -113,16 +119,29 @@ public class HomeScreenController : MonoBehaviour
             _inviteLinkController.OnClose += HideInvitePanel;
         }
 
+        if (DeepLinkHandler.Instance != null)
+            DeepLinkHandler.Instance.OnInviteTokenReceived += HandleInviteToken;
+        DeepLinkHandler.Instance?.MarkReady();
+
         SelectTab(_navWorld, _worldTabAsset);
     }
 
     private void OnDisable()
     {
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = null;
+
+        if (DeepLinkHandler.Instance != null)
+            DeepLinkHandler.Instance.OnInviteTokenReceived -= HandleInviteToken;
+
         DisposeAllControllers();
         _userInfoController?.Dispose();
         _userInfoController = null;
         _inviteLinkController?.Dispose();
         _inviteLinkController = null;
+        _flashController?.Dispose();
+        _flashController = null;
     }
 
     private void DisposeAllControllers()
@@ -350,6 +369,43 @@ public class HomeScreenController : MonoBehaviour
         _friendsRoomController = new FriendsRoomScreenController(content);
         _friendsRoomController.OnBackRequested += ShowFriendScreen;
         _friendsRoomController.OnEnterWorld += EnterWorld;
+    }
+
+    // ── Deep link invite ──────────────────────────────────────────────────────
+
+    private async void HandleInviteToken(string token)
+    {
+        if (UserManager.Instance?.Api == null) return;
+        var ct = _cts?.Token ?? CancellationToken.None;
+
+        var (room, error) = await UserManager.Instance.Api.PostJsonAsync<RoomResponse>(
+            $"/api/v1/invite/{token}/join", null, ct);
+
+        if (error != null)
+        {
+            string msg = error switch
+            {
+                "invite_expired" => "招待リンクの有効期限が切れています",
+                "invite_limit_reached" => "招待リンクの使用上限に達しています",
+                "room_not_open" => "このルームは現在入室できません",
+                "not_found" => "招待リンクが無効です",
+                "room_full" => "ルームが満員です",
+                _ => "招待リンクの処理に失敗しました",
+            };
+            FlashMessageController.Current?.Show(msg, FlashMessageType.Error);
+            return;
+        }
+
+        var (worldData, worldError) = await UserManager.Instance.Api.GetAsync<WorldDataResponse>(
+            $"/api/v1/worlds/{room.worldId}", ct);
+
+        if (worldError != null || worldData?.data == null)
+        {
+            FlashMessageController.Current?.Show("ワールドの読み込みに失敗しました", FlashMessageType.Error);
+            return;
+        }
+
+        EnterWorld(room.worldId, room.id, worldData.data.glbUrl);
     }
 
     // ── Scene transition ──────────────────────────────────────────────────────

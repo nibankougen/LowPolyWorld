@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="com.nibankougen.lowpolyworld">
+    <application>
+        <activity
+            android:name="com.unity3d.player.UnityPlayerGameActivity"
+            android:theme="@style/UnityThemeSelector"
+            android:exported="true"
+            android:launchMode="singleTask">
+
+            <!-- 通常起動 -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!-- Android App Links (https://lowpolyworld.app/invite/*) -->
+            <!-- android:autoVerify="true" により、起動時にドメイン検証が行われる -->
+            <!-- /.well-known/assetlinks.json をサーバーに配置すること -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="https"
+                    android:host="lowpolyworld.app"
+                    android:pathPrefix="/invite/" />
+            </intent-filter>
+
+        </activity>
+    </application>
+</manifest>

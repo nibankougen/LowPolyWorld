@@ -113,6 +113,12 @@ public class WorldListResponse
 }
 
 [Serializable]
+public class WorldDataResponse
+{
+    public WorldResponse data;
+}
+
+[Serializable]
 public class CursorResponse
 {
     public string next;

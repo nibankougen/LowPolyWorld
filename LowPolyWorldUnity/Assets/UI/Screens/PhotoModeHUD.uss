@@ -1,0 +1,352 @@
+/* PhotoModeHUD.uss — 撮影モード専用オーバーレイ */
+
+/* ── 共通ユーティリティ ────────────────────────────────── */
+.photo-hidden {
+    display: none;
+}
+
+/* ── ルートオーバーレイ ─────────────────────────────────── */
+.photo-mode-root {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
+/* ── 汎用ボタン ─────────────────────────────────────────── */
+.photo-btn {
+    width: 56px;
+    height: 56px;
+    border-radius: 28px;
+    font-size: 22px;
+    background-color: rgba(0, 0, 0, 0.55);
+    color: white;
+    border-width: 0;
+    -unity-text-align: middle-center;
+    margin: 4px;
+}
+
+/* ── 終了ボタン（右上固定） ─────────────────────────────── */
+.btn-exit {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    font-size: 26px;
+    width: 48px;
+    height: 48px;
+    border-radius: 24px;
+}
+
+/* ── 下部バー ───────────────────────────────────────────── */
+.photo-bottom-bar {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding-left: 16px;
+    padding-right: 16px;
+    padding-bottom: 20px;
+    height: 96px;
+}
+
+/* ── シャッターボタン ──────────────────────────────────── */
+.btn-shutter {
+    width: 72px;
+    height: 72px;
+    border-radius: 36px;
+    font-size: 36px;
+    background-color: rgba(255, 255, 255, 0.90);
+    color: #222;
+    border-width: 4px;
+    border-color: rgba(0, 0, 0, 0.35);
+    flex-shrink: 0;
+}
+
+/* ── サムネイルボタン（下部左） ─────────────────────────── */
+.photo-thumbnail {
+    width: 60px;
+    height: 60px;
+    border-radius: 6px;
+    border-width: 2px;
+    border-color: rgba(255, 255, 255, 0.7);
+    background-color: rgba(0, 0, 0, 0.4);
+    flex-shrink: 0;
+}
+
+/* ── スタンプ配置レイヤー ──────────────────────────────── */
+.stamp-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    /* タッチを拾わないようにするが、スタンプ VisualElement は独自に拾う */
+    pick-mode: ignore;
+}
+
+/* ── ゴミ箱（下部中央、スタンプドラッグ中のみ） ────────── */
+.stamp-trash {
+    position: absolute;
+    bottom: 100px;
+    left: 0; right: 0;
+    align-items: center;
+    justify-content: flex-end;
+}
+.trash-icon {
+    font-size: 44px;
+    color: rgba(255, 255, 255, 0.85);
+    background-color: rgba(200, 50, 50, 0.75);
+    border-radius: 32px;
+    width: 64px;
+    height: 64px;
+    -unity-text-align: middle-center;
+}
+
+/* ── スタンプメニュー（下から出るシート） ──────────────── */
+.stamp-menu {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    background-color: rgba(30, 30, 30, 0.93);
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+    padding-bottom: 24px;
+    max-height: 280px;
+}
+
+.stamp-menu-tabs {
+    flex-direction: row;
+    height: 44px;
+    border-bottom-color: rgba(255, 255, 255, 0.12);
+    border-bottom-width: 1px;
+}
+
+.stamp-tab {
+    flex: 1;
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    color: rgba(200, 200, 200, 0.7);
+    font-size: 13px;
+    border-bottom-width: 2px;
+    border-bottom-color: rgba(0, 0, 0, 0);
+}
+
+.stamp-tab--active {
+    color: white;
+    border-bottom-color: #5599ff;
+}
+
+.stamp-grid {
+    flex-grow: 1;
+    padding: 8px;
+}
+
+/* ── 配置済みスタンプ（動的に追加される VisualElement） ── */
+.stamp-placed {
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    -unity-text-align: middle-center;
+}
+
+.stamp-placed__label {
+    font-size: 52px;
+    -unity-text-align: middle-center;
+    width: 80px;
+    height: 80px;
+}
+
+.stamp-placed__color-dot {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    border-width: 2px;
+    border-color: white;
+}
+
+/* ── テキストスタンプ ────────────────────────────────────── */
+.text-stamp-clear .stamp-placed__label {
+    color: white;
+    background-color: rgba(0, 0, 0, 0);
+}
+
+.text-stamp-white .stamp-placed__label {
+    color: #222;
+    background-color: rgba(255, 255, 255, 0.88);
+    border-radius: 8px;
+    font-size: 20px;
+    padding: 4px 8px;
+    width: auto; height: auto;
+    min-width: 60px;
+    -unity-text-align: middle-center;
+}
+
+.text-stamp-black .stamp-placed__label {
+    color: white;
+    background-color: rgba(0, 0, 0, 0.82);
+    border-radius: 8px;
+    font-size: 20px;
+    padding: 4px 8px;
+    width: auto; height: auto;
+    min-width: 60px;
+    -unity-text-align: middle-center;
+}
+
+/* ── スタンプグリッドアイテム ──────────────────────────── */
+.stamp-menu-item {
+    width: 72px;
+    height: 72px;
+    border-radius: 10px;
+    background-color: rgba(255, 255, 255, 0.08);
+    border-width: 0;
+    margin: 4px;
+    align-items: center;
+    justify-content: center;
+}
+
+.stamp-menu-item__label {
+    font-size: 36px;
+    -unity-text-align: middle-center;
+}
+
+.stamp-menu-item__lock {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    font-size: 16px;
+}
+
+.stamp-menu-item__color-dot {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    width: 14px;
+    height: 14px;
+    border-radius: 7px;
+    border-width: 2px;
+    border-color: white;
+}
+
+.stamp-menu-item--dragging {
+    opacity: 0.5;
+}
+
+/* ── ドラッグゴースト ───────────────────────────────────── */
+.stamp-drag-ghost {
+    position: absolute;
+    width: 72px;
+    height: 72px;
+    border-radius: 10px;
+    background-color: rgba(255, 255, 255, 0.18);
+    align-items: center;
+    justify-content: center;
+    opacity: 0.85;
+}
+.stamp-drag-ghost__label {
+    font-size: 40px;
+    -unity-text-align: middle-center;
+}
+
+/* ── カラーパレットバー ──────────────────────────────────── */
+.color-picker-bar {
+    position: absolute;
+    bottom: 100px;
+    left: 0; right: 0;
+    height: 64px;
+    background-color: rgba(20, 20, 20, 0.90);
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    padding: 8px 12px;
+}
+
+.color-scroll {
+    flex-grow: 1;
+}
+
+.color-swatch {
+    width: 44px;
+    height: 44px;
+    border-radius: 22px;
+    border-width: 3px;
+    border-color: rgba(255, 255, 255, 0.35);
+    margin: 2px;
+    flex-shrink: 0;
+}
+
+.color-swatch--active {
+    border-color: white;
+    border-width: 3px;
+}
+
+.color-eyedropper-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 22px;
+    border-width: 2px;
+    border-color: rgba(255, 255, 255, 0.6);
+    background-color: rgba(255, 255, 255, 0.12);
+    color: white;
+    font-size: 22px;
+    -unity-text-align: middle-center;
+    margin: 2px;
+    flex-shrink: 0;
+}
+
+/* ── スポイトオーバーレイ ──────────────────────────────── */
+.eyedropper-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: rgba(0, 0, 0, 0.08);
+}
+
+.eyedropper-cursor {
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    border-radius: 40px;
+    border-width: 3px;
+    border-color: white;
+    background-color: rgba(0, 0, 0, 0);
+    align-items: center;
+    justify-content: center;
+    /* 位置は PhotoModeController が transform-origin で更新する */
+    translate: -40px -40px;
+}
+
+.eyedropper-color-circle {
+    width: 60px;
+    height: 60px;
+    border-radius: 30px;
+    border-width: 2px;
+    border-color: rgba(255, 255, 255, 0.8);
+}
+
+/* ── 撮影プレビューモーダル ──────────────────────────────── */
+.photo-preview-modal {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: rgba(0, 0, 0, 0.88);
+    align-items: center;
+    justify-content: center;
+}
+
+.preview-image {
+    flex-grow: 1;
+    max-width: 90%;
+    max-height: 80%;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.btn-preview-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 48px;
+    height: 48px;
+    border-radius: 24px;
+    font-size: 24px;
+    background-color: rgba(60, 60, 60, 0.85);
+    color: white;
+    border-width: 0;
+    -unity-text-align: middle-center;
+}
