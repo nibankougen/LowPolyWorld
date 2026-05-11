@@ -20,7 +20,6 @@ type userListResponse struct {
 	Users []userSummary `json:"users"`
 }
 
-
 func scanUserSummaryRows(rows interface {
 	Next() bool
 	Scan(...any) error

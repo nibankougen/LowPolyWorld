@@ -12,7 +12,6 @@ import (
 	"github.com/nibankougen/LowPolyWorld/api/internal/trust"
 )
 
-
 // valid violation reasons (Phase 9 will extend this to cover world/product reports)
 var validViolationReasons = map[string]bool{
 	"spam":            true,

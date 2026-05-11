@@ -36,6 +36,7 @@ public class WorldDetailController
     private Button _btnReportSend;
 
     private CancellationTokenSource _cts;
+    private CancellationTokenSource _likeCts;
     private string _pendingEnglishRoomId;
     private bool _isLiked;
     private int _likesCount;
@@ -135,6 +136,9 @@ public class WorldDetailController
         _cts?.Cancel();
         _cts?.Dispose();
         _cts = null;
+        _likeCts?.Cancel();
+        _likeCts?.Dispose();
+        _likeCts = null;
         foreach (var tex in _thumbTextures)
             if (tex != null)
                 UnityEngine.Object.Destroy(tex);
@@ -162,20 +166,20 @@ public class WorldDetailController
         _likesCount += _isLiked ? 1 : -1;
         UpdateLikesUI();
 
-        _cts?.Cancel();
-        _cts?.Dispose();
-        _cts = new CancellationTokenSource();
+        _likeCts?.Cancel();
+        _likeCts?.Dispose();
+        _likeCts = new CancellationTokenSource();
 
         string err;
         if (_isLiked)
         {
             var (_, e) = await _api.PostJsonAsync<object>(
-                $"/api/v1/worlds/{_world.id}/like", new object(), _cts.Token);
+                $"/api/v1/worlds/{_world.id}/like", new object(), _likeCts.Token);
             err = e;
         }
         else
         {
-            err = await _api.DeleteAsync($"/api/v1/worlds/{_world.id}/like", _cts.Token);
+            err = await _api.DeleteAsync($"/api/v1/worlds/{_world.id}/like", _likeCts.Token);
         }
 
         if (err != null)

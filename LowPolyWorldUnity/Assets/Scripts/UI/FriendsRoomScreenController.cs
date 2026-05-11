@@ -148,7 +148,12 @@ public class FriendsRoomScreenController : IDisposable
             return;
         }
 
-        OnEnterWorld?.Invoke(room.worldId, room.id, string.Empty);
+        // GLB URL を取得してからワールドへ入る
+        var (world, worldErr) = await api.GetAsync<WorldResponse>($"/api/v1/worlds/{room.worldId}", ct);
+        if (ct.IsCancellationRequested) return;
+
+        var glbUrl = worldErr == null && world != null ? world.glbUrl : string.Empty;
+        OnEnterWorld?.Invoke(room.worldId, room.id, glbUrl);
     }
 
     public void Dispose()

@@ -99,7 +99,7 @@ public class HiddenUsersScreenController : IDisposable
 
         row.Add(info);
 
-        var btnUnhide = new Button(() => OnUnhideClicked(user.id, row));
+        var btnUnhide = new Button(() => OnUnhideClicked(user.id));
         btnUnhide.text = "非表示解除";
         btnUnhide.AddToClassList("btn-unhide");
         row.Add(btnUnhide);
@@ -107,7 +107,7 @@ public class HiddenUsersScreenController : IDisposable
         return row;
     }
 
-    private async void OnUnhideClicked(string userId, VisualElement row)
+    private async void OnUnhideClicked(string userId)
     {
         if (HideManager.Instance == null) return;
         bool ok = await HideManager.Instance.UnhideUserAsync(userId);
