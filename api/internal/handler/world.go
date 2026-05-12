@@ -59,11 +59,14 @@ func (h *Handler) buildWorldResponse(
 }
 
 // ListNewWorlds handles GET /api/v1/worlds/new — public worlds, newest first.
+// Hidden worlds (per the authenticated user's hidden_worlds list) are excluded.
 func (h *Handler) ListNewWorlds(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.UserIDFromContext(r.Context())
 	limit := parseLimit(r)
 	after := r.URL.Query().Get("after")
 
-	cacheKey := "worlds:new:" + after
+	// Per-user cache key so hidden-world preferences are respected.
+	cacheKey := "worlds:new:" + userID + ":" + after
 	if h.Cache != nil {
 		if cached, ok := h.Cache.Get(r.Context(), cacheKey); ok {
 			response.WriteRaw(w, []byte(cached))
@@ -77,23 +80,29 @@ func (h *Handler) ListNewWorlds(w http.ResponseWriter, r *http.Request) {
 	if after == "" {
 		pgrows, err = h.DB.Query(r.Context(),
 			`SELECT id, name, description, thumbnail_hash, glb_hash, is_public, max_players, likes_count, created_at
-			 FROM worlds WHERE is_public = TRUE
+			 FROM worlds
+			 WHERE is_public = TRUE
+			   AND NOT EXISTS (
+			       SELECT 1 FROM hidden_worlds WHERE user_id = $1 AND world_id = worlds.id
+			   )
 			 ORDER BY created_at DESC, id DESC
-			 LIMIT $1`,
-			limit+1,
+			 LIMIT $2`,
+			userID, limit+1,
 		)
 	} else {
-		// Keyset pagination: fetch rows older than the cursor world (by created_at, then id as tiebreak)
 		pgrows, err = h.DB.Query(r.Context(),
 			`SELECT id, name, description, thumbnail_hash, glb_hash, is_public, max_players, likes_count, created_at
 			 FROM worlds
 			 WHERE is_public = TRUE
+			   AND NOT EXISTS (
+			       SELECT 1 FROM hidden_worlds WHERE user_id = $1 AND world_id = worlds.id
+			   )
 			   AND (created_at, id) < (
-			       SELECT created_at, id FROM worlds WHERE id = $1
+			       SELECT created_at, id FROM worlds WHERE id = $2
 			   )
 			 ORDER BY created_at DESC, id DESC
-			 LIMIT $2`,
-			after, limit+1,
+			 LIMIT $3`,
+			userID, after, limit+1,
 		)
 	}
 	if err != nil {
@@ -130,6 +139,9 @@ func (h *Handler) ListLikedWorlds(w http.ResponseWriter, r *http.Request) {
 			 FROM worlds w
 			 JOIN world_likes wl ON wl.world_id = w.id
 			 WHERE wl.user_id = $1
+			   AND NOT EXISTS (
+			       SELECT 1 FROM hidden_worlds WHERE user_id = $1 AND world_id = w.id
+			   )
 			 ORDER BY wl.created_at DESC, w.id DESC
 			 LIMIT $2`,
 			userID, limit+1,
@@ -142,6 +154,9 @@ func (h *Handler) ListLikedWorlds(w http.ResponseWriter, r *http.Request) {
 			 FROM worlds w
 			 JOIN world_likes wl ON wl.world_id = w.id
 			 WHERE wl.user_id = $1
+			   AND NOT EXISTS (
+			       SELECT 1 FROM hidden_worlds WHERE user_id = $1 AND world_id = w.id
+			   )
 			   AND (wl.created_at, w.id) < (
 			       SELECT wl2.created_at, wl2.world_id FROM world_likes wl2 WHERE wl2.world_id = $2 AND wl2.user_id = $1
 			   )
@@ -170,6 +185,7 @@ func (h *Handler) ListFollowingWorlds(w http.ResponseWriter, r *http.Request) {
 // Searches public worlds by name (pg_trgm ILIKE) and/or tags (AND match across world_tags).
 // Both q and tags are optional; omitting both returns all public worlds newest-first.
 func (h *Handler) SearchWorlds(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.UserIDFromContext(r.Context())
 	q := strings.TrimSpace(r.URL.Query().Get("q"))
 	tagsParam := r.URL.Query().Get("tags")
 	limit := parseLimit(r)
@@ -230,9 +246,12 @@ func (h *Handler) SearchWorlds(w http.ResponseWriter, r *http.Request) {
 				 FROM worlds
 				 WHERE is_public = TRUE
 				   AND ($1 = '' OR name ILIKE '%' || $1 || '%')
+				   AND NOT EXISTS (
+				       SELECT 1 FROM hidden_worlds WHERE user_id = $2 AND world_id = worlds.id
+				   )
 				 ORDER BY created_at DESC, id DESC
-				 LIMIT $2`,
-				q, limit+1,
+				 LIMIT $3`,
+				q, userID, limit+1,
 			)
 		} else {
 			pgrows, err = h.DB.Query(r.Context(),
@@ -240,10 +259,13 @@ func (h *Handler) SearchWorlds(w http.ResponseWriter, r *http.Request) {
 				 FROM worlds
 				 WHERE is_public = TRUE
 				   AND ($1 = '' OR name ILIKE '%' || $1 || '%')
-				   AND (created_at, id) < (SELECT created_at, id FROM worlds WHERE id = $2)
+				   AND NOT EXISTS (
+				       SELECT 1 FROM hidden_worlds WHERE user_id = $2 AND world_id = worlds.id
+				   )
+				   AND (created_at, id) < (SELECT created_at, id FROM worlds WHERE id = $3)
 				 ORDER BY created_at DESC, id DESC
-				 LIMIT $3`,
-				q, after, limit+1,
+				 LIMIT $4`,
+				q, userID, after, limit+1,
 			)
 		}
 	} else {
@@ -256,12 +278,15 @@ func (h *Handler) SearchWorlds(w http.ResponseWriter, r *http.Request) {
 				 JOIN world_tags wt ON wt.world_id = w.id AND wt.tag_normalized = ANY($1)
 				 WHERE w.is_public = TRUE
 				   AND ($2 = '' OR w.name ILIKE '%' || $2 || '%')
+				   AND NOT EXISTS (
+				       SELECT 1 FROM hidden_worlds WHERE user_id = $3 AND world_id = w.id
+				   )
 				 GROUP BY w.id, w.name, w.description, w.thumbnail_hash, w.glb_hash,
 				          w.is_public, w.max_players, w.likes_count, w.created_at
-				 HAVING COUNT(DISTINCT wt.tag_normalized) = $3
+				 HAVING COUNT(DISTINCT wt.tag_normalized) = $4
 				 ORDER BY w.created_at DESC, w.id DESC
-				 LIMIT $4`,
-				tags, q, tagCount, limit+1,
+				 LIMIT $5`,
+				tags, q, userID, tagCount, limit+1,
 			)
 		} else {
 			pgrows, err = h.DB.Query(r.Context(),
@@ -271,13 +296,16 @@ func (h *Handler) SearchWorlds(w http.ResponseWriter, r *http.Request) {
 				 JOIN world_tags wt ON wt.world_id = w.id AND wt.tag_normalized = ANY($1)
 				 WHERE w.is_public = TRUE
 				   AND ($2 = '' OR w.name ILIKE '%' || $2 || '%')
-				   AND (w.created_at, w.id) < (SELECT created_at, id FROM worlds WHERE id = $3)
+				   AND NOT EXISTS (
+				       SELECT 1 FROM hidden_worlds WHERE user_id = $3 AND world_id = w.id
+				   )
+				   AND (w.created_at, w.id) < (SELECT created_at, id FROM worlds WHERE id = $4)
 				 GROUP BY w.id, w.name, w.description, w.thumbnail_hash, w.glb_hash,
 				          w.is_public, w.max_players, w.likes_count, w.created_at
-				 HAVING COUNT(DISTINCT wt.tag_normalized) = $4
+				 HAVING COUNT(DISTINCT wt.tag_normalized) = $5
 				 ORDER BY w.created_at DESC, w.id DESC
-				 LIMIT $5`,
-				tags, q, after, tagCount, limit+1,
+				 LIMIT $6`,
+				tags, q, userID, after, tagCount, limit+1,
 			)
 		}
 	}

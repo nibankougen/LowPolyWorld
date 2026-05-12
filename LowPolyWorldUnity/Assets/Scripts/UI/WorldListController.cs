@@ -178,7 +178,12 @@ public class WorldListController
                 return;
             }
 
-            var worlds = result.data ?? new List<WorldResponse>();
+            var rawWorlds = result.data ?? new List<WorldResponse>();
+            var hideManager = HideManager.Instance;
+            var worlds = new List<WorldResponse>(rawWorlds.Count);
+            foreach (var w in rawWorlds)
+                if (hideManager == null || !hideManager.WorldLogic.IsHidden(w.id))
+                    worlds.Add(w);
             foreach (var world in worlds)
                 _worldList.Add(BuildWorldCard(world));
 

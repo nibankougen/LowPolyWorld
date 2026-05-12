@@ -699,7 +699,7 @@
 ### Unityクライアント
 - [x] 発話インジケーター（アバター頭上アイコンの点灯・Vivox発話状態連動）
 - [x] アバタータップUI（UserInfoPanelController: フォロー/フレンド申請/非表示/通報ボタン・フォロワー数タップでフォロー画面）<!-- 3Dアバタータップとの接続は WorldScene 統合時に完成 -->
-- [ ] ワールドモード入場時のアバター選択UI（スロット一覧 + 購入アバター直接利用）
+- [x] ワールドモード入場時のアバター選択UI（スロット一覧 + 購入アバター直接利用）<!-- WorldAvatarSelectLogic + WorldAvatarSelectController + WorldAvatarSelect.uxml/uss -->
 - [x] バックグラウンド通話モード（iOS/Android・プレミアム限定）
   - [x] `OnApplicationPause` でのVivox接続維持
   - [x] 3D描画停止処理
@@ -721,7 +721,8 @@
 - [x] ユーザー非表示リスト管理画面（設定画面から遷移・非表示解除ボタン）
 - [x] 通報モーダル共通UI（通報理由8種・必須詳細テキスト・非表示チェックボックス（デフォルトON）・通報/キャンセルボタン）<!-- ロジック層のみ: ReportModalLogic 実装済み -->
 - [x] ワールド詳細画面: クイックいいねボタン（サムネイル右下ハートアイコン）・いいねボタン・その他アクションボタン（…）→ 非表示/通報
-- [ ] ワールド非表示: 一覧・ポータルサムネイル非表示・ポータル移動不可・「非表示にしました」フラッシュメッセージ
+- [x] ワールド非表示: 一覧フィルタリング（HideWorldListLogic + HideManager + WorldListController）・「非表示にしました」フラッシュメッセージ<!-- サーバー側も hidden_worlds フィルタ追加済み -->
+- [ ] ワールド非表示: ポータルサムネイル非表示・ポータル移動不可（Phase 12 でワールドポータル実装時に対応）
 - [x] ワールド非表示リスト管理画面（設定タブから遷移・非表示解除ボタン）
 - [x] 各アクション完了時のフラッシュメッセージ表示（FlashMessageLogic + FlashMessageController）
 - [x] アプリ内通知センター（ベルアイコン・未読バッジ・一覧表示・タップで既読処理）
@@ -765,6 +766,8 @@
 - [x] `PhotoModeLogic`: 撮影モード状態遷移（Normal ↔ Photo）
 - [x] `StampOverlayLogic`: スタンプ追加・削除・移動・回転・スケールクランプ・セッション保持・Clear
 - [x] `CameraPhotoModeLogic`: 2本指ピンチズーム・スライド移動・上限クランプ・リセット
+- [x] `HideWorldListLogic`: 非表示追加・解除・一覧取得・IsHidden 判定
+- [x] `WorldAvatarSelectLogic`: スロット/購入済みアバター一覧・タブ切り替え・選択状態管理
 
 ---
 

@@ -28,6 +28,9 @@ public class HomeScreenController : MonoBehaviour
     [SerializeField] private VisualTreeAsset _friendsRoomScreenAsset;
     [SerializeField] private VisualTreeAsset _inviteLinkPanelAsset;
 
+    [Header("World Entry")]
+    [SerializeField] private VisualTreeAsset _worldAvatarSelectAsset;
+
     private UIDocument _document;
     private VisualElement _contentArea;
 
@@ -49,6 +52,7 @@ public class HomeScreenController : MonoBehaviour
     private HiddenWorldsScreenController _hiddenWorldsController;
     private FriendsRoomScreenController _friendsRoomController;
     private UserInfoPanelController _userInfoController;
+    private WorldAvatarSelectController _worldAvatarSelectController;
 
     // 招待リンクパネル（オーバーレイ）
     private VisualElement _inviteLinkOverlay;
@@ -165,6 +169,8 @@ public class HomeScreenController : MonoBehaviour
         _friendsRoomController?.Dispose();
         _friendsRoomController = null;
         _settingsTabController = null;
+        _worldAvatarSelectController?.Dispose();
+        _worldAvatarSelectController = null;
     }
 
     // ── Tab switching ─────────────────────────────────────────────────────────
@@ -413,7 +419,42 @@ public class HomeScreenController : MonoBehaviour
     private void EnterWorld(string worldId, string roomId, string glbUrl)
     {
         WorldSessionData.Set(worldId, roomId, glbUrl);
+        ShowAvatarSelect();
+    }
+
+    private void ShowAvatarSelect()
+    {
+        if (_worldAvatarSelectAsset == null)
+        {
+            DoEnterWorldScene();
+            return;
+        }
+
+        DisposeAllControllers();
+        _contentArea.Clear();
+
+        var content = _worldAvatarSelectAsset.Instantiate();
+        content.style.flexGrow = 1;
+        _contentArea.Add(content);
+
+        _worldAvatarSelectController = new WorldAvatarSelectController(content);
+        _worldAvatarSelectController.OnConfirmed += DoEnterWorldScene;
+        _worldAvatarSelectController.OnCanceled += CancelWorldEntry;
+    }
+
+    private void DoEnterWorldScene()
+    {
+        _worldAvatarSelectController?.Dispose();
+        _worldAvatarSelectController = null;
         DisposeAllControllers();
         SceneManager.LoadScene("WorldScene");
+    }
+
+    private void CancelWorldEntry()
+    {
+        WorldSessionData.Clear();
+        _worldAvatarSelectController?.Dispose();
+        _worldAvatarSelectController = null;
+        ShowWorldList();
     }
 }

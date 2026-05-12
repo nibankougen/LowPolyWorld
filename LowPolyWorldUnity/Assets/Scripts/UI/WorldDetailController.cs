@@ -220,12 +220,10 @@ public class WorldDetailController
     private async void OnHideWorldClicked()
     {
         HideMoreMenu();
-        if (UserManager.Instance == null) return;
+        if (HideManager.Instance == null) return;
 
-        var err = await UserManager.Instance.Api.PostJsonNoBodyAsync(
-            $"/api/v1/me/hidden-worlds/{_world.id}", null, default);
-
-        if (err != null)
+        bool ok = await HideManager.Instance.HideWorldAsync(_world.id);
+        if (!ok)
         {
             FlashMessageController.Current?.Show("非表示設定に失敗しました", FlashMessageType.Error);
             return;

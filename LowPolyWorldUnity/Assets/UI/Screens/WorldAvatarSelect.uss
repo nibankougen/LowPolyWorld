@@ -1,0 +1,142 @@
+.screen-root {
+    flex-grow: 1;
+    background-color: rgb(18, 18, 22);
+}
+
+.screen-header {
+    flex-direction: row;
+    align-items: center;
+    padding: 20px 16px 12px 16px;
+    background-color: rgb(24, 24, 30);
+    border-bottom-width: 1px;
+    border-color: rgb(44, 44, 54);
+}
+
+.btn-cancel {
+    width: 110px;
+    height: 60px;
+    background-color: transparent;
+    color: rgb(100, 170, 255);
+    font-size: 24px;
+    border-width: 0;
+    -unity-text-align: middle-left;
+}
+
+.screen-title {
+    flex-grow: 1;
+    color: white;
+    font-size: 30px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+}
+
+.btn-confirm {
+    width: 110px;
+    height: 56px;
+    font-size: 24px;
+    border-radius: 12px;
+    border-width: 0;
+    background-color: rgb(100, 170, 255);
+    color: white;
+    -unity-font-style: bold;
+}
+
+.btn-confirm.btn--disabled {
+    background-color: rgb(50, 55, 68);
+    color: rgb(100, 100, 115);
+}
+
+.tab-bar {
+    flex-direction: row;
+    background-color: rgb(24, 24, 30);
+    border-bottom-width: 1px;
+    border-color: rgb(44, 44, 54);
+}
+
+.tab-btn {
+    flex-grow: 1;
+    height: 68px;
+    font-size: 24px;
+    background-color: transparent;
+    color: rgb(130, 130, 145);
+    border-width: 0;
+    border-bottom-width: 3px;
+    border-color: transparent;
+}
+
+.tab-btn.tab--active {
+    color: rgb(100, 170, 255);
+    border-color: rgb(100, 170, 255);
+}
+
+.loading-overlay {
+    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+}
+
+.loading-label {
+    color: rgb(130, 130, 145);
+    font-size: 26px;
+}
+
+.avatar-list {
+    flex-grow: 1;
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding: 16px;
+}
+
+.avatar-card {
+    width: 46%;
+    margin: 2%;
+    background-color: rgb(28, 28, 36);
+    border-radius: 16px;
+    padding: 16px;
+    align-items: center;
+    border-width: 2px;
+    border-color: transparent;
+}
+
+.avatar-card--selected {
+    border-color: rgb(100, 170, 255);
+    background-color: rgb(30, 38, 58);
+}
+
+.avatar-card__thumb {
+    width: 120px;
+    height: 120px;
+    background-color: rgb(40, 40, 60);
+    border-radius: 60px;
+    margin-bottom: 12px;
+}
+
+.avatar-card__name {
+    color: white;
+    font-size: 22px;
+    -unity-font-style: bold;
+    -unity-text-align: upper-center;
+    white-space: normal;
+    max-width: 160px;
+}
+
+.avatar-card__badge {
+    margin-top: 6px;
+    font-size: 18px;
+    color: rgb(100, 200, 130);
+    background-color: rgba(30, 80, 50, 0.8);
+    border-radius: 8px;
+    padding: 2px 10px;
+}
+
+.empty-state {
+    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 20px;
+}
+
+.empty-label {
+    color: rgb(120, 120, 135);
+    font-size: 26px;
+}

@@ -1,0 +1,32 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="WorldAvatarSelect.uss" />
+    <ui:VisualElement class="screen-root">
+
+        <!-- ヘッダー -->
+        <ui:VisualElement class="screen-header">
+            <ui:Button name="btn-cancel" class="btn-cancel" text="キャンセル" />
+            <ui:Label class="screen-title" text="アバターを選択" />
+            <ui:Button name="btn-confirm" class="btn-confirm btn--disabled" text="決定" />
+        </ui:VisualElement>
+
+        <!-- タブバー -->
+        <ui:VisualElement class="tab-bar">
+            <ui:Button name="btn-tab-slot" class="tab-btn tab--active" text="スロット" />
+            <ui:Button name="btn-tab-purchased" class="tab-btn" text="購入済み" />
+        </ui:VisualElement>
+
+        <!-- ローディングオーバーレイ -->
+        <ui:VisualElement name="loading-overlay" class="loading-overlay" style="display: none;">
+            <ui:Label class="loading-label" text="読み込み中..." />
+        </ui:VisualElement>
+
+        <!-- アバター一覧 -->
+        <ui:ScrollView name="avatar-list" class="avatar-list" />
+
+        <!-- 空状態 -->
+        <ui:VisualElement name="empty-state" class="empty-state" style="display: none;">
+            <ui:Label class="empty-label" text="アバターがありません" />
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>
