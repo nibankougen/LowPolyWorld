@@ -65,10 +65,11 @@ public static class StampCatalog
         new("text_black",  "A",  StampCategory.Default, isText: true, textVariant: TextStampVariant.BlackRound),
 
         // ── プレミアム ────────────────────────────────────────────────────
-        new("diamond",   "💎", StampCategory.Premium, colorable: true),
-        new("wings",     "🦋", StampCategory.Premium, colorable: true),
-        new("fire",      "🔥", StampCategory.Premium, colorable: true),
-        new("rainbow",   "🌈", StampCategory.Premium),
-        new("crystal",   "🔮", StampCategory.Premium, colorable: true),
+        new("diamond",       "💎", StampCategory.Premium, colorable: true),
+        new("wings",         "🦋", StampCategory.Premium, colorable: true),
+        new("fire",          "🔥", StampCategory.Premium, colorable: true),
+        new("rainbow",       "🌈", StampCategory.Premium),
+        new("crystal",       "🔮", StampCategory.Premium, colorable: true),
+        new("yuyu_nice",     "",   StampCategory.Premium),
     };
 }

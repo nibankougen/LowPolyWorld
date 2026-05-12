@@ -15,6 +15,14 @@ public class PhotoModeController : MonoBehaviour
 {
     [Header("Assets")]
     [SerializeField] private VisualTreeAsset _photoModeHUDAsset;
+    [SerializeField] private StampSpriteEntry[] _stampSprites = Array.Empty<StampSpriteEntry>();
+
+    [System.Serializable]
+    public struct StampSpriteEntry
+    {
+        public string stampId;
+        public Sprite sprite;
+    }
 
     [Header("Scene References")]
     [SerializeField] private CameraFollowController _cameraFollow;
@@ -92,12 +100,18 @@ public class PhotoModeController : MonoBehaviour
         new Color(0.5f, 0f, 1f), Color.magenta, Color.gray,
     };
 
+    private readonly Dictionary<string, Sprite> _stampSpriteMap = new();
+
     // ── 初期化 ───────────────────────────────────────────────────────────
 
     /// <summary>WorldHUDController から呼び出す。</summary>
     public void Initialize(VisualElement hudRoot)
     {
         if (_photoModeHUDAsset == null || _photoRoot != null) return;
+
+        foreach (var entry in _stampSprites)
+            if (entry.sprite != null && !string.IsNullOrEmpty(entry.stampId))
+                _stampSpriteMap[entry.stampId] = entry.sprite;
 
         _hudTopRight = hudRoot.Q<VisualElement>("hud-top-right");
         _hudBottom = hudRoot.Q<VisualElement>("hud-bottom");
@@ -282,14 +296,27 @@ public class PhotoModeController : MonoBehaviour
         _stampGrid.Add(row);
     }
 
+    // スプライトがある場合は backgroundImage の VisualElement、なければ Label を返す。
+    private VisualElement MakeStampIcon(StampDefinition def, string labelClass, string imageClass)
+    {
+        if (!def.IsText && _stampSpriteMap.TryGetValue(def.Id, out var sprite))
+        {
+            var img = new VisualElement();
+            img.AddToClassList(imageClass);
+            img.style.backgroundImage = new StyleBackground(sprite);
+            return img;
+        }
+        var label = new Label(def.IsText ? "A" : def.Label);
+        label.AddToClassList(labelClass);
+        return label;
+    }
+
     private VisualElement BuildStampMenuItem(StampDefinition def, bool locked)
     {
         var item = new VisualElement();
         item.AddToClassList("stamp-menu-item");
 
-        var label = new Label(def.Label);
-        label.AddToClassList("stamp-menu-item__label");
-        item.Add(label);
+        item.Add(MakeStampIcon(def, "stamp-menu-item__label", "stamp-menu-item__image"));
 
         if (def.IsColorable)
         {
@@ -330,9 +357,7 @@ public class PhotoModeController : MonoBehaviour
         // ゴーストを作成して追従させる
         _dragGhost = new VisualElement();
         _dragGhost.AddToClassList("stamp-drag-ghost");
-        var ghostLabel = new Label(def.Label);
-        ghostLabel.AddToClassList("stamp-drag-ghost__label");
-        _dragGhost.Add(ghostLabel);
+        _dragGhost.Add(MakeStampIcon(def, "stamp-drag-ghost__label", "stamp-drag-ghost__image"));
         _dragGhost.style.position = Position.Absolute;
         _dragGhost.pickingMode = PickingMode.Ignore;
         _photoRoot.Add(_dragGhost);
@@ -427,11 +452,12 @@ public class PhotoModeController : MonoBehaviour
         var container = new VisualElement();
         container.AddToClassList("stamp-placed");
 
-        var label = new Label(def.IsText ? "" : def.Label);
-        label.AddToClassList("stamp-placed__label");
-
         if (def.IsText)
         {
+            var textLabel = new Label("");
+            textLabel.AddToClassList("stamp-placed__label");
+            container.Add(textLabel);
+
             switch (def.TextVariant)
             {
                 case TextStampVariant.WhiteRound: container.AddToClassList("text-stamp-white"); break;
@@ -439,8 +465,10 @@ public class PhotoModeController : MonoBehaviour
                 default: container.AddToClassList("text-stamp-clear"); break;
             }
         }
-
-        container.Add(label);
+        else
+        {
+            container.Add(MakeStampIcon(def, "stamp-placed__label", "stamp-placed__image"));
+        }
 
         if (def.IsColorable)
         {

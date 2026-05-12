@@ -151,6 +151,13 @@
     height: 80px;
 }
 
+.stamp-placed__image {
+    width: 80px;
+    height: 80px;
+    background-size: contain;
+    background-position: center;
+}
+
 .stamp-placed__color-dot {
     position: absolute;
     bottom: 4px;
@@ -207,6 +214,13 @@
     -unity-text-align: middle-center;
 }
 
+.stamp-menu-item__image {
+    width: 52px;
+    height: 52px;
+    background-size: contain;
+    background-position: center;
+}
+
 .stamp-menu-item__lock {
     position: absolute;
     bottom: 2px;
@@ -243,6 +257,13 @@
 .stamp-drag-ghost__label {
     font-size: 40px;
     -unity-text-align: middle-center;
+}
+
+.stamp-drag-ghost__image {
+    width: 52px;
+    height: 52px;
+    background-size: contain;
+    background-position: center;
 }
 
 /* ── カラーパレットバー ──────────────────────────────────── */
