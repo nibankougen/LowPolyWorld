@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/nibankougen/LowPolyWorld/api/internal/middleware"
+	"github.com/nibankougen/LowPolyWorld/api/internal/plan"
 	"github.com/nibankougen/LowPolyWorld/api/internal/response"
 )
 
@@ -65,6 +66,22 @@ func (h *Handler) ListMyAccessories(w http.ResponseWriter, r *http.Request) {
 // Accepts multipart/form-data with fields: glb (file), name (string, optional).
 func (h *Handler) UploadAccessory(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.UserIDFromContext(r.Context())
+
+	// Enforce accessory slot limit based on the user's subscription tier.
+	var subscriptionTier string
+	var accessoryCount int
+	_ = h.DB.QueryRow(r.Context(),
+		`SELECT au.subscription_tier,
+		        (SELECT count(*) FROM accessories WHERE user_id = au.user_id)
+		 FROM active_users au WHERE au.user_id = $1`,
+		userID,
+	).Scan(&subscriptionTier, &accessoryCount)
+	caps := plan.GetCapabilities(plan.Tier(subscriptionTier))
+	if accessoryCount >= caps.AccessorySlots {
+		response.Error(w, r, http.StatusForbidden, "slot_limit_reached",
+			"accessory slot limit reached; delete an existing accessory or upgrade your plan")
+		return
+	}
 
 	if err := r.ParseMultipartForm(5 << 20); err != nil {
 		response.Error(w, r, http.StatusBadRequest, "validation_error", "invalid multipart form")

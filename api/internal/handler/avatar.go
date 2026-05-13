@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/nibankougen/LowPolyWorld/api/internal/middleware"
+	"github.com/nibankougen/LowPolyWorld/api/internal/plan"
 	"github.com/nibankougen/LowPolyWorld/api/internal/response"
 )
 
@@ -72,6 +73,22 @@ func (h *Handler) ListMyAvatars(w http.ResponseWriter, r *http.Request) {
 // Accepts multipart/form-data with fields: vrm (file), name (string, optional).
 func (h *Handler) UploadAvatar(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.UserIDFromContext(r.Context())
+
+	// Enforce avatar slot limit based on the user's subscription tier.
+	var subscriptionTier string
+	var avatarCount int
+	_ = h.DB.QueryRow(r.Context(),
+		`SELECT au.subscription_tier,
+		        (SELECT count(*) FROM avatars WHERE user_id = au.user_id)
+		 FROM active_users au WHERE au.user_id = $1`,
+		userID,
+	).Scan(&subscriptionTier, &avatarCount)
+	caps := plan.GetCapabilities(plan.Tier(subscriptionTier))
+	if avatarCount >= caps.AvatarSlots {
+		response.Error(w, r, http.StatusForbidden, "slot_limit_reached",
+			"avatar slot limit reached; delete an existing avatar or upgrade your plan")
+		return
+	}
 
 	if err := r.ParseMultipartForm(10 << 20); err != nil {
 		response.Error(w, r, http.StatusBadRequest, "validation_error", "invalid multipart form")

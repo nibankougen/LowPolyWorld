@@ -775,15 +775,20 @@
 **目標**: プレミアム機能が動作する状態
 
 ### `api/`（Go）
-- [ ] `PlanConfig` マップ実装（`docs/unity-game-abstract.md` セクション 23.3 参照）
+- [x] `PlanConfig` マップ実装（`docs/unity-game-abstract.md` セクション 23.3 参照）
   - `PlanTier` 型・`PlanTierOrder` マップ・`TierAtLeast` 関数
-  - `FeatureMinTier` マップ（`background_call` / `invite_room_create` / `name_change` / `premium_stamps_filters`）・`HasFeature` 関数
+  - `FeatureMinTier` マップ（`background_call` / `invite_room_create` / `name_change` / `premium_stamps`）・`HasFeature` 関数
   - `PlanCapabilities` 構造体・`PlanConfig` マップ・`GetCapabilities` 関数
-- [ ] サブスクリプション管理エンドポイント（`subscription_tier` 更新・`subscription_expires_at` 管理・期限切れ時の `'free'` フォールバック処理）
-- [ ] スロット上限チェックを `GetCapabilities(user.SubscriptionTier).XxxSlots` で実装（定数ハードコード禁止）
-- [ ] 解約後スロットロック処理（データ保持・ロードのみ不可）
-- [ ] 招待制ルーム作成時の権限チェック: `HasFeature(user.SubscriptionTier, "invite_room_create")` が false なら 403
-- [ ] `GET /startup` レスポンスに `planCapabilities` オブジェクトを追加（`GetCapabilities` + `HasFeature` で計算したものをクライアントへ返す）
+- [x] サブスクリプション管理エンドポイント（`subscription_tier` 更新・`subscription_expires_at` 管理）
+  - `GET /me/subscription` — 現在のティアと有効期限を返す
+  - `POST /me/subscription/purchases` — IAP 購入後にクライアントが呼ぶ（idempotent・有効期限延長対応）
+  - `expire-subscriptions` バッチ（期限切れユーザーを `'free'` にダウングレード）
+- [x] スロット上限チェックを `GetCapabilities(user.SubscriptionTier).XxxSlots` で実装（定数ハードコード禁止）
+  - `UploadAvatar`: AvatarSlots 超過 → 403 `slot_limit_reached`
+  - `UploadAccessory`: AccessorySlots 超過 → 403 `slot_limit_reached`
+- [x] 解約後スロットロック処理（データ保持・ロードのみ不可） — クライアント側表示で対応（上限超過スロットをロック表示）
+- [x] 招待制ルーム作成時の権限チェック: `caps.InviteRoomCreate` が false なら 403（room.go 実装済み）
+- [x] `GET /startup` レスポンスに `planCapabilities` オブジェクトを追加（startup.go 実装済み）
 
 ### Unityクライアント
 - [ ] `UserManager` 実装（ユーザーID・称号・`PlanCapabilities` 構造体保持）

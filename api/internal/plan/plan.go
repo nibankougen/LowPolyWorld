@@ -68,3 +68,21 @@ func GetCapabilities(tier Tier) Capabilities {
 func TierAtLeast(userTier, required Tier) bool {
 	return planTierOrder[userTier] >= planTierOrder[required]
 }
+
+// featureMinTier maps each named feature to the minimum tier required to use it.
+var featureMinTier = map[string]Tier{
+	"background_call":       TierPremium,
+	"invite_room_create":    TierPremium,
+	"name_change":           TierPremium,
+	"premium_stamps":        TierPremium,
+}
+
+// HasFeature reports whether userTier meets the minimum tier for the named feature.
+// Unknown feature names always return false.
+func HasFeature(userTier Tier, feature string) bool {
+	required, ok := featureMinTier[feature]
+	if !ok {
+		return false
+	}
+	return TierAtLeast(userTier, required)
+}

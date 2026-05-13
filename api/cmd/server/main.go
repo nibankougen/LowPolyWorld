@@ -257,6 +257,10 @@ func main() {
 		r.Get("/me/coins", h.GetCoinBalance)
 		r.Post("/me/coins/purchases", h.RecordCoinPurchase)
 
+		// Me — subscription
+		r.Get("/me/subscription", h.GetSubscription)
+		r.Post("/me/subscription/purchases", h.RecordSubscriptionPurchase)
+
 		// Me — purchased products
 		r.Get("/me/products", h.ListMyProducts)
 	})
