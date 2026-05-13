@@ -41,7 +41,8 @@
       "Bash(curl -s http://localhost:8080/health)",
       "Bash(git add *)",
       "Bash(python convert_otf_to_ttf.py)",
-      "Bash(python Fonts/filter_chars.py)"
+      "Bash(python Fonts/filter_chars.py)",
+      "Bash(uloop find-game-objects *)"
     ]
   }
 }
