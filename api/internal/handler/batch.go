@@ -19,7 +19,7 @@ func (h *Handler) RunBatch(w http.ResponseWriter, r *http.Request) {
 	batchName := chi.URLParam(r, "batchName")
 	switch batchName {
 	case "delete-expired-accounts":
-		count, err := batch.DeleteExpiredAccounts(r.Context(), h.DB, h.Storage, h.Logger)
+		count, err := batch.DeleteExpiredAccounts(r.Context(), h.Pool, h.Storage, h.Logger)
 		if err != nil {
 			h.Logger.Error("batch failed", "batch", batchName, "error", err)
 			response.InternalError(w, r, h.Cfg.IsProduction())
@@ -41,7 +41,7 @@ func (h *Handler) RunBatch(w http.ResponseWriter, r *http.Request) {
 		)
 		response.JSON(w, http.StatusOK, map[string]any{"batch": batchName, "affected_count": 0})
 	case "expire-coins":
-		count, err := batch.ExpireCoins(r.Context(), h.DB, h.Logger)
+		count, err := batch.ExpireCoins(r.Context(), h.Pool, h.Logger)
 		if err != nil {
 			h.Logger.Error("batch failed", "batch", batchName, "error", err)
 			response.InternalError(w, r, h.Cfg.IsProduction())

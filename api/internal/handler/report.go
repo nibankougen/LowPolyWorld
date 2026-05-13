@@ -69,11 +69,11 @@ func (h *Handler) ReportWorld(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db, logger := h.DB, h.Logger
+	pool, logger := h.Pool, h.Logger
 	go func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
-		trust.CheckAndApplyViolationRestriction(ctx, db, logger, ownerID)
+		trust.CheckAndApplyViolationRestriction(ctx, pool, logger, ownerID)
 	}()
 
 	w.WriteHeader(http.StatusNoContent)
@@ -123,11 +123,11 @@ func (h *Handler) ReportUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Fire auto-restriction check asynchronously (detached context — request may finish first).
-	db, logger := h.DB, h.Logger
+	pool, logger := h.Pool, h.Logger
 	go func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
-		trust.CheckAndApplyViolationRestriction(ctx, db, logger, targetID)
+		trust.CheckAndApplyViolationRestriction(ctx, pool, logger, targetID)
 	}()
 
 	w.WriteHeader(http.StatusNoContent)

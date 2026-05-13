@@ -335,7 +335,7 @@
 - [x] @name 設定・更新エンドポイント（`PUT /me/name`・初回設定は全ユーザー可・変更はプレミアム会員のみ・90 日制限チェック）
 - [x] プロバイダー連携管理エンドポイント（`GET /me/auth-providers`・`POST /me/auth-providers`・`DELETE /me/auth-providers/{provider}`・最低 1 プロバイダー維持の制約）
 - [x] アカウント削除エンドポイント（`DELETE /me`・`active_users.deleted_at` を設定してソフトデリート・セッション全無効化・公開ワールドを非公開へ変更・`vivox_id` を `gen_random_uuid()` で再生成）
-  - [ ] **削除ユーザー ID の公開 API 漏洩防止確認**（`api-abstract.md §13` 準拠・ソフトデリート後 30 日間の確認）
+  - [x] **削除ユーザー ID の公開 API 漏洩防止確認**（`api-abstract.md §13` 準拠・ソフトデリート後 30 日間の確認）
     - `deleted_at IS NOT NULL` のユーザーを参照しうる全パブリックエンドポイントで 404 を返すことを実装・テストで確認する
     - 対象エンドポイント（`deleted_at IS NOT NULL` チェックが必要）:
       - `GET /api/v1/users/{id}` — ユーザープロフィール

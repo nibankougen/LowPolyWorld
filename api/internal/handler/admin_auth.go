@@ -29,7 +29,7 @@ func (h *Handler) AdminLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := adminauth.Login(r.Context(), h.DB, req.Email, req.Password)
+	token, err := adminauth.Login(r.Context(), h.Pool, req.Email, req.Password)
 	if errors.Is(err, adminauth.ErrInvalidCredentials) {
 		response.Error(w, r, http.StatusUnauthorized, "unauthorized", "invalid email or password")
 		return
@@ -52,7 +52,7 @@ func (h *Handler) AdminLogin(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) AdminLogout(w http.ResponseWriter, r *http.Request) {
 	raw := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
 	if raw != "" {
-		_ = adminauth.Logout(r.Context(), h.DB, raw)
+		_ = adminauth.Logout(r.Context(), h.Pool, raw)
 	}
 	w.WriteHeader(http.StatusNoContent)
 }

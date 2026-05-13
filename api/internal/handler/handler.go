@@ -12,7 +12,8 @@ import (
 
 // Handler holds shared dependencies for all HTTP handlers.
 type Handler struct {
-	DB      *pgxpool.Pool
+	DB      DBQuerier     // injectable for tests; set to Pool in production
+	Pool    *pgxpool.Pool // raw pool for internal packages that require *pgxpool.Pool
 	Cfg     *config.Config
 	Storage storage.Storage
 	AuthSvc *auth.Service

@@ -83,6 +83,7 @@ func main() {
 
 	h := &handler.Handler{
 		DB:      pool,
+		Pool:    pool,
 		Cfg:     cfg,
 		Storage: store,
 		AuthSvc: authSvc,

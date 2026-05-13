@@ -325,10 +325,10 @@ func (h *Handler) LeaveRoom(w http.ResponseWriter, r *http.Request) {
 
 	// Fire trust processing asynchronously for public rooms only.
 	if roomType == "public" && !joinedAt.IsZero() {
-		db := h.DB
+		pool := h.Pool
 		logger := h.Logger
 		go trust.ProcessPublicRoomLeave(
-			context.Background(), db, logger,
+			context.Background(), pool, logger,
 			userID, roomID,
 			joinMemberCount, exitCount,
 			joinedAt,
