@@ -18,6 +18,7 @@ import (
 	"github.com/nibankougen/LowPolyWorld/api/internal/cache"
 	"github.com/nibankougen/LowPolyWorld/api/internal/config"
 	"github.com/nibankougen/LowPolyWorld/api/internal/db"
+	"github.com/nibankougen/LowPolyWorld/api/internal/email"
 	"github.com/nibankougen/LowPolyWorld/api/internal/handler"
 	mw "github.com/nibankougen/LowPolyWorld/api/internal/middleware"
 	"github.com/nibankougen/LowPolyWorld/api/internal/storage"
@@ -81,14 +82,18 @@ func main() {
 		logger.Info("redis connected", "url", cfg.RedisURL)
 	}
 
+	var emailSender email.Sender = &email.NoOp{Logger: logger}
+	// TODO: replace with a real Resend sender when cfg.ResendAPIKey != ""
+
 	h := &handler.Handler{
-		DB:      pool,
-		Pool:    pool,
-		Cfg:     cfg,
-		Storage: store,
-		AuthSvc: authSvc,
-		Logger:  logger,
-		Cache:   redisCache,
+		DB:          pool,
+		Pool:        pool,
+		Cfg:         cfg,
+		Storage:     store,
+		AuthSvc:     authSvc,
+		Logger:      logger,
+		Cache:       redisCache,
+		EmailSender: emailSender,
 	}
 
 	authMW := mw.NewAuthMiddleware(authSvc, pool)
@@ -132,14 +137,19 @@ func main() {
 		r.Post("/apple/callback", h.AppleCallback)
 		r.Post("/refresh", h.RefreshToken)
 		r.With(authMW.Authenticate).Post("/logout", h.Logout)
+
+		// Parental consent — verify is public (parent clicks email link); request requires auth only.
+		r.Get("/parental-consent/verify", h.VerifyParentalConsent)
+		r.With(authMW.Authenticate).Post("/parental-consent/request", h.RequestParentalConsent)
 	})
 
-	// Authenticated startup
-	r.With(authMW.Authenticate).Get("/startup", h.GetStartup)
+	// Authenticated startup (parental consent required to proceed past this point)
+	r.With(authMW.Authenticate, authMW.RequireParentalConsent).Get("/startup", h.GetStartup)
 
 	// Authenticated API v1 routes
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Use(authMW.Authenticate)
+		r.Use(authMW.RequireParentalConsent)
 		r.Use(mw.HighAPIRateLog(logger, pool, 500))
 
 		// Me (user profile)
@@ -277,6 +287,7 @@ func main() {
 			r.Patch("/users/{userID}/trust-level", h.AdminPatchTrustLevel)
 			r.Get("/users/{userID}/trust-level/history", h.AdminGetTrustLevelHistory)
 			r.Get("/users/{userID}/data-export", h.AdminGetUserDataExport)
+			r.Post("/users/{userID}/delete-underage", h.AdminDeleteUnderage)
 
 			// Moderation.
 			r.Get("/violation-reports", h.AdminListViolationReports)

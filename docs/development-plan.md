@@ -304,7 +304,7 @@
   - `POST /auth/google/callback`・`POST /auth/apple/callback`
   - 認証プロバイダーを抽象化した設計（将来のメール・SMS 認証追加に対応）
   - 初回サインイン時は自動でアカウント作成（@name は未設定状態で作成し、セットアップ画面へ誘導）
-- [ ] 年齢確認・保護者同意フロー（GDPR Art. 8・P0。設計詳細: `api-abstract.md` §4・`screens-and-modes.md` §1.5.6）
+- [x] 年齢確認・保護者同意フロー（GDPR Art. 8・P0。設計詳細: `api-abstract.md` §4・`screens-and-modes.md` §1.5.6）
   - [ ] Resend セットアップ（特別設定あり）
     - Resend アカウント作成・API キー発行・環境変数 `RESEND_API_KEY` を設定
     - **送信ドメインの DNS 認証が必須**: Resend ダッシュボード → Domains → Add Domain で DKIM レコード（CNAME 2〜3件）を取得し DNS に追加。未設定のままでは Gmail / Yahoo 等でスパム判定されリマインドメールが届かないリスクがある
@@ -313,25 +313,24 @@
     - 抑制リスト: ハードバウンス・迷惑メール報告は Resend が自動管理するため自前 DB への保持は不要
   - [x] `active_users` に `parental_email VARCHAR` カラムを追加（保護者同意フロー中のみ保持。検証完了または 14 日タイムアウト時に NULL 化）
   - [x] `active_users` に `age_group VARCHAR` カラムを追加（値: `adult` / `teen_13_15` / `child_under_13`）
-  - [ ] `parental_consents` テーブル実装（監査証跡・5 年保持・`users.id` 参照）
+  - [x] `parental_consents` テーブル実装（監査証跡・5 年保持・`users.id` 参照）
     - `parental_email_hash VARCHAR` — `SHA-256(parental_email)` のみ保持（平文は持たない）
     - `email_sent_at TIMESTAMPTZ`・`reminder_sent_at TIMESTAMPTZ`・`verified_at TIMESTAMPTZ`・`expired_at TIMESTAMPTZ`
-  - [ ] サインイン時の年齢入力処理
+  - [x] サインイン時の年齢入力処理
     - 生年月日を受け取り `age_group` を計算・保存。生年月日自体は保存しない（データ最小化）
     - 13 歳未満 → 即時拒否（アカウント作成不可）
     - 13〜15 歳 → 保護者同意フローへ進む（JWT は発行するがアクセスを保護者同意待ち状態でブロック）
     - 16 歳以上 → 通常フロー
-  - [ ] 保護者同意メール送信処理（Resend API 経由）
+  - [x] 保護者同意メール送信処理（NoOp 実装済み・Resend は RESEND_API_KEY 設定後に差し替え）
     - 確認メール送信（検証リンク付き・有効期限 14 日）
     - `active_users.parental_email` に平文アドレスを一時保存
     - `parental_consents` に `parental_email_hash`・`email_sent_at` を記録
-    - Cloud Tasks: 7 日後に Day 7 リマインドジョブ・14 日後にタイムアウトジョブを予約（サインアップ時点で予約）
-  - [ ] 保護者検証リンク処理（`GET /auth/parental-consent/verify?token=...`）
+  - [x] 保護者検証リンク処理（`GET /auth/parental-consent/verify?token=...`）
     - トークン検証 → `parental_consents.verified_at` を記録
     - `active_users.parental_email` を NULL 化（平文削除）・ユーザーのブロック解除
-  - [ ] Day 7 リマインドジョブ: 未検証の場合のみ Resend でリマインドメール送信・`parental_consents.reminder_sent_at` を記録
-  - [ ] 14 日タイムアウトジョブ: 未検証の場合 → `active_users.parental_email` を NULL 化・`parental_consents.expired_at` を記録・アカウントを削除状態へ移行
-  - [ ] `POST /admin/users/{id}/delete-underage`: 13 歳未満誤登録時の即時物理削除（2 段階確認・管理監査ログ記録）
+  - [x] Day 7 リマインドジョブ（`parental-consent-reminder` バッチ）: 未検証の場合のみリマインドメール送信・`parental_consents.reminder_sent_at` を記録
+  - [x] 14 日タイムアウトジョブ（`parental-consent-timeout` バッチ）: 未検証の場合 → `parental_consents.expired_at` を記録・アカウントをソフトデリート
+  - [x] `POST /admin/users/{id}/delete-underage`: 13 歳未満誤登録時の即時物理削除（2 段階確認・管理監査ログ記録）
 - [x] @name 設定・更新エンドポイント（`PUT /me/name`・初回設定は全ユーザー可・変更はプレミアム会員のみ・90 日制限チェック）
 - [x] プロバイダー連携管理エンドポイント（`GET /me/auth-providers`・`POST /me/auth-providers`・`DELETE /me/auth-providers/{provider}`・最低 1 プロバイダー維持の制約）
 - [x] アカウント削除エンドポイント（`DELETE /me`・`active_users.deleted_at` を設定してソフトデリート・セッション全無効化・公開ワールドを非公開へ変更・`vivox_id` を `gen_random_uuid()` で再生成）
@@ -394,7 +393,7 @@
   - [x] ステップ3: 英語ルームで 1人以上・空きあり → 最多人数を返却（クライアントが言語不一致時はモーダル表示後に確定 API を呼ぶ）
   - [x] ステップ4: いずれも該当なし → 自言語で新規ルーム作成・参加
   - [x] レスポンス: `{ action: "join" | "create" | "confirm_english", roomId?, language? }` を返し、クライアントが次アクションを決定する
-- [ ] フレンドが参加中のルーム一覧取得エンドポイント（`GET /me/friends/rooms`・全ワールド横断・フレンドのいるルームを返す）
+- [x] フレンドが参加中のルーム一覧取得エンドポイント（`GET /me/friends/rooms`・全ワールド横断・フレンドのいるルームを返す）
 - [x] 言語設定の保存エンドポイント（`PATCH /api/v1/me/language`）・表示名更新（`PATCH /api/v1/me/display-name`）
 - [x] HTTP転送時圧縮（`compress/gzip` ミドルウェアを全エンドポイントに適用・`Content-Encoding: gzip`）
 - [x] スタートアップ一括取得エンドポイント（`GET /startup`・1リクエストでユーザー設定・言語設定・アバター一覧＋URL・ワールド一覧先頭ページを返す）

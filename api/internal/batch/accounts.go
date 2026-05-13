@@ -45,7 +45,7 @@ func DeleteExpiredAccounts(ctx context.Context, db *pgxpool.Pool, store storage.
 	}
 
 	for _, userID := range userIDs {
-		if err := deleteUserAssets(ctx, db, store, logger, userID); err != nil {
+		if err := DeleteUserAssets(ctx, db, store, logger, userID); err != nil {
 			logger.Warn("failed to delete assets for user, skipping", "user_id", userID, "error", err)
 		}
 
@@ -70,8 +70,8 @@ func DeleteExpiredAccounts(ctx context.Context, db *pgxpool.Pool, store storage.
 	return len(userIDs), nil
 }
 
-// deleteUserAssets removes avatar and accessory files from storage that are exclusively owned by userID.
-func deleteUserAssets(ctx context.Context, db *pgxpool.Pool, store storage.Storage, logger *slog.Logger, userID string) error {
+// DeleteUserAssets removes avatar and accessory files from storage that are exclusively owned by userID.
+func DeleteUserAssets(ctx context.Context, db *pgxpool.Pool, store storage.Storage, logger *slog.Logger, userID string) error {
 	// Collect avatar hashes
 	rows, err := db.Query(ctx,
 		`SELECT vrm_hash, texture_hash FROM avatars WHERE user_id = $1`, userID,

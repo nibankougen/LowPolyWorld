@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/nibankougen/LowPolyWorld/api/internal/adminauth"
+	"github.com/nibankougen/LowPolyWorld/api/internal/batch"
 	"github.com/nibankougen/LowPolyWorld/api/internal/middleware"
 	"github.com/nibankougen/LowPolyWorld/api/internal/response"
 	"github.com/nibankougen/LowPolyWorld/api/internal/trust"
@@ -333,4 +334,63 @@ func (h *Handler) AdminGetUserDataExport(w http.ResponseWriter, r *http.Request)
 		"avatars":     avatars,
 		"worlds":      worlds,
 	})
+}
+
+// AdminDeleteUnderage handles POST /admin/users/{userID}/delete-underage.
+// Immediately physically deletes a user incorrectly registered while under 13.
+// Requires super_admin role and explicit confirmation. GDPR Art. 8 compliance.
+func (h *Handler) AdminDeleteUnderage(w http.ResponseWriter, r *http.Request) {
+	admin := middleware.AdminUserFromContext(r.Context())
+	if !adminauth.AtLeast(admin.Role, adminauth.RoleSuperAdmin) {
+		response.Error(w, r, http.StatusForbidden, "forbidden", "super_admin role required")
+		return
+	}
+
+	userID := chi.URLParam(r, "userID")
+
+	var body struct {
+		Confirm string `json:"confirm"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || body.Confirm != "DELETE_UNDERAGE" {
+		response.Error(w, r, http.StatusBadRequest, "validation_error", `confirm must be "DELETE_UNDERAGE"`)
+		return
+	}
+
+	var exists bool
+	_ = h.DB.QueryRow(r.Context(),
+		`SELECT EXISTS(SELECT 1 FROM active_users WHERE user_id = $1)`, userID,
+	).Scan(&exists)
+	if !exists {
+		response.Error(w, r, http.StatusNotFound, "not_found", "user not found")
+		return
+	}
+
+	// Remove uploaded assets (avatar / accessory files) that no other user references.
+	if err := batch.DeleteUserAssets(r.Context(), h.Pool, h.Storage, h.Logger, userID); err != nil {
+		h.Logger.Error("admin delete underage: asset cleanup", "user_id", userID, "error", err)
+	}
+
+	// Revoke all active sessions.
+	_, _ = h.Pool.Exec(r.Context(),
+		`UPDATE refresh_tokens SET revoked_at = now() WHERE user_id = $1 AND revoked_at IS NULL`, userID)
+
+	// Physical deletion (parental_consents / accessories / avatars / active_users).
+	_, _ = h.Pool.Exec(r.Context(), `DELETE FROM parental_consents WHERE user_id = $1::UUID`, userID)
+	_, _ = h.Pool.Exec(r.Context(), `DELETE FROM accessories WHERE user_id = $1`, userID)
+	_, _ = h.Pool.Exec(r.Context(), `DELETE FROM avatars WHERE user_id = $1`, userID)
+	_, _ = h.Pool.Exec(r.Context(), `UPDATE worlds SET deleted_at = now() WHERE owner_user_id = $1 AND deleted_at IS NULL`, userID)
+	if _, err := h.Pool.Exec(r.Context(), `DELETE FROM active_users WHERE user_id = $1`, userID); err != nil {
+		h.Logger.Error("admin delete underage: delete active_users", "user_id", userID, "error", err)
+		response.InternalError(w, r, h.Cfg.IsProduction())
+		return
+	}
+
+	middleware.SetAdminAuditEntry(r.Context(), middleware.AdminAuditEntry{
+		AdminID:    admin.ID,
+		Action:     "admin_delete_underage",
+		TargetType: "user",
+		TargetID:   userID,
+	})
+
+	w.WriteHeader(http.StatusNoContent)
 }

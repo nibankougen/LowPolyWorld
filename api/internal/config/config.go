@@ -30,6 +30,8 @@ type Config struct {
 	GooglePackageName string
 	PubSubAudience    string
 
+	AppBaseURL string // base URL used in outgoing links (e.g. parental consent verification emails)
+
 	AppVersion    int
 	MinAppVersion int
 }
@@ -57,6 +59,7 @@ func Load() (*Config, error) {
 		JWTPublicKeyPath:  getEnv("JWT_PUBLIC_KEY_PATH", "secrets/jwt_public_key"),
 		GoogleClientID:    getEnv("GOOGLE_CLIENT_ID", ""),
 		AppleClientID:     getEnv("APPLE_CLIENT_ID", ""),
+		AppBaseURL:        getEnv("APP_BASE_URL", "http://localhost:8080"),
 		ResendAPIKey:      getEnv("RESEND_API_KEY", ""),
 		BatchSecret:       getEnv("BATCH_SECRET", ""),
 		AppleBundleID:     getEnv("APPLE_BUNDLE_ID", ""),

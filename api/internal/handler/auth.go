@@ -14,17 +14,19 @@ import (
 const maxActiveSessions = 3
 
 type authCallbackRequest struct {
-	IDToken    string `json:"id_token"`
-	DeviceName string `json:"device_name"`
-	BirthDate  string `json:"birth_date"` // YYYY-MM-DD, new accounts only
-	Locale     string `json:"locale"`     // ja-JP etc.
+	IDToken       string `json:"id_token"`
+	DeviceName    string `json:"device_name"`
+	BirthDate     string `json:"birth_date"`     // YYYY-MM-DD, new accounts only
+	Locale        string `json:"locale"`         // ja-JP etc.
+	ParentalEmail string `json:"parental_email"` // required when age_group == "young_teen"
 }
 
 type authResponse struct {
-	AccessToken       string `json:"access_token"`
-	RefreshToken      string `json:"refresh_token"`
-	ExpiresIn         int    `json:"expires_in"`
-	NameSetupRequired bool   `json:"name_setup_required"`
+	AccessToken             string `json:"access_token"`
+	RefreshToken            string `json:"refresh_token"`
+	ExpiresIn               int    `json:"expires_in"`
+	NameSetupRequired       bool   `json:"name_setup_required"`
+	ParentalConsentRequired bool   `json:"parental_consent_required,omitempty"`
 }
 
 func (h *Handler) handleOAuthCallback(w http.ResponseWriter, r *http.Request, provider string) {
@@ -60,7 +62,6 @@ func (h *Handler) handleOAuthCallback(w http.ResponseWriter, r *http.Request, pr
 		locale = "ja-JP"
 	}
 
-	// Determine which column to query/insert
 	var subColumn string
 	switch provider {
 	case "google":
@@ -69,27 +70,28 @@ func (h *Handler) handleOAuthCallback(w http.ResponseWriter, r *http.Request, pr
 		subColumn = "apple_sub"
 	}
 
-	// Find or create user
 	var userID string
 	var tokenRevision int
 	var nameSetupRequired bool
+	var ageGroup string
+	var parentalConsentVerifiedAt *time.Time
 
 	err = h.DB.QueryRow(r.Context(),
-		`SELECT au.user_id, au.token_revision, au.name_setup_required
+		`SELECT au.user_id, au.token_revision, au.name_setup_required,
+		        au.age_group, au.parental_consent_verified_at
 		 FROM active_users au
 		 WHERE `+subColumn+` = $1 AND au.deleted_at IS NULL`,
 		providerSub,
-	).Scan(&userID, &tokenRevision, &nameSetupRequired)
+	).Scan(&userID, &tokenRevision, &nameSetupRequired, &ageGroup, &parentalConsentVerifiedAt)
 
 	if err != nil {
-		// New user — determine age group
-		ageGroup := calcAgeGroup(req.BirthDate)
+		// New user
+		ageGroup = calcAgeGroup(req.BirthDate)
 		if ageGroup == "" {
 			response.Error(w, r, http.StatusForbidden, "age_restricted", "users under 13 cannot register")
 			return
 		}
 
-		// Generate unique temp name with retries
 		tempName := generateUniqueTempName(r.Context(), h)
 
 		tx, txErr := h.DB.Begin(r.Context())
@@ -126,9 +128,13 @@ func (h *Handler) handleOAuthCallback(w http.ResponseWriter, r *http.Request, pr
 		}
 		tokenRevision = 0
 		nameSetupRequired = true
+
+		// If new young_teen and parental email provided, initiate consent flow immediately.
+		if ageGroup == "young_teen" && req.ParentalEmail != "" {
+			go h.initiateParentalConsent(context.Background(), userID, req.ParentalEmail)
+		}
 	}
 
-	// Issue tokens
 	accessToken, err := h.AuthSvc.IssueAccessToken(userID, tokenRevision)
 	if err != nil {
 		h.Logger.Error("issue access token", "error", err)
@@ -142,7 +148,6 @@ func (h *Handler) handleOAuthCallback(w http.ResponseWriter, r *http.Request, pr
 		return
 	}
 
-	// Enforce max sessions by revoking oldest active session if needed
 	h.enforceMaxSessions(r.Context(), userID)
 
 	if _, err := h.DB.Exec(r.Context(),
@@ -155,11 +160,14 @@ func (h *Handler) handleOAuthCallback(w http.ResponseWriter, r *http.Request, pr
 		return
 	}
 
+	parConsentRequired := ageGroup == "young_teen" && parentalConsentVerifiedAt == nil
+
 	response.ClientJSON(w, http.StatusOK, authResponse{
-		AccessToken:       accessToken,
-		RefreshToken:      plain,
-		ExpiresIn:         int(7 * 24 * time.Hour / time.Second),
-		NameSetupRequired: nameSetupRequired,
+		AccessToken:             accessToken,
+		RefreshToken:            plain,
+		ExpiresIn:               int(7 * 24 * time.Hour / time.Second),
+		NameSetupRequired:       nameSetupRequired,
+		ParentalConsentRequired: parConsentRequired,
 	})
 }
 
@@ -202,7 +210,6 @@ func (h *Handler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if revokedAt != nil {
-		// Token reuse detected — revoke all sessions for this user
 		h.Logger.Warn("refresh token reuse detected", "user_id", userID)
 		_, _ = h.DB.Exec(r.Context(),
 			`UPDATE refresh_tokens SET revoked_at = now() WHERE user_id = $1 AND revoked_at IS NULL`, userID)
@@ -226,7 +233,6 @@ func (h *Handler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Revoke old token and issue a new one
 	_, _ = h.DB.Exec(r.Context(),
 		`UPDATE refresh_tokens SET revoked_at = now() WHERE id = $1`, tokenID)
 
@@ -274,7 +280,6 @@ func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// enforceMaxSessions revokes the oldest active session when the user exceeds maxActiveSessions.
 func (h *Handler) enforceMaxSessions(ctx context.Context, userID string) {
 	_, _ = h.DB.Exec(ctx, `
 		UPDATE refresh_tokens SET revoked_at = now()
@@ -291,7 +296,7 @@ func (h *Handler) enforceMaxSessions(ctx context.Context, userID string) {
 }
 
 // calcAgeGroup maps a birth date string to the DB age_group value.
-// Returns "" if user is under 13 (registration must be rejected).
+// Returns "" if the user is under 13 (registration must be rejected).
 func calcAgeGroup(birthDate string) string {
 	if birthDate == "" {
 		return "adult"
@@ -317,7 +322,6 @@ func calcAgeGroup(birthDate string) string {
 	}
 }
 
-// generateUniqueTempName tries to produce a temp @name that doesn't already exist in active_users.
 func generateUniqueTempName(ctx context.Context, h *Handler) string {
 	for i := 0; i < 10; i++ {
 		name := auth.GenerateTempName()
@@ -327,6 +331,5 @@ func generateUniqueTempName(ctx context.Context, h *Handler) string {
 			return name
 		}
 	}
-	// Fallback: use a UUID-based name (always unique in practice)
 	return auth.GenerateTempName()
 }
