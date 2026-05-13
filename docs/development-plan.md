@@ -109,7 +109,7 @@
 **目標**: 同一マシン上でホスト＋クライアントの複数人動作を確認できる状態
 
 ### 開発環境整備
-- [ ] **ParrelSync** 導入（同一マシンで複数Unityエディタを同時起動してマルチ検証）
+- [x] **ParrelSync** 導入（同一マシンで複数Unityエディタを同時起動してマルチ検証）
 
 ### Unityクライアント
 - [x] `NetworkManager` セットアップ（Netcode for GameObjects・Direct Connection）

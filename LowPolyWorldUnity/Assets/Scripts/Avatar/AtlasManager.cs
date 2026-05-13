@@ -52,7 +52,12 @@ public class AtlasManager : MonoBehaviour
     {
         if (Instance == this)
             Instance = null;
-        AtlasTexture?.Release();
+        if (AtlasTexture != null)
+        {
+            if (RenderTexture.active == AtlasTexture)
+                RenderTexture.active = null;
+            AtlasTexture.Release();
+        }
     }
 
     // ---- スロット管理（AvatarManager から呼ぶ） ----
