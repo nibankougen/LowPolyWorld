@@ -88,8 +88,9 @@ func (h *Handler) RecordSubscriptionPurchase(w http.ResponseWriter, r *http.Requ
 	}
 	expiresAt := base.Add(dur)
 
-	// Insert purchase record (idempotent via ON CONFLICT DO NOTHING).
-	_, err := h.DB.Exec(r.Context(),
+	// Insert purchase record. ON CONFLICT DO NOTHING makes the call idempotent;
+	// RowsAffected == 0 means this transaction was already recorded.
+	tag, err := h.DB.Exec(r.Context(),
 		`INSERT INTO subscription_purchases
 		 (user_id, platform, platform_transaction_id, product_id, subscription_tier, expires_at)
 		 VALUES ($1, $2, $3, $4, 'premium', $5)
@@ -99,6 +100,27 @@ func (h *Handler) RecordSubscriptionPurchase(w http.ResponseWriter, r *http.Requ
 	if err != nil {
 		h.Logger.Error("insert subscription purchase", "error", err)
 		response.InternalError(w, r, h.Cfg.IsProduction())
+		return
+	}
+
+	caps := plan.GetCapabilities(plan.TierPremium)
+
+	if tag.RowsAffected() == 0 {
+		// Duplicate transaction — return current subscription state without modification.
+		var currentTier string
+		var currentExpAt *time.Time
+		_ = h.DB.QueryRow(r.Context(),
+			`SELECT subscription_tier, subscription_expires_at FROM active_users WHERE user_id = $1`, userID,
+		).Scan(&currentTier, &currentExpAt)
+		expiresStr := ""
+		if currentExpAt != nil {
+			expiresStr = currentExpAt.UTC().Format(time.RFC3339)
+		}
+		response.ClientJSON(w, http.StatusOK, map[string]any{
+			"tier":             currentTier,
+			"expiresAt":        expiresStr,
+			"planCapabilities": plan.GetCapabilities(plan.Tier(currentTier)),
+		})
 		return
 	}
 
@@ -123,7 +145,6 @@ func (h *Handler) RecordSubscriptionPurchase(w http.ResponseWriter, r *http.Requ
 		"expires_at", expiresAt,
 	)
 
-	caps := plan.GetCapabilities(plan.TierPremium)
 	response.ClientJSON(w, http.StatusOK, map[string]any{
 		"tier":             "premium",
 		"expiresAt":        expiresAt.Format(time.RFC3339),

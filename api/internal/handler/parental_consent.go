@@ -100,7 +100,7 @@ func (h *Handler) RequestParentalConsent(w http.ResponseWriter, r *http.Request)
 // runParentalConsentReminder sends a reminder email to parents who have not verified after 7 days.
 // Returns the number of reminders sent.
 func (h *Handler) runParentalConsentReminder(ctx context.Context) (int, error) {
-	rows, err := h.Pool.Query(ctx,
+	rows, err := h.DB.Query(ctx,
 		`SELECT pc.user_id::text, au.parental_email, pc.token
 		 FROM parental_consents pc
 		 JOIN active_users au ON au.user_id = pc.user_id
@@ -140,7 +140,7 @@ func (h *Handler) runParentalConsentReminder(ctx context.Context) (int, error) {
 				continue
 			}
 		}
-		_, _ = h.Pool.Exec(ctx,
+		_, _ = h.DB.Exec(ctx,
 			`UPDATE parental_consents SET reminder_sent_at = now() WHERE token = $1`, p.token)
 		count++
 	}
@@ -150,7 +150,7 @@ func (h *Handler) runParentalConsentReminder(ctx context.Context) (int, error) {
 // runParentalConsentTimeout expires requests older than 14 days and soft-deletes the user.
 // Returns the number of accounts expired.
 func (h *Handler) runParentalConsentTimeout(ctx context.Context) (int, error) {
-	rows, err := h.Pool.Query(ctx,
+	rows, err := h.DB.Query(ctx,
 		`SELECT user_id::text
 		 FROM parental_consents
 		 WHERE verified_at IS NULL
@@ -176,12 +176,12 @@ func (h *Handler) runParentalConsentTimeout(ctx context.Context) (int, error) {
 
 	count := 0
 	for _, uid := range userIDs {
-		_, _ = h.Pool.Exec(ctx,
+		_, _ = h.DB.Exec(ctx,
 			`UPDATE parental_consents SET expired_at = now()
 			 WHERE user_id = $1 AND verified_at IS NULL AND expired_at IS NULL`,
 			uid,
 		)
-		_, _ = h.Pool.Exec(ctx,
+		_, _ = h.DB.Exec(ctx,
 			`UPDATE active_users SET deleted_at = now(), parental_email = NULL WHERE user_id = $1`,
 			uid,
 		)
@@ -224,20 +224,36 @@ func (h *Handler) VerifyParentalConsent(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	_, err = h.DB.Exec(r.Context(),
-		`UPDATE parental_consents SET verified_at = now() WHERE token = $1`, token)
+	tx, err := h.DB.Begin(r.Context())
 	if err != nil {
+		h.Logger.Error("verify parental consent: begin tx", "error", err)
+		response.InternalError(w, r, h.Cfg.IsProduction())
+		return
+	}
+	defer tx.Rollback(r.Context()) //nolint:errcheck
+
+	if _, err = tx.Exec(r.Context(),
+		`UPDATE parental_consents SET verified_at = now() WHERE token = $1`, token,
+	); err != nil {
 		h.Logger.Error("verify parental consent", "error", err)
 		response.InternalError(w, r, h.Cfg.IsProduction())
 		return
 	}
-
-	_, _ = h.DB.Exec(r.Context(),
+	if _, err = tx.Exec(r.Context(),
 		`UPDATE active_users
 		 SET parental_consent_verified_at = now(), parental_email = NULL
 		 WHERE user_id = $1`,
 		userID,
-	)
+	); err != nil {
+		h.Logger.Error("verify parental consent: update active_users", "error", err)
+		response.InternalError(w, r, h.Cfg.IsProduction())
+		return
+	}
+	if err = tx.Commit(r.Context()); err != nil {
+		h.Logger.Error("verify parental consent: commit", "error", err)
+		response.InternalError(w, r, h.Cfg.IsProduction())
+		return
+	}
 
 	response.JSON(w, http.StatusOK, map[string]string{"status": "verified"})
 }
