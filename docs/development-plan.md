@@ -182,12 +182,12 @@
 
 #### クロスコンパイル設定
 - [ ] iOS: `aarch64-apple-ios`（staticlib）
-- [ ] Android: `aarch64-linux-android`・`armv7-linux-androideabi`（cdylib）
+- [x] Android: `aarch64-linux-android`・`armv7-linux-androideabi`（cdylib）— `Assets/Plugins/Android/arm64-v8a/` および `armeabi-v7a/` に配置済み
 - [x] PC: `x86_64-pc-windows-msvc`（cdylib）— `Assets/Plugins/Windows/x86_64/paint_engine.dll` 配置済み
 
 ### Unityクライアント — ペイントUI共通基盤
 - [x] `Assets/Plugins/Windows/x86_64/` にビルド済みライブラリを配置（`paint_engine.dll`）
-- [ ] `Assets/Plugins/` iOS/Android プラットフォーム設定（Unity Inspector で platform 指定）
+- [x] `Assets/Plugins/` Android プラットフォーム設定（PluginImporter で Android/ARM64・ARMv7 を設定済み）<!-- iOS は macOS 環境で対応 -->
 - [x] P/Invokeラッパークラス実装（`PaintEngineWrapper.cs`）
 - [x] テクスチャ編集バー UI（ブラシ / 消しゴム / 塗りつぶし / 四角形 / 円 / 直線 / レイヤー / その他 ツールボタン）（`AvatarEditScreen.uxml`・`TexturePaintController.cs`）
 - [x] 色選択パネル UI（色相リング + 明度彩度四角形 + 透明度スライダー + RGBA入力 + 色履歴16色）（`ColorPickerLogic.cs`・`TexturePaintController.cs`）

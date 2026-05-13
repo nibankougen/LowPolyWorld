@@ -1,0 +1,16 @@
+# Android クロスコンパイル設定
+# 事前に NDK_HOME 環境変数を設定すること:
+#   $env:NDK_HOME = "C:\Users\<user>\AppData\Local\Android\Sdk\ndk\<version>"
+#
+# ビルド手順 (PowerShell):
+#   $ndkBin = "$env:NDK_HOME\toolchains\llvm\prebuilt\windows-x86_64\bin"
+#   $env:CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER    = "$ndkBin\aarch64-linux-android21-clang.cmd"
+#   $env:CARGO_TARGET_ARMV7_LINUX_ANDROIDEABI_LINKER  = "$ndkBin\armv7a-linux-androideabi21-clang.cmd"
+#   cargo build --target aarch64-linux-android --release
+#   cargo build --target armv7-linux-androideabi --release
+#
+# 出力先 (Unity):
+#   target/aarch64-linux-android/release/libpaint_engine.so
+#     → Assets/Plugins/Android/arm64-v8a/libpaint_engine.so
+#   target/armv7-linux-androideabi/release/libpaint_engine.so
+#     → Assets/Plugins/Android/armeabi-v7a/libpaint_engine.so
