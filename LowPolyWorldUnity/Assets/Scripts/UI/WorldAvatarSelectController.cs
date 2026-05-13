@@ -59,9 +59,12 @@ public class WorldAvatarSelectController : IDisposable
     {
         SetLoading(true);
 
-        // Slot avatars from startup data
+        // Slot avatars from startup data (pass slot limit for premium downgrade lock display)
         if (UserManager.Instance?.Avatars != null)
-            _logic.LoadSlotAvatars(UserManager.Instance.Avatars);
+        {
+            int slotLimit = UserManager.Instance.Capabilities?.avatarSlots ?? int.MaxValue;
+            _logic.LoadSlotAvatars(UserManager.Instance.Avatars, slotLimit);
+        }
 
         // Purchased avatars from API
         if (UserManager.Instance?.Api != null)
@@ -115,6 +118,7 @@ public class WorldAvatarSelectController : IDisposable
 
         bool isSelected = _logic.SelectedAvatar == avatar;
         if (isSelected) card.AddToClassList("avatar-card--selected");
+        if (avatar.IsLocked) card.AddToClassList("avatar-card--locked");
 
         var thumb = new VisualElement();
         thumb.AddToClassList("avatar-card__thumb");
@@ -131,12 +135,21 @@ public class WorldAvatarSelectController : IDisposable
             card.Add(badge);
         }
 
-        card.RegisterCallback<ClickEvent>(_ =>
+        if (avatar.IsLocked)
         {
-            _logic.Select(avatar);
-            RefreshList(); // Rebuild to update selection highlight
-            UpdateConfirmButton();
-        });
+            var lockBadge = new Label("ロック中");
+            lockBadge.AddToClassList("avatar-card__lock-badge");
+            card.Add(lockBadge);
+        }
+        else
+        {
+            card.RegisterCallback<ClickEvent>(_ =>
+            {
+                _logic.Select(avatar);
+                RefreshList(); // Rebuild to update selection highlight
+                UpdateConfirmButton();
+            });
+        }
 
         if (!string.IsNullOrEmpty(avatar.ThumbnailUrl))
             _ = LoadThumbnailAsync(avatar.ThumbnailUrl, thumb, _cts.Token);
@@ -165,14 +178,15 @@ public class WorldAvatarSelectController : IDisposable
     private void UpdateConfirmButton()
     {
         if (_btnConfirm == null) return;
-        _btnConfirm.SetEnabled(_logic.HasSelection);
-        _btnConfirm.EnableInClassList("btn--disabled", !_logic.HasSelection);
+        bool canConfirm = _logic.HasSelection && !(_logic.SelectedAvatar?.IsLocked ?? false);
+        _btnConfirm.SetEnabled(canConfirm);
+        _btnConfirm.EnableInClassList("btn--disabled", !canConfirm);
     }
 
     private void OnConfirmClicked()
     {
         var selected = _logic.SelectedAvatar;
-        if (selected == null) return;
+        if (selected == null || selected.IsLocked) return;
         _ = DownloadAndConfirmAsync(selected, _cts.Token);
     }
 

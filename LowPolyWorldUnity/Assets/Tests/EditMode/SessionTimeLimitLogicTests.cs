@@ -7,14 +7,14 @@ public class SessionTimeLimitLogicTests
     [Test]
     public void RemainingSeconds_InitiallyEqualsTotalDuration()
     {
-        var logic = new SessionTimeLimitLogic(isPremium: false);
+        var logic = new SessionTimeLimitLogic(90);
         Assert.AreEqual(SessionTimeLimitLogic.NormalUserDurationSeconds, logic.RemainingSeconds, 0.001f);
     }
 
     [Test]
     public void RemainingSeconds_DecreasesAfterTick()
     {
-        var logic = new SessionTimeLimitLogic(isPremium: false);
+        var logic = new SessionTimeLimitLogic(90);
         logic.Tick(10f);
         Assert.AreEqual(SessionTimeLimitLogic.NormalUserDurationSeconds - 10f, logic.RemainingSeconds, 0.001f);
     }
@@ -22,7 +22,7 @@ public class SessionTimeLimitLogicTests
     [Test]
     public void RemainingSeconds_NeverBelowZero()
     {
-        var logic = new SessionTimeLimitLogic(isPremium: false);
+        var logic = new SessionTimeLimitLogic(90);
         logic.Tick(SessionTimeLimitLogic.NormalUserDurationSeconds + 1000f);
         Assert.AreEqual(0f, logic.RemainingSeconds, 0.001f);
     }
@@ -30,8 +30,8 @@ public class SessionTimeLimitLogicTests
     [Test]
     public void PremiumUser_HasLongerDuration()
     {
-        var normal = new SessionTimeLimitLogic(isPremium: false);
-        var premium = new SessionTimeLimitLogic(isPremium: true);
+        var normal = new SessionTimeLimitLogic(90);    // 通常: 90分
+        var premium = new SessionTimeLimitLogic(720);  // プレミアム: 12時間
         Assert.Greater(premium.TotalDuration, normal.TotalDuration);
     }
 
@@ -40,7 +40,7 @@ public class SessionTimeLimitLogicTests
     [Test]
     public void Warning_FiredAt10MinRemaining()
     {
-        var logic = new SessionTimeLimitLogic(isPremium: false);
+        var logic = new SessionTimeLimitLogic(90);
         float? firedAt = null;
         logic.OnWarning += t => firedAt = t;
 
@@ -53,7 +53,7 @@ public class SessionTimeLimitLogicTests
     [Test]
     public void Warning_FiredAt5MinRemaining()
     {
-        var logic = new SessionTimeLimitLogic(isPremium: false);
+        var logic = new SessionTimeLimitLogic(90);
         float? firedAt = null;
         logic.OnWarning += t => firedAt = t;
 
@@ -66,7 +66,7 @@ public class SessionTimeLimitLogicTests
     [Test]
     public void Warning_FiredAt1MinRemaining()
     {
-        var logic = new SessionTimeLimitLogic(isPremium: false);
+        var logic = new SessionTimeLimitLogic(90);
         float? firedAt = null;
         logic.OnWarning += t => firedAt = t;
 
@@ -79,7 +79,7 @@ public class SessionTimeLimitLogicTests
     [Test]
     public void Warning_NotFiredTwiceForSameThreshold()
     {
-        var logic = new SessionTimeLimitLogic(isPremium: false);
+        var logic = new SessionTimeLimitLogic(90);
         int count = 0;
         logic.OnWarning += _ => count++;
 
@@ -93,7 +93,7 @@ public class SessionTimeLimitLogicTests
     [Test]
     public void AllThreeWarnings_FiredInOrder()
     {
-        var logic = new SessionTimeLimitLogic(isPremium: false);
+        var logic = new SessionTimeLimitLogic(90);
         var fired = new System.Collections.Generic.List<float>();
         logic.OnWarning += t => fired.Add(t);
 
@@ -110,7 +110,7 @@ public class SessionTimeLimitLogicTests
     [Test]
     public void Expired_FiredWhenTimeRunsOut()
     {
-        var logic = new SessionTimeLimitLogic(isPremium: false);
+        var logic = new SessionTimeLimitLogic(90);
         bool fired = false;
         logic.OnExpired += () => fired = true;
 
@@ -122,7 +122,7 @@ public class SessionTimeLimitLogicTests
     [Test]
     public void Expired_FiredOnlyOnce()
     {
-        var logic = new SessionTimeLimitLogic(isPremium: false);
+        var logic = new SessionTimeLimitLogic(90);
         int count = 0;
         logic.OnExpired += () => count++;
 
@@ -136,7 +136,7 @@ public class SessionTimeLimitLogicTests
     [Test]
     public void IsExpired_TrueAfterExpiry()
     {
-        var logic = new SessionTimeLimitLogic(isPremium: false);
+        var logic = new SessionTimeLimitLogic(90);
         logic.Tick(SessionTimeLimitLogic.NormalUserDurationSeconds + 1f);
         Assert.IsTrue(logic.IsExpired);
     }
@@ -144,8 +144,28 @@ public class SessionTimeLimitLogicTests
     [Test]
     public void IsExpired_FalseBeforeExpiry()
     {
-        var logic = new SessionTimeLimitLogic(isPremium: false);
+        var logic = new SessionTimeLimitLogic(90);
         logic.Tick(10f);
         Assert.IsFalse(logic.IsExpired);
+    }
+
+    // ---- プラン対応: sessionMinutes から計算 ----
+
+    [Test]
+    public void TotalDuration_EqualsSessionMinutesInSeconds()
+    {
+        var logic = new SessionTimeLimitLogic(60);
+        Assert.AreEqual(3600f, logic.TotalDuration, 0.001f);
+    }
+
+    [Test]
+    public void CustomSessionMinutes_WarningsStillFiredCorrectly()
+    {
+        var logic = new SessionTimeLimitLogic(15); // 15分 = 900秒
+        float? firedAt = null;
+        logic.OnWarning += t => firedAt = t;
+
+        logic.Tick(300f + 1f); // 残り 599秒 < 600s → 警告発火
+        Assert.AreEqual(600f, firedAt, 0.001f);
     }
 }

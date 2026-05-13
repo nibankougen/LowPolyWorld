@@ -2,13 +2,12 @@ using System;
 
 /// <summary>
 /// ルームセッション残り時間の計算と警告イベント発火を担う純粋 C# クラス。
-/// 通常ユーザー: 90分 / プレミアム: 12時間
 /// 警告タイミング: 残り10分・5分・1分
 /// </summary>
 public class SessionTimeLimitLogic
 {
-    public const float NormalUserDurationSeconds = 90f * 60f;   // 5400s
-    public const float PremiumUserDurationSeconds = 12f * 60f * 60f; // 43200s
+    public const float NormalUserDurationSeconds = 90f * 60f;    // 5400s (通常ユーザー参照値)
+    public const float PremiumUserDurationSeconds = 12f * 60f * 60f; // 43200s (プレミアム参照値)
 
     public static readonly float[] WarningThresholds = { 600f, 300f, 60f }; // 10min, 5min, 1min
 
@@ -28,9 +27,10 @@ public class SessionTimeLimitLogic
     public float RemainingSeconds => Math.Max(0f, _totalDuration - _elapsed);
     public bool IsExpired => _expired;
 
-    public SessionTimeLimitLogic(bool isPremium = false)
+    /// <param name="sessionMinutes">セッション継続時間（分）。PlanCapabilities.sessionMinutes を渡す。</param>
+    public SessionTimeLimitLogic(int sessionMinutes)
     {
-        _totalDuration = isPremium ? PremiumUserDurationSeconds : NormalUserDurationSeconds;
+        _totalDuration = sessionMinutes * 60f;
     }
 
     /// <summary>

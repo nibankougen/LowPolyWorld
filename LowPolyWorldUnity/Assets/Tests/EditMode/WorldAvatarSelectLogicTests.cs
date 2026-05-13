@@ -169,4 +169,71 @@ public class WorldAvatarSelectLogicTests
         logic.SetActiveTab(AvatarSelectTab.Purchased);
         Assert.AreEqual(logic.PurchasedAvatars, logic.ActiveList);
     }
+
+    // ── スロットロック（プレミアム解約後のスロット上限超過） ─────────────────────
+
+    [Test]
+    public void LoadSlotAvatars_WithSlotLimit_AvatarsWithinLimitNotLocked()
+    {
+        var logic = new WorldAvatarSelectLogic();
+        logic.LoadSlotAvatars(
+            new[]
+            {
+                new StartupAvatar { id = "a1", name = "A", vrmUrl = "http://x/a.vrm", vrmHash = "h1" },
+                new StartupAvatar { id = "a2", name = "B", vrmUrl = "http://x/b.vrm", vrmHash = "h2" },
+            },
+            slotLimit: 3
+        );
+
+        Assert.IsFalse(logic.SlotAvatars[0].IsLocked);
+        Assert.IsFalse(logic.SlotAvatars[1].IsLocked);
+    }
+
+    [Test]
+    public void LoadSlotAvatars_WithSlotLimit_AvatarsBeyondLimitAreLocked()
+    {
+        var logic = new WorldAvatarSelectLogic();
+        logic.LoadSlotAvatars(
+            new[]
+            {
+                new StartupAvatar { id = "a1", name = "A", vrmUrl = "http://x/a.vrm", vrmHash = "h1" },
+                new StartupAvatar { id = "a2", name = "B", vrmUrl = "http://x/b.vrm", vrmHash = "h2" },
+                new StartupAvatar { id = "a3", name = "C", vrmUrl = "http://x/c.vrm", vrmHash = "h3" },
+            },
+            slotLimit: 2
+        );
+
+        Assert.IsFalse(logic.SlotAvatars[0].IsLocked);
+        Assert.IsFalse(logic.SlotAvatars[1].IsLocked);
+        Assert.IsTrue(logic.SlotAvatars[2].IsLocked);
+    }
+
+    [Test]
+    public void LoadSlotAvatars_WithSlotLimitZero_AllAvatarsLocked()
+    {
+        var logic = new WorldAvatarSelectLogic();
+        logic.LoadSlotAvatars(
+            new[]
+            {
+                new StartupAvatar { id = "a1", name = "A", vrmUrl = "http://x/a.vrm", vrmHash = "h1" },
+            },
+            slotLimit: 0
+        );
+
+        Assert.IsTrue(logic.SlotAvatars[0].IsLocked);
+    }
+
+    [Test]
+    public void LoadSlotAvatars_WithoutSlotLimit_NoAvatarsLocked()
+    {
+        var logic = new WorldAvatarSelectLogic();
+        logic.LoadSlotAvatars(new[]
+        {
+            new StartupAvatar { id = "a1", name = "A", vrmUrl = "http://x/a.vrm", vrmHash = "h1" },
+            new StartupAvatar { id = "a2", name = "B", vrmUrl = "http://x/b.vrm", vrmHash = "h2" },
+        });
+
+        Assert.IsFalse(logic.SlotAvatars[0].IsLocked);
+        Assert.IsFalse(logic.SlotAvatars[1].IsLocked);
+    }
 }

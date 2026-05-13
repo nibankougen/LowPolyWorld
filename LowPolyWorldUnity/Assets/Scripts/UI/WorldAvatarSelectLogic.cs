@@ -24,13 +24,17 @@ public class SelectableAvatar
     public readonly string ThumbnailUrl;
     public readonly AvatarSource Source;
 
+    /// <summary>スロット上限超過によりロックされているか（プレミアム解約後のスロットロック表示に使用）。</summary>
+    public readonly bool IsLocked;
+
     public SelectableAvatar(
         string id,
         string name,
         string vrmUrl,
         string vrmHash,
         string thumbnailUrl,
-        AvatarSource source
+        AvatarSource source,
+        bool isLocked = false
     )
     {
         Id = id;
@@ -39,6 +43,7 @@ public class SelectableAvatar
         VrmHash = vrmHash;
         ThumbnailUrl = thumbnailUrl;
         Source = source;
+        IsLocked = isLocked;
     }
 }
 
@@ -60,16 +65,22 @@ public class WorldAvatarSelectLogic
             ? (IReadOnlyList<SelectableAvatar>)SlotAvatars
             : PurchasedAvatars;
 
-    /// <summary>スロットアバター一覧を読み込む。最初のアバターを自動選択する。</summary>
-    public void LoadSlotAvatars(IEnumerable<StartupAvatar> avatars)
+    /// <summary>
+    /// スロットアバター一覧を読み込む。最初のアバターを自動選択する。
+    /// slotLimit 以降のアバターは IsLocked = true になる（プレミアム解約後のスロットロック表示用）。
+    /// </summary>
+    public void LoadSlotAvatars(IEnumerable<StartupAvatar> avatars, int slotLimit = int.MaxValue)
     {
         SlotAvatars.Clear();
+        int index = 0;
         foreach (var a in avatars)
         {
             if (string.IsNullOrEmpty(a.vrmUrl)) continue;
+            bool isLocked = index >= slotLimit;
             SlotAvatars.Add(
-                new SelectableAvatar(a.id, a.name, a.vrmUrl, a.vrmHash, a.textureUrl, AvatarSource.Slot)
+                new SelectableAvatar(a.id, a.name, a.vrmUrl, a.vrmHash, a.textureUrl, AvatarSource.Slot, isLocked)
             );
+            index++;
         }
         if (SelectedAvatar == null && SlotAvatars.Count > 0)
             SelectedAvatar = SlotAvatars[0];

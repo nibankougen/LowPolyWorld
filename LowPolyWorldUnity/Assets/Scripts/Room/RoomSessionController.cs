@@ -51,15 +51,15 @@ public class RoomSessionController : MonoBehaviour
     }
 
     /// <summary>セッションを開始する。</summary>
-    public void StartSession(bool isPremium)
+    public void StartSession(PlanCapabilities capabilities)
     {
-        _sessionLimit = new SessionTimeLimitLogic(isPremium);
+        _sessionLimit = new SessionTimeLimitLogic(capabilities.sessionMinutes);
         _sessionLimit.OnWarning += OnWarning;
         _sessionLimit.OnExpired += OnSessionExpired;
 
-        float afkThreshold = isPremium
-            ? float.MaxValue
-            : AfkDetectionLogic.DefaultAfkThresholdSeconds;
+        float afkThreshold = capabilities.afkEnabled
+            ? AfkDetectionLogic.DefaultAfkThresholdSeconds
+            : float.MaxValue;
         _afkDetection = new AfkDetectionLogic(afkThreshold);
         _afkDetection.OnAfkDetected += OnAfkDetected;
     }
