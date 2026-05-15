@@ -60,6 +60,7 @@
         <ui:VisualElement name="error-area" class="error-area" style="display: none;">
             <ui:Label name="error-label" class="error-label" />
             <ui:Button name="btn-retry" class="btn-secondary" text="再試行" />
+            <ui:Button name="btn-contact" class="btn-secondary" text="nibankougen@gmail.com へのお問い合わせ" style="display: none;" />
         </ui:VisualElement>
 
     </ui:VisualElement>

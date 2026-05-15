@@ -73,11 +73,13 @@ public class UserManager : MonoBehaviour
         Avatars = data.avatars ?? new List<StartupAvatar>();
     }
 
-    public async Task<bool> TryRefreshAccessTokenAsync(CancellationToken ct = default)
+    public async Task<(bool success, string errorCode)> TryRefreshAccessTokenAsync(
+        CancellationToken ct = default
+    )
     {
         var refreshToken = GetRefreshToken();
         if (string.IsNullOrEmpty(refreshToken))
-            return false;
+            return (false, null);
 
         var anonClient = new ApiClient(_config.ApiBaseUrl);
         var (result, error) = await anonClient.PostJsonAsync<TokenResponse>(
@@ -89,11 +91,11 @@ public class UserManager : MonoBehaviour
         if (error != null || result == null)
         {
             ClearSession();
-            return false;
+            return (false, error);
         }
 
         StoreTokens(result.access_token, result.refresh_token);
-        return true;
+        return (true, null);
     }
 
     public void ClearSession()

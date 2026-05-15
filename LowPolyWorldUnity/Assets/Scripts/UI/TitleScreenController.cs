@@ -42,6 +42,7 @@ public class TitleScreenController : MonoBehaviour
     // Error area
     private Label _errorLabel;
     private Button _btnRetry;
+    private Button _btnContact;
 
     private CancellationTokenSource _cts;
     private Action _retryAction;
@@ -74,6 +75,7 @@ public class TitleScreenController : MonoBehaviour
 
         _errorLabel = root.Q<Label>("error-label");
         _btnRetry = root.Q<Button>("btn-retry");
+        _btnContact = root.Q<Button>("btn-contact");
 
         _termsToggle.RegisterValueChangedCallback(_ => UpdateSignInButtons());
         _privacyToggle.RegisterValueChangedCallback(_ => UpdateSignInButtons());
@@ -83,6 +85,7 @@ public class TitleScreenController : MonoBehaviour
         _btnPrivacyLink.clicked += () => UnityEngine.Application.OpenURL(_config.PrivacyPolicyUrl);
         _btnNameConfirm.clicked += () => _ = OnNameConfirmClickedAsync();
         _btnRetry.clicked += () => _retryAction?.Invoke();
+        _btnContact.clicked += () => UnityEngine.Application.OpenURL("mailto:nibankougen@gmail.com");
 
         root.Q<Button>("btn-store").clicked += OpenStore;
 
@@ -123,8 +126,14 @@ public class TitleScreenController : MonoBehaviour
         // Step 2: Try auto-login with stored refresh token
         if (UserManager.Instance.HasRefreshToken())
         {
-            var refreshed = await UserManager.Instance.TryRefreshAccessTokenAsync(ct);
+            var (refreshed, refreshError) = await UserManager.Instance.TryRefreshAccessTokenAsync(ct);
             if (ct.IsCancellationRequested) return;
+
+            if (refreshError == "user_banned")
+            {
+                ShowBanError();
+                return;
+            }
 
             if (refreshed)
             {
@@ -147,6 +156,11 @@ public class TitleScreenController : MonoBehaviour
 
         if (error != null)
         {
+            if (error == "user_banned")
+            {
+                ShowBanError();
+                return;
+            }
             ShowError("起動データの取得に失敗しました。", () => _ = FetchStartupAndNavigateAsync(_cts.Token));
             return;
         }
@@ -199,6 +213,11 @@ public class TitleScreenController : MonoBehaviour
 
         if (error != null)
         {
+            if (error == "user_banned")
+            {
+                ShowBanError();
+                return;
+            }
             ShowModal(_loginModal);
             ShowError("サインインに失敗しました: " + error, null);
             ShowLoading(false);
@@ -289,6 +308,18 @@ public class TitleScreenController : MonoBehaviour
         _errorArea.style.display = DisplayStyle.Flex;
         _retryAction = retry;
         _btnRetry.style.display = retry != null ? DisplayStyle.Flex : DisplayStyle.None;
+        _btnContact.style.display = DisplayStyle.None;
+    }
+
+    private void ShowBanError()
+    {
+        UserManager.Instance?.ClearSession();
+        _loadingArea.style.display = DisplayStyle.None;
+        _loginModal.style.display = DisplayStyle.None;
+        _errorLabel.text = "アカウントが利用停止されています。";
+        _errorArea.style.display = DisplayStyle.Flex;
+        _btnRetry.style.display = DisplayStyle.None;
+        _btnContact.style.display = DisplayStyle.Flex;
     }
 
     private void ShowNameError(string msg)

@@ -49,6 +49,7 @@ public class WorldDetailController
     public event Action OnBack;
     public event Action OnShowRoomList;
     public event Action<string, string, string> OnEnterWorld; // worldId, roomId, glbUrl
+    public event Action OnUserRestricted;
 
     public WorldDetailController(VisualElement root, ApiClient api, WorldResponse world)
     {
@@ -276,7 +277,10 @@ public class WorldDetailController
 
         if (error != null || result == null)
         {
-            ShowError("ルームへの参加に失敗しました");
+            if (error == "user_restricted")
+                OnUserRestricted?.Invoke();
+            else
+                ShowError("ルームへの参加に失敗しました");
             return;
         }
 
@@ -331,7 +335,10 @@ public class WorldDetailController
 
         if (error != null)
         {
-            ShowError("ルームへの参加に失敗しました");
+            if (error == "user_restricted")
+                OnUserRestricted?.Invoke();
+            else
+                ShowError("ルームへの参加に失敗しました");
             return;
         }
 
@@ -361,7 +368,10 @@ public class WorldDetailController
 
         if (error != null || result == null)
         {
-            ShowError("ルームの作成に失敗しました");
+            if (error == "user_restricted" && roomType == "public")
+                OnUserRestricted?.Invoke();
+            else
+                ShowError("ルームの作成に失敗しました");
             return;
         }
 

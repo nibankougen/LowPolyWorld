@@ -27,6 +27,7 @@ public class RoomListController
     public event Action OnBack;
     public event Action<string, string, string> OnEnterWorld; // worldId, roomId, glbUrl
     public event Action<string, int> OnInviteRoomCreated; // roomId, maxPlayers
+    public event Action OnUserRestricted;
 
     public RoomListController(VisualElement root, ApiClient api, WorldResponse world, bool hasPremium)
     {
@@ -142,6 +143,8 @@ public class RoomListController
         if (error != null)
         {
             SetButtonsEnabled(true);
+            if (error == "user_restricted")
+                OnUserRestricted?.Invoke();
             return;
         }
 
@@ -175,6 +178,8 @@ public class RoomListController
         if (error != null || result == null)
         {
             SetButtonsEnabled(true);
+            if (error == "user_restricted" && roomType != "invite_only")
+                OnUserRestricted?.Invoke();
             return;
         }
 

@@ -243,6 +243,7 @@ public class HomeScreenController : MonoBehaviour
         _worldDetailController.OnBack += ShowWorldList;
         _worldDetailController.OnShowRoomList += ShowRoomList;
         _worldDetailController.OnEnterWorld += EnterWorld;
+        _worldDetailController.OnUserRestricted += ShowRestrictionDialog;
     }
 
     private void ShowWorldList()
@@ -275,6 +276,7 @@ public class HomeScreenController : MonoBehaviour
         _roomListController.OnBack += () => ShowWorldDetail(_currentWorld);
         _roomListController.OnEnterWorld += EnterWorld;
         _roomListController.OnInviteRoomCreated += ShowInvitePanel;
+        _roomListController.OnUserRestricted += ShowRestrictionDialog;
         _roomListController.Initialize();
     }
 
@@ -441,6 +443,97 @@ public class HomeScreenController : MonoBehaviour
         }
 
         EnterWorld(room.worldId, room.id, worldData.data.glbUrl);
+    }
+
+    // ── Restriction dialog ────────────────────────────────────────────────────
+
+    private void ShowRestrictionDialog()
+    {
+        var root = _document.rootVisualElement;
+
+        var backdrop = new VisualElement();
+        backdrop.style.position = Position.Absolute;
+        backdrop.style.top = 0;
+        backdrop.style.left = 0;
+        backdrop.style.right = 0;
+        backdrop.style.bottom = 0;
+        backdrop.style.backgroundColor = new Color(0f, 0f, 0f, 0.6f);
+        backdrop.style.alignItems = Align.Center;
+        backdrop.style.justifyContent = Justify.Center;
+
+        var box = new VisualElement();
+        box.style.backgroundColor = new Color(30f / 255, 30f / 255, 40f / 255);
+        box.style.borderTopLeftRadius = 18;
+        box.style.borderTopRightRadius = 18;
+        box.style.borderBottomLeftRadius = 18;
+        box.style.borderBottomRightRadius = 18;
+        box.style.paddingTop = 30;
+        box.style.paddingBottom = 30;
+        box.style.paddingLeft = 28;
+        box.style.paddingRight = 28;
+        box.style.marginLeft = 24;
+        box.style.marginRight = 24;
+        box.style.maxWidth = 600;
+
+        var title = new Label("参加が制限されています");
+        title.style.fontSize = 26;
+        title.style.color = Color.white;
+        title.style.unityFontStyleAndWeight = FontStyle.Bold;
+        title.style.marginBottom = 16;
+        title.style.unityTextAlign = TextAnchor.MiddleCenter;
+        box.Add(title);
+
+        var body = new Label(
+            "このアカウントは現在、公開ルームへの参加が制限されています。\n"
+                + "制限の解除については下記までお問い合わせください。"
+        );
+        body.style.fontSize = 22;
+        body.style.color = new Color(180f / 255, 180f / 255, 195f / 255);
+        body.style.whiteSpace = WhiteSpace.Normal;
+        body.style.marginBottom = 16;
+        box.Add(body);
+
+        var btnContact = new Button(() => Application.OpenURL("mailto:nibankougen@gmail.com"))
+        {
+            text = "nibankougen@gmail.com",
+        };
+        btnContact.style.backgroundColor = new StyleColor(Color.clear);
+        btnContact.style.color = new Color(100f / 255, 170f / 255, 255f / 255);
+        btnContact.style.fontSize = 22;
+        btnContact.style.borderTopWidth = 0;
+        btnContact.style.borderBottomWidth = 0;
+        btnContact.style.borderLeftWidth = 0;
+        btnContact.style.borderRightWidth = 0;
+        btnContact.style.marginBottom = 20;
+        box.Add(btnContact);
+
+        var btnClose = new Button(() => root.Remove(backdrop)) { text = "閉じる" };
+        btnClose.style.height = 60;
+        btnClose.style.fontSize = 24;
+        btnClose.style.borderTopLeftRadius = 12;
+        btnClose.style.borderTopRightRadius = 12;
+        btnClose.style.borderBottomLeftRadius = 12;
+        btnClose.style.borderBottomRightRadius = 12;
+        var borderColor = new StyleColor(new Color(80f / 255, 80f / 255, 100f / 255));
+        btnClose.style.borderTopWidth = 1;
+        btnClose.style.borderBottomWidth = 1;
+        btnClose.style.borderLeftWidth = 1;
+        btnClose.style.borderRightWidth = 1;
+        btnClose.style.borderTopColor = borderColor;
+        btnClose.style.borderBottomColor = borderColor;
+        btnClose.style.borderLeftColor = borderColor;
+        btnClose.style.borderRightColor = borderColor;
+        btnClose.style.backgroundColor = new StyleColor(Color.clear);
+        btnClose.style.color = new Color(180f / 255, 180f / 255, 195f / 255);
+        box.Add(btnClose);
+
+        backdrop.Add(box);
+        backdrop.RegisterCallback<ClickEvent>(e =>
+        {
+            if (e.target == backdrop)
+                root.Remove(backdrop);
+        });
+        root.Add(backdrop);
     }
 
     // ── Scene transition ──────────────────────────────────────────────────────

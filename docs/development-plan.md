@@ -838,12 +838,12 @@
   - [ ] ルーム参加時の制限チェック（公開・フォロワー限定ルームへの参加試行時に `is_restricted` を確認・true なら 403 `user_restricted` を返す）
 
 ### Unityクライアント
-- [ ] BANユーザーのログイン拒否処理
+- [x] BANユーザーのログイン拒否処理
 - [ ] 検疫中アバター（`moderation_status = 'pending'`）の扱い
   - 本人のアバター一覧に「審査中」バッジ表示
   - ルーム内で他プレイヤーが pending アバターを持つプレイヤーを見た場合、フォールバックアバター（システム既定）を表示
 - [ ] BAN済みアバター（`moderation_status = 'rejected'`）の非表示処理（Atlas更新・スロット表示）
-- [ ] ルーム参加時に 403 `user_restricted` を受信したとき制限エラー画面を表示（お問い合わせメールリンク: nibankougen@gmail.com）
+- [x] ルーム参加時に 403 `user_restricted` を受信したとき制限エラー画面を表示（お問い合わせメールリンク: nibankougen@gmail.com）
 - [ ] 公認バッジ表示対応（`is_verified` フィールドを受け取り、表示名の右横に `icon_verified.png` を表示）
   - ワールド内アバター頭上の World Space Canvas 名前タグ
   - ユーザー情報パネル（セクション 2.4）
