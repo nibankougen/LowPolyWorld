@@ -29,6 +29,7 @@ public class SettingsTabController
     public event Action OnFollowScreenRequested;
     public event Action OnHiddenUsersRequested;
     public event Action OnHiddenWorldsRequested;
+    public event Action OnAccountSettingsRequested;
 
     public SettingsTabController(VisualElement root)
     {
@@ -60,6 +61,9 @@ public class SettingsTabController
         root.Q<Button>("btn-follow-screen")?.RegisterCallback<ClickEvent>(_ => OnFollowScreenRequested?.Invoke());
         root.Q<Button>("btn-hidden-users")?.RegisterCallback<ClickEvent>(_ => OnHiddenUsersRequested?.Invoke());
         root.Q<Button>("btn-hidden-worlds")?.RegisterCallback<ClickEvent>(_ => OnHiddenWorldsRequested?.Invoke());
+        root.Q<Button>("btn-account-settings")?.RegisterCallback<ClickEvent>(
+            _ => OnAccountSettingsRequested?.Invoke()
+        );
     }
 
     private static void BindNotifToggle(VisualElement root, string toggleName, string prefsKey)

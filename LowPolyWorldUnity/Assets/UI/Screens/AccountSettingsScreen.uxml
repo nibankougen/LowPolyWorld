@@ -1,0 +1,62 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="AccountSettingsScreen.uss" />
+    <ui:VisualElement class="acct-root">
+
+        <!-- ヘッダー -->
+        <ui:VisualElement class="acct-header">
+            <ui:Button name="btn-back" class="acct-back-btn" text="&#x2039;" />
+            <ui:Label class="acct-title" text="アカウント設定" />
+            <ui:VisualElement style="width: 60px;" />
+        </ui:VisualElement>
+
+        <!-- コンテンツ -->
+        <ui:ScrollView class="acct-scroll">
+
+            <!-- @name セクション -->
+            <ui:Label class="acct-section-title" text="ユーザーID (@name)" />
+            <ui:VisualElement class="acct-card">
+                <ui:Label name="label-current-name" class="acct-current-name" text="..." />
+                <ui:Label name="label-next-change" class="acct-next-change" text="" />
+                <ui:TextField name="field-new-name" class="acct-name-field"
+                              placeholder-text="新しい @name（英数字・_・3〜15文字）" max-length="15" />
+                <ui:Label name="label-name-error" class="acct-name-error" />
+                <ui:Label class="acct-name-caution"
+                          text="古い @name は変更後すぐに解放され、他のユーザーが取得可能になります。リダイレクトはサポートされません。" />
+                <ui:Button name="btn-change-name" class="acct-btn-primary" text="@name を変更する" />
+            </ui:VisualElement>
+
+            <!-- 言語設定セクション -->
+            <ui:Label class="acct-section-title" text="表示言語" />
+            <ui:VisualElement class="acct-card">
+                <ui:DropdownField name="dropdown-language" class="acct-language-dropdown" />
+            </ui:VisualElement>
+
+            <!-- ソーシャルプロバイダーセクション -->
+            <ui:Label class="acct-section-title" text="ソーシャルアカウント連携" />
+            <ui:VisualElement name="provider-list" class="acct-card acct-provider-list" />
+
+            <!-- サポート -->
+            <ui:Label class="acct-section-title" text="サポート" />
+            <ui:VisualElement class="acct-card">
+                <ui:Button name="btn-contact" class="acct-link-btn" text="お問い合わせ ›" />
+            </ui:VisualElement>
+
+            <!-- アカウント削除 -->
+            <ui:VisualElement class="acct-delete-area">
+                <ui:Button name="btn-delete-account" class="acct-delete-btn" text="アカウントを削除する" />
+            </ui:VisualElement>
+
+        </ui:ScrollView>
+
+        <!-- 確認ダイアログ（overlay-hidden で非表示） -->
+        <ui:VisualElement name="dialog-backdrop" class="acct-dialog-backdrop overlay-hidden">
+            <ui:VisualElement class="acct-dialog-box">
+                <ui:Label name="dialog-title" class="acct-dialog-title" text="" />
+                <ui:Label name="dialog-body" class="acct-dialog-body" text="" />
+                <ui:Button name="btn-dialog-confirm" class="acct-dialog-btn-confirm" text="" />
+                <ui:Button name="btn-dialog-cancel" class="acct-dialog-btn-cancel" text="キャンセル" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>

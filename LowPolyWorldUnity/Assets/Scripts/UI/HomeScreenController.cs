@@ -28,6 +28,9 @@ public class HomeScreenController : MonoBehaviour
     [SerializeField] private VisualTreeAsset _friendsRoomScreenAsset;
     [SerializeField] private VisualTreeAsset _inviteLinkPanelAsset;
 
+    [Header("Account Settings")]
+    [SerializeField] private VisualTreeAsset _accountSettingsScreenAsset;
+
     [Header("World Entry")]
     [SerializeField] private VisualTreeAsset _worldAvatarSelectAsset;
 
@@ -53,6 +56,7 @@ public class HomeScreenController : MonoBehaviour
     private FriendsRoomScreenController _friendsRoomController;
     private UserInfoPanelController _userInfoController;
     private WorldAvatarSelectController _worldAvatarSelectController;
+    private AccountSettingsController _accountSettingsController;
 
     // 招待リンクパネル（オーバーレイ）
     private VisualElement _inviteLinkOverlay;
@@ -171,6 +175,8 @@ public class HomeScreenController : MonoBehaviour
         _settingsTabController = null;
         _worldAvatarSelectController?.Dispose();
         _worldAvatarSelectController = null;
+        _accountSettingsController?.Dispose();
+        _accountSettingsController = null;
     }
 
     // ── Tab switching ─────────────────────────────────────────────────────────
@@ -201,6 +207,7 @@ public class HomeScreenController : MonoBehaviour
             _settingsTabController.OnFollowScreenRequested += () => ShowFollowScreen(null);
             _settingsTabController.OnHiddenUsersRequested += ShowHiddenUsersScreen;
             _settingsTabController.OnHiddenWorldsRequested += ShowHiddenWorldsScreen;
+            _settingsTabController.OnAccountSettingsRequested += ShowAccountSettingsScreen;
         }
         else if (tab == _navWorld && UserManager.Instance != null)
         {
@@ -375,6 +382,28 @@ public class HomeScreenController : MonoBehaviour
         _friendsRoomController = new FriendsRoomScreenController(content);
         _friendsRoomController.OnBackRequested += ShowFriendScreen;
         _friendsRoomController.OnEnterWorld += EnterWorld;
+    }
+
+    // ── Account settings ─────────────────────────────────────────────────────
+
+    private void ShowAccountSettingsScreen()
+    {
+        if (_accountSettingsScreenAsset == null) return;
+
+        DisposeAllControllers();
+        _contentArea.Clear();
+
+        var content = _accountSettingsScreenAsset.Instantiate();
+        content.style.flexGrow = 1;
+        _contentArea.Add(content);
+
+        _accountSettingsController = new AccountSettingsController(content);
+        _accountSettingsController.OnBackRequested += () => SelectTab(_navSettings, _settingsTabAsset);
+        _accountSettingsController.OnLoggedOut += () =>
+        {
+            DisposeAllControllers();
+            SceneManager.LoadScene("HomeScene");
+        };
     }
 
     // ── Deep link invite ──────────────────────────────────────────────────────

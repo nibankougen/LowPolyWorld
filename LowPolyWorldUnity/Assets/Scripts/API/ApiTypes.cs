@@ -378,6 +378,39 @@ public class ReportUserRequest
     public string detail;
 }
 
+// ── Account Settings ─────────────────────────────────────────────────────────
+
+[Serializable]
+public class MeProfileResponse
+{
+    public string id;
+    public string displayName;
+    public string name;
+    public string language;
+    public string subscriptionTier;
+    public string nextNameChangeAt; // ISO 8601, null = 現在変更可能
+}
+
+[Serializable]
+public class ChangeNameResponse
+{
+    public string name;
+    public string nextNameChangeAt; // ISO 8601
+}
+
+[Serializable]
+public class SocialProviderEntry
+{
+    public string provider; // "google" | "x" | "apple"
+    public string linkedAt;
+}
+
+[Serializable]
+public class SocialProvidersResponse
+{
+    public List<SocialProviderEntry> providers;
+}
+
 [Serializable]
 public class RecordCoinPurchaseRequest
 {

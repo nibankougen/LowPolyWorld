@@ -1,0 +1,262 @@
+.overlay-hidden {
+    display: none;
+}
+
+.acct-root {
+    flex-grow: 1;
+    background-color: rgb(18, 18, 22);
+}
+
+/* ── ヘッダー ── */
+.acct-header {
+    flex-direction: row;
+    align-items: center;
+    padding: 20px 16px 12px 16px;
+    background-color: rgb(24, 24, 30);
+    border-bottom-width: 1px;
+    border-color: rgb(44, 44, 54);
+}
+
+.acct-back-btn {
+    width: 60px;
+    height: 60px;
+    background-color: transparent;
+    color: rgb(100, 170, 255);
+    font-size: 36px;
+    border-width: 0;
+}
+
+.acct-title {
+    flex-grow: 1;
+    color: white;
+    font-size: 30px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+}
+
+/* ── スクロール ── */
+.acct-scroll {
+    flex-grow: 1;
+    padding: 24px 20px 40px 20px;
+}
+
+/* ── セクションタイトル ── */
+.acct-section-title {
+    font-size: 22px;
+    color: rgba(255, 255, 255, 0.4);
+    -unity-font-style: bold;
+    margin-top: 28px;
+    margin-bottom: 10px;
+    padding-left: 4px;
+}
+
+/* ── カード ── */
+.acct-card {
+    background-color: rgb(28, 28, 36);
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 4px;
+}
+
+/* ── @name セクション ── */
+.acct-current-name {
+    font-size: 28px;
+    color: rgb(220, 220, 235);
+    -unity-font-style: bold;
+    margin-bottom: 6px;
+}
+
+.acct-next-change {
+    font-size: 22px;
+    color: rgb(130, 130, 150);
+    margin-bottom: 16px;
+}
+
+.acct-name-field {
+    margin-bottom: 8px;
+    font-size: 26px;
+    height: 60px;
+    border-radius: 10px;
+    border-color: rgb(60, 60, 80);
+    background-color: rgb(38, 38, 50);
+    color: white;
+    padding: 0 14px;
+}
+
+.acct-name-error {
+    font-size: 22px;
+    color: rgb(240, 80, 80);
+    margin-bottom: 8px;
+    min-height: 26px;
+}
+
+.acct-name-caution {
+    font-size: 20px;
+    color: rgb(150, 150, 165);
+    white-space: normal;
+    margin-bottom: 18px;
+    -unity-text-align: upper-left;
+}
+
+.acct-btn-primary {
+    height: 60px;
+    font-size: 24px;
+    border-radius: 12px;
+    border-width: 0;
+    background-color: rgb(80, 150, 255);
+    color: white;
+    -unity-font-style: bold;
+}
+
+.acct-btn-primary:disabled {
+    background-color: rgb(50, 60, 80);
+    color: rgb(120, 120, 140);
+}
+
+/* ── 言語ドロップダウン ── */
+.acct-language-dropdown {
+    font-size: 26px;
+    height: 60px;
+    border-radius: 10px;
+    border-width: 0;
+    background-color: rgb(38, 38, 50);
+    color: white;
+}
+
+.acct-language-dropdown > .unity-base-field__label {
+    display: none;
+}
+
+/* ── プロバイダーリスト ── */
+.acct-provider-list {
+    padding: 8px 20px;
+}
+
+.provider-row {
+    flex-direction: row;
+    align-items: center;
+    height: 64px;
+    border-bottom-width: 1px;
+    border-color: rgb(44, 44, 58);
+}
+
+.provider-label {
+    font-size: 26px;
+    color: rgb(210, 210, 225);
+}
+
+.provider-status-linked {
+    font-size: 22px;
+    color: rgb(90, 200, 120);
+    margin-right: 12px;
+}
+
+.provider-btn-unlink {
+    height: 50px;
+    font-size: 22px;
+    border-radius: 10px;
+    border-width: 1px;
+    border-color: rgb(200, 80, 80);
+    background-color: transparent;
+    color: rgb(200, 80, 80);
+    padding: 0 16px;
+}
+
+.provider-btn-unlink:disabled {
+    border-color: rgb(80, 60, 60);
+    color: rgb(100, 80, 80);
+}
+
+.provider-btn-link {
+    height: 50px;
+    font-size: 22px;
+    border-radius: 10px;
+    border-width: 1px;
+    border-color: rgb(100, 170, 255);
+    background-color: transparent;
+    color: rgb(100, 170, 255);
+    padding: 0 16px;
+}
+
+/* ── リンクボタン ── */
+.acct-link-btn {
+    background-color: transparent;
+    color: rgb(100, 170, 255);
+    font-size: 26px;
+    height: 60px;
+    border-width: 0;
+    -unity-text-align: middle-left;
+    padding: 0;
+}
+
+/* ── アカウント削除 ── */
+.acct-delete-area {
+    margin-top: 40px;
+    align-items: center;
+    padding-bottom: 20px;
+}
+
+.acct-delete-btn {
+    background-color: transparent;
+    color: rgb(220, 60, 60);
+    font-size: 24px;
+    border-width: 0;
+    height: 50px;
+}
+
+/* ── 確認ダイアログ ── */
+.acct-dialog-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    align-items: center;
+    justify-content: center;
+}
+
+.acct-dialog-box {
+    background-color: rgb(30, 30, 40);
+    border-radius: 18px;
+    padding: 30px 28px;
+    margin: 24px;
+    max-width: 600px;
+}
+
+.acct-dialog-title {
+    font-size: 28px;
+    color: white;
+    -unity-font-style: bold;
+    margin-bottom: 18px;
+    -unity-text-align: middle-center;
+}
+
+.acct-dialog-body {
+    font-size: 22px;
+    color: rgb(180, 180, 195);
+    white-space: normal;
+    margin-bottom: 28px;
+    -unity-text-align: upper-left;
+}
+
+.acct-dialog-btn-confirm {
+    height: 60px;
+    font-size: 24px;
+    border-radius: 12px;
+    border-width: 0;
+    background-color: rgb(200, 50, 50);
+    color: white;
+    -unity-font-style: bold;
+    margin-bottom: 12px;
+}
+
+.acct-dialog-btn-cancel {
+    height: 60px;
+    font-size: 24px;
+    border-radius: 12px;
+    border-width: 1px;
+    border-color: rgb(80, 80, 100);
+    background-color: transparent;
+    color: rgb(180, 180, 195);
+}

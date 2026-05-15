@@ -65,5 +65,9 @@
         <ui:Button name="btn-hidden-users" class="settings-link-btn" text="非表示ユーザー管理 ›" />
         <ui:Button name="btn-hidden-worlds" class="settings-link-btn" text="非表示ワールド管理 ›" />
 
+        <ui:Label class="settings-section-title" text="アカウント" />
+
+        <ui:Button name="btn-account-settings" class="settings-link-btn" text="アカウント設定 ›" />
+
     </ui:ScrollView>
 </ui:UXML>

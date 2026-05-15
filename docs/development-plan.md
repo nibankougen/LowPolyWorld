@@ -798,12 +798,12 @@
   - `WorldAvatarSelectLogic.LoadSlotAvatars` に `slotLimit` パラメータを追加
 - [x] プレミアム解約後のスロットロック表示
   - `SelectableAvatar.IsLocked` プロパティ追加（スロット上限超過時に `true`）
-- [ ] ユーザー設定画面（@name設定・称号表示/非表示切り替え・プレミアム加入/解約・言語選択）
-  - [ ] 言語選択UI（10言語ドロップダウン / リスト）・変更即時反映・サーバーへ保存
-  - [ ] お問い合わせリンク（nibankougen@gmail.com）をテキストリンクとして設置
-  - [ ] @name 変更 UI（現在の @name 表示・次回変更可能日表示・注意文言表示・`Capabilities.NameChange == false` の場合はロック）
-  - [ ] ソーシャルプロバイダー連携管理 UI（連携中プロバイダー一覧・追加ボタン・解除ボタン・最低 1 つ維持の制約をクライアントでも表示）
-  - [ ] アカウント削除リンク（赤字テキスト・確認ダイアログ → `DELETE /me` 呼び出し → 即時ログアウト）
+- [x] ユーザー設定画面（@name設定・称号表示/非表示切り替え・プレミアム加入/解約・言語選択）
+  - [x] 言語選択UI（10言語ドロップダウン / リスト）・変更即時反映・サーバーへ保存
+  - [x] お問い合わせリンク（nibankougen@gmail.com）をテキストリンクとして設置
+  - [x] @name 変更 UI（現在の @name 表示・次回変更可能日表示・注意文言表示・`Capabilities.NameChange == false` の場合はロック）
+  - [x] ソーシャルプロバイダー連携管理 UI（連携中プロバイダー一覧・追加ボタン・解除ボタン・最低 1 つ維持の制約をクライアントでも表示）
+  - [x] アカウント削除リンク（赤字テキスト・確認ダイアログ → `DELETE /me` 呼び出し → 即時ログアウト）
 - [x] `SessionTimeLimitLogic` のプラン対応: `capabilities.SessionMinutes` をコンストラクタで受け取る（直接 90/720 をハードコードしない）
 - [x] `AfkDetectionLogic` のプラン対応: `capabilities.AfkEnabled` をコンストラクタで受け取る
   - `RoomSessionController.StartSession(PlanCapabilities)` に変更・`capabilities.afkEnabled` で AFK 有無を制御
