@@ -23,6 +23,7 @@ public class FriendsRoomScreenController : IDisposable
 
     public event Action OnBackRequested;
     public event Action<string, string, string> OnEnterWorld; // worldId, roomId, glbUrl
+    public event Action OnUserRestricted;
 
     public FriendsRoomScreenController(VisualElement root, Dictionary<string, string> worldNames = null)
     {
@@ -144,7 +145,12 @@ public class FriendsRoomScreenController : IDisposable
 
         if (error != null)
         {
-            FlashMessageController.Current?.Show("ルームへの参加に失敗しました", FlashMessageType.Error);
+            var isRestrictedRoom =
+                room.roomType == "public" || room.roomType == "followers_only";
+            if (error == "user_restricted" && isRestrictedRoom)
+                OnUserRestricted?.Invoke();
+            else
+                FlashMessageController.Current?.Show("ルームへの参加に失敗しました", FlashMessageType.Error);
             return;
         }
 

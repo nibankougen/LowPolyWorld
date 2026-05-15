@@ -384,6 +384,7 @@ public class HomeScreenController : MonoBehaviour
         _friendsRoomController = new FriendsRoomScreenController(content);
         _friendsRoomController.OnBackRequested += ShowFriendScreen;
         _friendsRoomController.OnEnterWorld += EnterWorld;
+        _friendsRoomController.OnUserRestricted += ShowRestrictionDialog;
     }
 
     // ── Account settings ─────────────────────────────────────────────────────
