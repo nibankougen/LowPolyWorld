@@ -46,13 +46,13 @@ func (h *Handler) AdminListUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	rows, err := h.DB.Query(r.Context(),
-		`SELECT au.user_id, au.display_name, au.at_name,
+		`SELECT au.user_id, au.display_name, au.name,
 		        au.trust_level, au.trust_points, au.trust_level_locked,
 		        au.is_restricted, au.subscription_tier, au.deleted_at,
 		        u.created_at
 		 FROM active_users au
 		 JOIN users u ON u.id = au.user_id
-		 WHERE ($1 = '' OR au.display_name ILIKE '%'||$1||'%' OR au.at_name ILIKE '%'||$1||'%')
+		 WHERE ($1 = '' OR au.display_name ILIKE '%'||$1||'%' OR au.name ILIKE '%'||$1||'%')
 		   AND ($2 = '' OR au.trust_level = $2)
 		   AND ($3::BOOLEAN IS NULL OR au.is_restricted = $3)
 		   AND ($4 = '' OR u.created_at < (SELECT created_at FROM users WHERE id = $4::UUID))
@@ -94,7 +94,7 @@ func (h *Handler) AdminGetUser(w http.ResponseWriter, r *http.Request) {
 	userID := chi.URLParam(r, "userID")
 	var u adminUserRow
 	err := h.DB.QueryRow(r.Context(),
-		`SELECT au.user_id, au.display_name, au.at_name,
+		`SELECT au.user_id, au.display_name, au.name,
 		        au.trust_level, au.trust_points, au.trust_level_locked,
 		        au.is_restricted, au.subscription_tier, au.deleted_at,
 		        u.created_at
@@ -277,7 +277,7 @@ func (h *Handler) AdminGetUserDataExport(w http.ResponseWriter, r *http.Request)
 
 	var profile adminUserRow
 	err := h.DB.QueryRow(r.Context(),
-		`SELECT au.user_id, au.display_name, au.at_name,
+		`SELECT au.user_id, au.display_name, au.name,
 		        au.trust_level, au.trust_points, au.trust_level_locked,
 		        au.is_restricted, au.subscription_tier, au.deleted_at,
 		        u.created_at
