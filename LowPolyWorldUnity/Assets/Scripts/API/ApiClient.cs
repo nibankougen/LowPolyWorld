@@ -67,6 +67,21 @@ public class ApiClient
         return ParseResponse<T>(req);
     }
 
+    // ── PUT (multipart) ─────────────────────────────────────────────────────
+
+    public async Task<(T result, string error)> PutMultipartAsync<T>(
+        string path,
+        List<IMultipartFormSection> sections,
+        CancellationToken ct = default
+    )
+    {
+        using var req = UnityWebRequest.Post(_baseUrl + path, sections);
+        req.method = "PUT";
+        AddAuthHeader(req);
+        await SendAsync(req, ct);
+        return ParseResponse<T>(req);
+    }
+
     // ── PUT (JSON) ───────────────────────────────────────────────────────────
 
     public async Task<(T result, string error)> PutJsonAsync<T>(

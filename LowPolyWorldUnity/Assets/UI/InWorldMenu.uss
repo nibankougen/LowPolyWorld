@@ -136,3 +136,186 @@
     color: rgb(120, 200, 255);
     -unity-text-align: middle-right;
 }
+
+/* ルームタブ */
+.room-info-row {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+}
+
+.room-info-label {
+    font-size: 24px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.room-info-value {
+    font-size: 28px;
+    color: rgb(120, 200, 255);
+    -unity-font-style: bold;
+}
+
+/* アバタータブ — サブタブ */
+.menu-subtab-bar {
+    flex-direction: row;
+    padding: 0 0 16px;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+    margin-bottom: 16px;
+}
+
+.menu-subtab {
+    flex-grow: 1;
+    height: 64px;
+    font-size: 22px;
+    background-color: rgba(0, 0, 0, 0);
+    color: rgba(180, 180, 190, 0.5);
+    border-width: 0;
+    border-radius: 0;
+    border-bottom-width: 2px;
+    border-bottom-color: rgba(0, 0, 0, 0);
+}
+
+.menu-subtab--active {
+    color: rgb(120, 200, 255);
+    border-bottom-color: rgb(120, 200, 255);
+}
+
+.menu-subcontent--hidden {
+    display: none;
+}
+
+/* アバタータブ — カード一覧 */
+.menu-avatar-list-wrap {
+    flex-grow: 1;
+}
+
+.menu-avatar-list {
+    flex-grow: 1;
+}
+
+.menu-avatar-card {
+    flex-direction: row;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 12px;
+}
+
+.menu-avatar-card:active {
+    background-color: rgba(255, 255, 255, 0.12);
+}
+
+.menu-avatar-card--locked {
+    opacity: 0.4;
+}
+
+.menu-avatar-name {
+    flex-grow: 1;
+    font-size: 26px;
+    color: rgb(230, 230, 240);
+}
+
+.menu-avatar-lock {
+    font-size: 28px;
+}
+
+/* アバター変更確認ダイアログ */
+.menu-confirm-backdrop {
+    position: absolute;
+    left: 0; right: 0; top: 0; bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    align-items: center;
+    justify-content: center;
+}
+
+.overlay-hidden {
+    display: none;
+}
+
+.menu-confirm-dialog {
+    background-color: rgb(40, 40, 52);
+    border-radius: 20px;
+    padding: 40px;
+    width: 520px;
+    border-width: 1px;
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+.menu-confirm-title {
+    font-size: 32px;
+    color: rgb(255, 255, 255);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    margin-bottom: 16px;
+}
+
+.menu-confirm-body {
+    font-size: 24px;
+    color: rgba(220, 220, 230, 0.7);
+    -unity-text-align: middle-center;
+    margin-bottom: 36px;
+}
+
+.menu-confirm-buttons {
+    flex-direction: row;
+    justify-content: flex-end;
+}
+
+.menu-confirm-btn {
+    height: 72px;
+    min-width: 180px;
+    font-size: 24px;
+    border-radius: 12px;
+    border-width: 0;
+    margin-left: 16px;
+    padding: 0 28px;
+}
+
+.menu-confirm-btn--cancel {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: rgba(200, 200, 210, 0.8);
+}
+
+.menu-confirm-btn--cancel:active {
+    background-color: rgba(255, 255, 255, 0.18);
+}
+
+.menu-confirm-btn--ok {
+    background-color: rgb(80, 160, 230);
+    color: rgb(255, 255, 255);
+    -unity-font-style: bold;
+}
+
+.menu-confirm-btn--ok:active {
+    background-color: rgb(60, 140, 210);
+}
+
+/* ワールド一覧タブ */
+.menu-worlds-list {
+    flex-grow: 1;
+}
+
+.menu-world-card {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 12px;
+}
+
+.menu-world-card:active {
+    background-color: rgba(255, 255, 255, 0.12);
+}
+
+.menu-world-name {
+    font-size: 26px;
+    color: rgb(230, 230, 240);
+    margin-bottom: 6px;
+}
+
+.menu-world-players {
+    font-size: 22px;
+    color: rgba(180, 180, 200, 0.6);
+}

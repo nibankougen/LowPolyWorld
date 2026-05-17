@@ -26,6 +26,7 @@ public class UserManager : MonoBehaviour
     public StartupUserProfile Profile { get; private set; }
     public PlanCapabilities Capabilities { get; private set; }
     public List<StartupAvatar> Avatars { get; private set; } = new List<StartupAvatar>();
+    public List<WorldResponse> Worlds { get; private set; } = new List<WorldResponse>();
     public ApiClient Api => _apiClient;
 
     /// <summary>Vivox ログイン用の仮名 ID（実 UUID ではない）。</summary>
@@ -71,6 +72,7 @@ public class UserManager : MonoBehaviour
         Profile = data.user;
         Capabilities = data.planCapabilities;
         Avatars = data.avatars ?? new List<StartupAvatar>();
+        Worlds = data.worlds ?? new List<WorldResponse>();
     }
 
     public async Task<(bool success, string errorCode)> TryRefreshAccessTokenAsync(
@@ -103,6 +105,7 @@ public class UserManager : MonoBehaviour
         _accessToken = null;
         Profile = null;
         Avatars = new List<StartupAvatar>();
+        Worlds = new List<WorldResponse>();
         SelectedAvatarLocalPath = null;
         PlayerPrefs.DeleteKey(PrefKeyRefreshToken);
         PlayerPrefs.Save();

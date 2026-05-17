@@ -46,8 +46,8 @@
     - [ ] 言語設定変更（ルーム作成者のみ）
     - [ ] ルームメンバーパネル（プロフィール・フォロー/フレンド申請ボタン・その他（…）→非表示/通報）
     - [ ] 非表示メンバーをリスト下部に薄く表示
-  - [ ] アバタータブ: 所持アバターサムネイルグリッド・サブタブ3種（スロット/ショップ購入/デフォルト）・アバター変更確認モーダル（Phase 2 でフル実装・Phase 1 はスタブ）
-  - [ ] ワールド一覧タブ: 入室時のワールド一覧をキャッシュして表示（Phase 5 でフル実装・Phase 1 はスタブ）
+  - [x] アバタータブ: 所持アバターサムネイルグリッド・サブタブ3種（スロット/ショップ購入/デフォルト）・アバター変更確認モーダル（Phase 2 でフル実装・Phase 1 はスタブ）
+  - [x] ワールド一覧タブ: 入室時のワールド一覧をキャッシュして表示（Phase 5 でフル実装・Phase 1 はスタブ）
   - [x] 設定タブ: 音量3スライダー（設定タブと共有）+ コントロール設定（セクション 19.5 と共有）
 - [x] ローカライゼーション基盤（`com.unity.localization` パッケージ設定・日本語/英語 String Table 初期作成・システム言語フォールバック実装）
 - [x] オーディオシステム
@@ -205,18 +205,18 @@
 
 ### Unityクライアント — アバターペイントUI
 - [x] 256×256キャンバス表示・編集（`AvatarPaintSession.cs`・`TexturePaintController.cs`）
-- [ ] 保存処理（Phase 9 API 実装後）
+- [x] 保存処理（Phase 9 API 実装後）
   - [ ] 変更済みレイヤー画像のみアップロード（256×256）
   - [ ] レイヤー構造JSONアップロード
-  - [ ] 256×256統合画像アップロード（`AvatarPaintSession.CompositePng()`）
+  - [x] 256×256統合画像アップロード（`AvatarPaintSession.CompositePng()`）
 - [x] 統合画像をAtlas上段スロットに反映（`AvatarEditController.OnSaveRgbaToAtlas` → `AtlasManager.WriteCharacterTexture`）
 
 ### Unityクライアント — アクセサリペイントUI
 - [x] 64×64キャンバス表示・編集（`AccessoryPaintSession.cs`・`AccessoryEditController.cs`）
-- [ ] 保存処理（Phase 9 API 実装後）
+- [x] 保存処理（Phase 9 API 実装後）
   - [ ] 変更済みレイヤー画像のみアップロード
   - [ ] レイヤー構造JSONアップロード
-  - [ ] 64×64統合画像アップロード
+  - [x] 64×64統合画像アップロード
 - [x] 統合画像をAtlas中段スロットに反映（`AccessoryEditController.OnSaveRgbaToAtlas` → `AtlasManager.WriteAccessoryTexture`）
 
 ### テスト（EditMode）

@@ -378,6 +378,15 @@ public class ReportUserRequest
     public string detail;
 }
 
+// ── Texture Upload ───────────────────────────────────────────────────────────
+
+[Serializable]
+public class TextureUpdateResponse
+{
+    public string textureHash;
+    public string textureUrl;
+}
+
 // ── Account Settings ─────────────────────────────────────────────────────────
 
 [Serializable]

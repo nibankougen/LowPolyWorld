@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -21,6 +23,9 @@ public class TexturePaintController : MonoBehaviour
 
     /// <summary>保存時に呼ばれるコールバック（Atlas 反映用）。引数は RGBA byte[]。</summary>
     private Action<byte[]> _onSaveRgba;
+
+    /// <summary>保存時にサーバーへ PNG をアップロードするコールバック。成功時 true。</summary>
+    private Func<byte[], CancellationToken, Task<bool>> _onSavePngAsync;
 
     // ---- ロジック ----
 
@@ -106,18 +111,21 @@ public class TexturePaintController : MonoBehaviour
     /// </summary>
     /// <param name="onPreviewUpdated">コンポジット更新時に Texture2D を受け取るコールバック（3D プレビュー反映用・任意）。</param>
     /// <param name="onSaveRgba">保存時に RGBA byte[] を受け取るコールバック（Atlas 反映用・任意）。</param>
+    /// <param name="onSavePngAsync">保存時にサーバーへ PNG をアップロードするコールバック（任意）。成功時 true。</param>
     public void Initialize(
         VisualElement contentTexture,
         IPaintSession session,
         Action onHistoryChanged,
         Action<Texture2D> onPreviewUpdated = null,
-        Action<byte[]> onSaveRgba = null)
+        Action<byte[]> onSaveRgba = null,
+        Func<byte[], CancellationToken, Task<bool>> onSavePngAsync = null)
     {
         _contentTexture = contentTexture;
         _session = session;
         _onHistoryChanged = onHistoryChanged;
         _onPreviewUpdated = onPreviewUpdated;
         _onSaveRgba = onSaveRgba;
+        _onSavePngAsync = onSavePngAsync;
 
         _brush = new BrushSettingsLogic();
         _colorPicker = new ColorPickerLogic();
@@ -918,7 +926,7 @@ public class TexturePaintController : MonoBehaviour
 
     // ---- 保存 ----
 
-    private void OnSave()
+    private async void OnSave()
     {
         if (_session == null)
             return;
@@ -929,12 +937,28 @@ public class TexturePaintController : MonoBehaviour
         if (rgba != null)
             _onSaveRgba?.Invoke(rgba);
 
-        // TODO: Phase 9 — PNG + レイヤー構造 JSON をサーバーへアップロード
         var png = _session.CompositePng();
-        if (png != null)
+        if (png == null)
+            return;
+
+        _session.CleanupUndo();
+
+        if (_onSavePngAsync == null)
+            return;
+
+        _btnSave?.SetEnabled(false);
+        try
         {
-            _session.CleanupUndo();
-            Debug.Log($"[TexturePaintController] 保存 PNG size={png.Length} bytes");
+            bool ok = await _onSavePngAsync(png, destroyCancellationToken);
+            if (ok)
+                FlashMessageController.Current?.Show("保存しました");
+            else
+                FlashMessageController.Current?.Show("保存に失敗しました", FlashMessageType.Error);
+        }
+        catch (OperationCanceledException) { }
+        finally
+        {
+            _btnSave?.SetEnabled(true);
         }
     }
 

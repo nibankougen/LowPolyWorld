@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -37,6 +39,10 @@ public class AccessoryEditController : MonoBehaviour
     private AccessoryPaintSession _paintSession;
     private bool _paintSessionInitialized;
 
+    // サーバー保存用
+    private string _accessoryId;
+    private CancellationTokenSource _cts;
+
     private Button _btnMinimize;
     private VisualElement _tabContent;
     private bool _isMinimized;
@@ -48,6 +54,12 @@ public class AccessoryEditController : MonoBehaviour
     public event Action OnBackRequested;
     public event Action<HumanBodyBones> OnBoneChanged;
 
+    /// <summary>編集対象アクセサリの ID を設定する。ペイント保存時のアップロード先に使用する。</summary>
+    public void SetAccessoryId(string accessoryId)
+    {
+        _accessoryId = accessoryId;
+    }
+
     private void Awake()
     {
         _document = GetComponent<UIDocument>();
@@ -55,6 +67,7 @@ public class AccessoryEditController : MonoBehaviour
 
     private void OnEnable()
     {
+        _cts = new CancellationTokenSource();
         _root = _document.rootVisualElement;
 
         _root.Q<Button>("btn-back")?.RegisterCallback<ClickEvent>(_ => OnBackRequested?.Invoke());
@@ -119,6 +132,9 @@ public class AccessoryEditController : MonoBehaviour
 
     private void OnDisable()
     {
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = null;
         _undoRedoPlacement.OnHistoryChanged -= UpdateUndoRedoButtons;
         _paintSession?.Dispose();
         _paintSession = null;
@@ -157,7 +173,8 @@ public class AccessoryEditController : MonoBehaviour
                     _paintSession,
                     UpdateUndoRedoButtons,
                     onPreviewUpdated: OnPreviewTextureUpdated,
-                    onSaveRgba: OnSaveRgbaToAtlas);
+                    onSaveRgba: OnSaveRgbaToAtlas,
+                    onSavePngAsync: UploadAccessoryTextureAsync);
                 _paintSessionInitialized = true;
             }
             catch (Exception e)
@@ -199,6 +216,31 @@ public class AccessoryEditController : MonoBehaviour
         AtlasManager.Instance.WriteAccessoryTexture(_atlasAccessorySlot, tex);
         AtlasManager.Instance.ScheduleAtlasUpdate();
         Destroy(tex);
+    }
+
+    /// <summary>合成 PNG をサーバーの PUT /api/v1/me/accessories/{id}/texture へアップロードする。</summary>
+    private async Task<bool> UploadAccessoryTextureAsync(byte[] png, CancellationToken ct)
+    {
+        if (string.IsNullOrEmpty(_accessoryId) || UserManager.Instance == null)
+            return false;
+
+        var sections = new List<UnityEngine.Networking.IMultipartFormSection>
+        {
+            new UnityEngine.Networking.MultipartFormFileSection("texture", png, "texture.png", "image/png"),
+        };
+
+        var (_, error) = await UserManager.Instance.Api.PutMultipartAsync<TextureUpdateResponse>(
+            $"/api/v1/me/accessories/{_accessoryId}/texture",
+            sections,
+            ct
+        );
+
+        if (error != null)
+        {
+            Debug.LogWarning($"[AccessoryEditController] テクスチャアップロード失敗: {error}");
+            return false;
+        }
+        return true;
     }
 
     private void UpdateUndoRedoButtons()

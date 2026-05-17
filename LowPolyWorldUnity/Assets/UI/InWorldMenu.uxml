@@ -30,17 +30,44 @@
                     <ui:Label class="room-info-label" text="セッション残り時間" />
                     <ui:Label name="label-session-remaining" class="room-info-value" text="--:--:--" />
                 </ui:VisualElement>
-                <ui:Label class="menu-stub-text" text="ルーム詳細は Phase 5 で実装予定" />
+                <ui:Label class="menu-stub-text" text="ルームメンバー一覧は Phase 12 で実装予定" />
             </ui:VisualElement>
 
-            <!-- アバタータブ（Phase 2 でフル実装） -->
+            <!-- アバタータブ -->
             <ui:VisualElement name="content-avatar" class="menu-tab-content menu-tab-content--hidden">
-                <ui:Label class="menu-stub-text" text="Phase 2 で実装予定" />
+                <!-- サブタブバー -->
+                <ui:VisualElement class="menu-subtab-bar">
+                    <ui:Button name="subtab-slot" class="menu-subtab menu-subtab--active" text="スロット" />
+                    <ui:Button name="subtab-shop" class="menu-subtab" text="購入済み" />
+                </ui:VisualElement>
+
+                <!-- スロットアバター一覧 -->
+                <ui:VisualElement name="avatar-slot-content" class="menu-avatar-list-wrap">
+                    <ui:ScrollView name="avatar-slot-list" class="menu-avatar-list" />
+                </ui:VisualElement>
+
+                <!-- 購入済みアバター（スタブ） -->
+                <ui:VisualElement name="avatar-shop-content" class="menu-avatar-list-wrap menu-subcontent--hidden">
+                    <ui:Label class="menu-stub-text" text="購入済みアバターは近日対応予定" />
+                </ui:VisualElement>
+
+                <!-- アバター変更確認ダイアログ -->
+                <ui:VisualElement name="avatar-confirm-backdrop" class="menu-confirm-backdrop overlay-hidden">
+                    <ui:VisualElement name="avatar-confirm-dialog" class="menu-confirm-dialog">
+                        <ui:Label name="avatar-confirm-name" class="menu-confirm-title" text="" />
+                        <ui:Label class="menu-confirm-body" text="このアバターに変更しますか？" />
+                        <ui:VisualElement class="menu-confirm-buttons">
+                            <ui:Button name="btn-avatar-confirm-cancel" class="menu-confirm-btn menu-confirm-btn--cancel" text="キャンセル" />
+                            <ui:Button name="btn-avatar-confirm-ok" class="menu-confirm-btn menu-confirm-btn--ok" text="変更する" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                </ui:VisualElement>
             </ui:VisualElement>
 
-            <!-- ワールド一覧タブ（Phase 5 でフル実装） -->
+            <!-- ワールド一覧タブ -->
             <ui:VisualElement name="content-worlds" class="menu-tab-content menu-tab-content--hidden">
-                <ui:Label class="menu-stub-text" text="Phase 5 で実装予定" />
+                <ui:Label name="label-worlds-loading" class="menu-stub-text" text="読み込み中..." />
+                <ui:ScrollView name="worlds-list" class="menu-worlds-list" />
             </ui:VisualElement>
 
             <!-- 設定タブ（AudioManager と共有）-->

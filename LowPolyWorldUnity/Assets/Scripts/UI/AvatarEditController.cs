@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -79,6 +81,10 @@ public class AvatarEditController : MonoBehaviour
     private TexturePaintController _texturePaint;
     private IPaintSession _paintSession;
 
+    // サーバー保存用
+    private string _avatarId;
+    private CancellationTokenSource _cts;
+
     // パネル最小化
     private Button _btnMinimize;
     private VisualElement _tabContent;
@@ -94,8 +100,15 @@ public class AvatarEditController : MonoBehaviour
         _document = GetComponent<UIDocument>();
     }
 
+    /// <summary>編集対象アバターの ID を設定する。ペイント保存時のアップロード先に使用する。</summary>
+    public void SetAvatarId(string avatarId)
+    {
+        _avatarId = avatarId;
+    }
+
     private void OnEnable()
     {
+        _cts = new CancellationTokenSource();
         _root = _document.rootVisualElement;
 
         _root.Q<Button>("btn-back")?.RegisterCallback<ClickEvent>(_ => OnBackRequested?.Invoke());
@@ -224,7 +237,8 @@ public class AvatarEditController : MonoBehaviour
             _paintSession,
             UpdateUndoRedoButtons,
             onPreviewUpdated: OnPreviewTextureUpdated,
-            onSaveRgba: OnSaveRgbaToAtlas);
+            onSaveRgba: OnSaveRgbaToAtlas,
+            onSavePngAsync: UploadAvatarTextureAsync);
 
         BuildAccessorySlotCards();
 
@@ -235,6 +249,9 @@ public class AvatarEditController : MonoBehaviour
 
     private void OnDisable()
     {
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = null;
         _undoRedoAccessory.OnHistoryChanged -= UpdateUndoRedoButtons;
         _accessoryLogic.OnSelectionChanged -= OnAccessorySelectionChanged;
         _accessoryLogic.OnSlotChanged -= OnAccessorySlotChanged;
@@ -615,6 +632,31 @@ public class AvatarEditController : MonoBehaviour
         AtlasManager.Instance.WriteCharacterTexture(_atlasCharacterSlot, tex);
         AtlasManager.Instance.ScheduleAtlasUpdate();
         Destroy(tex);
+    }
+
+    /// <summary>合成 PNG をサーバーの PUT /api/v1/me/avatars/{id}/texture へアップロードする。</summary>
+    private async Task<bool> UploadAvatarTextureAsync(byte[] png, CancellationToken ct)
+    {
+        if (string.IsNullOrEmpty(_avatarId) || UserManager.Instance == null)
+            return false;
+
+        var sections = new List<UnityEngine.Networking.IMultipartFormSection>
+        {
+            new UnityEngine.Networking.MultipartFormFileSection("texture", png, "texture.png", "image/png"),
+        };
+
+        var (_, error) = await UserManager.Instance.Api.PutMultipartAsync<TextureUpdateResponse>(
+            $"/api/v1/me/avatars/{_avatarId}/texture",
+            sections,
+            ct
+        );
+
+        if (error != null)
+        {
+            Debug.LogWarning($"[AvatarEditController] テクスチャアップロード失敗: {error}");
+            return false;
+        }
+        return true;
     }
 
     private void UpdateUndoRedoButtons()
