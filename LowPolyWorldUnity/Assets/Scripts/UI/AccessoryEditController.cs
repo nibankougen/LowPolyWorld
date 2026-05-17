@@ -224,6 +224,9 @@ public class AccessoryEditController : MonoBehaviour
         if (string.IsNullOrEmpty(_accessoryId) || UserManager.Instance == null)
             return false;
 
+        // OnDisable 時キャンセル(_cts) と GameObject 破棄時キャンセル(ct) を合成する
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(ct, _cts?.Token ?? CancellationToken.None);
+
         var sections = new List<UnityEngine.Networking.IMultipartFormSection>
         {
             new UnityEngine.Networking.MultipartFormFileSection("texture", png, "texture.png", "image/png"),
@@ -232,7 +235,7 @@ public class AccessoryEditController : MonoBehaviour
         var (_, error) = await UserManager.Instance.Api.PutMultipartAsync<TextureUpdateResponse>(
             $"/api/v1/me/accessories/{_accessoryId}/texture",
             sections,
-            ct
+            linked.Token
         );
 
         if (error != null)

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -19,7 +18,6 @@ public class InWorldMenuController : IDisposable
     public event Action<WorldResponse> OnWorldSelected;
 
     private readonly VisualElement _root;
-    private readonly CancellationTokenSource _cts = new();
 
     // セッション残り時間
     private Label _labelSessionRemaining;
@@ -302,8 +300,6 @@ public class InWorldMenuController : IDisposable
 
     public void Dispose()
     {
-        _cts.Cancel();
-        _cts.Dispose();
         _settingsTabController?.Unbind();
         HideAvatarConfirm();
     }
