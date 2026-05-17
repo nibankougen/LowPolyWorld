@@ -15,6 +15,7 @@ public class UserInfoPanelController : IDisposable
     private readonly VisualElement _moreMenu;
 
     private readonly Label _displayName;
+    private readonly Label _verifiedBadge;
     private readonly Label _atName;
     private readonly Label _followerCount;
     private readonly Label _followingCount;
@@ -49,6 +50,7 @@ public class UserInfoPanelController : IDisposable
         _moreMenu = backdrop.Q<VisualElement>("uip-more-menu");
 
         _displayName = backdrop.Q<Label>("uip-display-name");
+        _verifiedBadge = backdrop.Q<Label>("uip-verified-badge");
         _atName = backdrop.Q<Label>("uip-at-name");
         _followerCount = backdrop.Q<Label>("uip-follower-count");
         _followingCount = backdrop.Q<Label>("uip-following-count");
@@ -95,6 +97,7 @@ public class UserInfoPanelController : IDisposable
         _atName.text = "";
         _followerCount.text = "–";
         _followingCount.text = "–";
+        _verifiedBadge?.AddToClassList("overlay-hidden");
         _moreMenu.AddToClassList("overlay-hidden");
 
         bool isSelf = UserManager.Instance?.Profile?.id == userId;
@@ -118,6 +121,7 @@ public class UserInfoPanelController : IDisposable
             _atName.text = string.IsNullOrEmpty(res.name) ? "" : $"@{res.name}";
             _followerCount.text = res.followerCount.ToString();
             _followingCount.text = res.followingCount.ToString();
+            _verifiedBadge?.EnableInClassList("overlay-hidden", !res.isVerified);
 
             if (!isSelf)
                 RefreshActionButtons();

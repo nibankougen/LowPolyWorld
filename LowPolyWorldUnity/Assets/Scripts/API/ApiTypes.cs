@@ -74,6 +74,7 @@ public class StartupUserProfile
     public string language;
     public string subscriptionTier;
     public string vivoxId;
+    public bool isVerified;
     public string createdAt;
 }
 
@@ -213,6 +214,7 @@ public class UserSummaryResponse
     public string id;
     public string displayName;
     public string name;
+    public bool isVerified;
 }
 
 [Serializable]
@@ -269,6 +271,7 @@ public class PublicUserResponse
     public string name;
     public int followerCount;
     public int followingCount;
+    public bool isVerified;
     public string createdAt;
 }
 

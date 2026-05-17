@@ -128,10 +128,24 @@
     flex-grow: 1;
 }
 
+.user-name-row {
+    flex-direction: row;
+    align-items: center;
+}
+
 .user-display-name {
     color: white;
     font-size: 26px;
     -unity-font-style: bold;
+}
+
+.verified-badge {
+    font-size: 16px;
+    color: white;
+    background-color: rgb(60, 140, 230);
+    border-radius: 10px;
+    padding: 1px 6px;
+    margin-left: 6px;
 }
 
 .user-at-name {

@@ -15,7 +15,10 @@
             </ui:VisualElement>
 
             <!-- 表示名 -->
-            <ui:Label name="uip-display-name" class="uip-display-name" text="" />
+            <ui:VisualElement class="uip-name-row">
+                <ui:Label name="uip-display-name" class="uip-display-name" text="" />
+                <ui:Label name="uip-verified-badge" class="uip-verified-badge overlay-hidden" text="✓" />
+            </ui:VisualElement>
 
             <!-- @name -->
             <ui:Label name="uip-at-name" class="uip-at-name" text="" />

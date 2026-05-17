@@ -134,9 +134,21 @@ public class FollowScreenController : IDisposable
         var info = new VisualElement();
         info.AddToClassList("user-info");
 
+        var nameRow = new VisualElement();
+        nameRow.AddToClassList("user-name-row");
+
         var nameLabel = new Label(user.displayName);
         nameLabel.AddToClassList("user-display-name");
-        info.Add(nameLabel);
+        nameRow.Add(nameLabel);
+
+        if (user.isVerified)
+        {
+            var badge = new Label("✓");
+            badge.AddToClassList("verified-badge");
+            nameRow.Add(badge);
+        }
+
+        info.Add(nameRow);
 
         if (!string.IsNullOrEmpty(user.name))
         {
