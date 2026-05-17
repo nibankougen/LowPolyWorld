@@ -27,6 +27,12 @@ public class SelectableAvatar
     /// <summary>スロット上限超過によりロックされているか（プレミアム解約後のスロットロック表示に使用）。</summary>
     public readonly bool IsLocked;
 
+    /// <summary>モデレーションステータス。"pending" / "approved" / "rejected" のいずれか。</summary>
+    public readonly string ModerationStatus;
+
+    public bool IsPending => ModerationStatus == "pending";
+    public bool IsRejected => ModerationStatus == "rejected";
+
     public SelectableAvatar(
         string id,
         string name,
@@ -34,7 +40,8 @@ public class SelectableAvatar
         string vrmHash,
         string thumbnailUrl,
         AvatarSource source,
-        bool isLocked = false
+        bool isLocked = false,
+        string moderationStatus = "approved"
     )
     {
         Id = id;
@@ -44,6 +51,7 @@ public class SelectableAvatar
         ThumbnailUrl = thumbnailUrl;
         Source = source;
         IsLocked = isLocked;
+        ModerationStatus = string.IsNullOrEmpty(moderationStatus) ? "approved" : moderationStatus;
     }
 }
 
@@ -66,7 +74,7 @@ public class WorldAvatarSelectLogic
             : PurchasedAvatars;
 
     /// <summary>
-    /// スロットアバター一覧を読み込む。最初のアバターを自動選択する。
+    /// スロットアバター一覧を読み込む。最初の使用可能アバターを自動選択する。
     /// slotLimit 以降のアバターは IsLocked = true になる（プレミアム解約後のスロットロック表示用）。
     /// </summary>
     public void LoadSlotAvatars(IEnumerable<StartupAvatar> avatars, int slotLimit = int.MaxValue)
@@ -78,12 +86,18 @@ public class WorldAvatarSelectLogic
             if (string.IsNullOrEmpty(a.vrmUrl)) continue;
             bool isLocked = index >= slotLimit;
             SlotAvatars.Add(
-                new SelectableAvatar(a.id, a.name, a.vrmUrl, a.vrmHash, a.textureUrl, AvatarSource.Slot, isLocked)
+                new SelectableAvatar(
+                    a.id, a.name, a.vrmUrl, a.vrmHash, a.textureUrl,
+                    AvatarSource.Slot, isLocked, a.moderationStatus)
             );
             index++;
         }
-        if (SelectedAvatar == null && SlotAvatars.Count > 0)
-            SelectedAvatar = SlotAvatars[0];
+        if (SelectedAvatar == null)
+        {
+            // 非ロック・非拒否のアバターを優先して自動選択
+            SelectedAvatar = SlotAvatars.Find(av => !av.IsLocked && !av.IsRejected)
+                ?? (SlotAvatars.Count > 0 ? SlotAvatars[0] : null);
+        }
     }
 
     /// <summary>購入済みアバター一覧を読み込む（category == "avatar" のみ）。</summary>

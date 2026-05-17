@@ -119,6 +119,7 @@ public class WorldAvatarSelectController : IDisposable
         bool isSelected = _logic.SelectedAvatar == avatar;
         if (isSelected) card.AddToClassList("avatar-card--selected");
         if (avatar.IsLocked) card.AddToClassList("avatar-card--locked");
+        if (avatar.IsRejected) card.AddToClassList("avatar-card--rejected");
 
         var thumb = new VisualElement();
         thumb.AddToClassList("avatar-card__thumb");
@@ -141,12 +142,28 @@ public class WorldAvatarSelectController : IDisposable
             lockBadge.AddToClassList("avatar-card__lock-badge");
             card.Add(lockBadge);
         }
-        else
+        else if (avatar.IsRejected)
+        {
+            var rejectedBadge = new Label("非承認");
+            rejectedBadge.AddToClassList("avatar-card__moderation-badge");
+            rejectedBadge.AddToClassList("avatar-card__moderation-badge--rejected");
+            card.Add(rejectedBadge);
+        }
+        else if (avatar.IsPending)
+        {
+            var pendingBadge = new Label("審査中");
+            pendingBadge.AddToClassList("avatar-card__moderation-badge");
+            pendingBadge.AddToClassList("avatar-card__moderation-badge--pending");
+            card.Add(pendingBadge);
+        }
+
+        // 拒否されたアバターは選択不可（審査中・承認済みは選択可）
+        if (!avatar.IsLocked && !avatar.IsRejected)
         {
             card.RegisterCallback<ClickEvent>(_ =>
             {
                 _logic.Select(avatar);
-                RefreshList(); // Rebuild to update selection highlight
+                RefreshList();
                 UpdateConfirmButton();
             });
         }
@@ -178,7 +195,9 @@ public class WorldAvatarSelectController : IDisposable
     private void UpdateConfirmButton()
     {
         if (_btnConfirm == null) return;
-        bool canConfirm = _logic.HasSelection && !(_logic.SelectedAvatar?.IsLocked ?? false);
+        bool canConfirm = _logic.HasSelection
+            && !(_logic.SelectedAvatar?.IsLocked ?? false)
+            && !(_logic.SelectedAvatar?.IsRejected ?? false);
         _btnConfirm.SetEnabled(canConfirm);
         _btnConfirm.EnableInClassList("btn--disabled", !canConfirm);
     }
@@ -186,7 +205,7 @@ public class WorldAvatarSelectController : IDisposable
     private void OnConfirmClicked()
     {
         var selected = _logic.SelectedAvatar;
-        if (selected == null || selected.IsLocked) return;
+        if (selected == null || selected.IsLocked || selected.IsRejected) return;
         _ = DownloadAndConfirmAsync(selected, _cts.Token);
     }
 

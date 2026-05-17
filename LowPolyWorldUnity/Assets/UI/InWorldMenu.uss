@@ -212,6 +212,12 @@
     opacity: 0.4;
 }
 
+.menu-avatar-card--rejected {
+    opacity: 0.5;
+    border-width: 1px;
+    border-color: rgba(220, 60, 60, 0.4);
+}
+
 .menu-avatar-name {
     flex-grow: 1;
     font-size: 26px;
@@ -220,6 +226,23 @@
 
 .menu-avatar-lock {
     font-size: 28px;
+}
+
+.menu-avatar-moderation-badge {
+    font-size: 20px;
+    border-radius: 8px;
+    padding: 2px 12px;
+    margin-left: 8px;
+}
+
+.menu-avatar-moderation-badge--pending {
+    color: rgb(220, 180, 60);
+    background-color: rgba(80, 60, 10, 0.9);
+}
+
+.menu-avatar-moderation-badge--rejected {
+    color: rgb(240, 80, 80);
+    background-color: rgba(80, 20, 20, 0.9);
 }
 
 /* アバター変更確認ダイアログ */

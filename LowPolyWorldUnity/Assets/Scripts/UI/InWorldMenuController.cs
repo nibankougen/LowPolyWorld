@@ -166,10 +166,15 @@ public class InWorldMenuController : IDisposable
 
     private VisualElement BuildAvatarCard(StartupAvatar avatar, bool isLocked)
     {
+        bool isPending = avatar.moderationStatus == "pending";
+        bool isRejected = avatar.moderationStatus == "rejected";
+
         var card = new VisualElement();
         card.AddToClassList("menu-avatar-card");
         if (isLocked)
             card.AddToClassList("menu-avatar-card--locked");
+        if (isRejected)
+            card.AddToClassList("menu-avatar-card--rejected");
 
         var nameLabel = new Label(avatar.name ?? "Avatar");
         nameLabel.AddToClassList("menu-avatar-name");
@@ -181,8 +186,23 @@ public class InWorldMenuController : IDisposable
             lockLabel.AddToClassList("menu-avatar-lock");
             card.Add(lockLabel);
         }
+        else if (isRejected)
+        {
+            var badge = new Label("非承認");
+            badge.AddToClassList("menu-avatar-moderation-badge");
+            badge.AddToClassList("menu-avatar-moderation-badge--rejected");
+            card.Add(badge);
+        }
+        else if (isPending)
+        {
+            var badge = new Label("審査中");
+            badge.AddToClassList("menu-avatar-moderation-badge");
+            badge.AddToClassList("menu-avatar-moderation-badge--pending");
+            card.Add(badge);
+        }
 
-        if (!isLocked)
+        // 拒否されたアバターはインワールドでの変更不可
+        if (!isLocked && !isRejected)
         {
             card.RegisterCallback<ClickEvent>(_ => ShowAvatarConfirm(avatar));
         }

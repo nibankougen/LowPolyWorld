@@ -236,4 +236,77 @@ public class WorldAvatarSelectLogicTests
         Assert.IsFalse(logic.SlotAvatars[0].IsLocked);
         Assert.IsFalse(logic.SlotAvatars[1].IsLocked);
     }
+
+    // ── モデレーションステータス ───────────────────────────────────────────────
+
+    [Test]
+    public void LoadSlotAvatars_ModerationStatus_IsStoredCorrectly()
+    {
+        var logic = new WorldAvatarSelectLogic();
+        logic.LoadSlotAvatars(new[]
+        {
+            new StartupAvatar { id = "a1", name = "A", vrmUrl = "http://x/a.vrm", vrmHash = "h1", moderationStatus = "approved" },
+            new StartupAvatar { id = "a2", name = "B", vrmUrl = "http://x/b.vrm", vrmHash = "h2", moderationStatus = "pending" },
+            new StartupAvatar { id = "a3", name = "C", vrmUrl = "http://x/c.vrm", vrmHash = "h3", moderationStatus = "rejected" },
+        });
+
+        Assert.IsFalse(logic.SlotAvatars[0].IsPending);
+        Assert.IsFalse(logic.SlotAvatars[0].IsRejected);
+        Assert.IsTrue(logic.SlotAvatars[1].IsPending);
+        Assert.IsFalse(logic.SlotAvatars[1].IsRejected);
+        Assert.IsFalse(logic.SlotAvatars[2].IsPending);
+        Assert.IsTrue(logic.SlotAvatars[2].IsRejected);
+    }
+
+    [Test]
+    public void LoadSlotAvatars_AutoSelect_SkipsRejectedAvatar()
+    {
+        var logic = new WorldAvatarSelectLogic();
+        logic.LoadSlotAvatars(new[]
+        {
+            new StartupAvatar { id = "a1", name = "A", vrmUrl = "http://x/a.vrm", vrmHash = "h1", moderationStatus = "rejected" },
+            new StartupAvatar { id = "a2", name = "B", vrmUrl = "http://x/b.vrm", vrmHash = "h2", moderationStatus = "approved" },
+        });
+
+        // rejected を飛ばして approved を自動選択する
+        Assert.AreEqual("a2", logic.SelectedAvatar.Id);
+    }
+
+    [Test]
+    public void LoadSlotAvatars_AutoSelect_PendingIsSelectable()
+    {
+        var logic = new WorldAvatarSelectLogic();
+        logic.LoadSlotAvatars(new[]
+        {
+            new StartupAvatar { id = "a1", name = "A", vrmUrl = "http://x/a.vrm", vrmHash = "h1", moderationStatus = "pending" },
+        });
+
+        // pending は自動選択される（審査中でも本人は使用可）
+        Assert.IsNotNull(logic.SelectedAvatar);
+        Assert.AreEqual("a1", logic.SelectedAvatar.Id);
+    }
+
+    [Test]
+    public void LoadSlotAvatars_AllRejected_FallsBackToFirstAvatar()
+    {
+        var logic = new WorldAvatarSelectLogic();
+        logic.LoadSlotAvatars(new[]
+        {
+            new StartupAvatar { id = "a1", name = "A", vrmUrl = "http://x/a.vrm", vrmHash = "h1", moderationStatus = "rejected" },
+            new StartupAvatar { id = "a2", name = "B", vrmUrl = "http://x/b.vrm", vrmHash = "h2", moderationStatus = "rejected" },
+        });
+
+        // 全件 rejected でも最初のアバターを選択しておく（confirm ボタン側で制御）
+        Assert.AreEqual("a1", logic.SelectedAvatar.Id);
+    }
+
+    [Test]
+    public void SelectableAvatar_NullModerationStatus_TreatedAsApproved()
+    {
+        var avatar = new SelectableAvatar("id", "name", "url", "hash", null, AvatarSource.Slot,
+            moderationStatus: null);
+
+        Assert.IsFalse(avatar.IsPending);
+        Assert.IsFalse(avatar.IsRejected);
+    }
 }
