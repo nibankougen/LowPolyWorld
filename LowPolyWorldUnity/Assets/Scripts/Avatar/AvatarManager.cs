@@ -16,6 +16,7 @@ public class AvatarManager : MonoBehaviour
     private readonly Dictionary<string, AvatarInstance> _avatars = new();
 
     [SerializeField] private GameObject _pendingFallbackPrefab;
+    [SerializeField] private GameObject _nameTagPrefab;
 
     private AtlasManager _atlasManager;
     private HideListLogic _hideList;
@@ -53,6 +54,12 @@ public class AvatarManager : MonoBehaviour
         int slot = _atlasManager != null ? _atlasManager.AllocateCharacterSlot() : -1;
         var instance = new AvatarInstance(userId, vrmRoot, slot);
         _avatars[userId] = instance;
+
+        if (_nameTagPrefab != null && vrmRoot != null)
+        {
+            var tagGo = Instantiate(_nameTagPrefab, vrmRoot.transform);
+            instance.SetNameTag(tagGo.GetComponent<NameTagController>());
+        }
 
         if (isLocal)
             LocalAvatar = instance;
@@ -146,6 +153,25 @@ public class AvatarManager : MonoBehaviour
             fallback.transform.localScale = Vector3.one;
         }
     }
+
+    /// <summary>
+    /// アバターの名前タグに表示名と公認バッジを設定する。
+    /// NameTagPrefab が設定されていない場合は何もしない。
+    /// </summary>
+    public void SetAvatarNameTag(string userId, string displayName, bool isVerified)
+    {
+        if (!_avatars.TryGetValue(userId, out var instance)) return;
+        instance.NameTag?.SetNameTag(displayName, isVerified);
+    }
+
+    /// <summary>
+    /// アバターの発話インジケーターを更新する。
+    /// </summary>
+    public void SetAvatarVoiceActive(string userId, bool active)
+    {
+        if (!_avatars.TryGetValue(userId, out var instance)) return;
+        instance.NameTag?.SetVoiceActive(active);
+    }
 }
 
 /// <summary>
@@ -164,6 +190,9 @@ public class AvatarInstance
 
     /// <summary>モデレーション検疫中（pending）のアバターかどうか。</summary>
     public bool IsPending { get; private set; }
+
+    /// <summary>頭上の名前タグコントローラー。_nameTagPrefab 未設定時は null。</summary>
+    public NameTagController NameTag { get; private set; }
 
     private readonly List<int> _accessorySlots = new();
     public IReadOnlyList<int> AccessorySlots => _accessorySlots;
@@ -186,4 +215,7 @@ public class AvatarInstance
 
     /// <summary>このアバターを検疫中としてマークする。</summary>
     public void MarkPending() => IsPending = true;
+
+    /// <summary>名前タグコントローラーを設定する（AvatarManager からのみ呼ぶ）。</summary>
+    public void SetNameTag(NameTagController tag) => NameTag = tag;
 }
