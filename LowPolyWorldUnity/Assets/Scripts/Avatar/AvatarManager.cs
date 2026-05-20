@@ -15,6 +15,8 @@ public class AvatarManager : MonoBehaviour
 
     private readonly Dictionary<string, AvatarInstance> _avatars = new();
 
+    [SerializeField] private GameObject _pendingFallbackPrefab;
+
     private AtlasManager _atlasManager;
     private HideListLogic _hideList;
 
@@ -112,6 +114,38 @@ public class AvatarManager : MonoBehaviour
         if (instance.CharacterSlot >= 0)
             _atlasManager?.ClearCharacterSlot(instance.CharacterSlot);
     }
+
+    /// <summary>
+    /// 他プレイヤーのアバターを検疫中（pending）としてマークし、
+    /// VRM メッシュを非表示にしてフォールバックアバターを表示する。
+    /// _pendingFallbackPrefab が未設定の場合はカプセルプリミティブで代替する。
+    /// </summary>
+    public void MarkAvatarPending(string userId)
+    {
+        if (!_avatars.TryGetValue(userId, out var instance))
+            return;
+
+        instance.MarkPending();
+
+        if (instance.Root == null)
+            return;
+
+        foreach (var r in instance.Root.GetComponentsInChildren<Renderer>(true))
+            r.enabled = false;
+
+        GameObject fallback;
+        if (_pendingFallbackPrefab != null)
+        {
+            fallback = Instantiate(_pendingFallbackPrefab, instance.Root.transform);
+        }
+        else
+        {
+            fallback = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+            fallback.transform.SetParent(instance.Root.transform, worldPositionStays: false);
+            fallback.transform.localPosition = new Vector3(0f, 1f, 0f);
+            fallback.transform.localScale = Vector3.one;
+        }
+    }
 }
 
 /// <summary>
@@ -127,6 +161,9 @@ public class AvatarInstance
 
     /// <summary>モデレーションにより拒否されたアバターかどうか。</summary>
     public bool IsRejected { get; private set; }
+
+    /// <summary>モデレーション検疫中（pending）のアバターかどうか。</summary>
+    public bool IsPending { get; private set; }
 
     private readonly List<int> _accessorySlots = new();
     public IReadOnlyList<int> AccessorySlots => _accessorySlots;
@@ -146,4 +183,7 @@ public class AvatarInstance
 
     /// <summary>このアバターを拒否済みとしてマークする。</summary>
     public void MarkRejected() => IsRejected = true;
+
+    /// <summary>このアバターを検疫中としてマークする。</summary>
+    public void MarkPending() => IsPending = true;
 }

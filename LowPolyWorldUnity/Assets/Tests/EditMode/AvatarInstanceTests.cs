@@ -48,4 +48,37 @@ public class AvatarInstanceTests
         instance.MarkRejected();
         Assert.IsTrue(instance.IsRejected);
     }
+
+    // ── IsPending ─────────────────────────────────────────────────────────────
+
+    [Test]
+    public void IsPending_DefaultsFalse()
+    {
+        var instance = new AvatarInstance("u1", null, 0);
+        Assert.IsFalse(instance.IsPending);
+    }
+
+    [Test]
+    public void MarkPending_SetsIsPendingTrue()
+    {
+        var instance = new AvatarInstance("u1", null, 0);
+        instance.MarkPending();
+        Assert.IsTrue(instance.IsPending);
+    }
+
+    [Test]
+    public void MarkPending_DoesNotAffectIsRejected()
+    {
+        var instance = new AvatarInstance("u1", null, 0);
+        instance.MarkPending();
+        Assert.IsFalse(instance.IsRejected);
+    }
+
+    [Test]
+    public void MarkRejected_DoesNotAffectIsPending()
+    {
+        var instance = new AvatarInstance("u1", null, 0);
+        instance.MarkRejected();
+        Assert.IsFalse(instance.IsPending);
+    }
 }
