@@ -60,6 +60,30 @@ public class AtlasManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// キャラクタースロットを透明ピクセルでクリアしてアトラスを更新する。
+    /// 拒否アバターのテクスチャを消去するために使用する。
+    /// </summary>
+    public void ClearCharacterSlot(int slot)
+    {
+        if (slot < 0)
+            return;
+
+        var px = _layout.GetCharacterPixelRect(slot);
+
+        // slot サイズの一時 RT を透明でクリアし、アトラスの該当領域に上書きコピーする
+        var tmp = RenderTexture.GetTemporary(px.width, px.height, 0, RenderTextureFormat.ARGB32);
+        var prev = RenderTexture.active;
+        RenderTexture.active = tmp;
+        GL.Clear(true, true, Color.clear);
+        RenderTexture.active = prev;
+
+        Graphics.CopyTexture(tmp, 0, 0, 0, 0, px.width, px.height, AtlasTexture, 0, 0, px.x, px.y);
+        RenderTexture.ReleaseTemporary(tmp);
+
+        ScheduleAtlasUpdate();
+    }
+
     // ---- スロット管理（AvatarManager から呼ぶ） ----
 
     public int AllocateCharacterSlot() => _layout.AllocateCharacterSlot();

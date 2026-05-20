@@ -97,6 +97,21 @@ public class AvatarManager : MonoBehaviour
         if (instance.Root != null)
             instance.Root.SetActive(!shouldHide);
     }
+
+    /// <summary>
+    /// アバターを拒否済みとしてマークし、アトラス上のキャラクタースロットを透明クリアする。
+    /// モデレーションで rejected になったアバターの表示を消去するために呼ぶ。
+    /// </summary>
+    public void MarkAvatarRejected(string userId)
+    {
+        if (!_avatars.TryGetValue(userId, out var instance))
+            return;
+
+        instance.MarkRejected();
+
+        if (instance.CharacterSlot >= 0)
+            _atlasManager?.ClearCharacterSlot(instance.CharacterSlot);
+    }
 }
 
 /// <summary>
@@ -109,6 +124,9 @@ public class AvatarInstance
     public string UserId { get; }
     public GameObject Root { get; }
     public int CharacterSlot { get; }
+
+    /// <summary>モデレーションにより拒否されたアバターかどうか。</summary>
+    public bool IsRejected { get; private set; }
 
     private readonly List<int> _accessorySlots = new();
     public IReadOnlyList<int> AccessorySlots => _accessorySlots;
@@ -125,4 +143,7 @@ public class AvatarInstance
     public void AddAccessorySlot(int slot) => _accessorySlots.Add(slot);
 
     public void RemoveAccessorySlot(int slot) => _accessorySlots.Remove(slot);
+
+    /// <summary>このアバターを拒否済みとしてマークする。</summary>
+    public void MarkRejected() => IsRejected = true;
 }
