@@ -1038,8 +1038,8 @@
 - [ ] `InventorySlot`: ルーム退出時リセット
 - [x] `WorldVariantSlotManager`: スロット上限チェック（通常10 / プレミアム100）・上限超過エラー
 - [x] `WorldVariantSlotManager`: プレミアム解約後のロック判定
-- [ ] `MyObjectSlotManager`: スロット上限チェック（通常10 / プレミアム100）・上限超過エラー
-- [ ] `MyObjectSlotManager`: プレミアム解約後のロック判定
+- [x] `MyObjectSlotManager`: スロット上限チェック（通常10 / プレミアム100）・上限超過エラー
+- [x] `MyObjectSlotManager`: プレミアム解約後のロック判定
 - [ ] `TextureCostCalculator`: objectTypeId / savedVariantId ごとの独立カウント
 - [ ] `TextureCostCalculator`: ギミック非表示オブジェクトをコスト対象外にすること
 - [ ] `TextureCostCalculator`: 上限 4,096 到達時の追加ブロック判定
