@@ -29,6 +29,7 @@ public class SettingsTabController
     public event Action OnFollowScreenRequested;
     public event Action OnHiddenUsersRequested;
     public event Action OnHiddenWorldsRequested;
+    public event Action OnMyProfileRequested;
     public event Action OnAccountSettingsRequested;
 
     public SettingsTabController(VisualElement root)
@@ -61,6 +62,9 @@ public class SettingsTabController
         root.Q<Button>("btn-follow-screen")?.RegisterCallback<ClickEvent>(_ => OnFollowScreenRequested?.Invoke());
         root.Q<Button>("btn-hidden-users")?.RegisterCallback<ClickEvent>(_ => OnHiddenUsersRequested?.Invoke());
         root.Q<Button>("btn-hidden-worlds")?.RegisterCallback<ClickEvent>(_ => OnHiddenWorldsRequested?.Invoke());
+        root.Q<Button>("btn-my-profile")?.RegisterCallback<ClickEvent>(
+            _ => OnMyProfileRequested?.Invoke()
+        );
         root.Q<Button>("btn-account-settings")?.RegisterCallback<ClickEvent>(
             _ => OnAccountSettingsRequested?.Invoke()
         );

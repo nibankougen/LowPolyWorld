@@ -1,0 +1,62 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="MyProfileScreen.uss" />
+    <ui:VisualElement class="myp-root">
+
+        <!-- ヘッダー -->
+        <ui:VisualElement class="myp-header">
+            <ui:Button name="btn-back" class="myp-back-btn" text="&#x2039;" />
+            <ui:Label class="myp-title" text="プロフィール" />
+            <ui:VisualElement style="width: 60px;" />
+        </ui:VisualElement>
+
+        <!-- ヒーローエリア（アバターアイコン・表示名・@name） -->
+        <ui:VisualElement class="myp-hero">
+            <!-- アバターアイコン -->
+            <ui:VisualElement name="myp-avatar-icon" class="myp-avatar-icon">
+                <ui:Label class="myp-avatar-placeholder" text="&#x265F;" />
+            </ui:VisualElement>
+
+            <!-- 表示名 + 公認バッジ -->
+            <ui:VisualElement class="myp-name-row">
+                <ui:Label name="myp-display-name" class="myp-display-name" text="" />
+                <ui:Label name="myp-verified-badge" class="myp-verified-badge overlay-hidden" text="&#x2713;" />
+            </ui:VisualElement>
+
+            <!-- @name -->
+            <ui:Label name="myp-at-name" class="myp-at-name" text="" />
+        </ui:VisualElement>
+
+        <!-- ソーシャル数値行（フォロワー / フォロー中 / フレンド） -->
+        <ui:VisualElement class="myp-stats-row">
+            <ui:Button name="btn-followers" class="myp-stat-btn">
+                <ui:Label name="myp-follower-count" class="myp-stat-count" text="–" />
+                <ui:Label class="myp-stat-label" text="フォロワー" />
+            </ui:Button>
+            <ui:VisualElement class="myp-stat-divider" />
+            <ui:Button name="btn-following" class="myp-stat-btn">
+                <ui:Label name="myp-following-count" class="myp-stat-count" text="–" />
+                <ui:Label class="myp-stat-label" text="フォロー中" />
+            </ui:Button>
+            <ui:VisualElement class="myp-stat-divider" />
+            <ui:Button name="btn-friends" class="myp-stat-btn">
+                <ui:Label name="myp-friend-count" class="myp-stat-count" text="–" />
+                <ui:Label class="myp-stat-label" text="フレンド" />
+            </ui:Button>
+        </ui:VisualElement>
+
+        <!-- 編集エリア -->
+        <ui:ScrollView class="myp-scroll">
+
+            <!-- 表示名編集 -->
+            <ui:Label class="myp-section-title" text="表示名" />
+            <ui:VisualElement class="myp-card">
+                <ui:TextField name="field-display-name" class="myp-name-field" max-length="30"
+                              placeholder-text="表示名（30文字以内）" />
+                <ui:Label name="label-name-error" class="myp-name-error" />
+                <ui:Button name="btn-save-name" class="myp-btn-primary" text="保存する" />
+            </ui:VisualElement>
+
+        </ui:ScrollView>
+
+    </ui:VisualElement>
+</ui:UXML>

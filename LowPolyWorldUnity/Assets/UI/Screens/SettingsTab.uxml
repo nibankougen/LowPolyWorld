@@ -67,6 +67,7 @@
 
         <ui:Label class="settings-section-title" text="アカウント" />
 
+        <ui:Button name="btn-my-profile" class="settings-link-btn" text="マイプロフィール ›" />
         <ui:Button name="btn-account-settings" class="settings-link-btn" text="アカウント設定 ›" />
 
     </ui:ScrollView>

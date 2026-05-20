@@ -390,6 +390,20 @@ public class TextureUpdateResponse
     public string textureUrl;
 }
 
+// ── My Profile ───────────────────────────────────────────────────────────────
+
+[Serializable]
+public class SetDisplayNameRequest
+{
+    public string displayName;
+}
+
+[Serializable]
+public class SetDisplayNameResponse
+{
+    public string displayName;
+}
+
 // ── Account Settings ─────────────────────────────────────────────────────────
 
 [Serializable]

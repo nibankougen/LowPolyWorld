@@ -29,6 +29,7 @@ public class HomeScreenController : MonoBehaviour
     [SerializeField] private VisualTreeAsset _inviteLinkPanelAsset;
 
     [Header("Account Settings")]
+    [SerializeField] private VisualTreeAsset _myProfileScreenAsset;
     [SerializeField] private VisualTreeAsset _accountSettingsScreenAsset;
 
     [Header("World Entry")]
@@ -56,6 +57,7 @@ public class HomeScreenController : MonoBehaviour
     private FriendsRoomScreenController _friendsRoomController;
     private UserInfoPanelController _userInfoController;
     private WorldAvatarSelectController _worldAvatarSelectController;
+    private MyProfileController _myProfileController;
     private AccountSettingsController _accountSettingsController;
 
     // 招待リンクパネル（オーバーレイ）
@@ -175,6 +177,8 @@ public class HomeScreenController : MonoBehaviour
         _settingsTabController = null;
         _worldAvatarSelectController?.Dispose();
         _worldAvatarSelectController = null;
+        _myProfileController?.Dispose();
+        _myProfileController = null;
         _accountSettingsController?.Dispose();
         _accountSettingsController = null;
     }
@@ -207,6 +211,7 @@ public class HomeScreenController : MonoBehaviour
             _settingsTabController.OnFollowScreenRequested += () => ShowFollowScreen(null);
             _settingsTabController.OnHiddenUsersRequested += ShowHiddenUsersScreen;
             _settingsTabController.OnHiddenWorldsRequested += ShowHiddenWorldsScreen;
+            _settingsTabController.OnMyProfileRequested += ShowMyProfileScreen;
             _settingsTabController.OnAccountSettingsRequested += ShowAccountSettingsScreen;
         }
         else if (tab == _navWorld && UserManager.Instance != null)
@@ -385,6 +390,26 @@ public class HomeScreenController : MonoBehaviour
         _friendsRoomController.OnBackRequested += ShowFriendScreen;
         _friendsRoomController.OnEnterWorld += EnterWorld;
         _friendsRoomController.OnUserRestricted += ShowRestrictionDialog;
+    }
+
+    // ── My profile ───────────────────────────────────────────────────────────
+
+    private void ShowMyProfileScreen()
+    {
+        if (_myProfileScreenAsset == null) return;
+
+        DisposeAllControllers();
+        _contentArea.Clear();
+
+        var content = _myProfileScreenAsset.Instantiate();
+        content.style.flexGrow = 1;
+        _contentArea.Add(content);
+
+        _myProfileController = new MyProfileController(content);
+        _myProfileController.OnBackRequested += () => SelectTab(_navSettings, _settingsTabAsset);
+        _myProfileController.OnFollowersRequested += userId => ShowFollowScreen(userId, followersTab: true);
+        _myProfileController.OnFollowingRequested += userId => ShowFollowScreen(userId, followersTab: false);
+        _myProfileController.OnFriendsRequested += ShowFriendScreen;
     }
 
     // ── Account settings ─────────────────────────────────────────────────────
