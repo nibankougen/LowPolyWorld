@@ -138,6 +138,99 @@
 }
 
 /* ルームタブ */
+.room-world-name {
+    font-size: 32px;
+    color: rgb(255, 255, 255);
+    -unity-font-style: bold;
+    margin-bottom: 28px;
+}
+
+.room-language-btn {
+    font-size: 24px;
+    color: rgb(120, 200, 255);
+    -unity-font-style: bold;
+    background-color: rgba(120, 200, 255, 0.1);
+    border-radius: 8px;
+    border-width: 1px;
+    border-color: rgba(120, 200, 255, 0.3);
+    padding: 4px 20px;
+    height: 52px;
+}
+
+.room-language-btn:active {
+    background-color: rgba(120, 200, 255, 0.2);
+}
+
+.room-language-btn--readonly {
+    background-color: rgba(0, 0, 0, 0);
+    border-color: rgba(0, 0, 0, 0);
+}
+
+.room-reenter-btn {
+    height: 80px;
+    font-size: 26px;
+    color: rgb(255, 255, 255);
+    background-color: rgb(60, 150, 220);
+    border-radius: 12px;
+    border-width: 0;
+    margin-top: 8px;
+    margin-bottom: 32px;
+    -unity-font-style: bold;
+}
+
+.room-reenter-btn:active {
+    background-color: rgb(40, 130, 200);
+    scale: 0.97;
+}
+
+.room-members-title {
+    margin-bottom: 12px;
+}
+
+.room-members-list {
+    flex-grow: 1;
+}
+
+.room-member-card {
+    flex-direction: row;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 18px 24px;
+    margin-bottom: 10px;
+}
+
+.room-member-card:active {
+    background-color: rgba(255, 255, 255, 0.12);
+}
+
+.room-member-card--hidden {
+    opacity: 0.3;
+}
+
+.room-member-name {
+    flex-grow: 1;
+    font-size: 26px;
+    color: rgb(230, 230, 240);
+}
+
+.room-member-badge {
+    font-size: 20px;
+    border-radius: 8px;
+    padding: 2px 12px;
+    margin-left: 8px;
+}
+
+.room-member-badge--owner {
+    color: rgb(255, 200, 60);
+    background-color: rgba(80, 60, 10, 0.9);
+}
+
+.room-member-badge--verified {
+    color: rgb(100, 200, 255);
+    background-color: rgba(10, 50, 80, 0.9);
+}
+
 .room-info-row {
     flex-direction: row;
     align-items: center;

@@ -26,11 +26,31 @@
 
             <!-- ルームタブ -->
             <ui:VisualElement name="content-room" class="menu-tab-content">
+
+                <!-- ワールド名 -->
+                <ui:Label name="label-world-name" class="room-world-name" text="" />
+
+                <!-- ルーム情報 -->
+                <ui:VisualElement class="room-info-row">
+                    <ui:Label class="room-info-label" text="言語" />
+                    <ui:Button name="btn-room-language" class="room-language-btn" text="--" />
+                </ui:VisualElement>
+                <ui:VisualElement class="room-info-row">
+                    <ui:Label class="room-info-label" text="最大人数" />
+                    <ui:Label name="label-room-max-players" class="room-info-value" text="--" />
+                </ui:VisualElement>
                 <ui:VisualElement class="room-info-row">
                     <ui:Label class="room-info-label" text="セッション残り時間" />
                     <ui:Label name="label-session-remaining" class="room-info-value" text="--:--:--" />
                 </ui:VisualElement>
-                <ui:Label class="menu-stub-text" text="ルームメンバー一覧は Phase 12 で実装予定" />
+
+                <!-- 再入室ボタン -->
+                <ui:Button name="btn-reenter-room" class="room-reenter-btn" text="再入室する" />
+
+                <!-- メンバー一覧 -->
+                <ui:Label class="menu-section-title room-members-title" text="ルームメンバー" />
+                <ui:ScrollView name="room-members-list" class="room-members-list" />
+
             </ui:VisualElement>
 
             <!-- アバタータブ -->

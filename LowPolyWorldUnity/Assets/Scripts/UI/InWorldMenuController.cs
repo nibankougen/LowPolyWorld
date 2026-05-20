@@ -17,10 +17,24 @@ public class InWorldMenuController : IDisposable
     /// <summary>ワールド一覧タブでワールドタップ時に発火。</summary>
     public event Action<WorldResponse> OnWorldSelected;
 
+    /// <summary>ルームタブのメンバーカードをタップしたときに発火。</summary>
+    public event Action<string> OnRoomMemberTapped;
+
+    /// <summary>ルームタブの再入室ボタンをタップしたときに発火。</summary>
+    public event Action OnReenterRoomRequested;
+
+    /// <summary>ルームタブの言語ボタンをタップしたときに発火（ルームオーナーのみ）。</summary>
+    public event Action OnLanguageChangeRequested;
+
     private readonly VisualElement _root;
 
-    // セッション残り時間
+    // ルームタブ
+    private Label _labelWorldName;
+    private Button _btnRoomLanguage;
+    private Label _labelRoomMaxPlayers;
     private Label _labelSessionRemaining;
+    private Button _btnReenterRoom;
+    private ScrollView _roomMembersList;
 
     // タブ
     private Button _tabRoom;
@@ -80,6 +94,7 @@ public class InWorldMenuController : IDisposable
 
         _settingsTabController = new SettingsTabController(_contentSettings);
 
+        SetupRoomTab();
         SetupAvatarTab();
         SetupWorldsTab();
 
@@ -108,6 +123,93 @@ public class InWorldMenuController : IDisposable
         int m = (total % 3600) / 60;
         int s = total % 60;
         _labelSessionRemaining.text = $"{h:00}:{m:00}:{s:00}";
+    }
+
+    // ---- ルームタブ ------------------------------------------------------------------
+
+    private void SetupRoomTab()
+    {
+        _labelWorldName = _root.Q<Label>("label-world-name");
+        _btnRoomLanguage = _root.Q<Button>("btn-room-language");
+        _labelRoomMaxPlayers = _root.Q<Label>("label-room-max-players");
+        _btnReenterRoom = _root.Q<Button>("btn-reenter-room");
+        _roomMembersList = _root.Q<ScrollView>("room-members-list");
+
+        _btnRoomLanguage?.RegisterCallback<ClickEvent>(_ => OnLanguageChangeRequested?.Invoke());
+        _btnReenterRoom?.RegisterCallback<ClickEvent>(_ => OnReenterRoomRequested?.Invoke());
+    }
+
+    /// <summary>ルームタブにワールド・ルーム情報を反映する。</summary>
+    public void SetRoomInfo(string worldName, string language, int maxPlayers, bool isOwner)
+    {
+        if (_labelWorldName != null)
+            _labelWorldName.text = worldName ?? string.Empty;
+
+        if (_btnRoomLanguage != null)
+        {
+            _btnRoomLanguage.text = language ?? "--";
+            if (isOwner)
+                _btnRoomLanguage.RemoveFromClassList("room-language-btn--readonly");
+            else
+                _btnRoomLanguage.AddToClassList("room-language-btn--readonly");
+        }
+
+        if (_labelRoomMaxPlayers != null)
+            _labelRoomMaxPlayers.text = $"{maxPlayers}人";
+    }
+
+    /// <summary>メンバー一覧を再構築する。非表示メンバーは末尾に薄く表示する。</summary>
+    public void RefreshMemberList(RoomMemberListLogic members, HideListLogic hideList)
+    {
+        if (_roomMembersList == null) return;
+        _roomMembersList.Clear();
+
+        if (members == null || members.Count == 0)
+        {
+            var empty = new Label("メンバーがいません");
+            empty.AddToClassList("menu-stub-text");
+            _roomMembersList.Add(empty);
+            return;
+        }
+
+        foreach (var member in members.GetSortedMembers(hideList))
+        {
+            bool isHidden = RoomMemberListLogic.IsMemberHidden(member.UserId, hideList);
+            var card = BuildMemberCard(member, isHidden);
+            _roomMembersList.Add(card);
+        }
+    }
+
+    private VisualElement BuildMemberCard(RoomMemberInfo member, bool isHidden)
+    {
+        var card = new VisualElement();
+        card.AddToClassList("room-member-card");
+        if (isHidden)
+            card.AddToClassList("room-member-card--hidden");
+
+        var nameLabel = new Label(NameTagLogic.ResolveDisplayName(member.DisplayName));
+        nameLabel.AddToClassList("room-member-name");
+        card.Add(nameLabel);
+
+        if (member.IsVerified)
+        {
+            var badge = new Label("✓");
+            badge.AddToClassList("room-member-badge");
+            badge.AddToClassList("room-member-badge--verified");
+            card.Add(badge);
+        }
+
+        if (member.IsOwner)
+        {
+            var badge = new Label("オーナー");
+            badge.AddToClassList("room-member-badge");
+            badge.AddToClassList("room-member-badge--owner");
+            card.Add(badge);
+        }
+
+        card.RegisterCallback<ClickEvent>(_ => OnRoomMemberTapped?.Invoke(member.UserId));
+
+        return card;
     }
 
     // ---- アバタータブ ----------------------------------------------------------------
