@@ -1043,7 +1043,7 @@
 - [ ] `TextureCostCalculator`: objectTypeId / savedVariantId ごとの独立カウント
 - [ ] `TextureCostCalculator`: ギミック非表示オブジェクトをコスト対象外にすること
 - [ ] `TextureCostCalculator`: 上限 4,096 到達時の追加ブロック判定
-- [ ] `WorldObjectScaleLogic`: インスタンスサイズ設定・0.25m クランプ・スケールロック判定（ロック時は変更を拒否）
+- [x] `WorldObjectScaleLogic`: インスタンスサイズ設定・0.25m クランプ・スケールロック判定（ロック時は変更を拒否）
 - [ ] `ColliderSizeRounding`: AABB float 値 → 0.25m 単位切り上げ・全軸 0 時の装飾判定
 
 ---
