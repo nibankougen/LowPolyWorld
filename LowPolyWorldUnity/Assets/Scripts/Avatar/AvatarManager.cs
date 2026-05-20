@@ -116,6 +116,9 @@ public class AvatarManager : MonoBehaviour
         if (!_avatars.TryGetValue(userId, out var instance))
             return;
 
+        if (instance.IsRejected)
+            return;
+
         instance.MarkRejected();
 
         if (instance.CharacterSlot >= 0)
@@ -130,6 +133,9 @@ public class AvatarManager : MonoBehaviour
     public void MarkAvatarPending(string userId)
     {
         if (!_avatars.TryGetValue(userId, out var instance))
+            return;
+
+        if (instance.IsPending)
             return;
 
         instance.MarkPending();
