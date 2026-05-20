@@ -1036,8 +1036,8 @@
 - [ ] `InventorySlot`: 「持つ」反応でオブジェクトが消え保有状態になること
 - [ ] `InventorySlot`: 別オブジェクトを持とうとしたとき既存アイテムが元の位置に戻ること
 - [ ] `InventorySlot`: ルーム退出時リセット
-- [ ] `WorldVariantSlotManager`: スロット上限チェック（通常10 / プレミアム100）・上限超過エラー
-- [ ] `WorldVariantSlotManager`: プレミアム解約後のロック判定
+- [x] `WorldVariantSlotManager`: スロット上限チェック（通常10 / プレミアム100）・上限超過エラー
+- [x] `WorldVariantSlotManager`: プレミアム解約後のロック判定
 - [ ] `MyObjectSlotManager`: スロット上限チェック（通常10 / プレミアム100）・上限超過エラー
 - [ ] `MyObjectSlotManager`: プレミアム解約後のロック判定
 - [ ] `TextureCostCalculator`: objectTypeId / savedVariantId ごとの独立カウント
