@@ -43,7 +43,8 @@
       "Bash(python convert_otf_to_ttf.py)",
       "Bash(python Fonts/filter_chars.py)",
       "Bash(uloop find-game-objects *)",
-      "Skill(uloop-compile)"
+      "Skill(uloop-compile)",
+      "Skill(uloop-get-logs)"
     ]
   }
 }
