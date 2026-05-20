@@ -35,6 +35,7 @@ public class InWorldMenuController : IDisposable
     private Label _labelSessionRemaining;
     private Button _btnReenterRoom;
     private ScrollView _roomMembersList;
+    private bool _isRoomOwner;
 
     // タブ
     private Button _tabRoom;
@@ -135,7 +136,7 @@ public class InWorldMenuController : IDisposable
         _btnReenterRoom = _root.Q<Button>("btn-reenter-room");
         _roomMembersList = _root.Q<ScrollView>("room-members-list");
 
-        _btnRoomLanguage?.RegisterCallback<ClickEvent>(_ => OnLanguageChangeRequested?.Invoke());
+        _btnRoomLanguage?.RegisterCallback<ClickEvent>(_ => { if (_isRoomOwner) OnLanguageChangeRequested?.Invoke(); });
         _btnReenterRoom?.RegisterCallback<ClickEvent>(_ => OnReenterRoomRequested?.Invoke());
     }
 
@@ -144,6 +145,8 @@ public class InWorldMenuController : IDisposable
     {
         if (_labelWorldName != null)
             _labelWorldName.text = worldName ?? string.Empty;
+
+        _isRoomOwner = isOwner;
 
         if (_btnRoomLanguage != null)
         {
