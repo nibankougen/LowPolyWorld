@@ -462,37 +462,38 @@ Phase 12 の地形システム動作確認に使うテクスチャ。ランダ�
 
 ---
 
-### 19. 環境音ライブラリ
+### 19. ワールド BGM ライブラリ
 
-ワールド作成設定で選択できる環境音（ループ再生・`docs/world-creation.md` セクション 13.2 参照）。
+ワールド設定パネルのデフォルト BGM 選択・ギミックの「BGM を切り替える」アクションで利用できる統合サウンドライブラリ（`docs/world-creation.md` セクション 14.2 参照）。
 
-**配置先:** `LowPolyWorldUnity/Assets/Audio/Ambient/`
+**配置先:** `LowPolyWorldUnity/Assets/Audio/WorldMusic/`
 
-| ✅ | ファイル名 | soundId | 内容 |
-|---|---|---|---|
-| ☐ | ambient_forest.ogg | `forest` | 森・鳥のさえずり |
-| ☐ | ambient_rain.ogg | `rain` | 雨音 |
-| ☐ | ambient_ocean.ogg | `ocean` | 波音・海辺 |
-| ☐ | ambient_wind.ogg | `wind` | 風音 |
-| ☐ | ambient_city.ogg | `city` | 街のざわめき |
-| ☐ | ambient_cave.ogg | `cave` | 洞窟・残響 |
-| ☐ | ambient_night.ogg | `night` | 夜・虫の声 |
+| ✅ | ファイル名 | soundId | 種別 | 内容 |
+|---|---|---|---|---|
+| ☐ | ambient_rain.ogg | `rain` | 環境音 | 雨音 |
+| ☐ | ambient_ocean.ogg | `ocean` | 環境音 | 波音・海辺 |
+| ☐ | ambient_wind.ogg | `wind` | 環境音 | 風音 |
+| ☐ | ambient_cave.ogg | `cave` | 環境音 | 洞窟・残響 |
+| ☐ | ambient_dark_factory.ogg | `darkFactory` | 環境音 | 暗い工場の音 |
+| ☐ | bgm_cheerful.ogg | `bgmCheerful` | BGM | 明るい BGM |
+| ☐ | bgm_calm.ogg | `bgmCalm` | BGM | 落ち着いた BGM |
+| ☐ | bgm_suspense.ogg | `bgmSuspense` | BGM | シリアス系 BGM |
 
 **仕様:**
 - 形式: OGG（ループポイント設定必須・シームレスにつながること）
 - 長さ: 30 秒以上推奨
-- 著作権: ロイヤリティフリー素材（商用利用可）
+- 著作権: ロイヤリティフリー素材（商用利用可・クレジット表記不要のもの推奨）
 - 推奨素材サイト: Freesound（https://freesound.org）・効果音ラボ等
 
 ---
 
-### 20. 内蔵サウンドエフェクトライブラリ
+### 20. 内蔵効果音ライブラリ
 
-ギミックの「音・音楽を鳴らす」反応で選択できる効果音・BGM ファイル。
+ギミックの「効果音を鳴らす」アクションで選択できるワンショット効果音ファイル。
 
 **配置先:** `LowPolyWorldUnity/Assets/Audio/WorldGimmick/`
 
-| ✅ | ファイル名（例） | 内容 |
+| ✅ | ファイル名 | 内容 |
 |---|---|---|
 | ☐ | se_coin.wav | コイン取得音 |
 | ☐ | se_button.wav | ボタン・スイッチ音 |
@@ -501,15 +502,12 @@ Phase 12 の地形システム動作確認に使うテクスチャ。ランダ�
 | ☐ | se_fanfare.wav | ファンファーレ・クリア音 |
 | ☐ | se_damage.wav | ダメージ・失敗音 |
 | ☐ | se_footstep.wav | 足音 |
-| ☐ | bgm_cheerful.ogg | 明るい BGM（ループ） |
-| ☐ | bgm_calm.ogg | 落ち着いた BGM（ループ） |
-| ☐ | bgm_suspense.ogg | シリアス系 BGM（ループ） |
 
 **仕様:**
-- 形式: SE は WAV（44.1kHz・16bit）、BGM は OGG（ループポイント設定推奨）
+- 形式: WAV（44.1kHz・16bit）
 - 著作権: ロイヤリティフリー素材を使用（商用利用可・クレジット表記不要のもの推奨）
 - 推奨素材サイト: Freesound（https://freesound.org）・効果音ラボ（https://soundeffect-lab.info）等
-- 最低点数: SE 5 点以上・BGM 2 点以上
+- 最低点数: 5 点以上
 
 ---
 
