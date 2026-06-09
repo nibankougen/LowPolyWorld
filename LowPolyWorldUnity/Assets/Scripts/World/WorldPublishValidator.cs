@@ -50,15 +50,10 @@ public class WorldPublishValidator
 
     // ── Private helpers ─────────────────────────────────────────────────────
 
-    // スポーン位置が origin (0,0,0) でないか、または worldStates が定義されているワールドは
-    // スポーンが設定済みとみなす。完全な判定は特殊オブジェクトシステム実装後に更新する。
-    private static bool HasSpawn(WorldDefinitionJson def)
-    {
-        if (def?.specialObjects?.spawn == null) return false;
-        var p = def.specialObjects.spawn.position;
-        // 座標が origin から動いているかで判定（暫定: 0,0,0 = 未設定）
-        return p.x != 0f || p.y != 0f || p.z != 0f;
-    }
+    // SpawnPointData.isSet フラグでスポーン設定済みを判定する。
+    // float 座標での等値比較は使わない（origin が有効な位置のため）。
+    private static bool HasSpawn(WorldDefinitionJson def) =>
+        def?.specialObjects?.spawn?.isSet == true;
 
     // 入口ポータルが存在するとき、すべての入口に出口が設定されているかを確認する
     private static bool HasPortalWithoutExit(WorldDefinitionJson def)

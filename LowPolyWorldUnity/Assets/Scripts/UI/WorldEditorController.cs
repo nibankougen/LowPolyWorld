@@ -135,8 +135,21 @@ public class WorldEditorController : MonoBehaviour
         int publishedVersion = 0,
         bool hasThumbnail = false)
     {
-        _settingsLogic = new WorldSettingsPanelLogic(isPremium);
-        _settingsLogic.LoadFrom(def);
+        // WorldCreationManager の settingsLogic と同一インスタンスを共有することで
+        // CommitSettingsChanges が正しくエディタの変更を保存できる。
+        var mgr = WorldCreationManager.Instance;
+        if (mgr != null)
+        {
+            mgr.LoadWorldDef(def, isPremium);
+            _settingsLogic = mgr.SettingsLogic;
+        }
+        else
+        {
+            // マネージャーなし（エディタ外テスト等）のフォールバック
+            _settingsLogic = new WorldSettingsPanelLogic(isPremium);
+            _settingsLogic.LoadFrom(def);
+        }
+
         _publishedVersion = publishedVersion;
         _hasThumbnail = hasThumbnail;
 
@@ -262,7 +275,7 @@ public class WorldEditorController : MonoBehaviour
         _sliderBgmVolume.RegisterValueChangedCallback(e =>
         {
             _settingsLogic?.SetBgmVolume((int)e.newValue);
-            _labelBgmVolume.text = $"{(int)e.newValue}%";
+            if (_labelBgmVolume != null) _labelBgmVolume.text = $"{(int)e.newValue}%";
         });
 
         _btnPlayersInc.clicked += () => ChangeMaxPlayers(+1);
@@ -281,12 +294,12 @@ public class WorldEditorController : MonoBehaviour
 
         _sliderFogStart.RegisterValueChangedCallback(e =>
         {
-            _labelFogStart.text = $"{(int)e.newValue}m";
+            if (_labelFogStart != null) _labelFogStart.text = $"{(int)e.newValue}m";
             UpdateFogData();
         });
         _sliderFogEnd.RegisterValueChangedCallback(e =>
         {
-            _labelFogEnd.text = $"{(int)e.newValue}m";
+            if (_labelFogEnd != null) _labelFogEnd.text = $"{(int)e.newValue}m";
             UpdateFogData();
         });
 
@@ -294,7 +307,7 @@ public class WorldEditorController : MonoBehaviour
         _btnFxRain.clicked += () => SetScreenEffect("rain");
         _sliderFxIntensity.RegisterValueChangedCallback(e =>
         {
-            _labelFxIntensity.text = $"{(int)e.newValue}%";
+            if (_labelFxIntensity != null) _labelFxIntensity.text = $"{(int)e.newValue}%";
             UpdateScreenEffect();
         });
 
@@ -383,12 +396,12 @@ public class WorldEditorController : MonoBehaviour
         // BGM
         _bgmSoundId = _settingsLogic.BgmSoundId;
         _sliderBgmVolume?.SetValueWithoutNotify(_settingsLogic.BgmVolume);
-        _labelBgmVolume.text = $"{_settingsLogic.BgmVolume}%";
+        if (_labelBgmVolume != null) _labelBgmVolume.text = $"{_settingsLogic.BgmVolume}%";
         RefreshBgmCurrentDisplay();
         RefreshBgmTrackList();
 
         // 人数上限
-        _labelMaxPlayers.text = _settingsLogic.MaxPlayers.ToString();
+        if (_labelMaxPlayers != null) _labelMaxPlayers.text = _settingsLogic.MaxPlayers.ToString();
         UpdatePlayersHint();
 
         // 背景
@@ -406,9 +419,9 @@ public class WorldEditorController : MonoBehaviour
         _fogFields?.EnableInClassList("overlay-hidden", !fog.enabled);
         _fieldFogColor?.SetValueWithoutNotify(fog.color);
         _sliderFogStart?.SetValueWithoutNotify(fog.startDistance);
-        _labelFogStart.text = $"{(int)fog.startDistance}m";
+        if (_labelFogStart != null) _labelFogStart.text = $"{(int)fog.startDistance}m";
         _sliderFogEnd?.SetValueWithoutNotify(fog.endDistance);
-        _labelFogEnd.text = $"{(int)fog.endDistance}m";
+        if (_labelFogEnd != null) _labelFogEnd.text = $"{(int)fog.endDistance}m";
 
         // スクリーンエフェクト
         var fx = _settingsLogic.ScreenEffect ?? new ScreenEffectData();
@@ -417,13 +430,13 @@ public class WorldEditorController : MonoBehaviour
         _btnFxRain?.EnableInClassList("radio-btn--active", fx.type == "rain");
         _fxIntensityRow?.EnableInClassList("overlay-hidden", !hasEffect);
         _sliderFxIntensity?.SetValueWithoutNotify(fx.intensity);
-        _labelFxIntensity.text = $"{fx.intensity}%";
+        if (_labelFxIntensity != null) _labelFxIntensity.text = $"{fx.intensity}%";
 
         // 公開状態
         _togglePublic?.SetValueWithoutNotify(_settingsLogic.IsPublic);
 
         // バージョン
-        _labelVersion.text = _publishedVersion == 0 ? "未公開" : $"バージョン {_publishedVersion}";
+        if (_labelVersion != null) _labelVersion.text = _publishedVersion == 0 ? "未公開" : $"バージョン {_publishedVersion}";
     }
 
     // ── タグ UI ───────────────────────────────────────────────────────────────
@@ -470,7 +483,6 @@ public class WorldEditorController : MonoBehaviour
         if (string.IsNullOrEmpty(input)) return;
 
         var result = _settingsLogic?.Tags.TryAdd(input) ?? TagAddResult.Empty;
-        _tagError?.EnableInClassList("overlay-hidden", result == TagAddResult.Success);
 
         if (result == TagAddResult.Success)
         {
@@ -554,21 +566,13 @@ public class WorldEditorController : MonoBehaviour
     private void RefreshBgmCurrentDisplay()
     {
         var track = WorldMusicLibrary.Find(_bgmSoundId);
-        _bgmCurrentName.text = track?.DisplayName ?? _bgmSoundId;
-        _bgmCurrentAuthor.text = track?.AuthorName ?? "";
+        if (_bgmCurrentName != null) _bgmCurrentName.text = track?.DisplayName ?? _bgmSoundId;
+        if (_bgmCurrentAuthor != null) _bgmCurrentAuthor.text = track?.AuthorName ?? "";
     }
 
-    private void RefreshBgmTrackList()
-    {
-        if (_bgmTrackList == null) return;
-        int i = 0;
-        foreach (VisualElement item in _bgmTrackList.Children())
-        {
-            string id = i < _availableTracks.Count ? _availableTracks[i].SoundId : "";
-            item.EnableInClassList("bgm-track-item--active", id == _bgmSoundId);
-            i++;
-        }
-    }
+    // DOM とデータの同期ずれを防ぐため、リスト全体を再構築する。
+    // リストは最大 ~10 件なので再構築コストは無視できる。
+    private void RefreshBgmTrackList() => BuildBgmTrackList();
 
     // ── 人数上限 ──────────────────────────────────────────────────────────────
 
@@ -576,7 +580,7 @@ public class WorldEditorController : MonoBehaviour
     {
         if (_settingsLogic == null) return;
         _settingsLogic.SetMaxPlayers(_settingsLogic.MaxPlayers + delta);
-        _labelMaxPlayers.text = _settingsLogic.MaxPlayers.ToString();
+        if (_labelMaxPlayers != null) _labelMaxPlayers.text = _settingsLogic.MaxPlayers.ToString();
         UpdatePlayersHint();
     }
 
@@ -584,6 +588,7 @@ public class WorldEditorController : MonoBehaviour
     {
         if (_settingsLogic == null) return;
         bool premium = _settingsLogic.MaxPlayersUpperBound > WorldSettingsPanelLogic.NormalMaxPlayers;
+        if (_labelPlayersHint == null) return;
         _labelPlayersHint.text = premium
             ? $"2〜{WorldSettingsPanelLogic.PremiumMaxPlayers} 人（プレミアム）"
             : $"2〜{WorldSettingsPanelLogic.NormalMaxPlayers} 人";
@@ -679,10 +684,10 @@ public class WorldEditorController : MonoBehaviour
 
     private void CommitAndSave()
     {
-        if (_settingsLogic == null) return;
         var mgr = WorldCreationManager.Instance;
-        if (mgr == null) return;
-        _settingsLogic.ApplyTo(mgr.CurrentDefinition);
+        // _settingsLogic は mgr.SettingsLogic と同一インスタンスのため
+        // CommitSettingsChanges のみで正しく保存される（二重適用なし）
+        if (mgr?.CurrentDefinition == null) return;
         mgr.CommitSettingsChanges();
     }
 

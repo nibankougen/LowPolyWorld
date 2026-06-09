@@ -16,7 +16,7 @@ public class WorldPublishValidatorTests
             worldName = "テストワールド",
             specialObjects = new SpecialObjectsData
             {
-                spawn = new SpawnPointData { position = new Vec3Json(1f, 0f, 1f) },
+                spawn = new SpawnPointData { isSet = true, position = new Vec3Json(0f, 0f, 0f) },
             },
         };
 
@@ -76,18 +76,21 @@ public class WorldPublishValidatorTests
     // ── スポーン ─────────────────────────────────────────────────────────────
 
     [Test]
-    public void SpawnAtOrigin_ReturnsSpawnNotSet()
+    public void SpawnNotSet_ReturnsSpawnNotSet()
     {
         var def = ValidDef();
-        def.specialObjects.spawn.position = new Vec3Json(0f, 0f, 0f);
+        def.specialObjects.spawn.isSet = false;
         var errors = Run(def);
         Assert.Contains(PublishError.SpawnNotSet, (System.Collections.ICollection)errors);
     }
 
     [Test]
-    public void SpawnOffOrigin_NoSpawnError()
+    public void SpawnAtOriginWithIsSet_NoSpawnError()
     {
-        var errors = Run();
+        // (0,0,0) は isSet=true なら有効なスポーン位置
+        var def = ValidDef();
+        def.specialObjects.spawn = new SpawnPointData { isSet = true, position = new Vec3Json(0f, 0f, 0f) };
+        var errors = Run(def);
         CollectionAssert.DoesNotContain(errors, PublishError.SpawnNotSet);
     }
 

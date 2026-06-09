@@ -119,6 +119,8 @@ public class SpecialObjectsData
 [Serializable]
 public class SpawnPointData
 {
+    /// <summary>スポーン位置が設定済みかどうか。false = 未設定（position の値は無効）。</summary>
+    public bool isSet = false;
     public Vec3Json position = new();
     public int rotationY = 0;
 }

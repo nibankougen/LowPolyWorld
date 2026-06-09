@@ -43,6 +43,18 @@ public class WorldCreationManager : MonoBehaviour
     }
 
     /// <summary>
+    /// 既に解析済みの WorldDefinitionJson を読み込む。
+    /// ワールドエディタから呼び出し、UI と同じ settingsLogic インスタンスを共有させる。
+    /// </summary>
+    public void LoadWorldDef(WorldDefinitionJson def, bool isPremium)
+    {
+        _currentDef = def ?? WorldDefinition.CreateBlank();
+        _settingsLogic = new WorldSettingsPanelLogic(isPremium);
+        _settingsLogic.LoadFrom(_currentDef);
+        ApplyBgmToPlayer();
+    }
+
+    /// <summary>
     /// 空白テンプレートで新規ワールドを初期化する。
     /// </summary>
     public void InitBlankWorld(string worldName, bool isPremium)
