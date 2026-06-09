@@ -44,7 +44,9 @@
       "Bash(python Fonts/filter_chars.py)",
       "Bash(uloop find-game-objects *)",
       "Skill(uloop-compile)",
-      "Skill(uloop-get-logs)"
+      "Skill(uloop-get-logs)",
+      "Bash(grep -i \".cs$\")",
+      "Bash(test\")"
     ]
   }
 }
