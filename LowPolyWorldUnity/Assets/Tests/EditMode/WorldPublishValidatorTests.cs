@@ -1,0 +1,177 @@
+using System.Collections.Generic;
+using NUnit.Framework;
+
+public class WorldPublishValidatorTests
+{
+    private WorldPublishValidator _validator;
+
+    [SetUp]
+    public void SetUp() => _validator = new WorldPublishValidator();
+
+    // ── ヘルパー ─────────────────────────────────────────────────────────────
+
+    private static WorldDefinitionJson ValidDef() =>
+        new()
+        {
+            worldName = "テストワールド",
+            specialObjects = new SpecialObjectsData
+            {
+                spawn = new SpawnPointData { position = new Vec3Json(1f, 0f, 1f) },
+            },
+        };
+
+    private IReadOnlyList<PublishError> Run(
+        WorldDefinitionJson def = null,
+        int textureCost = 0,
+        int objectCount = 0,
+        bool hasThumbnail = true,
+        int publishedVersion = 0) =>
+        _validator.Validate(def ?? ValidDef(), textureCost, objectCount, hasThumbnail, publishedVersion);
+
+    // ── 正常ケース ────────────────────────────────────────────────────────────
+
+    [Test]
+    public void ValidWorld_NoErrors()
+    {
+        var errors = Run();
+        Assert.AreEqual(0, errors.Count);
+    }
+
+    // ── ワールド名 ────────────────────────────────────────────────────────────
+
+    [Test]
+    public void WorldNameEmpty_ReturnsWorldNameEmpty()
+    {
+        var def = ValidDef();
+        def.worldName = "";
+        var errors = Run(def);
+        Assert.Contains(PublishError.WorldNameEmpty, (System.Collections.ICollection)errors);
+    }
+
+    [Test]
+    public void WorldNameWhitespace_ReturnsWorldNameEmpty()
+    {
+        var def = ValidDef();
+        def.worldName = "   ";
+        var errors = Run(def);
+        Assert.Contains(PublishError.WorldNameEmpty, (System.Collections.ICollection)errors);
+    }
+
+    [Test]
+    public void NullDef_ReturnsWorldNameEmpty()
+    {
+        var errors = _validator.Validate(null, 0, 0, true, 0);
+        Assert.Contains(PublishError.WorldNameEmpty, (System.Collections.ICollection)errors);
+    }
+
+    // ── サムネイル ────────────────────────────────────────────────────────────
+
+    [Test]
+    public void NoThumbnail_ReturnsThumbnailMissing()
+    {
+        var errors = Run(hasThumbnail: false);
+        Assert.Contains(PublishError.ThumbnailMissing, (System.Collections.ICollection)errors);
+    }
+
+    // ── スポーン ─────────────────────────────────────────────────────────────
+
+    [Test]
+    public void SpawnAtOrigin_ReturnsSpawnNotSet()
+    {
+        var def = ValidDef();
+        def.specialObjects.spawn.position = new Vec3Json(0f, 0f, 0f);
+        var errors = Run(def);
+        Assert.Contains(PublishError.SpawnNotSet, (System.Collections.ICollection)errors);
+    }
+
+    [Test]
+    public void SpawnOffOrigin_NoSpawnError()
+    {
+        var errors = Run();
+        CollectionAssert.DoesNotContain(errors, PublishError.SpawnNotSet);
+    }
+
+    // ── テクスチャコスト ─────────────────────────────────────────────────────
+
+    [Test]
+    public void TextureCostAtLimit_NoError()
+    {
+        var errors = Run(textureCost: TextureCostCalculator.CostLimit);
+        CollectionAssert.DoesNotContain(errors, PublishError.TextureCostExceeded);
+    }
+
+    [Test]
+    public void TextureCostExceedsLimit_ReturnsError()
+    {
+        var errors = Run(textureCost: TextureCostCalculator.CostLimit + 1);
+        Assert.Contains(PublishError.TextureCostExceeded, (System.Collections.ICollection)errors);
+    }
+
+    // ── オブジェクト数 ────────────────────────────────────────────────────────
+
+    [Test]
+    public void ObjectCountAtLimit_NoError()
+    {
+        var errors = Run(objectCount: TextureCostCalculator.ObjectCountLimit);
+        CollectionAssert.DoesNotContain(errors, PublishError.ObjectCountExceeded);
+    }
+
+    [Test]
+    public void ObjectCountExceedsLimit_ReturnsError()
+    {
+        var errors = Run(objectCount: TextureCostCalculator.ObjectCountLimit + 1);
+        Assert.Contains(PublishError.ObjectCountExceeded, (System.Collections.ICollection)errors);
+    }
+
+    // ── バージョン番号オーバーフロー ──────────────────────────────────────────
+
+    [Test]
+    public void PublishedVersionAtIntMax_ReturnsVersionNumberOverflow()
+    {
+        var errors = Run(publishedVersion: int.MaxValue);
+        Assert.Contains(PublishError.VersionNumberOverflow, (System.Collections.ICollection)errors);
+    }
+
+    [Test]
+    public void PublishedVersionNormal_NoOverflowError()
+    {
+        var errors = Run(publishedVersion: 100);
+        CollectionAssert.DoesNotContain(errors, PublishError.VersionNumberOverflow);
+    }
+
+    // ── ポータル ─────────────────────────────────────────────────────────────
+
+    [Test]
+    public void PortalWithoutExit_ReturnsPortalExitMissing()
+    {
+        var def = ValidDef();
+        def.specialObjects.portals = new[]
+        {
+            new PortalInstance { entryId = "e1", exitId = "" },
+        };
+        var errors = Run(def);
+        Assert.Contains(PublishError.PortalExitMissing, (System.Collections.ICollection)errors);
+    }
+
+    [Test]
+    public void PortalWithExit_NoPortalError()
+    {
+        var def = ValidDef();
+        def.specialObjects.portals = new[]
+        {
+            new PortalInstance { entryId = "e1", exitId = "x1" },
+        };
+        var errors = Run(def);
+        CollectionAssert.DoesNotContain(errors, PublishError.PortalExitMissing);
+    }
+
+    // ── 複数エラー ────────────────────────────────────────────────────────────
+
+    [Test]
+    public void MultipleErrors_AllReported()
+    {
+        var def = new WorldDefinitionJson { worldName = "" };
+        var errors = _validator.Validate(def, 0, 0, hasThumbnail: false, publishedVersion: 0);
+        Assert.GreaterOrEqual(errors.Count, 2, "名前なし + サムネイルなし + スポーンなしで複数エラー");
+    }
+}

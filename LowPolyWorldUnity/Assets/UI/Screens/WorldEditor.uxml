@@ -1,0 +1,226 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="WorldEditor.uss" />
+    <ui:VisualElement name="editor-root" class="editor-root">
+
+        <!-- ── ヘッダー ── -->
+        <ui:VisualElement class="editor-header">
+            <ui:Button name="btn-back" class="editor-btn-icon" text="‹" />
+            <ui:TextField name="field-world-name" class="editor-world-name"
+                          placeholder-text="ワールド名を入力..." />
+            <ui:Button name="btn-save" class="editor-btn-secondary" text="保存" />
+            <ui:Button name="btn-publish" class="editor-btn-primary" text="公開" />
+        </ui:VisualElement>
+
+        <!-- ── ギズモバー（オブジェクト選択中のみ表示） ── -->
+        <ui:VisualElement name="gizmo-bar" class="gizmo-bar overlay-hidden">
+            <ui:Button name="btn-gizmo-move"  class="gizmo-btn gizmo-btn--active" text="移動" />
+            <ui:Button name="btn-gizmo-scale" class="gizmo-btn" text="拡大縮小" />
+            <ui:Button name="btn-gizmo-rotate" class="gizmo-btn" text="回転" />
+        </ui:VisualElement>
+
+        <!-- ── 3D ビュー領域（透過・カメラがこの後ろに描画される） ── -->
+        <ui:VisualElement name="view3d-area" class="view3d-area">
+            <!-- テクスチャコスト表示（右上） -->
+            <ui:VisualElement class="cost-display">
+                <ui:VisualElement class="cost-bar-track">
+                    <ui:VisualElement name="cost-bar-fill" class="cost-bar-fill" />
+                </ui:VisualElement>
+                <ui:Label name="cost-label" class="cost-label" text="0 / 4096" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- ── 下部タブバー ── -->
+        <ui:VisualElement class="bottom-tab-bar">
+            <ui:Button name="tab-terrain"  class="bottom-tab" text="地形" />
+            <ui:Button name="tab-objects"  class="bottom-tab bottom-tab--active" text="オブジェクト" />
+            <ui:Button name="tab-gimmicks" class="bottom-tab" text="ギミック" />
+            <ui:Button name="tab-settings" class="bottom-tab" text="設定" />
+            <ui:Button name="btn-minimize" class="bottom-tab-minimize" text="▽" />
+        </ui:VisualElement>
+
+        <!-- ── タブコンテンツ ── -->
+        <ui:VisualElement name="tab-content" class="tab-content">
+
+            <!-- 地形タブ（スタブ） -->
+            <ui:VisualElement name="panel-terrain" class="tab-panel overlay-hidden">
+                <ui:Label class="stub-label" text="地形システム（実装予定）" />
+            </ui:VisualElement>
+
+            <!-- オブジェクトタブ（スタブ） -->
+            <ui:VisualElement name="panel-objects" class="tab-panel">
+                <ui:Label class="stub-label" text="オブジェクト配置（実装予定）" />
+            </ui:VisualElement>
+
+            <!-- ギミックタブ（スタブ） -->
+            <ui:VisualElement name="panel-gimmicks" class="tab-panel overlay-hidden">
+                <ui:Label class="stub-label" text="ギミックエディタ（実装予定）" />
+            </ui:VisualElement>
+
+            <!-- ───── 設定タブ ───── -->
+            <ui:VisualElement name="panel-settings" class="tab-panel overlay-hidden">
+                <ui:ScrollView class="settings-scroll">
+
+                    <!-- テストプレイ -->
+                    <ui:VisualElement class="settings-section">
+                        <ui:Button name="btn-test-play" class="btn-test-play" text="▶ テストプレイ" />
+                    </ui:VisualElement>
+
+                    <!-- サムネイル -->
+                    <ui:VisualElement class="settings-section">
+                        <ui:Label class="settings-label" text="サムネイル" />
+                        <ui:VisualElement name="thumbnail-preview" class="thumbnail-preview">
+                            <ui:Label name="thumbnail-hint" class="thumbnail-hint" text="タップして設定" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+
+                    <!-- ワールド名（ヘッダーと共有・表示のみ） -->
+                    <ui:VisualElement class="settings-section">
+                        <ui:Label class="settings-label" text="ワールド名" />
+                        <ui:TextField name="settings-world-name" class="settings-input"
+                                      placeholder-text="ワールド名を入力..." />
+                    </ui:VisualElement>
+
+                    <!-- タグ入力 -->
+                    <ui:VisualElement class="settings-section">
+                        <ui:Label class="settings-label" text="タグ（最大 5 個）" />
+                        <!-- 追加済みタグチップ一覧 -->
+                        <ui:VisualElement name="tag-chips" class="tag-chips-container" />
+                        <!-- タグ入力フィールド（上限到達時は非表示） -->
+                        <ui:VisualElement name="tag-input-row" class="tag-input-row">
+                            <ui:TextField name="field-tag-input" class="tag-input"
+                                          placeholder-text="タグを入力して Enter" />
+                            <ui:Button name="btn-tag-add" class="btn-tag-add" text="追加" />
+                        </ui:VisualElement>
+                        <ui:Label name="tag-error" class="tag-error overlay-hidden" text="" />
+                    </ui:VisualElement>
+
+                    <!-- BGM 設定 -->
+                    <ui:VisualElement class="settings-section">
+                        <ui:Label class="settings-label" text="BGM" />
+                        <!-- 選択中トラック表示 -->
+                        <ui:VisualElement class="bgm-current">
+                            <ui:Label name="bgm-current-name" class="bgm-current-name" text="なし" />
+                            <ui:Label name="bgm-current-author" class="bgm-current-author" text="" />
+                        </ui:VisualElement>
+                        <!-- トラックリスト -->
+                        <ui:VisualElement name="bgm-track-list" class="bgm-track-list" />
+                        <!-- 音量スライダー -->
+                        <ui:VisualElement class="settings-row">
+                            <ui:Label class="settings-row-label" text="音量" />
+                            <ui:Slider name="slider-bgm-volume" class="settings-slider"
+                                       low-value="0" high-value="100" value="100" />
+                            <ui:Label name="label-bgm-volume" class="settings-row-value" text="100%" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+
+                    <!-- 人数上限 -->
+                    <ui:VisualElement class="settings-section">
+                        <ui:Label class="settings-label" text="人数上限" />
+                        <ui:VisualElement class="stepper-row">
+                            <ui:Button name="btn-players-dec" class="stepper-btn" text="−" />
+                            <ui:Label name="label-max-players" class="stepper-value" text="6" />
+                            <ui:Button name="btn-players-inc" class="stepper-btn" text="＋" />
+                        </ui:VisualElement>
+                        <ui:Label name="label-players-hint" class="settings-hint"
+                                  text="2〜6人（プレミアム: 最大24人）" />
+                    </ui:VisualElement>
+
+                    <!-- 背景設定 -->
+                    <ui:VisualElement class="settings-section">
+                        <ui:Label class="settings-label" text="背景" />
+                        <ui:VisualElement class="radio-row">
+                            <ui:Button name="btn-bg-solid"    class="radio-btn radio-btn--active" text="単色" />
+                            <ui:Button name="btn-bg-gradient" class="radio-btn" text="グラデーション" />
+                            <ui:Button name="btn-bg-texture"  class="radio-btn" text="テクスチャ" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="bg-color-row" class="settings-row">
+                            <ui:Label class="settings-row-label" text="カラー" />
+                            <ui:TextField name="field-bg-color" class="color-input" value="#111111" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+
+                    <!-- 環境カラー -->
+                    <ui:VisualElement class="settings-section">
+                        <ui:Label class="settings-label" text="環境カラー" />
+                        <ui:VisualElement class="settings-row">
+                            <ui:TextField name="field-ambient-color" class="color-input" value="#FFFFFF" />
+                            <ui:Label class="settings-hint" text="HSV V ≥ 0.25" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+
+                    <!-- フォグ設定 -->
+                    <ui:VisualElement class="settings-section">
+                        <ui:VisualElement class="settings-row">
+                            <ui:Label class="settings-label" text="フォグ" />
+                            <ui:Toggle name="toggle-fog" class="settings-toggle" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="fog-fields" class="overlay-hidden">
+                            <ui:VisualElement class="settings-row">
+                                <ui:Label class="settings-row-label" text="カラー" />
+                                <ui:TextField name="field-fog-color" class="color-input" value="#E6E6E6" />
+                            </ui:VisualElement>
+                            <ui:VisualElement class="settings-row">
+                                <ui:Label class="settings-row-label" text="開始距離" />
+                                <ui:Slider name="slider-fog-start" class="settings-slider"
+                                           low-value="0" high-value="100" value="10" />
+                                <ui:Label name="label-fog-start" class="settings-row-value" text="10m" />
+                            </ui:VisualElement>
+                            <ui:VisualElement class="settings-row">
+                                <ui:Label class="settings-row-label" text="終了距離" />
+                                <ui:Slider name="slider-fog-end" class="settings-slider"
+                                           low-value="0" high-value="200" value="50" />
+                                <ui:Label name="label-fog-end" class="settings-row-value" text="50m" />
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+
+                    <!-- スクリーンエフェクト -->
+                    <ui:VisualElement class="settings-section">
+                        <ui:Label class="settings-label" text="スクリーンエフェクト" />
+                        <ui:VisualElement class="radio-row">
+                            <ui:Button name="btn-fx-none" class="radio-btn radio-btn--active" text="なし" />
+                            <ui:Button name="btn-fx-rain" class="radio-btn" text="雨" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="fx-intensity-row" class="settings-row overlay-hidden">
+                            <ui:Label class="settings-row-label" text="強度" />
+                            <ui:Slider name="slider-fx-intensity" class="settings-slider"
+                                       low-value="0" high-value="100" value="100" />
+                            <ui:Label name="label-fx-intensity" class="settings-row-value" text="100%" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+
+                    <!-- 公開/非公開 -->
+                    <ui:VisualElement class="settings-section">
+                        <ui:VisualElement class="settings-row">
+                            <ui:Label class="settings-label" text="公開" />
+                            <ui:Toggle name="toggle-public" class="settings-toggle" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+
+                    <!-- バージョン情報 -->
+                    <ui:VisualElement class="settings-section">
+                        <ui:Label name="label-version" class="version-label" text="未公開" />
+                    </ui:VisualElement>
+
+                    <!-- 公開ボタン -->
+                    <ui:VisualElement class="settings-section">
+                        <ui:Button name="btn-publish-settings" class="btn-publish-full"
+                                   text="新しいバージョンを公開" />
+                        <!-- 公開エラー一覧 -->
+                        <ui:VisualElement name="publish-errors" class="publish-errors overlay-hidden" />
+                    </ui:VisualElement>
+
+                    <!-- バックアップ（プレミアムのみ表示） -->
+                    <ui:VisualElement name="backup-section" class="settings-section overlay-hidden">
+                        <ui:Label class="settings-label" text="バックアップ（プレミアム）" />
+                        <ui:Button name="btn-backup-save"    class="editor-btn-secondary" text="バックアップを保存" />
+                        <ui:Button name="btn-backup-restore" class="editor-btn-secondary" text="バックアップを復元" />
+                    </ui:VisualElement>
+
+                </ui:ScrollView>
+            </ui:VisualElement>
+
+        </ui:VisualElement><!-- end tab-content -->
+
+    </ui:VisualElement>
+</ui:UXML>

@@ -7,6 +7,17 @@
             <ui:TextField name="search-input" class="search-input" placeholder-text="ワールドを検索..." />
         </ui:VisualElement>
 
+        <!-- タグフィルター（ホームタブのみ表示・複数選択・AND 条件） -->
+        <ui:VisualElement name="tag-filter-area" class="tag-filter-area" style="display: none;">
+            <ui:ScrollView name="tag-filter-scroll" class="tag-filter-scroll"
+                           horizontal-scroller-visibility="Hidden"
+                           vertical-scroller-visibility="Hidden"
+                           mode="Horizontal">
+                <ui:VisualElement name="tag-filter-chips" class="tag-filter-chips" />
+            </ui:ScrollView>
+            <ui:Button name="btn-tag-clear" class="btn-tag-clear" text="✕" />
+        </ui:VisualElement>
+
         <!-- サブタブ -->
         <ui:VisualElement name="sub-tab-bar" class="sub-tab-bar">
             <ui:Button name="tab-home" class="sub-tab sub-tab--active" text="ホーム" />

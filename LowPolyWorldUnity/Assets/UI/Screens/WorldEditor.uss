@@ -1,0 +1,499 @@
+.overlay-hidden {
+    display: none;
+}
+
+/* ── ルート ── */
+.editor-root {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    flex-direction: column;
+}
+
+/* ── ヘッダー ── */
+.editor-header {
+    flex-direction: row;
+    align-items: center;
+    padding: 8px 12px;
+    background-color: rgba(15, 15, 20, 0.92);
+    border-bottom-width: 1px;
+    border-color: rgb(44, 44, 60);
+}
+
+.editor-btn-icon {
+    width: 52px;
+    height: 52px;
+    background-color: transparent;
+    border-width: 0;
+    color: rgb(100, 170, 255);
+    font-size: 32px;
+}
+
+.editor-world-name {
+    flex-grow: 1;
+    height: 44px;
+    background-color: rgb(30, 30, 42);
+    border-color: rgb(55, 55, 75);
+    border-radius: 8px;
+    color: white;
+    font-size: 22px;
+    margin: 0 8px;
+}
+
+.editor-btn-secondary {
+    height: 44px;
+    padding: 0 16px;
+    background-color: transparent;
+    border-width: 1px;
+    border-color: rgb(100, 170, 255);
+    border-radius: 8px;
+    color: rgb(100, 170, 255);
+    font-size: 20px;
+    margin-left: 6px;
+}
+
+.editor-btn-primary {
+    height: 44px;
+    padding: 0 16px;
+    background-color: rgb(60, 120, 220);
+    border-width: 0;
+    border-radius: 8px;
+    color: white;
+    font-size: 20px;
+    margin-left: 6px;
+}
+
+/* ── ギズモバー ── */
+.gizmo-bar {
+    flex-direction: row;
+    justify-content: center;
+    padding: 6px;
+    background-color: rgba(15, 15, 20, 0.80);
+}
+
+.gizmo-btn {
+    width: 100px;
+    height: 40px;
+    background-color: rgb(40, 40, 60);
+    border-width: 1px;
+    border-color: rgb(70, 70, 100);
+    border-radius: 6px;
+    color: rgb(180, 180, 210);
+    font-size: 18px;
+    margin: 0 4px;
+}
+
+.gizmo-btn--active {
+    background-color: rgb(60, 80, 170);
+    border-color: rgb(100, 130, 240);
+    color: white;
+}
+
+/* ── 3D ビュー領域 ── */
+.view3d-area {
+    flex-grow: 1;
+    position: relative;
+}
+
+.cost-display {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    align-items: flex-end;
+    background-color: rgba(0, 0, 0, 0.55);
+    border-radius: 8px;
+    padding: 6px 10px;
+}
+
+.cost-bar-track {
+    width: 120px;
+    height: 6px;
+    background-color: rgb(50, 50, 70);
+    border-radius: 3px;
+    margin-bottom: 4px;
+    overflow: hidden;
+}
+
+.cost-bar-fill {
+    height: 6px;
+    width: 0%;
+    background-color: rgb(80, 160, 255);
+    border-radius: 3px;
+    transition-duration: 0.2s;
+    transition-property: width;
+}
+
+.cost-label {
+    color: rgb(200, 220, 255);
+    font-size: 18px;
+}
+
+/* ── 下部タブバー ── */
+.bottom-tab-bar {
+    flex-direction: row;
+    background-color: rgba(15, 15, 20, 0.92);
+    border-top-width: 1px;
+    border-color: rgb(44, 44, 60);
+}
+
+.bottom-tab {
+    flex-grow: 1;
+    height: 56px;
+    background-color: transparent;
+    border-width: 0;
+    color: rgb(140, 140, 160);
+    font-size: 20px;
+}
+
+.bottom-tab--active {
+    color: rgb(100, 170, 255);
+    border-top-width: 2px;
+    border-color: rgb(100, 170, 255);
+}
+
+.bottom-tab-minimize {
+    width: 52px;
+    height: 56px;
+    background-color: transparent;
+    border-width: 0;
+    color: rgb(100, 100, 130);
+    font-size: 18px;
+}
+
+/* ── タブコンテンツ ── */
+.tab-content {
+    background-color: rgba(15, 15, 22, 0.95);
+    max-height: 55%;
+}
+
+.tab-panel {
+    flex-grow: 1;
+    flex-direction: column;
+}
+
+.stub-label {
+    color: rgb(90, 90, 110);
+    font-size: 20px;
+    -unity-text-align: middle-center;
+    padding: 30px;
+}
+
+/* ── 設定タブ ── */
+.settings-scroll {
+    flex-grow: 1;
+}
+
+.settings-section {
+    padding: 14px 16px;
+    border-bottom-width: 1px;
+    border-color: rgb(40, 40, 58);
+}
+
+.settings-label {
+    color: rgb(180, 180, 200);
+    font-size: 20px;
+    -unity-font-style: bold;
+    margin-bottom: 10px;
+}
+
+.settings-hint {
+    color: rgb(100, 100, 125);
+    font-size: 16px;
+    margin-top: 4px;
+}
+
+.settings-row {
+    flex-direction: row;
+    align-items: center;
+    margin-top: 8px;
+}
+
+.settings-row-label {
+    width: 90px;
+    color: rgb(160, 160, 185);
+    font-size: 18px;
+}
+
+.settings-row-value {
+    width: 55px;
+    color: rgb(200, 200, 220);
+    font-size: 18px;
+    -unity-text-align: middle-right;
+}
+
+.settings-input {
+    height: 44px;
+    background-color: rgb(30, 30, 45);
+    border-color: rgb(55, 55, 80);
+    border-radius: 8px;
+    color: white;
+    font-size: 20px;
+}
+
+.settings-slider {
+    flex-grow: 1;
+    margin: 0 8px;
+}
+
+.settings-toggle {
+    margin-left: auto;
+}
+
+.color-input {
+    width: 120px;
+    height: 36px;
+    background-color: rgb(30, 30, 45);
+    border-color: rgb(55, 55, 80);
+    border-radius: 6px;
+    color: white;
+    font-size: 18px;
+}
+
+/* ── テストプレイ ── */
+.btn-test-play {
+    height: 52px;
+    background-color: rgb(40, 120, 60);
+    border-width: 0;
+    border-radius: 10px;
+    color: white;
+    font-size: 22px;
+}
+
+/* ── サムネイル ── */
+.thumbnail-preview {
+    width: 120px;
+    height: 213px;
+    background-color: rgb(35, 35, 50);
+    border-radius: 8px;
+    align-items: center;
+    justify-content: center;
+    border-width: 1px;
+    border-color: rgb(60, 60, 85);
+}
+
+.thumbnail-hint {
+    color: rgb(100, 100, 130);
+    font-size: 16px;
+    -unity-text-align: middle-center;
+}
+
+/* ── タグ ── */
+.tag-chips-container {
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+}
+
+.settings-tag-chip {
+    flex-direction: row;
+    align-items: center;
+    height: 34px;
+    padding: 0 10px;
+    margin: 3px;
+    background-color: rgb(50, 80, 160);
+    border-radius: 17px;
+    border-width: 0;
+}
+
+.settings-tag-chip__label {
+    color: white;
+    font-size: 18px;
+    margin-right: 6px;
+}
+
+.settings-tag-chip__remove {
+    color: rgb(200, 220, 255);
+    font-size: 16px;
+    background-color: transparent;
+    border-width: 0;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+}
+
+.tag-input-row {
+    flex-direction: row;
+    align-items: center;
+}
+
+.tag-input {
+    flex-grow: 1;
+    height: 42px;
+    background-color: rgb(30, 30, 45);
+    border-color: rgb(55, 55, 80);
+    border-radius: 8px;
+    color: white;
+    font-size: 18px;
+}
+
+.btn-tag-add {
+    height: 42px;
+    padding: 0 14px;
+    margin-left: 8px;
+    background-color: rgb(50, 80, 160);
+    border-width: 0;
+    border-radius: 8px;
+    color: white;
+    font-size: 18px;
+}
+
+.tag-error {
+    color: rgb(255, 100, 100);
+    font-size: 16px;
+    margin-top: 4px;
+}
+
+/* ── BGM ── */
+.bgm-current {
+    flex-direction: row;
+    align-items: center;
+    padding: 8px 12px;
+    background-color: rgb(30, 50, 100);
+    border-radius: 8px;
+    margin-bottom: 8px;
+}
+
+.bgm-current-name {
+    flex-grow: 1;
+    color: white;
+    font-size: 20px;
+}
+
+.bgm-current-author {
+    color: rgb(160, 190, 255);
+    font-size: 16px;
+}
+
+.bgm-track-list {
+    flex-direction: column;
+    max-height: 200px;
+    overflow: hidden;
+}
+
+.bgm-track-item {
+    flex-direction: row;
+    align-items: center;
+    height: 52px;
+    padding: 0 12px;
+    border-radius: 6px;
+}
+
+.bgm-track-item--active {
+    background-color: rgb(40, 60, 130);
+}
+
+.bgm-track-item__name {
+    flex-grow: 1;
+    color: rgb(220, 220, 240);
+    font-size: 20px;
+}
+
+.bgm-track-item__author {
+    color: rgb(140, 150, 180);
+    font-size: 16px;
+}
+
+.bgm-track-item__kind {
+    font-size: 14px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-right: 8px;
+    color: white;
+}
+
+.bgm-kind-ambient {
+    background-color: rgb(40, 100, 80);
+}
+
+.bgm-kind-bgm {
+    background-color: rgb(80, 50, 130);
+}
+
+/* ── ステッパー（人数上限） ── */
+.stepper-row {
+    flex-direction: row;
+    align-items: center;
+    margin-top: 4px;
+}
+
+.stepper-btn {
+    width: 52px;
+    height: 52px;
+    background-color: rgb(40, 40, 60);
+    border-width: 1px;
+    border-color: rgb(70, 70, 100);
+    border-radius: 8px;
+    color: rgb(180, 180, 255);
+    font-size: 26px;
+}
+
+.stepper-value {
+    flex-grow: 1;
+    color: white;
+    font-size: 26px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+}
+
+/* ── ラジオボタン行 ── */
+.radio-row {
+    flex-direction: row;
+    margin-top: 6px;
+}
+
+.radio-btn {
+    flex-grow: 1;
+    height: 44px;
+    background-color: rgb(35, 35, 52);
+    border-width: 1px;
+    border-color: rgb(60, 60, 85);
+    border-radius: 0;
+    color: rgb(160, 160, 185);
+    font-size: 18px;
+}
+
+.radio-btn:first-child {
+    border-top-left-radius: 8px;
+    border-bottom-left-radius: 8px;
+}
+
+.radio-btn:last-child {
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+.radio-btn--active {
+    background-color: rgb(50, 80, 170);
+    border-color: rgb(80, 120, 230);
+    color: white;
+}
+
+/* ── バージョン ── */
+.version-label {
+    color: rgb(120, 120, 150);
+    font-size: 18px;
+    -unity-text-align: middle-center;
+}
+
+/* ── 公開ボタン ── */
+.btn-publish-full {
+    height: 56px;
+    background-color: rgb(60, 120, 220);
+    border-width: 0;
+    border-radius: 10px;
+    color: white;
+    font-size: 22px;
+    margin-bottom: 8px;
+}
+
+.publish-errors {
+    flex-direction: column;
+    padding: 8px;
+    background-color: rgb(70, 20, 20);
+    border-radius: 8px;
+}
+
+.publish-error-item {
+    color: rgb(255, 150, 150);
+    font-size: 18px;
+    padding: 2px 0;
+}

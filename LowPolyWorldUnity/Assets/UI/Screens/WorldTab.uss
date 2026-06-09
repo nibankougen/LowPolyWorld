@@ -19,6 +19,52 @@
     font-size: 14px;
 }
 
+/* ── Tag filter ─────────────────────────────────── */
+
+.tag-filter-area {
+    flex-direction: row;
+    align-items: center;
+    padding: 4px 8px 6px;
+    background-color: rgb(22, 22, 34);
+}
+
+.tag-filter-scroll {
+    flex: 1;
+}
+
+.tag-filter-chips {
+    flex-direction: row;
+    padding: 2px 0;
+}
+
+.tag-chip {
+    height: 28px;
+    padding: 0 12px;
+    margin-right: 6px;
+    border-radius: 14px;
+    background-color: rgb(50, 50, 75);
+    border-width: 1px;
+    border-color: rgb(80, 80, 110);
+    color: rgb(200, 200, 230);
+    font-size: 13px;
+}
+
+.tag-chip--active {
+    background-color: rgb(80, 100, 200);
+    border-color: rgb(100, 130, 255);
+    color: white;
+}
+
+.btn-tag-clear {
+    width: 32px;
+    height: 32px;
+    background-color: transparent;
+    border-width: 0;
+    color: rgb(150, 150, 180);
+    font-size: 16px;
+    margin-left: 4px;
+}
+
 /* ── Sub-tab bar ─────────────────────────────────── */
 
 .sub-tab-bar {
