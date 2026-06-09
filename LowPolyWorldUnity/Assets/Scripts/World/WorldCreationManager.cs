@@ -11,6 +11,9 @@ public class WorldCreationManager : MonoBehaviour
     [SerializeField]
     private WorldMusicPlayer _worldMusicPlayer;
 
+    [SerializeField]
+    private WorldEnvironmentController _environment;
+
     private WorldSettingsPanelLogic _settingsLogic;
     private WorldDefinitionJson _currentDef;
 
@@ -40,6 +43,7 @@ public class WorldCreationManager : MonoBehaviour
         _settingsLogic = new WorldSettingsPanelLogic(isPremium);
         _settingsLogic.LoadFrom(_currentDef);
         ApplyBgmToPlayer();
+        ApplyEnvironment();
     }
 
     /// <summary>
@@ -52,6 +56,7 @@ public class WorldCreationManager : MonoBehaviour
         _settingsLogic = new WorldSettingsPanelLogic(isPremium);
         _settingsLogic.LoadFrom(_currentDef);
         ApplyBgmToPlayer();
+        ApplyEnvironment();
     }
 
     /// <summary>
@@ -63,6 +68,7 @@ public class WorldCreationManager : MonoBehaviour
         _settingsLogic = new WorldSettingsPanelLogic(isPremium);
         _settingsLogic.LoadFrom(_currentDef);
         ApplyBgmToPlayer();
+        ApplyEnvironment();
     }
 
     /// <summary>現在の設定ロジックを返す（UI から参照用）。</summary>
@@ -72,13 +78,14 @@ public class WorldCreationManager : MonoBehaviour
     public WorldDefinitionJson CurrentDefinition => _currentDef;
 
     /// <summary>
-    /// 設定パネルの変更を WorldDefinitionJson に反映し、BGM プレイヤーを更新する。
+    /// 設定パネルの変更を WorldDefinitionJson に反映し、BGM・環境設定を更新する。
     /// </summary>
     public void CommitSettingsChanges()
     {
         if (_settingsLogic == null || _currentDef == null) return;
         _settingsLogic.ApplyTo(_currentDef);
         ApplyBgmToPlayer();
+        _environment?.Apply(_currentDef);
     }
 
     // ── BGM 接続 ─────────────────────────────────────────────────────────────
@@ -89,5 +96,11 @@ public class WorldCreationManager : MonoBehaviour
         var bgm = _currentDef.worldBgm ?? new WorldBgmData();
         float volumeNormalized = bgm.volume / 100f;
         _worldMusicPlayer.SetDefault(bgm.soundId, volumeNormalized);
+    }
+
+    // 環境設定（フォグ・環境カラー・背景・エフェクト）を適用する
+    private void ApplyEnvironment()
+    {
+        _environment?.Apply(_currentDef);
     }
 }

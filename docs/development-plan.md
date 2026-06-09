@@ -967,21 +967,21 @@
 - [ ] ルーム内アクションボタン UI（接触オブジェクトに対応する画面上ボタン）
 - [ ] ルーム内ポータル・ワールドポータルの遷移処理
 - [ ] 数字オブジェクト（プレミアム限定・上限 30 個・ワールドステート/プレイヤーステート/固定値参照・ステート変更時即時更新）
-- [ ] 背景レンダリング（単色・グラデーション・テクスチャ）
-- [ ] 環境カラー対応
-  - [ ] 地形シェーダーに `_AmbientColor` プロパティを追加（`texel × vertex_AO × ambient`）
-  - [ ] 共通 Unlit シェーダー（アバター・オブジェクト用）に `_AmbientColor` プロパティを追加（`texel × ambient`）
-  - [ ] ワールド読み込み時に `ambientColor` を JSON から取得してシェーダーに渡す
-  - [ ] world JSON への `ambientColor` フィールド対応（保存・読み込み。デフォルト `#FFFFFF`）
-- [ ] フォグ対応（詳細: `docs/world-creation.md` セクション 15.18）
-  - [ ] 地形シェーダー・共通 Unlit シェーダーに `#pragma multi_compile_fog` と `UNITY_FOG_COORDS` / `UNITY_TRANSFER_FOG` / `UNITY_APPLY_FOG` マクロを追加
-  - [ ] ワールド読み込み時に `fog` フィールドを JSON から取得して `RenderSettings` に反映（`fog` / `fogColor` / `fogStartDistance` / `fogEndDistance`）
-  - [ ] ワールド退出時に `RenderSettings.fog = false` にリセット
-  - [ ] world JSON への `fog` フィールド対応（保存・読み込み）
-- [ ] スクリーンオーバーレイエフェクト対応（詳細: `docs/world-creation.md` セクション 15.19）
-  - [ ] `ScreenEffectController` 実装（種類・強度の切り替え・`type = "none"` 時は `SetActive(false)`）
-  - [ ] 雨エフェクト実装（Screen Space Canvas 上のパーティクルシステム・強度に比例した放出レート制御）
-  - [ ] world JSON への `screenEffect` フィールド対応（保存・読み込み）
+- [x] 背景レンダリング（単色・グラデーション・テクスチャ）— `WorldBackgroundController`（テクスチャ: API統合後）
+- [x] 環境カラー対応
+  - [ ] 地形シェーダーに `_AmbientColor` プロパティを追加（`texel × vertex_AO × ambient`）— 地形システム実装時
+  - [x] 共通 Unlit シェーダー（アバター・オブジェクト用）に `_AmbientColor` プロパティを追加（`texel × ambient`）— `LowPolyUnlit.shader`
+  - [x] ワールド読み込み時に `ambientColor` を JSON から取得してシェーダーに渡す — `WorldEnvironmentController`
+  - [x] world JSON への `ambientColor` フィールド対応（保存・読み込み。デフォルト `#FFFFFF`）— `WorldDefinitionJson`
+- [x] フォグ対応（詳細: `docs/world-creation.md` セクション 15.18）
+  - [x] 共通 Unlit シェーダーに `#pragma multi_compile_fog` + `ComputeFogFactor` / `MixFog` を追加 — `LowPolyUnlit.shader`
+  - [x] ワールド読み込み時に `fog` フィールドを JSON から取得して `RenderSettings` に反映 — `WorldEnvironmentController`
+  - [x] ワールド退出時に `RenderSettings.fog = false` にリセット — `WorldEnvironmentController.ResetAll()`
+  - [x] world JSON への `fog` フィールド対応（保存・読み込み）— `WorldDefinitionJson`
+- [x] スクリーンオーバーレイエフェクト対応（詳細: `docs/world-creation.md` セクション 15.19）
+  - [x] `ScreenEffectController` 実装（種類・強度の切り替え・`type = "none"` 時は `SetActive(false)`）
+  - [x] 雨エフェクト実装（Screen Space Canvas 上のパーティクルシステム・強度に比例した放出レート制御）
+  - [x] world JSON への `screenEffect` フィールド対応（保存・読み込み）— `WorldDefinitionJson`
 - [ ] ワールド公開フロー（必須条件チェック + ギミックループ検出 → サーバー送信）
 - [ ] ワールド編集中フレンド招待（ルーム ID 共有 + アプリ内通知）
 - [ ] 地形システム

@@ -5,6 +5,8 @@ Shader "LowPoly/Unlit"
         _MainTex ("Texture", 2D) = "white" {}
         _Cutoff ("Alpha Cutoff", Range(0, 1)) = 0.5
         _Color ("Color", Color) = (1, 1, 1, 1)
+        // Set globally via Shader.SetGlobalColor("_AmbientColor", ...) by WorldEnvironmentController
+        [HideInInspector] _AmbientColor ("Ambient Color", Color) = (1, 1, 1, 1)
     }
 
     SubShader
@@ -21,17 +23,16 @@ Shader "LowPoly/Unlit"
             Name "ForwardLit"
             Tags { "LightMode" = "UniversalForward" }
 
-            // Double-sided: no back-face culling
             Cull Off
-            // No depth write interference needed; standard opaque-like depth
             ZWrite On
             ZTest LEqual
 
             HLSLPROGRAM
             #pragma vertex vert
             #pragma fragment frag
-            // No lighting, no shadows
             #pragma multi_compile_instancing
+            // Linear fog via Unity RenderSettings (world-creation.md §15.18)
+            #pragma multi_compile_fog
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
@@ -44,6 +45,9 @@ Shader "LowPoly/Unlit"
                 half _Cutoff;
             CBUFFER_END
 
+            // Global ambient color set by WorldEnvironmentController
+            half4 _AmbientColor;
+
             struct Attributes
             {
                 float4 positionOS : POSITION;
@@ -55,6 +59,7 @@ Shader "LowPoly/Unlit"
             {
                 float4 positionHCS : SV_POSITION;
                 float2 uv : TEXCOORD0;
+                float fogFactor : TEXCOORD1;
                 UNITY_VERTEX_INPUT_INSTANCE_ID
             };
 
@@ -64,8 +69,11 @@ Shader "LowPoly/Unlit"
                 UNITY_SETUP_INSTANCE_ID(input);
                 UNITY_TRANSFER_INSTANCE_ID(input, output);
 
-                output.positionHCS = TransformObjectToHClip(input.positionOS.xyz);
+                float3 positionWS = TransformObjectToWorld(input.positionOS.xyz);
+                output.positionHCS = TransformWorldToHClip(positionWS);
                 output.uv = TRANSFORM_TEX(input.uv, _MainTex);
+                // Compute linear fog factor from clip-space Z
+                output.fogFactor = ComputeFogFactor(output.positionHCS.z);
                 return output;
             }
 
@@ -74,19 +82,21 @@ Shader "LowPoly/Unlit"
                 UNITY_SETUP_INSTANCE_ID(input);
 
                 half4 texColor = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, input.uv);
-                half4 color = texColor * _Color;
+                // texel × _Color × _AmbientColor (world-creation.md §15.17)
+                half3 rgb = texColor.rgb * _Color.rgb * _AmbientColor.rgb;
+                half alpha = texColor.a * _Color.a;
 
-                // Alpha cutout: discard transparent pixels
-                clip(color.a - _Cutoff);
+                clip(alpha - _Cutoff);
 
-                // Output fully opaque (alpha forced to 1 after cutout)
-                return half4(color.rgb, 1.0);
+                // Apply linear fog (world-creation.md §15.18)
+                rgb = MixFog(rgb, input.fogFactor);
+
+                return half4(rgb, 1.0);
             }
             ENDHLSL
         }
 
-        // Shadow caster pass — disabled per rendering constraints (no shadows)
-        // ShadowCaster omitted intentionally
+        // Shadow caster pass omitted (no shadows per rendering constraints)
     }
 
     FallBack Off
