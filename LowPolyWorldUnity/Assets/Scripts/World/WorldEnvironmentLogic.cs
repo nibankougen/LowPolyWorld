@@ -53,13 +53,22 @@ public static class WorldEnvironmentLogic
     public static bool IsValidFog(FogData fog) =>
         fog != null && fog.endDistance > fog.startDistance;
 
-    /// <summary>FogData を補正して endDistance > startDistance を保証する。</summary>
+    /// <summary>
+    /// FogData を補正して endDistance > startDistance を保証した新しいインスタンスを返す。
+    /// 入力オブジェクトは変更しない（copy-on-write）。
+    /// </summary>
     public static FogData ClampFog(FogData fog)
     {
         if (fog == null) return new FogData();
-        if (fog.endDistance <= fog.startDistance)
-            fog.endDistance = fog.startDistance + 0.5f;
-        return fog;
+        return new FogData
+        {
+            enabled = fog.enabled,
+            color = fog.color,
+            startDistance = fog.startDistance,
+            endDistance = fog.endDistance <= fog.startDistance
+                ? fog.startDistance + 0.5f
+                : fog.endDistance,
+        };
     }
 
     // ── スクリーンエフェクト ──────────────────────────────────────────────────

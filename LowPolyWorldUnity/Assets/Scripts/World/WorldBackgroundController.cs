@@ -42,15 +42,13 @@ public class WorldBackgroundController : MonoBehaviour
                     WorldEnvironmentLogic.ParseHexColor(data.colors[0]),
                     WorldEnvironmentLogic.ParseHexColor(data.colors[1]));
                 break;
-            case "texture":
-                // テクスチャ URL からのダウンロードは Phase 12 API 統合後に実装
-                ApplySolid(WorldEnvironmentLogic.ParseHexColor(
-                    data.colors?.Length > 0 ? data.colors[0] : "#111111"));
+            default: // "solid" / "texture"（テクスチャ URL は Phase 12 API 統合後に実装）
+            {
+                var fallbackColor = WorldEnvironmentLogic.ParseHexColor(
+                    data.colors?.Length > 0 ? data.colors[0] : "#111111");
+                ApplySolid(fallbackColor);
                 break;
-            default: // "solid"
-                ApplySolid(WorldEnvironmentLogic.ParseHexColor(
-                    data.colors?.Length > 0 ? data.colors[0] : "#111111"));
-                break;
+            }
         }
     }
 
@@ -61,6 +59,9 @@ public class WorldBackgroundController : MonoBehaviour
 
     private void ApplySolid(Color color)
     {
+        // グラデーション用テクスチャが残っていれば解放する
+        DestroyGradientTex();
+
         if (_backgroundImage != null)
             _backgroundImage.gameObject.SetActive(false);
 

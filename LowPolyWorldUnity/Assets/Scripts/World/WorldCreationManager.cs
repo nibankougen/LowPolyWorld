@@ -31,6 +31,8 @@ public class WorldCreationManager : MonoBehaviour
     {
         if (Instance == this)
             Instance = null;
+        // シーン終了時にフェードコルーチンを孤立させないよう明示的に停止する
+        if (_worldMusicPlayer != null) _worldMusicPlayer.Stop();
     }
 
     /// <summary>

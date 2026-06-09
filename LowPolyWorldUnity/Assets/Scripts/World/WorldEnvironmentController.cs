@@ -42,8 +42,9 @@ public class WorldEnvironmentController : MonoBehaviour
     {
         Shader.SetGlobalColor(AmbientColorId, Color.white);
         RenderSettings.fog = false;
-        _screenEffect?.Reset();
-        _background?.Reset();
+        // Unity の == オーバーロードで破棄済みオブジェクトも null 扱いにする
+        if (_screenEffect != null) _screenEffect.Reset();
+        if (_background != null) _background.Reset();
     }
 
     // ── Private ───────────────────────────────────────────────────────────────
