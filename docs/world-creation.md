@@ -582,9 +582,9 @@ UI 仕様: `docs/screens-and-modes.md` セクション 12 参照
 | `wind` | 環境音 | 風音 |
 | `cave` | 環境音 | 洞窟・残響 |
 | `darkFactory` | 環境音 | 暗い工場の音 |
-| `bgmCheerful` | BGM | 明るい BGM |
-| `bgmCalm` | BGM | 落ち着いた BGM |
-| `bgmSuspense` | BGM | シリアス系 BGM |
+| `bgmFunNightStage` | BGM | 楽しい夜のステージ |
+| `bgmBrightPlains` | BGM | 明るい平原 |
+| `bgmATenseMoment` | BGM | 緊張の瞬間 |
 
 内蔵トラックの作者情報については、各トラックに `authorName`（"LowPolyWorld"）・`licenseType`（`exclusive`）が付与される（詳細: セクション 14.7）。
 

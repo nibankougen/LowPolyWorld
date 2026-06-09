@@ -1160,7 +1160,7 @@ Master
 | 人数上限（`maxPlayers`） | 通常ユーザー: 2〜6 の整数 / プレミアム: 2〜24 の整数（ワールド設定パネルからの更新時・ワールド定義 JSON 保存時） |
 | コライダーサイズ値 | 0 以上・0.25m 単位（マイオブジェクトタイプ更新・インスタンス `size` フィールド） |
 | ギミックアクション音量値 | 0〜100 の整数 |
-| ワールド BGM 設定 | `soundId` が内蔵許可リスト内（`none` / `rain` / `ocean` / `wind` / `cave` / `darkFactory` / `bgmCheerful` / `bgmCalm` / `bgmSuspense`）またはそのユーザーが購入済みの BGM アイテム ID（形式: `shop_{itemId}`）/ `volume` が 0〜100 の整数 |
+| ワールド BGM 設定 | `soundId` が内蔵許可リスト内（`none` / `rain` / `ocean` / `wind` / `cave` / `darkFactory` / `bgmFunNightStage` / `bgmBrightPlains` / `bgmATenseMoment`）またはそのユーザーが購入済みの BGM アイテム ID（形式: `shop_{itemId}`）/ `volume` が 0〜100 の整数 |
 | ワールドタグ | タグ数 ≤ 5 / 1タグ ≤ 20文字 / BAN タグ除外（正規化後に照合） |
 | ワールド名 | 文字数上限（実装時に決定） |
 | ユーザー名（@name） | 英数字（a-z / A-Z / 0-9）・アンダースコアのみ / 3〜15 文字 / 重複なし / 保存時に小文字正規化 / プレミアム会員による変更は前回から 90 日以上経過していること |

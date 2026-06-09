@@ -22,9 +22,9 @@ public class WorldMusicPlayer : MonoBehaviour
     [SerializeField] private AudioClip _darkFactoryClip;
 
     [Header("BGM Clips")]
-    [SerializeField] private AudioClip _bgmCheerfulClip;
-    [SerializeField] private AudioClip _bgmCalmClip;
-    [SerializeField] private AudioClip _bgmSuspenseClip;
+    [SerializeField] private AudioClip _bgmFunNightStageClip;
+    [SerializeField] private AudioClip _bgmBrightPlainsClip;
+    [SerializeField] private AudioClip _bgmATenseMomentClip;
 
     private AudioSource _audioSource;
     private Coroutine _fadeCoroutine;
@@ -182,9 +182,9 @@ public class WorldMusicPlayer : MonoBehaviour
             "wind" => _windClip,
             "cave" => _caveClip,
             "darkFactory" => _darkFactoryClip,
-            "bgmCheerful" => _bgmCheerfulClip,
-            "bgmCalm" => _bgmCalmClip,
-            "bgmSuspense" => _bgmSuspenseClip,
+            "bgmFunNightStage" => _bgmFunNightStageClip,
+            "bgmBrightPlains" => _bgmBrightPlainsClip,
+            "bgmATenseMoment" => _bgmATenseMomentClip,
             _ => null,
         };
 }
