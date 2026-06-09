@@ -468,16 +468,16 @@ Phase 12 の地形システム動作確認に使うテクスチャ。ランダ�
 
 **配置先:** `LowPolyWorldUnity/Assets/Audio/WorldMusic/`
 
-| ✅ | ファイル名 | soundId | 種別 | 内容 |
+| ✅ | ファイル名 | soundId | 種別 | 内容 | 作者 |
 |---|---|---|---|---|
-| ☐ | ambient_rain.ogg | `rain` | 環境音 | 雨音 |
-| ☐ | ambient_ocean.ogg | `ocean` | 環境音 | 波音・海辺 |
-| ☐ | ambient_wind.ogg | `wind` | 環境音 | 風音 |
-| ☐ | ambient_cave.ogg | `cave` | 環境音 | 洞窟・残響 |
-| ☐ | ambient_dark_factory.ogg | `darkFactory` | 環境音 | 暗い工場の音 |
-| ☐ | bgm_cheerful.ogg | `bgmCheerful` | BGM | 明るい BGM |
-| ☐ | bgm_calm.ogg | `bgmCalm` | BGM | 落ち着いた BGM |
-| ☐ | bgm_suspense.ogg | `bgmSuspense` | BGM | シリアス系 BGM |
+| ✅ | ambient_rain.ogg | `rain` | 環境音 | 雨音 | |
+| ✅ | ambient_ocean.ogg | `ocean` | 環境音 | 波音・海辺 | |
+| ✅ | ambient_wind.ogg | `wind` | 環境音 | 風音 | |
+| ✅ | ambient_cave.ogg | `cave` | 環境音 | 洞窟・残響 | |
+| ✅ | ambient_dark_factory.ogg | `darkFactory` | 環境音 | 暗い工場の音 | |
+| ✅ | bgm_fun_night_stage.ogg | `bgmFunNightStage` | BGM | 楽しい夜のステージ | kougen |
+| ✅ | bgm_bright_plains.ogg | `bgmBrightPlains` | BGM | 明るい平原 | kougen |
+| ✅ | bgm_a_tense_moment.ogg | `bgmATenseMoment` | BGM | 緊張の瞬間 | kougen |
 
 **仕様:**
 - 形式: OGG（ループポイント設定必須・シームレスにつながること）
@@ -495,13 +495,13 @@ Phase 12 の地形システム動作確認に使うテクスチャ。ランダ�
 
 | ✅ | ファイル名 | 内容 |
 |---|---|---|
-| ☐ | se_coin.wav | コイン取得音 |
-| ☐ | se_button.wav | ボタン・スイッチ音 |
-| ☐ | se_door_open.wav | ドア開閉音 |
-| ☐ | se_magic.wav | 魔法・エフェクト音 |
-| ☐ | se_fanfare.wav | ファンファーレ・クリア音 |
-| ☐ | se_damage.wav | ダメージ・失敗音 |
-| ☐ | se_footstep.wav | 足音 |
+| ✅ | se_coin.wav | コイン取得音 |
+| ✅ | se_button.wav | ボタン・スイッチ音 |
+| ✅ | se_door_open.wav | ドア開閉音 |
+| ✅ | se_magic.wav | 魔法・エフェクト音 |
+| ✅ | se_success.wav | ファンファーレ・クリア音 |
+| ✅ | se_fail.wav | 失敗音 |
+| ✅ | se_damage.wav | ダメージ・失敗音 |
 
 **仕様:**
 - 形式: WAV（44.1kHz・16bit）
