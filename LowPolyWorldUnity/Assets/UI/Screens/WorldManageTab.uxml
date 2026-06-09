@@ -1,0 +1,54 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="WorldManageTab.uss" />
+    <ui:VisualElement name="world-manage-root" class="world-manage-root">
+
+        <!-- タブバー (5タブ) -->
+        <ui:VisualElement class="category-tab-bar">
+            <ui:Button name="tab-my-worlds"  class="category-tab category-tab--active" text="マイワールド" />
+            <ui:Button name="tab-edit-obj"   class="category-tab" text="編集オブジェクト" />
+            <ui:Button name="tab-owned-obj"  class="category-tab" text="所有オブジェクト" />
+            <ui:Button name="tab-edit-terr"  class="category-tab" text="編集地形" />
+            <ui:Button name="tab-owned-terr" class="category-tab" text="所有地形" />
+        </ui:VisualElement>
+
+        <!-- ───── 自分のワールドタブ ───── -->
+        <ui:VisualElement name="panel-my-worlds" class="tab-panel">
+
+            <!-- スロット使用状況 -->
+            <ui:VisualElement class="slot-usage-bar">
+                <ui:Label name="slot-usage-label" class="slot-usage-label" text="0 / 5" />
+            </ui:VisualElement>
+
+            <!-- ワールドグリッド -->
+            <ui:ScrollView name="world-grid" class="world-grid" />
+
+            <!-- 空状態 -->
+            <ui:VisualElement name="empty-worlds" class="empty-state overlay-hidden">
+                <ui:Label class="empty-label" text="ワールドがありません" />
+                <ui:Label class="empty-hint" text="「新規作成」からワールドを作りましょう" />
+            </ui:VisualElement>
+
+        </ui:VisualElement>
+
+        <!-- ───── 編集オブジェクトタブ ───── -->
+        <ui:VisualElement name="panel-edit-obj" class="tab-panel overlay-hidden">
+            <ui:Label class="stub-label" text="編集オブジェクト（Phase 12 実装予定）" />
+        </ui:VisualElement>
+
+        <!-- ───── 所有オブジェクトタブ ───── -->
+        <ui:VisualElement name="panel-owned-obj" class="tab-panel overlay-hidden">
+            <ui:Label class="stub-label" text="所有オブジェクト（Phase 12 実装予定）" />
+        </ui:VisualElement>
+
+        <!-- ───── 編集地形タブ ───── -->
+        <ui:VisualElement name="panel-edit-terr" class="tab-panel overlay-hidden">
+            <ui:Label class="stub-label" text="編集地形（Phase 12 実装予定）" />
+        </ui:VisualElement>
+
+        <!-- ───── 所有地形タブ ───── -->
+        <ui:VisualElement name="panel-owned-terr" class="tab-panel overlay-hidden">
+            <ui:Label class="stub-label" text="所有地形（Phase 12 実装予定）" />
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>

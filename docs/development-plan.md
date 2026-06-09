@@ -886,14 +886,14 @@
 - [ ] 管理画面: マイワールドオブジェクト一覧・BAN処理
 
 ### Unityクライアント
-- [ ] `WorldCreationManager` 実装
-- [ ] ワールドスロット一覧画面（新規作成・既存編集・削除）
+- [x] `WorldCreationManager` 実装（スケルトン・BGM接続）
+- [x] ワールドスロット一覧画面（新規作成・既存編集・削除）— `WorldManageTab.uxml/uss` + `WorldManageTabController.cs`・ロック表示対応
 - [ ] ワールド設定パネルのタグ入力 UI（最大5個・テキスト入力・チップ表示・削除）
 - [ ] ワールド設定パネルの環境音選択 UI（内蔵ライブラリ一覧・音量スライダー 0〜100%）
-- [ ] ワールド定義 JSON への `ambientSound` フィールド対応（保存・読み込み）
+- [x] ワールド定義 JSON への `worldBgm` フィールド対応（保存・読み込み）— `WorldDefinitionJson` / `WorldSettingsPanelLogic`
 - [ ] ワールド設定パネルの人数上限 UI（デフォルト 6・通常ユーザー: 2〜6 / プレミアム: 2〜24）
-- [ ] ワールド定義 JSON への `maxPlayers` フィールド対応（保存・読み込み）
-- [ ] 環境音プレイヤーへのワールド定義 JSON の反映（入場時に再生・退場時に停止）
+- [x] ワールド定義 JSON への `maxPlayers` フィールド対応（保存・読み込み）— `WorldSettingsPanelLogic`
+- [x] 環境音プレイヤーへのワールド定義 JSON の反映（入場時に再生・退場時に停止）— `WorldCreationManager.ApplyBgmToPlayer()`
 - [ ] ワールド選択画面のタグフィルター UI（横スクロールチップ・複数選択）
 - [ ] ワールドエディタ UI（セクション 11.7）
   - [ ] レイアウト: ヘッダー・上部中央ギズモ切り替えボタン（移動/拡大縮小/回転）・3D ビュー・下部タブ（地形/オブジェクト/ギミック/設定）
