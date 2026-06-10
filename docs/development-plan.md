@@ -995,18 +995,18 @@
 - [ ] ワールド公開フロー（必須条件チェック + ギミックループ検出 → サーバー送信）
 - [ ] ワールド編集中フレンド招待（ルーム ID 共有 + アプリ内通知）
 - [ ] 地形システム
-  - [ ] **データ構造**
-    - [ ] 地形種別 UID（int64 文字列）・パレット（最大 16 種類）
-    - [ ] ボクセルバイト定義（上位 4bit: shape、下位 4bit: palette index）
-    - [ ] チャンク構造（16×16×16、格納順 X→Z→Y）・空チャンク省略
-    - [ ] RLE 圧縮（`value, count` 1 バイトペア）・バイナリファイル形式（magic + チャンクリスト）
-    - [ ] world JSON への terrain フィールド追加（palette, voxelDataUrl, terrainAtlasUrl, terrainAtlasUVMap）
+  - [x] **データ構造**（`Assets/Scripts/World/Terrain/`）
+    - [x] 地形種別 UID（int64 文字列）・パレット（最大 16 種類・ボクセルは 4bit インデックス）
+    - [x] ボクセルバイト定義（上位 4bit: shape、下位 4bit: palette index）— `TerrainVoxel` / `TerrainShape`
+    - [x] チャンク構造（16×16×16、格納順 X→Z→Y）・空チャンク省略 — `TerrainChunk` / `TerrainVoxelStore`（63×31×63・4×2×4 チャンク・遅延生成）
+    - [x] RLE 圧縮（`value, count` 1 バイトペア）・バイナリファイル形式（magic + チャンクリスト）— `TerrainRle` / `TerrainBinarySerializer`
+    - [x] world JSON への terrain フィールド追加（palette, voxelDataUrl, terrainAtlasUrl, terrainAtlasUVMap）— `WorldDefinitionJson.TerrainData`
   - [ ] **サーバー（Go API）**
     - [ ] 地形種別 UID 単位でテクスチャデータを返すエンドポイント
     - [ ] ワールド保存時: ボクセルデータ RLE 圧縮 → バイナリ blob 保存・URL 生成
     - [ ] ワールド保存時: 地形テクスチャアトラス生成（1024×1024、ランダム→固定順で貪欲パック）
   - [ ] **Unity クライアント**
-    - [ ] ボクセルデータのデシリアライズ（RLE 展開・チャンク構造復元）
+    - [x] ボクセルデータのデシリアライズ（RLE 展開・チャンク構造復元）— `TerrainBinarySerializer.TryDeserialize`（UGC 防御: magic/version/チャンク座標/RLE 長/不正ボクセル/パディング領域/重複を検証しエラー理由を返す）
     - [ ] 動的メッシュ生成（チャンク単位・隣接判定による面カリング）
       - [ ] cube / ramp / diag 各形状の面生成
       - [ ] 隣接判定ルール実装（セクション 15.12 の形状別テーブル準拠）
