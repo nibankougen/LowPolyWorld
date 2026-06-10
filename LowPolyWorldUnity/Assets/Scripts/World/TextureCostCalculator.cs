@@ -31,10 +31,15 @@ public static class TextureCostCalculator
     /// <param name="alwaysHiddenTypeIds">
     /// ギミックで常時非表示にされた objectTypeId の集合。null = 除外なし。
     /// </param>
+    /// <param name="switchTargetTypeIds">
+    /// ギミック「種類切り替え（A → B）」の切り替え先 objectTypeId の一覧。
+    /// 配置されていなくても両方のコストを合算する（セクション 4.3）。null = なし。
+    /// </param>
     public static int Calculate(
         IEnumerable<WorldObjectInstance> objects,
         Func<string, int> textureSizeGetter,
-        HashSet<string> alwaysHiddenTypeIds = null)
+        HashSet<string> alwaysHiddenTypeIds = null,
+        IEnumerable<string> switchTargetTypeIds = null)
     {
         var uniqueKeys = new HashSet<string>();
 
@@ -47,6 +52,18 @@ public static class TextureCostCalculator
             var key = string.IsNullOrEmpty(obj.savedVariantId) ? obj.objectTypeId : obj.savedVariantId;
             if (!string.IsNullOrEmpty(key))
                 uniqueKeys.Add(key);
+        }
+
+        if (switchTargetTypeIds != null)
+        {
+            foreach (var typeId in switchTargetTypeIds)
+            {
+                if (string.IsNullOrEmpty(typeId))
+                    continue;
+                if (alwaysHiddenTypeIds != null && alwaysHiddenTypeIds.Contains(typeId))
+                    continue;
+                uniqueKeys.Add(typeId);
+            }
         }
 
         int total = 0;

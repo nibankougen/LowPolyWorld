@@ -98,6 +98,29 @@ public class TextureCostCalculatorTests
         Assert.DoesNotThrow(() => TextureCostCalculator.Calculate(objs, _ => 64, null));
     }
 
+    [Test]
+    public void Calculate_SwitchTarget_CountsBothTypes()
+    {
+        // ギミック「種類切り替え（A → B）」: A・B 両方のコストを合算（セクション 4.3）
+        var objs = new[] { new WorldObjectInstance { objectTypeId = "type_a" } };
+        int cost = TextureCostCalculator.Calculate(
+            objs, _ => 64, switchTargetTypeIds: new[] { "type_b" });
+        Assert.AreEqual(32, cost, "配置中の A と切り替え先 B の両方をカウント");
+    }
+
+    [Test]
+    public void Calculate_SwitchTargetAlreadyPlaced_CountsOnce()
+    {
+        var objs = new[]
+        {
+            new WorldObjectInstance { objectTypeId = "type_a" },
+            new WorldObjectInstance { objectTypeId = "type_b" },
+        };
+        int cost = TextureCostCalculator.Calculate(
+            objs, _ => 64, switchTargetTypeIds: new[] { "type_b" });
+        Assert.AreEqual(32, cost, "配置済みの切り替え先は重複カウントしない");
+    }
+
     // ── CanAdd ───────────────────────────────────────────────────────────────
 
     [Test]

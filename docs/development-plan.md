@@ -969,7 +969,9 @@
   - [ ] PickupObjectEffect の適用（ワールドオブジェクトの非表示 / 返却時の再表示 — ワールド表示制御統合時）
 - [ ] ルーム内アクションボタン UI（接触オブジェクトに対応する画面上ボタン）
 - [ ] ルーム内ポータル・ワールドポータルの遷移処理
-- [ ] 数字オブジェクト（プレミアム限定・上限 30 個・ワールドステート/プレイヤーステート/固定値参照・ステート変更時即時更新）
+- [ ] 数字オブジェクト（プレミアム限定・上限 30 個）
+  - [x] `NumberObjectSyncLogic`（ワールドステート/参加 X 番目プレイヤーステート/固定値の参照解決・ステート更新時の影響オブジェクト特定・上限 30 個）
+  - [ ] 配置・メッシュ表示（数字レンダリング・プレミアム制限・ステート変更エフェクトとのワイヤリング）
 - [x] 背景レンダリング（単色・グラデーション・テクスチャ）— `WorldBackgroundController`（テクスチャ: API統合後）
 - [x] 環境カラー対応
   - [ ] 地形シェーダーに `_AmbientColor` プロパティを追加（`texel × vertex_AO × ambient`）— 地形システム実装時
@@ -1035,7 +1037,7 @@
 - [x] `GimmickEngine`: 複数ルールが同一フレームで発火したとき定義順に実行されること
 - [x] `GimmickEngine`: 相手プレイヤー確定後にアクション対象として正しく渡されること
 - [x] `GimmickValueResolver`: 固定値 / ステート参照 / プレイヤーステート参照 / 乱数それぞれが正しい値を返すこと
-- [ ] `NumberObjectSync`: ステート更新時に参照している数字オブジェクトが即座に更新されること
+- [x] `NumberObjectSyncLogic`: ステート更新時に参照している数字オブジェクトが即座に更新されること
 - [x] `GimmickInventoryLogic`: 「持つ」反応でオブジェクトが消え保有状態になること
 - [x] `GimmickInventoryLogic`: 別オブジェクトを持とうとしたとき既存アイテムが元の位置に戻ること
 - [x] `GimmickInventoryLogic`: ルーム退出時リセット
@@ -1043,9 +1045,10 @@
 - [x] `WorldVariantSlotManager`: プレミアム解約後のロック判定
 - [x] `MyObjectSlotManager`: スロット上限チェック（通常10 / プレミアム100）・上限超過エラー
 - [x] `MyObjectSlotManager`: プレミアム解約後のロック判定
-- [ ] `TextureCostCalculator`: objectTypeId / savedVariantId ごとの独立カウント
-- [ ] `TextureCostCalculator`: ギミック非表示オブジェクトをコスト対象外にすること
-- [ ] `TextureCostCalculator`: 上限 4,096 到達時の追加ブロック判定
+- [x] `TextureCostCalculator`: objectTypeId / savedVariantId ごとの独立カウント
+- [x] `TextureCostCalculator`: ギミック非表示オブジェクトをコスト対象外にすること
+- [x] `TextureCostCalculator`: ギミック種類切り替え（A → B）の両方コスト合算
+- [x] `TextureCostCalculator`: 上限 4,096 到達時の追加ブロック判定
 - [x] `WorldObjectScaleLogic`: インスタンスサイズ設定・0.25m クランプ・スケールロック判定（ロック時は変更を拒否）
 - [x] `ColliderSizeRounding`: AABB float 値 → 0.25m 単位切り上げ・全軸 0 時の装飾判定
 
