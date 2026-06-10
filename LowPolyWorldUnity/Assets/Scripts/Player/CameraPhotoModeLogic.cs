@@ -13,6 +13,12 @@ public class CameraPhotoModeLogic
     public const float MinZoom = -3f;             // 最接近オフセット
     public const float MaxZoom = 10f;             // 最遠退オフセット
 
+    // カメラ可動域制限（screens-and-modes.md 2.7.2）
+    public const float MaxSlideDistance = 10f;    // スライド平行移動の累積上限
+    public const float MinCameraY = -7.75f;       // ワールド下端（地形 Y 範囲の最下端）。
+                                                  // 地表スラブの底面はメッシュ生成されないため
+                                                  // カメラはこれより下に行けない（world-creation.md 15.14）
+
     /// <summary>正規カメラ位置からの前後オフセット（+ = 遠退き）。</summary>
     public float ZoomOffset { get; private set; }
 
@@ -49,7 +55,9 @@ public class CameraPhotoModeLogic
         Vector2 rawDelta = mid - _prevMidPoint;
         // スクリーン高さで正規化して SlideSensitivity を掛ける
         float scale = SlideSensitivity / Mathf.Max(1f, screenHeight);
-        SlideOffset += new Vector2(-rawDelta.x * scale, rawDelta.y * scale);
+        SlideOffset = Vector2.ClampMagnitude(
+            SlideOffset + new Vector2(-rawDelta.x * scale, rawDelta.y * scale),
+            MaxSlideDistance);
         _prevMidPoint = mid;
     }
 

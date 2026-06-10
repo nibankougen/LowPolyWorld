@@ -71,6 +71,37 @@ public class CameraPhotoModeLogicTests
     }
 
     [Test]
+    public void Slide_ClampsAtMaxDistance()
+    {
+        // 2.7.2: スライド平行移動の累積は合計 10m にクランプ
+        _logic.BeginTwoFingers(new Vector2(100, 100), new Vector2(200, 100));
+        for (int i = 0; i < 100; i++)
+        {
+            float y = 100 + i * 100;
+            _logic.UpdateTwoFingers(new Vector2(100, y + 100), new Vector2(200, y + 100), 1000f);
+        }
+
+        Assert.LessOrEqual(_logic.SlideOffset.magnitude,
+            CameraPhotoModeLogic.MaxSlideDistance + 0.001f,
+            "大きくスライドし続けても累積オフセットは上限でクランプ");
+    }
+
+    [Test]
+    public void Slide_DiagonalAlsoClampsByMagnitude()
+    {
+        _logic.BeginTwoFingers(new Vector2(0, 0), new Vector2(100, 0));
+        for (int i = 0; i < 200; i++)
+        {
+            float d = (i + 1) * 50f;
+            _logic.UpdateTwoFingers(new Vector2(d, d), new Vector2(d + 100, d), 1000f);
+        }
+
+        Assert.LessOrEqual(_logic.SlideOffset.magnitude,
+            CameraPhotoModeLogic.MaxSlideDistance + 0.001f,
+            "斜め方向もベクトル長でクランプ（成分ごとではない）");
+    }
+
+    [Test]
     public void Reset_ClearsAllOffsets()
     {
         _logic.BeginTwoFingers(new Vector2(0, 500), new Vector2(100, 500));

@@ -18,6 +18,7 @@ public class CameraFollowController : MonoBehaviour
     // 撮影モード中のカメラオフセット（PhotoModeController が設定する）
     private float _photoZoomOffset;
     private Vector2 _photoSlideOffset;
+    private bool _photoOffsetActive;
 
     /// <summary>PlayerController が参照するヨー角（度）。</summary>
     public float Yaw => _logic?.Yaw ?? 0f;
@@ -32,6 +33,7 @@ public class CameraFollowController : MonoBehaviour
     {
         _photoZoomOffset = zoom;
         _photoSlideOffset = slide;
+        _photoOffsetActive = true;
     }
 
     /// <summary>撮影モード終了時にオフセットをクリアする。</summary>
@@ -39,6 +41,7 @@ public class CameraFollowController : MonoBehaviour
     {
         _photoZoomOffset = 0f;
         _photoSlideOffset = Vector2.zero;
+        _photoOffsetActive = false;
     }
 
     private void LateUpdate()
@@ -61,10 +64,17 @@ public class CameraFollowController : MonoBehaviour
         var fwd = rot * Vector3.forward;
         var right = rot * Vector3.right;
         var up = rot * Vector3.up;
-        transform.position = basePos
+        var pos = basePos
             + fwd * (-_photoZoomOffset)       // 正値 = カメラ遠退き
             + right * _photoSlideOffset.x
             + up * _photoSlideOffset.y;
+
+        // 撮影モード中はワールド下端より下に行けない（地表の底面メッシュは
+        // 生成されないため — screens-and-modes.md 2.7.2 / world-creation.md 15.14）
+        if (_photoOffsetActive && pos.y < CameraPhotoModeLogic.MinCameraY)
+            pos.y = CameraPhotoModeLogic.MinCameraY;
+
+        transform.position = pos;
         transform.rotation = rot;
     }
 }
