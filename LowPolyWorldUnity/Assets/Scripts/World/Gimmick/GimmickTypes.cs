@@ -80,7 +80,8 @@ public enum GimmickActionType
     ShowHideObject,
     ChangeObjectType,
     ShowMessage,
-    PickupObject,
+    PickupObject, // 配置オブジェクトを持つ（インスタンス指定・対象は単一プレイヤーのみ）
+    GrantObject,  // オブジェクトを付与する（種別指定・配置物を消費しない・全員可）
     PlaySound,
     SwitchBgm,
     MoveObject,
@@ -385,8 +386,19 @@ public class ShowMessageEffect : GimmickEffect
 public class PickupObjectEffect : GimmickEffect
 {
     public string PlayerId { get; }
+
+    /// <summary>IsGrant=false: 配置インスタンス ID / IsGrant=true: オブジェクト種別 ID。</summary>
     public string ObjectId { get; }
-    public PickupObjectEffect(string playerId, string objectId) { PlayerId = playerId; ObjectId = objectId; }
+
+    /// <summary>true = 付与（配置物を消費しない）。</summary>
+    public bool IsGrant { get; }
+
+    public PickupObjectEffect(string playerId, string objectId, bool isGrant = false)
+    {
+        PlayerId = playerId;
+        ObjectId = objectId;
+        IsGrant = isGrant;
+    }
 }
 
 public class PlaySoundEffect : GimmickEffect

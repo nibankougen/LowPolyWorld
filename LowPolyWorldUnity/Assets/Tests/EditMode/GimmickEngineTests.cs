@@ -522,5 +522,30 @@ public class GimmickEngineTests
         Assert.IsNotNull(effect);
         Assert.AreEqual("p1", effect.PlayerId);
         Assert.AreEqual("obj_key", effect.ObjectId);
+        Assert.IsFalse(effect.IsGrant, "「持つ」は配置オブジェクトの取得");
+    }
+
+    [Test]
+    public void Fire_GrantObjectActionAllPlayers_EmitsGrantEffectPerPlayer()
+    {
+        var rule = new RuntimeGimmickRule("r1", "",
+            new[] { new RuntimeGimmickTrigger(GimmickEventType.RoomStart) },
+            System.Array.Empty<RuntimeGimmickCondition>(),
+            new[] { new RuntimeGimmickAction(GimmickActionType.GrantObject,
+                targetId: "type_sword", playerTarget: PlayerTarget.AllPlayers) });
+
+        var result = Build(new[] { rule }).Fire(GimmickEventContext.RoomStart());
+
+        Assert.AreEqual(2, result.Effects.Count, "「付与する」は全員選択可");
+        var ids = new List<string>();
+        foreach (var e in result.Effects)
+        {
+            var grant = e as PickupObjectEffect;
+            Assert.IsNotNull(grant);
+            Assert.IsTrue(grant.IsGrant);
+            Assert.AreEqual("type_sword", grant.ObjectId);
+            ids.Add(grant.PlayerId);
+        }
+        CollectionAssert.AreEquivalent(new[] { "p1", "p2" }, ids);
     }
 }

@@ -258,8 +258,16 @@ public class GimmickEngine
                 break;
 
             case GimmickActionType.PickupObject:
+            {
+                // 1 つの配置オブジェクトは 1 人にしか入らないため対象は単一プレイヤーのみ（仕様 9.8）
+                string pid = ResolvePlayerId(action.PlayerTarget, ctx);
+                effects.Add(new PickupObjectEffect(pid, action.TargetId, isGrant: false));
+                break;
+            }
+
+            case GimmickActionType.GrantObject:
                 foreach (var pid in ResolvePlayerIds(action.PlayerTarget, ctx))
-                    effects.Add(new PickupObjectEffect(pid, action.TargetId));
+                    effects.Add(new PickupObjectEffect(pid, action.TargetId, isGrant: true));
                 break;
 
             case GimmickActionType.PlaySound:
