@@ -139,6 +139,10 @@ public class PhotoModeController : MonoBehaviour
         _hudBottom?.AddToClassList("hud-hidden");
         _photoRoot.style.display = DisplayStyle.Flex;
 
+        // 撮影モード中は全アバターの名札・発話インジケーターを非表示にする
+        // （WYSIWYG・@name 写り込み防止 — screens-and-modes.md 2.7）
+        NameTagController.SetAllVisible(false);
+
         if (_playerController != null)
             _playerController.IsPhotoMode = true;
     }
@@ -151,6 +155,8 @@ public class PhotoModeController : MonoBehaviour
         _hudTopRight?.RemoveFromClassList("hud-hidden");
         _hudBottom?.RemoveFromClassList("hud-hidden");
         _photoRoot.style.display = DisplayStyle.None;
+
+        NameTagController.SetAllVisible(true);
 
         if (_playerController != null)
             _playerController.IsPhotoMode = false;
@@ -890,6 +896,10 @@ public class PhotoModeController : MonoBehaviour
 
     private void OnDestroy()
     {
+        // 撮影モード中にシーン破棄された場合に備えて名札表示を復元する
+        // （static 状態のためシーンをまたいで残留する）
+        NameTagController.SetAllVisible(true);
+
         if (_lastPhoto != null)
             Destroy(_lastPhoto);
         if (_eyedropTex != null)
