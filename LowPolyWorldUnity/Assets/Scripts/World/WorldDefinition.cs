@@ -154,6 +154,9 @@ public class AreaInstance
     public int areaIndex = 0;
 }
 
+// ── ギミックルール (world-creation.md セクション 9.4〜9.8) ─────────────────────
+// JSON → ランタイム変換とバリデーション（9.11）は GimmickRuleConverter が行う。
+
 [Serializable]
 public class GimmickRule
 {
@@ -167,26 +170,76 @@ public class GimmickRule
 [Serializable]
 public class GimmickTrigger
 {
+    // roomStart | playerCountChanged | playerTouchObject | objectTap | areaEnter | areaExit |
+    // timerReached | actionButton | playerTouchPlayer | respawn | inRoomPortalUsed
     public string type = "";
-    public string targetId = "";
+
+    public string targetId = "";    // オブジェクト系イベントの対象 ID（空 = 全対象）
+    public int timerIndex = 0;      // timerReached 用（0〜4）
+    public float timerSeconds = 0f; // timerReached 用（到達秒）
 }
 
 [Serializable]
 public class GimmickCondition
 {
+    // worldState | playerState | playerCount | playerNumber | timerCompare |
+    // hasObject | playersOverlapping | playerDistance | playerLineOfSight
     public string type = "";
+
     public int stateIndex = 0;
-    public string op = "eq"; // "eq" | "ne" | "gt" | "lt" | "gte" | "lte" | "mod_eq"
-    public int value = 0;
-    public int modBy = 0;
+    public int timerIndex = 0;                    // timerCompare 用
+    public string op = "eq";                      // eq | ne | gt | lt | gte | lte | mod_eq
+    public GimmickValueJson threshold = new();    // 比較閾値（9.6 比較値の参照種別）
+    public int modBy = 2;                         // mod_eq 用（2 以上）
+    public int modResult = 0;                     // mod_eq 用
+    public string playerTarget = "input";         // input | opponent | all
+    public string objectId = "";                  // hasObject 用（種別 ID）
+    public float distanceGrid = 0f;               // playerDistance / playerLineOfSight 用（1 グリッド = 0.5m）
 }
 
 [Serializable]
 public class GimmickAction
 {
+    // setWorldState | setPlayerState | timerStart | timerStop | timerReset |
+    // showHideObject | changeObjectType | showMessage | pickupObject | grantObject |
+    // playSound | switchBgm | moveObject | teleportPlayer | resetState | playEffect |
+    // setMoveSpeed | setPlayerMarker
     public string type = "";
-    public string targetId = "";
-    public string paramsJson = "{}"; // ネストした JSON を raw 文字列で保持
+
+    public int stateIndex = 0;
+    public string stateOp = "set";                // set | add | sub
+    public GimmickValueJson value = new();        // ステート変更の値（9.7 値の参照種別）
+    public string playerTarget = "input";         // input | opponent | all
+    public string targetId = "";                  // 対象 ID（オブジェクト / ポータル / サウンド / マーカー等）
+    public string stringParam = "";               // changeObjectType の切り替え先種別 等
+    public GimmickTextJson[] texts = Array.Empty<GimmickTextJson>(); // showMessage 用（言語別・各 80 文字以内）
+    public bool visible = true;                   // showHideObject / setPlayerMarker 用
+    public int timerIndex = 0;                    // タイマー操作用（0〜4）
+    public float floatParam = 0f;                 // moveObject: 速度 / playSound: 音量 0〜100 / setMoveSpeed: 0〜200%
+    public float pitch = 1f;                      // playSound 用（0.5〜2.0）
+    public float playbackRate = 1f;               // playSound 用（0.5〜2.0）
+    public Vec3Json position = new();             // moveObject の目標グリッド座標
+    public string resetTarget = "all";            // resetState 用: input | opponent | allPlayers | world | all
+}
+
+/// <summary>値の参照（world-creation.md 9.6 / 9.7）。</summary>
+[Serializable]
+public class GimmickValueJson
+{
+    public string kind = "fixed"; // fixed | worldState | playerState | allPlayersSum | random
+    public int value = 0;         // fixed 用
+    public int stateIndex = 0;    // worldState / playerState / allPlayersSum 用
+    public string playerTarget = "input"; // playerState 用: input | opponent
+    public int min = 0;           // random 用
+    public int max = 0;           // random 用
+    public bool maxIsPlayerCount = false; // random 用（最大値 = 現在人数）
+}
+
+[Serializable]
+public class GimmickTextJson
+{
+    public string lang = ""; // 言語コード（空 = デフォルト言語）
+    public string text = "";
 }
 
 [Serializable]

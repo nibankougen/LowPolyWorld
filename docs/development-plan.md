@@ -965,7 +965,9 @@
   - [x] 全アクション実装（ステート変更/タイマー/オブジェクト表示切替/オブジェクト移動/持つ/付与/BGM切替/ポータルワープ/状態リセット等）
   - [x] 無限ループ検出（連鎖 100 回超で IsInfiniteLoop=true + LoopRuleId 返却）
   - [x] ゲーム内ゲーム拡張（エリア退出イベント / タイマー値比較条件 / 移動速度変更・頭上マーカーアクション / 乱数最大値に現在人数 — エフェクト発行まで。移動制御・マーカー表示の適用は上位レイヤー）
-  - [ ] ワールド定義 JSON のギミックルールモデル更新 + JSON→Runtime 変換層（確定仕様 9.5〜9.8 の全要素対応・9.11 バリデーション準拠・不正ルールのルール単位無効化。現 `WorldDefinition.cs` の GimmickRule 系は旧形式）
+  - [x] ワールド定義 JSON のギミックルールモデル更新（確定仕様 9.5〜9.8 の全要素対応・paramsJson 廃止・GimmickValueJson / GimmickTextJson 追加）
+  - [x] JSON→Runtime 変換層 `GimmickRuleConverter`（9.11 バリデーション・不正ルールのルール単位無効化・理由付き返却・参照 ID 実在チェックは WorldRefs 注入式）
+  - [ ] サーバー側バリデーション（Go API — ワールド保存 / 公開時に 9.11 同等の検証で拒否。Phase 12 API 連携時）
   - [ ] 物理判定条件の Unity 実装（IPhysicsQuery を実装する MonoBehaviour — 3D 物理統合時）
 - [ ] インベントリシステム
   - [x] `GimmickInventoryLogic`（種別 ID 単位の保有・「持つ」配置/「付与」種別の 2 モード・持ち替え時の既存アイテム返却・退出/ルーム終了リセット・入室時スナップショット同期・IInventoryQuery 実装）
