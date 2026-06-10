@@ -1904,3 +1904,60 @@ Redis を用いてインプロセスキャッシュ＋永続化する。キャ�
        └── email 一致なし → 新規アカウント作成 → JWT 発行 → name_setup_required: true を返す
 4. Unity → JWT を Application.persistentDataPath に保存し以降のリクエストに使用
 ```
+
+---
+
+## 16. ストーリー機能
+
+UI 仕様: `docs/screens-and-modes.md` セクション 23。撮影画像を 48 時間限定で共有する。
+
+### DB スキーマ
+
+```sql
+CREATE TABLE stories (
+    id           BIGINT PRIMARY KEY,
+    user_id      BIGINT NOT NULL REFERENCES active_users(user_id) ON DELETE CASCADE,
+    image_key    VARCHAR NOT NULL,          -- ストーリー専用バケット内のキー（content-addressed ではない）
+    visibility   VARCHAR NOT NULL DEFAULT 'public',  -- 'public' | 'friends'
+    world_id     BIGINT NULL,               -- 撮影ワールド（非公開ワールド撮影時は NULL）
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+    expires_at   TIMESTAMPTZ NOT NULL       -- created_at + 48h
+);
+
+CREATE TABLE story_report_snapshots (
+    id               BIGINT PRIMARY KEY,
+    story_id         BIGINT NOT NULL,       -- FK は張らない（元レコード削除後も保持）
+    reported_user_id BIGINT NOT NULL REFERENCES users(id),  -- アカウント削除後も整合性維持
+    image_key        VARCHAR NOT NULL,      -- モデレーション専用バケットへのコピー
+    visibility       VARCHAR NOT NULL,
+    world_id         BIGINT NULL,
+    story_created_at TIMESTAMPTZ NOT NULL,
+    created_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
+    purge_after      TIMESTAMPTZ NULL       -- 審査完了時に「+90日」を設定。バッチで物理削除
+);
+```
+
+### エンドポイント
+
+| エンドポイント | 内容 |
+|---|---|
+| `POST /api/v1/stories` | multipart 画像 + `visibility` + `worldId`。9:16 に正規化（1080×1920 以下）。同時有効 10 件超は 409。ユーザー制限中（トラストレベル自動制限）は 403 |
+| `GET /api/v1/stories/feed` | フォロー中ユーザーの有効ストーリー一覧（公開範囲・非表示/ブロック考慮・ユーザー単位にグルーピング・最新投稿時刻降順） |
+| `GET /api/v1/users/{id}/stories` | 対象ユーザーの有効ストーリー（公開範囲を考慮。friends は申請者がフレンドのときのみ） |
+| `DELETE /api/v1/stories/{id}` | 本人のみ。レコード + R2 オブジェクトを即時削除 |
+| 違反報告 API | 既存通報 API に `target_type=story` を追加。**通報受理時に画像をモデレーションバケットへコピー**し `story_report_snapshots` を作成 |
+| `GET /admin/story-reports/{id}/image` | 管理画面用スナップショット画像取得（admin 権限） |
+
+### 画像配信（content-addressed CDN を使わない）
+
+- 公開 CDN の `{sha256}.ext` + `Cache-Control: immutable` 方式は使用しない
+  - フレンドのみ公開のアクセス制御ができない
+  - immutable キャッシュは 48 時間失効後も CDN エッジに残留する
+- API レスポンスに**短寿命の署名付き URL（有効 10 分）**を含めて返す。`Cache-Control: private, max-age=600`
+
+### 失効・削除
+
+- 失効バッチ（1 時間ごと）: `expires_at` 超過の `stories` レコードと R2 オブジェクトを物理削除
+- スナップショット削除バッチ（日次）: `purge_after` 超過の `story_report_snapshots` と画像を物理削除
+- アカウント削除申請時: 有効ストーリーを即時削除（`active_users` CASCADE + オブジェクト削除）。
+  `story_report_snapshots` は `users.id` 参照のため保持される（モデレーション目的・データ保持方針セクション 13 に準拠）
