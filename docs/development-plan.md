@@ -964,7 +964,9 @@
   - [x] 全アクション実装（ステート変更/タイマー/オブジェクト表示切替/オブジェクト移動/持つ/BGM切替/ポータルワープ/状態リセット等）
   - [x] 無限ループ検出（連鎖 100 回超で IsInfiniteLoop=true + LoopRuleId 返却）
   - [ ] 物理判定条件の Unity 実装（IPhysicsQuery を実装する MonoBehaviour — 3D 物理統合時）
-- [ ] インベントリシステム（オブジェクト保有・退出時リセット・IInventoryQuery 実装）
+- [ ] インベントリシステム
+  - [x] `GimmickInventoryLogic`（同時保有 1 個・持ち替え時の既存アイテム返却・退出/ルーム終了リセット・入室時スナップショット同期・IInventoryQuery 実装）
+  - [ ] PickupObjectEffect の適用（ワールドオブジェクトの非表示 / 返却時の再表示 — ワールド表示制御統合時）
 - [ ] ルーム内アクションボタン UI（接触オブジェクトに対応する画面上ボタン）
 - [ ] ルーム内ポータル・ワールドポータルの遷移処理
 - [ ] 数字オブジェクト（プレミアム限定・上限 30 個・ワールドステート/プレイヤーステート/固定値参照・ステート変更時即時更新）
@@ -1034,9 +1036,9 @@
 - [x] `GimmickEngine`: 相手プレイヤー確定後にアクション対象として正しく渡されること
 - [x] `GimmickValueResolver`: 固定値 / ステート参照 / プレイヤーステート参照 / 乱数それぞれが正しい値を返すこと
 - [ ] `NumberObjectSync`: ステート更新時に参照している数字オブジェクトが即座に更新されること
-- [ ] `InventorySlot`: 「持つ」反応でオブジェクトが消え保有状態になること
-- [ ] `InventorySlot`: 別オブジェクトを持とうとしたとき既存アイテムが元の位置に戻ること
-- [ ] `InventorySlot`: ルーム退出時リセット
+- [x] `GimmickInventoryLogic`: 「持つ」反応でオブジェクトが消え保有状態になること
+- [x] `GimmickInventoryLogic`: 別オブジェクトを持とうとしたとき既存アイテムが元の位置に戻ること
+- [x] `GimmickInventoryLogic`: ルーム退出時リセット
 - [x] `WorldVariantSlotManager`: スロット上限チェック（通常10 / プレミアム100）・上限超過エラー
 - [x] `WorldVariantSlotManager`: プレミアム解約後のロック判定
 - [x] `MyObjectSlotManager`: スロット上限チェック（通常10 / プレミアム100）・上限超過エラー
