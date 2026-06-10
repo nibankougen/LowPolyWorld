@@ -974,7 +974,7 @@
 - [ ] ルーム内ポータル・ワールドポータルの遷移処理
 - [ ] 数字オブジェクト（プレミアム限定・上限 30 個）
   - [x] `NumberObjectSyncLogic`（ワールドステート/参加 X 番目プレイヤーステート/タイマー（カウントダウン対応）/固定値の参照解決・ステート更新時の影響オブジェクト特定・上限 30 個）
-  - [ ] 配置・メッシュ表示（数字レンダリング・プレミアム制限・ステート変更エフェクトとのワイヤリング）
+  - [ ] 配置・メッシュ表示（数字レンダリング — 描画方式は桁メッシュ切替 / 数字アトラス UV のいずれかを実装時に選定・プレミアム制限・ステート変更エフェクトとのワイヤリング・タイマー参照分の毎秒更新）
 - [x] 背景レンダリング（単色・グラデーション・テクスチャ）— `WorldBackgroundController`（テクスチャ: API統合後）
 - [x] 環境カラー対応
   - [ ] 地形シェーダーに `_AmbientColor` プロパティを追加（`texel × vertex_AO × ambient`）— 地形システム実装時
@@ -1049,7 +1049,7 @@
 - [x] `MyObjectSlotManager`: スロット上限チェック（通常10 / プレミアム100）・上限超過エラー
 - [x] `MyObjectSlotManager`: プレミアム解約後のロック判定
 - [x] `TextureCostCalculator`: objectTypeId / savedVariantId ごとの独立カウント
-- [x] `TextureCostCalculator`: ギミック非表示オブジェクトをコスト対象外にすること
+- [x] `TextureCostCalculator`: 配置ベース計算（ギミック表示状態の影響なし — 仕様 4.3）
 - [x] `TextureCostCalculator`: ギミック種類切り替え（A → B）の両方コスト合算
 - [x] `TextureCostCalculator`: 上限 4,096 到達時の追加ブロック判定
 - [x] `WorldObjectScaleLogic`: インスタンスサイズ設定・0.25m クランプ・スケールロック判定（ロック時は変更を拒否）
