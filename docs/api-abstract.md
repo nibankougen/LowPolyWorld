@@ -1603,6 +1603,8 @@ GET /api/v1/me/data-export
 | 管理者操作ログ（`admin_audit_logs`）| **1 年保持** | セキュリティ監査。重大インシデント発生時は手動アーカイブ |
 | リフレッシュトークン（失効・失効済み） | `expires_at` から 7 日後にバッチ削除 | — |
 | アクセスログ（IP アドレス・User-Agent）| **1 年後削除** | セキュリティ監査・不正アクセス調査・レート制限証拠。データ侵害の検知遅延に備えてジオロケーション推定（EU ユーザー特定・GDPR 報告先 DPA 特定）に使用する。Cloud Logging `lowpolyworld-access` に格納（セクション 5.5 参照） |
+| ストーリー投稿画像（セクション 16） | 投稿から **48 時間**（失効バッチで物理削除。本人削除・退会時は即時） | — |
+| 通報されたストーリーのスナップショット（`story_report_snapshots`） | 審査完了から **90 日**（`purge_after` バッチで物理削除）。投稿失効・本人削除・退会後も保持 | モデレーション・再犯調査（GDPR Art. 6(1)(f) 正当な利益・Art. 17(3) 削除権の例外） |
 
 `reporter_id` の匿名化は 30 日後バッチ（アカウント物理削除と同じジョブ）で `NULL` に更新する。
 
@@ -1624,6 +1626,8 @@ GET /api/v1/me/data-export
 | アカウント物理削除 | JST 03:00 | `delete-expired-accounts` |
 | 通報者匿名化 | JST 03:05 | `anonymize-reporters` |
 | アクセスログ IP/UA NULL 化 | JST 03:30 | `cleanup-access-logs` |
+| ストーリー失効削除 | 1 時間ごと（毎時 15 分） | `delete-expired-stories` |
+| ストーリー通報スナップショット削除 | JST 03:40 | `purge-story-snapshots` |
 
 **通報者匿名化バッチ仕様:**
 
