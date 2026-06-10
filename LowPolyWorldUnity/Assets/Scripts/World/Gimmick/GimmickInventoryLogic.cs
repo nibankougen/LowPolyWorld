@@ -125,6 +125,10 @@ public class GimmickInventoryLogic : IInventoryQuery
         {
             if (string.IsNullOrEmpty(pair.Key) || string.IsNullOrEmpty(pair.Value))
                 continue;
+            // 同一オブジェクトを複数プレイヤーが保有する壊れたデータは先勝ちで無視し、
+            // _heldByPlayer と _holderByObject の 1:1 整合を維持する
+            if (_holderByObject.ContainsKey(pair.Value))
+                continue;
             _heldByPlayer[pair.Key] = pair.Value;
             _holderByObject[pair.Value] = pair.Key;
         }

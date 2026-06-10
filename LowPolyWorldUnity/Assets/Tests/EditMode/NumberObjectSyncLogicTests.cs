@@ -53,6 +53,31 @@ public class NumberObjectSyncLogicTests
     }
 
     [Test]
+    public void TryAdd_WorldStateIndexOutOfRange_Fails()
+    {
+        Assert.IsFalse(_sync.TryAdd(WorldRef("num_a", GimmickStateManager.MaxWorldStates)),
+            "ワールドステートは 0〜9 のみ");
+        Assert.IsFalse(_sync.TryAdd(WorldRef("num_b", -1)));
+        Assert.AreEqual(0, _sync.Objects.Count, "不正な定義は登録されない");
+    }
+
+    [Test]
+    public void TryAdd_PlayerStateIndexOutOfRange_Fails()
+    {
+        Assert.IsFalse(_sync.TryAdd(PlayerRef("num_a", 1, GimmickStateManager.MaxPlayerStates)),
+            "プレイヤーステートは 0〜3 のみ");
+        Assert.IsFalse(_sync.TryAdd(PlayerRef("num_b", 1, -1)));
+    }
+
+    [Test]
+    public void TryAdd_PlayerNumberLessThanOne_Fails()
+    {
+        Assert.IsFalse(_sync.TryAdd(PlayerRef("num_a", playerNumber: 0, stateIndex: 0)),
+            "参加順番号は 1 起点");
+        Assert.IsFalse(_sync.TryAdd(PlayerRef("num_b", playerNumber: -1, stateIndex: 0)));
+    }
+
+    [Test]
     public void Remove_RegisteredObject_Succeeds()
     {
         _sync.TryAdd(WorldRef("num_1", 0));

@@ -52,7 +52,8 @@ public class NumberObjectSyncLogic
     // ── 登録・削除 ────────────────────────────────────────────────────────────
 
     /// <summary>
-    /// 数字オブジェクトを登録する。上限 30 個超過・ID 重複・空 ID の場合は false。
+    /// 数字オブジェクトを登録する。上限 30 個超過・ID 重複・空 ID・
+    /// 参照インデックス範囲外（不正なワールド定義 JSON）の場合は false。
     /// </summary>
     public bool TryAdd(NumberObjectDefinition def)
     {
@@ -62,11 +63,27 @@ public class NumberObjectSyncLogic
             return false;
         if (_byId.ContainsKey(def.ObjectId))
             return false;
+        if (!IsValidSource(def))
+            return false;
 
         _objects.Add(def);
         _byId[def.ObjectId] = def;
         return true;
     }
+
+    // 参照インデックスを登録時に検証する。ワールド定義 JSON は UGC 由来のため、
+    // 不正な定義を弾いて ResolveValue が GimmickStateManager の範囲外例外を
+    // 起こさないようにする。
+    private static bool IsValidSource(NumberObjectDefinition def) =>
+        def.Source switch
+        {
+            SourceKind.WorldState =>
+                (uint)def.StateIndex < GimmickStateManager.MaxWorldStates,
+            SourceKind.PlayerState =>
+                (uint)def.StateIndex < GimmickStateManager.MaxPlayerStates && def.PlayerNumber >= 1,
+            SourceKind.Fixed => true,
+            _ => false,
+        };
 
     public bool Remove(string objectId)
     {

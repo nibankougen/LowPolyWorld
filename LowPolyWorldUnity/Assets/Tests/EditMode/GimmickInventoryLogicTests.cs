@@ -151,6 +151,24 @@ public class GimmickInventoryLogicTests
     }
 
     [Test]
+    public void ApplySnapshot_DuplicateObjectId_KeepsFirstHolderOnly()
+    {
+        // 同一オブジェクトを複数プレイヤーが保有する壊れたスナップショットは先勝ち
+        _inventory.ApplySnapshot(new Dictionary<string, string>
+        {
+            ["p1"] = "obj_key",
+            ["p2"] = "obj_key",
+        });
+
+        int holderCount = 0;
+        if (_inventory.HasObject("p1", "obj_key")) holderCount++;
+        if (_inventory.HasObject("p2", "obj_key")) holderCount++;
+
+        Assert.AreEqual(1, holderCount, "保有者は 1 人だけになる");
+        Assert.IsTrue(_inventory.IsObjectHeld("obj_key"));
+    }
+
+    [Test]
     public void ApplySnapshot_Null_ClearsState()
     {
         _inventory.TryPickup("p1", "obj_key");
