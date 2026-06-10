@@ -331,6 +331,45 @@ public class GimmickEngineTests
         Assert.AreEqual(0, _state.GetWorldState(0));
     }
 
+    [Test]
+    public void Fire_ResetAllAction_ResetsStatesAndTimers()
+    {
+        _state.SetWorldState(0, 100);
+        _state.SetPlayerState("p1", 0, 50);
+        _timers.Start(0);
+        _timers.Start(3);
+
+        var rule = new RuntimeGimmickRule("r1", "",
+            new[] { new RuntimeGimmickTrigger(GimmickEventType.RoomStart) },
+            System.Array.Empty<RuntimeGimmickCondition>(),
+            new[] { new RuntimeGimmickAction(GimmickActionType.ResetState,
+                resetTarget: ResetTarget.All) });
+
+        Build(new[] { rule }).Fire(GimmickEventContext.RoomStart());
+
+        Assert.AreEqual(0, _state.GetWorldState(0));
+        Assert.AreEqual(0, _state.GetPlayerState("p1", 0));
+        Assert.IsFalse(_timers.IsRunning(0), "「すべて」は全タイマーを停止");
+        Assert.IsFalse(_timers.IsRunning(3));
+        Assert.AreEqual(0.0, _timers.GetElapsed(0), 0.001, "タイマーは 0 に戻る");
+    }
+
+    [Test]
+    public void Fire_ResetWorldAction_DoesNotStopTimers()
+    {
+        _timers.Start(0);
+
+        var rule = new RuntimeGimmickRule("r1", "",
+            new[] { new RuntimeGimmickTrigger(GimmickEventType.RoomStart) },
+            System.Array.Empty<RuntimeGimmickCondition>(),
+            new[] { new RuntimeGimmickAction(GimmickActionType.ResetState,
+                resetTarget: ResetTarget.World) });
+
+        Build(new[] { rule }).Fire(GimmickEventContext.RoomStart());
+
+        Assert.IsTrue(_timers.IsRunning(0), "「ワールド」はタイマーをリセットしない（仕様 9.8）");
+    }
+
     // ── プレイヤー数条件 ──────────────────────────────────────────────────────
 
     [Test]

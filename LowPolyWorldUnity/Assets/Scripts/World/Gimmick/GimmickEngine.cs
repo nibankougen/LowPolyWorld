@@ -324,6 +324,9 @@ public class GimmickEngine
 
     // ── ステートリセット ──────────────────────────────────────────────────────
 
+    // エンジンが管理する状態（ステート・タイマー）のみここでリセットする。
+    // BGM・オブジェクト表示/種類/位置・インベントリ・移動速度・頭上マーカーは
+    // StateResetEffect を受けた上位レイヤーが仕様 9.8 の範囲表に従ってリセットする。
     private void ApplyResetState(ResetTarget target, GimmickEventContext ctx)
     {
         switch (target)
@@ -343,6 +346,9 @@ public class GimmickEngine
                 break;
             case ResetTarget.All:
                 _state.ResetAll();
+                // 「すべて」は全タイマーもリセット（0 で停止・仕様 9.8）
+                for (int i = 0; i < GimmickTimerLogic.MaxTimers; i++)
+                    _timers.Reset(i);
                 break;
         }
     }

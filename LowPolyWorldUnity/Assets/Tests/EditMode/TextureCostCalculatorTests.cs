@@ -66,36 +66,16 @@ public class TextureCostCalculatorTests
     }
 
     [Test]
-    public void Calculate_AlwaysHiddenTypeId_Excluded()
+    public void Calculate_PlacementBased_IgnoresGimmickVisibility()
     {
+        // 仕様 4.3: コストは配置ベース。ギミックで非表示でも配置されている限り対象
         var objs = new[]
         {
             new WorldObjectInstance { objectTypeId = "visible_obj" },
             new WorldObjectInstance { objectTypeId = "hidden_obj" },
         };
-        var hidden = new HashSet<string>(new[] { "hidden_obj" });
-        int cost = TextureCostCalculator.Calculate(objs, _ => 64, hidden);
-        Assert.AreEqual(16, cost, "常時非表示オブジェクトはコスト対象外");
-    }
-
-    [Test]
-    public void Calculate_AllHidden_ReturnsZero()
-    {
-        var objs = new[]
-        {
-            new WorldObjectInstance { objectTypeId = "obj_a" },
-            new WorldObjectInstance { objectTypeId = "obj_b" },
-        };
-        var hidden = new HashSet<string>(new[] { "obj_a", "obj_b" });
-        int cost = TextureCostCalculator.Calculate(objs, _ => 64, hidden);
-        Assert.AreEqual(0, cost);
-    }
-
-    [Test]
-    public void Calculate_NullAlwaysHidden_DoesNotThrow()
-    {
-        var objs = new[] { new WorldObjectInstance { objectTypeId = "obj" } };
-        Assert.DoesNotThrow(() => TextureCostCalculator.Calculate(objs, _ => 64, null));
+        int cost = TextureCostCalculator.Calculate(objs, _ => 64);
+        Assert.AreEqual(32, cost, "表示状態に関わらず配置全種別をカウント");
     }
 
     [Test]

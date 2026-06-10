@@ -446,6 +446,13 @@ public class TeleportPlayerEffect : GimmickEffect
     public TeleportPlayerEffect(string pid, string portalId) { PlayerId = pid; ExitPortalId = portalId; }
 }
 
+/// <summary>
+/// 状態リセット（world-creation.md 9.8 範囲表）。ステート・タイマーはエンジンがリセット済み。
+/// 上位レイヤーは Target に応じて以下を追加でリセットする:
+/// - プレイヤー系: インベントリ返却 + 移動速度 100% + 頭上マーカー消去
+/// - World: BGM オーバーライド解除 + オブジェクト表示 / 種類切り替え状態を初期化
+/// - All: 上記すべて + オブジェクト位置をワールド初期配置へ
+/// </summary>
 public class StateResetEffect : GimmickEffect
 {
     public ResetTarget Target { get; }

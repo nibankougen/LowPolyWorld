@@ -14,6 +14,10 @@ public class NumberObjectSyncLogic
 {
     public const int MaxNumberObjects = 30;
 
+    // 固定値の範囲（world-creation.md 3.9: 0〜999・負数なし）
+    public const int MinFixedValue = 0;
+    public const int MaxFixedValue = 999;
+
     public enum SourceKind
     {
         WorldState,
@@ -93,7 +97,8 @@ public class NumberObjectSyncLogic
                 (uint)def.StateIndex < GimmickStateManager.MaxPlayerStates && def.PlayerNumber >= 1,
             SourceKind.Timer =>
                 (uint)def.TimerIndex < GimmickTimerLogic.MaxTimers && def.CountdownFromSeconds >= 0,
-            SourceKind.Fixed => true,
+            SourceKind.Fixed =>
+                def.FixedValue >= MinFixedValue && def.FixedValue <= MaxFixedValue,
             _ => false,
         };
 

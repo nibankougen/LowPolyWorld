@@ -201,6 +201,20 @@ public class NumberObjectSyncLogicTests
     }
 
     [Test]
+    public void TryAdd_FixedValueOutOfRange_Fails()
+    {
+        Assert.IsFalse(_sync.TryAdd(new NumberObjectSyncLogic.NumberObjectDefinition(
+            "num_a", NumberObjectSyncLogic.SourceKind.Fixed, fixedValue: -1)),
+            "固定値は 0 以上（負数なし）");
+        Assert.IsFalse(_sync.TryAdd(new NumberObjectSyncLogic.NumberObjectDefinition(
+            "num_b", NumberObjectSyncLogic.SourceKind.Fixed,
+            fixedValue: NumberObjectSyncLogic.MaxFixedValue + 1)), "固定値は 999 以下");
+        Assert.IsTrue(_sync.TryAdd(new NumberObjectSyncLogic.NumberObjectDefinition(
+            "num_c", NumberObjectSyncLogic.SourceKind.Fixed,
+            fixedValue: NumberObjectSyncLogic.MaxFixedValue)), "境界値 999 は許可");
+    }
+
+    [Test]
     public void GetTimerObjectIds_ReturnsOnlyTimerSourceObjects()
     {
         _sync.TryAdd(new NumberObjectSyncLogic.NumberObjectDefinition(

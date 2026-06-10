@@ -6,7 +6,8 @@ using System.Collections.Generic;
 ///
 /// コスト計算式: (テクスチャサイズ / 16)²
 /// カウント単位: ワールドで使用する一意の objectTypeId または savedVariantId（別エントリ）
-/// ギミックで常時非表示に設定されているオブジェクト種別はコスト対象外
+/// コストは配置ベースで計算し、ギミックによる表示状態は影響しない（セクション 4.3）。
+/// ギミック「種類切り替え」の切り替え先は未配置でも合算する。
 /// </summary>
 public static class TextureCostCalculator
 {
@@ -28,26 +29,19 @@ public static class TextureCostCalculator
     /// objectTypeId または savedVariantId → テクスチャサイズ（px）のマッパー。
     /// 存在しないキーには 64（デフォルト）を返すことを推奨。
     /// </param>
-    /// <param name="alwaysHiddenTypeIds">
-    /// ギミックで常時非表示にされた objectTypeId の集合。null = 除外なし。
-    /// </param>
     /// <param name="switchTargetTypeIds">
-    /// ギミック「種類切り替え（A → B）」の切り替え先 objectTypeId の一覧。
+    /// ギミック「種類切り替え（A → B）」の切り替え先 ID（種別 / 保存バリアント）の一覧。
     /// 配置されていなくても両方のコストを合算する（セクション 4.3）。null = なし。
     /// </param>
     public static int Calculate(
         IEnumerable<WorldObjectInstance> objects,
         Func<string, int> textureSizeGetter,
-        HashSet<string> alwaysHiddenTypeIds = null,
         IEnumerable<string> switchTargetTypeIds = null)
     {
         var uniqueKeys = new HashSet<string>();
 
         foreach (var obj in objects)
         {
-            if (alwaysHiddenTypeIds != null && alwaysHiddenTypeIds.Contains(obj.objectTypeId))
-                continue;
-
             // savedVariantId が設定されている場合はそちらを独立エントリとしてカウント
             var key = string.IsNullOrEmpty(obj.savedVariantId) ? obj.objectTypeId : obj.savedVariantId;
             if (!string.IsNullOrEmpty(key))
@@ -58,11 +52,8 @@ public static class TextureCostCalculator
         {
             foreach (var typeId in switchTargetTypeIds)
             {
-                if (string.IsNullOrEmpty(typeId))
-                    continue;
-                if (alwaysHiddenTypeIds != null && alwaysHiddenTypeIds.Contains(typeId))
-                    continue;
-                uniqueKeys.Add(typeId);
+                if (!string.IsNullOrEmpty(typeId))
+                    uniqueKeys.Add(typeId);
             }
         }
 
