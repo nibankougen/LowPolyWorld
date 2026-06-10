@@ -1928,6 +1928,13 @@ CREATE TABLE stories (
     expires_at   TIMESTAMPTZ NOT NULL       -- created_at + 48h
 );
 
+CREATE TABLE story_likes (
+    story_id   BIGINT NOT NULL REFERENCES stories(id) ON DELETE CASCADE,
+    user_id    BIGINT NOT NULL REFERENCES active_users(user_id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (story_id, user_id)
+);
+
 CREATE TABLE story_report_snapshots (
     id               BIGINT PRIMARY KEY,
     story_id         BIGINT NOT NULL,       -- FK は張らない（元レコード削除後も保持）
@@ -1949,8 +1956,13 @@ CREATE TABLE story_report_snapshots (
 | `GET /api/v1/stories/feed` | フォロー中ユーザーの有効ストーリー一覧（公開範囲・非表示/ブロック考慮・ユーザー単位にグルーピング・最新投稿時刻降順） |
 | `GET /api/v1/users/{id}/stories` | 対象ユーザーの有効ストーリー（公開範囲を考慮。friends は申請者がフレンドのときのみ） |
 | `DELETE /api/v1/stories/{id}` | 本人のみ。レコード + R2 オブジェクトを即時削除 |
+| `POST /api/v1/stories/{id}/like` | いいね（冪等・既にいいね済みなら no-op）。閲覧可能なユーザーのみ（公開範囲・非表示/ブロックを検証）。自分のストーリーへのいいねは 403 |
+| `DELETE /api/v1/stories/{id}/like` | いいね解除（冪等） |
 | 違反報告 API | 既存通報 API に `target_type=story` を追加。**通報受理時に画像をモデレーションバケットへコピー**し `story_report_snapshots` を作成 |
 | `GET /admin/story-reports/{id}/image` | 管理画面用スナップショット画像取得（admin 権限） |
+
+**いいねのレスポンス仕様**: フィード・一覧の各ストーリーに `liked`（リクエストユーザーのいいね状態）を含める。
+`likeCount` は**投稿者本人のリクエストにのみ**含める（いいね数は投稿者のみ確認できる — screens-and-modes.md 23.4）。
 
 ### 画像配信（content-addressed CDN を使わない）
 
