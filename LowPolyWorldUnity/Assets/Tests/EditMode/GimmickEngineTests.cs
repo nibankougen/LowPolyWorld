@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using System.Collections.Generic;
+using UnityEngine;
 
 public class GimmickEngineTests
 {
@@ -15,8 +16,44 @@ public class GimmickEngineTests
         _players = new List<string> { "p1", "p2" };
     }
 
-    private GimmickEngine Build(IReadOnlyList<RuntimeGimmickRule> rules) =>
-        new GimmickEngine(rules, _state, _timers, _players, (min, max) => min);
+    private GimmickEngine Build(
+        IReadOnlyList<RuntimeGimmickRule> rules,
+        IPhysicsQuery physics = null,
+        IInventoryQuery inventory = null) =>
+        new GimmickEngine(rules, _state, _timers, _players, (min, max) => min, physics, inventory);
+
+    private class FakePhysicsQuery : IPhysicsQuery
+    {
+        public string Opponent;
+        public bool Hit;
+
+        public bool ArePlayersOverlapping(string playerId, out string opponentId)
+        {
+            opponentId = Opponent;
+            return Hit;
+        }
+
+        public bool FindNearestPlayer(string playerId, float maxDistance, out string opponentId)
+        {
+            opponentId = Opponent;
+            return Hit;
+        }
+
+        public bool RaycastToPlayer(string playerId, float maxDistance, out string opponentId)
+        {
+            opponentId = Opponent;
+            return Hit;
+        }
+    }
+
+    private class FakeInventoryQuery : IInventoryQuery
+    {
+        public string HoldingPlayerId;
+        public string HoldingObjectId;
+
+        public bool HasObject(string playerId, string objectTypeId) =>
+            playerId == HoldingPlayerId && objectTypeId == HoldingObjectId;
+    }
 
     // ── OR 発火 ────────────────────────────────────────────────────────────────
 
@@ -313,5 +350,177 @@ public class GimmickEngineTests
         // _players = ["p1","p2"] → count=2 → 条件成立
         Build(new[] { rule }).Fire(GimmickEventContext.RoomStart());
         Assert.AreEqual(1, _state.GetWorldState(0));
+    }
+
+    // ── 相手プレイヤー ────────────────────────────────────────────────────────
+
+    [Test]
+    public void Fire_PlayerTouchPlayer_OpponentTargetAffectsOpponent()
+    {
+        var rule = new RuntimeGimmickRule("r1", "",
+            new[] { new RuntimeGimmickTrigger(GimmickEventType.PlayerTouchPlayer) },
+            System.Array.Empty<RuntimeGimmickCondition>(),
+            new[] { new RuntimeGimmickAction(GimmickActionType.SetPlayerState,
+                stateIndex: 0, stateOp: StateOp.Set, valueRef: ValueRef.Fixed(7),
+                playerTarget: PlayerTarget.OpponentPlayer) });
+
+        Build(new[] { rule }).Fire(GimmickEventContext.PlayerTouchPlayer("p1", "p2"));
+
+        Assert.AreEqual(7, _state.GetPlayerState("p2", 0), "相手プレイヤーに適用される");
+        Assert.AreEqual(0, _state.GetPlayerState("p1", 0), "入力プレイヤーは変化しない");
+    }
+
+    [Test]
+    public void Fire_DistanceCondition_EstablishesOpponentForActions()
+    {
+        var physics = new FakePhysicsQuery { Hit = true, Opponent = "p2" };
+
+        var cond = new RuntimeGimmickCondition(
+            GimmickConditionType.PlayerDistance, physicsDistance: 2f);
+
+        var rule = new RuntimeGimmickRule("r1", "",
+            new[] { new RuntimeGimmickTrigger(GimmickEventType.ActionButton) },
+            new[] { cond },
+            new[] { new RuntimeGimmickAction(GimmickActionType.SetPlayerState,
+                stateIndex: 0, stateOp: StateOp.Set, valueRef: ValueRef.Fixed(9),
+                playerTarget: PlayerTarget.OpponentPlayer) });
+
+        Build(new[] { rule }, physics: physics).Fire(GimmickEventContext.ActionButton("p1"));
+
+        Assert.AreEqual(9, _state.GetPlayerState("p2", 0),
+            "距離条件で確定した相手プレイヤーがアクション対象になる");
+    }
+
+    [Test]
+    public void Fire_OverlappingCondition_EstablishesOpponentForActions()
+    {
+        var physics = new FakePhysicsQuery { Hit = true, Opponent = "p2" };
+
+        var cond = new RuntimeGimmickCondition(GimmickConditionType.PlayersOverlapping);
+
+        var rule = new RuntimeGimmickRule("r1", "",
+            new[] { new RuntimeGimmickTrigger(GimmickEventType.ActionButton) },
+            new[] { cond },
+            new[] { new RuntimeGimmickAction(GimmickActionType.SetPlayerState,
+                stateIndex: 1, stateOp: StateOp.Set, valueRef: ValueRef.Fixed(3),
+                playerTarget: PlayerTarget.OpponentPlayer) });
+
+        Build(new[] { rule }, physics: physics).Fire(GimmickEventContext.ActionButton("p1"));
+
+        Assert.AreEqual(3, _state.GetPlayerState("p2", 1),
+            "重なり条件で確定した相手プレイヤーがアクション対象になる");
+    }
+
+    // ── 全員対象アクション ────────────────────────────────────────────────────
+
+    [Test]
+    public void Fire_SetPlayerStateAllPlayers_AppliesToAllPlayers()
+    {
+        var rule = new RuntimeGimmickRule("r1", "",
+            new[] { new RuntimeGimmickTrigger(GimmickEventType.RoomStart) },
+            System.Array.Empty<RuntimeGimmickCondition>(),
+            new[] { new RuntimeGimmickAction(GimmickActionType.SetPlayerState,
+                stateIndex: 0, stateOp: StateOp.Add, valueRef: ValueRef.Fixed(5),
+                playerTarget: PlayerTarget.AllPlayers) });
+
+        var result = Build(new[] { rule }).Fire(GimmickEventContext.RoomStart());
+
+        Assert.AreEqual(5, _state.GetPlayerState("p1", 0));
+        Assert.AreEqual(5, _state.GetPlayerState("p2", 0));
+        Assert.AreEqual(2, result.Effects.Count, "全プレイヤー分のエフェクトが返る");
+    }
+
+    [Test]
+    public void Fire_ShowMessageAllPlayers_EmitsEffectPerPlayer()
+    {
+        var rule = new RuntimeGimmickRule("r1", "",
+            new[] { new RuntimeGimmickTrigger(GimmickEventType.RoomStart) },
+            System.Array.Empty<RuntimeGimmickCondition>(),
+            new[] { new RuntimeGimmickAction(GimmickActionType.ShowMessage,
+                stringParam: "こんにちは", playerTarget: PlayerTarget.AllPlayers) });
+
+        var result = Build(new[] { rule }).Fire(GimmickEventContext.RoomStart());
+
+        Assert.AreEqual(2, result.Effects.Count);
+        var ids = new List<string>();
+        foreach (var effect in result.Effects)
+        {
+            var msg = effect as ShowMessageEffect;
+            Assert.IsNotNull(msg);
+            Assert.AreEqual("こんにちは", msg.Message);
+            ids.Add(msg.PlayerId);
+        }
+        CollectionAssert.AreEquivalent(new[] { "p1", "p2" }, ids);
+    }
+
+    // ── インベントリ条件 ──────────────────────────────────────────────────────
+
+    [Test]
+    public void Fire_HasInventoryCondition_ChecksInventoryQuery()
+    {
+        var inventory = new FakeInventoryQuery { HoldingPlayerId = "p1", HoldingObjectId = "obj_key" };
+
+        var hasKey = new RuntimeGimmickCondition(
+            GimmickConditionType.HasInventoryObject, objectId: "obj_key");
+        var hasGem = new RuntimeGimmickCondition(
+            GimmickConditionType.HasInventoryObject, objectId: "obj_gem");
+
+        var rules = new[]
+        {
+            new RuntimeGimmickRule("r1", "",
+                new[] { new RuntimeGimmickTrigger(GimmickEventType.ActionButton) },
+                new[] { hasKey },
+                new[] { new RuntimeGimmickAction(GimmickActionType.SetWorldState,
+                    stateIndex: 0, stateOp: StateOp.Set, valueRef: ValueRef.Fixed(1)) }),
+            new RuntimeGimmickRule("r2", "",
+                new[] { new RuntimeGimmickTrigger(GimmickEventType.ActionButton) },
+                new[] { hasGem },
+                new[] { new RuntimeGimmickAction(GimmickActionType.SetWorldState,
+                    stateIndex: 1, stateOp: StateOp.Set, valueRef: ValueRef.Fixed(1)) }),
+        };
+
+        Build(rules, inventory: inventory).Fire(GimmickEventContext.ActionButton("p1"));
+
+        Assert.AreEqual(1, _state.GetWorldState(0), "所持しているオブジェクト: 条件成立");
+        Assert.AreEqual(0, _state.GetWorldState(1), "未所持のオブジェクト: 条件不成立");
+    }
+
+    // ── オブジェクト移動・持つアクション ──────────────────────────────────────
+
+    [Test]
+    public void Fire_MoveObjectAction_ReturnsMoveEffect()
+    {
+        var rule = new RuntimeGimmickRule("r1", "",
+            new[] { new RuntimeGimmickTrigger(GimmickEventType.RoomStart) },
+            System.Array.Empty<RuntimeGimmickCondition>(),
+            new[] { new RuntimeGimmickAction(GimmickActionType.MoveObject,
+                targetId: "obj_lift", positionParam: new Vector3(1f, 0f, 2f), floatParam: 2.5f) });
+
+        var result = Build(new[] { rule }).Fire(GimmickEventContext.RoomStart());
+
+        Assert.AreEqual(1, result.Effects.Count);
+        var effect = result.Effects[0] as ObjectMoveEffect;
+        Assert.IsNotNull(effect);
+        Assert.AreEqual("obj_lift", effect.ObjectId);
+        Assert.AreEqual(new Vector3(1f, 0f, 2f), effect.ToPosition);
+        Assert.AreEqual(2.5f, effect.Speed);
+    }
+
+    [Test]
+    public void Fire_PickupObjectAction_ReturnsPickupEffect()
+    {
+        var rule = new RuntimeGimmickRule("r1", "",
+            new[] { new RuntimeGimmickTrigger(GimmickEventType.PlayerTouchObject, "obj_key") },
+            System.Array.Empty<RuntimeGimmickCondition>(),
+            new[] { new RuntimeGimmickAction(GimmickActionType.PickupObject,
+                targetId: "obj_key", playerTarget: PlayerTarget.InputPlayer) });
+
+        var result = Build(new[] { rule }).Fire(GimmickEventContext.TouchObject("p1", "obj_key"));
+
+        Assert.AreEqual(1, result.Effects.Count);
+        var effect = result.Effects[0] as PickupObjectEffect;
+        Assert.IsNotNull(effect);
+        Assert.AreEqual("p1", effect.PlayerId);
+        Assert.AreEqual("obj_key", effect.ObjectId);
     }
 }

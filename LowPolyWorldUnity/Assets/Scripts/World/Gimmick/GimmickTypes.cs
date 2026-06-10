@@ -153,6 +153,14 @@ public class GimmickEventContext
 
     public bool HasOpponent => !string.IsNullOrEmpty(OpponentPlayerId);
 
+    /// <summary>
+    /// 相手プレイヤーを確定した新しいコンテキストを返す（イベント種別など他フィールドは維持）。
+    /// 距離・視線・重なり条件が相手プレイヤーを動的に確定するときに使用する。
+    /// </summary>
+    public GimmickEventContext WithOpponent(string opponentPlayerId) =>
+        new GimmickEventContext(
+            EventType, InputPlayerId, opponentPlayerId, ObjectId, TimerIndex, TimerTargetSeconds);
+
     private GimmickEventContext(
         GimmickEventType type,
         string inputPlayerId = null,
@@ -267,6 +275,7 @@ public class RuntimeGimmickAction
     public bool BoolParam { get; }     // 表示/非表示
     public int TimerIndex { get; }
     public float FloatParam { get; }   // 移動速度等
+    public Vector3 PositionParam { get; } // オブジェクト移動の目標座標
     public ResetTarget ResetTarget { get; }
 
     public RuntimeGimmickAction(
@@ -280,6 +289,7 @@ public class RuntimeGimmickAction
         bool boolParam = true,
         int timerIndex = -1,
         float floatParam = 0f,
+        Vector3 positionParam = default,
         ResetTarget resetTarget = ResetTarget.All)
     {
         Type = type;
@@ -292,6 +302,7 @@ public class RuntimeGimmickAction
         BoolParam = boolParam;
         TimerIndex = timerIndex;
         FloatParam = floatParam;
+        PositionParam = positionParam;
         ResetTarget = resetTarget;
     }
 }
@@ -369,6 +380,13 @@ public class ShowMessageEffect : GimmickEffect
     public string PlayerId { get; }
     public string Message { get; }
     public ShowMessageEffect(string playerId, string msg) { PlayerId = playerId; Message = msg; }
+}
+
+public class PickupObjectEffect : GimmickEffect
+{
+    public string PlayerId { get; }
+    public string ObjectId { get; }
+    public PickupObjectEffect(string playerId, string objectId) { PlayerId = playerId; ObjectId = objectId; }
 }
 
 public class PlaySoundEffect : GimmickEffect

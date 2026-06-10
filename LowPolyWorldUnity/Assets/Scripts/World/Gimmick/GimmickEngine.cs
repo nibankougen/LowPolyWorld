@@ -12,7 +12,8 @@ using System.Collections.Generic;
 /// 5. 連鎖アクション数が MaxChainCount を超えた場合: 無限ループ判定
 ///
 /// 物理判定が必要な条件（PlayerDistance / PlayersOverlapping / PlayerLineOfSight）は
-/// IPhysicsQuery インターフェース経由で外部から提供する。
+/// IPhysicsQuery、インベントリ参照条件（HasInventoryObject）は IInventoryQuery の
+/// インターフェース経由で外部から提供する。
 /// </summary>
 public class GimmickEngine
 {
@@ -23,6 +24,7 @@ public class GimmickEngine
     private readonly GimmickValueResolver _resolver;
     private readonly GimmickTimerLogic _timers;
     private readonly IPhysicsQuery _physics;
+    private readonly IInventoryQuery _inventory;
     private readonly IReadOnlyList<string> _allPlayerIds;
 
     public GimmickEngine(
@@ -31,7 +33,8 @@ public class GimmickEngine
         GimmickTimerLogic timers,
         IReadOnlyList<string> allPlayerIds = null,
         Func<int, int, int> randomProvider = null,
-        IPhysicsQuery physics = null)
+        IPhysicsQuery physics = null,
+        IInventoryQuery inventory = null)
     {
         _rules = rules ?? Array.Empty<RuntimeGimmickRule>();
         _state = state ?? throw new ArgumentNullException(nameof(state));
@@ -39,6 +42,7 @@ public class GimmickEngine
         _allPlayerIds = allPlayerIds ?? Array.Empty<string>();
         _resolver = new GimmickValueResolver(state, randomProvider);
         _physics = physics ?? NullPhysicsQuery.Instance;
+        _inventory = inventory ?? NullInventoryQuery.Instance;
     }
 
     // ── 公開 API ─────────────────────────────────────────────────────────────
@@ -59,7 +63,10 @@ public class GimmickEngine
             if (!MatchesAnyTrigger(rule, ctx))
                 continue;
 
-            if (!EvaluateConditions(rule, ctx))
+            // 距離・視線・重なり条件は相手プレイヤーを動的に確定する。
+            // 確定した相手は同一ルール内の後続条件・アクションにのみ有効。
+            var ruleCtx = ctx;
+            if (!EvaluateConditions(rule, ref ruleCtx))
                 continue;
 
             foreach (var action in rule.Actions)
@@ -67,9 +74,7 @@ public class GimmickEngine
                 if (++chainCount > MaxChainCount)
                     return GimmickExecutionResult.InfiniteLoop(rule.RuleId);
 
-                var effect = ExecuteAction(action, ctx);
-                if (effect != null)
-                    effects.Add(effect);
+                ExecuteAction(action, ruleCtx, effects);
             }
         }
 
@@ -114,17 +119,17 @@ public class GimmickEngine
 
     // ── 条件評価（AND 結合） ──────────────────────────────────────────────────
 
-    private bool EvaluateConditions(RuntimeGimmickRule rule, GimmickEventContext ctx)
+    private bool EvaluateConditions(RuntimeGimmickRule rule, ref GimmickEventContext ctx)
     {
         foreach (var cond in rule.Conditions)
         {
-            if (!EvaluateCondition(cond, ctx))
+            if (!EvaluateCondition(cond, ref ctx))
                 return false;
         }
         return true;
     }
 
-    private bool EvaluateCondition(RuntimeGimmickCondition cond, GimmickEventContext ctx)
+    private bool EvaluateCondition(RuntimeGimmickCondition cond, ref GimmickEventContext ctx)
     {
         switch (cond.Type)
         {
@@ -158,16 +163,27 @@ public class GimmickEngine
                 return GimmickValueResolver.Evaluate(number, cond.Op, rhs);
             }
 
-            // 物理判定は IPhysicsQuery に委譲
+            case GimmickConditionType.HasInventoryObject:
+            {
+                string playerId = ResolvePlayerId(cond.PlayerTarget, ctx);
+                return _inventory.HasObject(playerId, cond.ObjectId);
+            }
+
+            // 物理判定は IPhysicsQuery に委譲。判定相手が相手プレイヤーになる（仕様 9.6）
             case GimmickConditionType.PlayersOverlapping:
-                return _physics.ArePlayersOverlapping(ctx.InputPlayerId, out _);
+            {
+                bool hit = _physics.ArePlayersOverlapping(ctx.InputPlayerId, out string opponent);
+                if (hit && !ctx.HasOpponent)
+                    ctx = ctx.WithOpponent(opponent);
+                return hit;
+            }
 
             case GimmickConditionType.PlayerDistance:
             {
                 bool hit = _physics.FindNearestPlayer(
                     ctx.InputPlayerId, cond.PhysicsDistance, out string opponent);
-                if (hit && string.IsNullOrEmpty(ctx.OpponentPlayerId))
-                    ctx = GimmickEventContext.PlayerTouchPlayer(ctx.InputPlayerId, opponent);
+                if (hit && !ctx.HasOpponent)
+                    ctx = ctx.WithOpponent(opponent);
                 return hit;
             }
 
@@ -175,8 +191,8 @@ public class GimmickEngine
             {
                 bool hit = _physics.RaycastToPlayer(
                     ctx.InputPlayerId, cond.PhysicsDistance, out string opponent);
-                if (hit && string.IsNullOrEmpty(ctx.OpponentPlayerId))
-                    ctx = GimmickEventContext.PlayerTouchPlayer(ctx.InputPlayerId, opponent);
+                if (hit && !ctx.HasOpponent)
+                    ctx = ctx.WithOpponent(opponent);
                 return hit;
             }
 
@@ -187,7 +203,8 @@ public class GimmickEngine
 
     // ── アクション実行 ────────────────────────────────────────────────────────
 
-    private GimmickEffect ExecuteAction(RuntimeGimmickAction action, GimmickEventContext ctx)
+    private void ExecuteAction(
+        RuntimeGimmickAction action, GimmickEventContext ctx, List<GimmickEffect> effects)
     {
         switch (action.Type)
         {
@@ -195,74 +212,84 @@ public class GimmickEngine
             {
                 int delta = _resolver.Resolve(action.ValueRef, ctx, _allPlayerIds);
                 _state.ApplyWorldState(action.StateIndex, action.StateOp, delta);
-                return new WorldStateChangedEffect(
-                    action.StateIndex, _state.GetWorldState(action.StateIndex));
+                effects.Add(new WorldStateChangedEffect(
+                    action.StateIndex, _state.GetWorldState(action.StateIndex)));
+                break;
             }
 
             case GimmickActionType.SetPlayerState:
             {
                 int delta = _resolver.Resolve(action.ValueRef, ctx, _allPlayerIds);
-                var targets = ResolvePlayerIds(action.PlayerTarget, ctx);
-                foreach (var pid in targets)
+                foreach (var pid in ResolvePlayerIds(action.PlayerTarget, ctx))
                 {
                     _state.ApplyPlayerState(pid, action.StateIndex, action.StateOp, delta);
-                    return new PlayerStateChangedEffect(
-                        pid, action.StateIndex, _state.GetPlayerState(pid, action.StateIndex));
+                    effects.Add(new PlayerStateChangedEffect(
+                        pid, action.StateIndex, _state.GetPlayerState(pid, action.StateIndex)));
                 }
-                return null;
+                break;
             }
 
             case GimmickActionType.TimerStart:
                 _timers.Start(action.TimerIndex);
-                return new TimerOperationEffect(action.TimerIndex, TimerOperationEffect.Op.Start);
+                effects.Add(new TimerOperationEffect(action.TimerIndex, TimerOperationEffect.Op.Start));
+                break;
 
             case GimmickActionType.TimerStop:
                 _timers.Stop(action.TimerIndex);
-                return new TimerOperationEffect(action.TimerIndex, TimerOperationEffect.Op.Stop);
+                effects.Add(new TimerOperationEffect(action.TimerIndex, TimerOperationEffect.Op.Stop));
+                break;
 
             case GimmickActionType.TimerReset:
                 _timers.Reset(action.TimerIndex);
-                return new TimerOperationEffect(action.TimerIndex, TimerOperationEffect.Op.Reset);
+                effects.Add(new TimerOperationEffect(action.TimerIndex, TimerOperationEffect.Op.Reset));
+                break;
 
             case GimmickActionType.ShowHideObject:
-                return new ObjectVisibilityEffect(action.TargetId, action.BoolParam);
+                effects.Add(new ObjectVisibilityEffect(action.TargetId, action.BoolParam));
+                break;
 
             case GimmickActionType.ChangeObjectType:
-                return new ObjectTypeChangedEffect(action.TargetId, action.StringParam);
+                effects.Add(new ObjectTypeChangedEffect(action.TargetId, action.StringParam));
+                break;
 
             case GimmickActionType.ShowMessage:
-            {
-                var targets = ResolvePlayerIds(action.PlayerTarget, ctx);
-                foreach (var pid in targets)
-                    return new ShowMessageEffect(pid, action.StringParam);
-                return null;
-            }
+                foreach (var pid in ResolvePlayerIds(action.PlayerTarget, ctx))
+                    effects.Add(new ShowMessageEffect(pid, action.StringParam));
+                break;
+
+            case GimmickActionType.PickupObject:
+                foreach (var pid in ResolvePlayerIds(action.PlayerTarget, ctx))
+                    effects.Add(new PickupObjectEffect(pid, action.TargetId));
+                break;
 
             case GimmickActionType.PlaySound:
-                return new PlaySoundEffect(action.TargetId, action.FloatParam);
+                effects.Add(new PlaySoundEffect(action.TargetId, action.FloatParam));
+                break;
 
             case GimmickActionType.SwitchBgm:
-                return new SwitchBgmEffect(action.TargetId);
+                effects.Add(new SwitchBgmEffect(action.TargetId));
+                break;
+
+            case GimmickActionType.MoveObject:
+                effects.Add(new ObjectMoveEffect(
+                    action.TargetId, action.PositionParam, action.FloatParam));
+                break;
 
             case GimmickActionType.TeleportPlayer:
-            {
-                string pid = ResolvePlayerId(action.PlayerTarget, ctx);
-                return new TeleportPlayerEffect(pid, action.TargetId);
-            }
+                foreach (var pid in ResolvePlayerIds(action.PlayerTarget, ctx))
+                    effects.Add(new TeleportPlayerEffect(pid, action.TargetId));
+                break;
 
             case GimmickActionType.ResetState:
                 ApplyResetState(action.ResetTarget, ctx);
-                return new StateResetEffect(action.ResetTarget,
-                    ResolvePlayerId(action.PlayerTarget, ctx));
+                effects.Add(new StateResetEffect(
+                    action.ResetTarget, ResetTargetPlayerId(action.ResetTarget, ctx)));
+                break;
 
             case GimmickActionType.PlayEffect:
-            {
-                string pid = ResolvePlayerId(action.PlayerTarget, ctx);
-                return new PlayEffectEffect(pid, action.TargetId);
-            }
-
-            default:
-                return null;
+                foreach (var pid in ResolvePlayerIds(action.PlayerTarget, ctx))
+                    effects.Add(new PlayEffectEffect(pid, action.TargetId));
+                break;
         }
     }
 
@@ -308,6 +335,14 @@ public class GimmickEngine
             _ => ctx.InputPlayerId,
         };
 
+    private static string ResetTargetPlayerId(ResetTarget target, GimmickEventContext ctx) =>
+        target switch
+        {
+            ResetTarget.InputPlayer => ctx.InputPlayerId,
+            ResetTarget.OpponentPlayer => ctx.HasOpponent ? ctx.OpponentPlayerId : ctx.InputPlayerId,
+            _ => "",
+        };
+
     private IEnumerable<string> ResolvePlayerIds(PlayerTarget target, GimmickEventContext ctx)
     {
         if (target == PlayerTarget.AllPlayers)
@@ -350,4 +385,22 @@ public sealed class NullPhysicsQuery : IPhysicsQuery
         opponentId = null;
         return false;
     }
+}
+
+// ── インベントリクエリインターフェース（インベントリシステム実装時に接続）────
+
+/// <summary>
+/// 「特定のオブジェクトを持っているか」条件（world-creation.md セクション 9.3）の
+/// 抽象インターフェース。EditMode テストでは NullInventoryQuery（常に false）を使用する。
+/// </summary>
+public interface IInventoryQuery
+{
+    bool HasObject(string playerId, string objectTypeId);
+}
+
+public sealed class NullInventoryQuery : IInventoryQuery
+{
+    public static readonly NullInventoryQuery Instance = new();
+
+    public bool HasObject(string playerId, string objectTypeId) => false;
 }

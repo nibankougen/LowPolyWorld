@@ -118,13 +118,8 @@ public class GimmickStateManager
     /// <summary>プレイヤーが退出したとき: そのプレイヤーのステートエントリを削除する。</summary>
     public void RemovePlayer(string playerId) => _playerStates.Remove(playerId);
 
-    // ── プレイヤー管理 ────────────────────────────────────────────────────────
-
-    /// <summary>プレイヤー一覧（入室順番号 = プレイヤー番号 の参照に使用）。</summary>
-    public IReadOnlyList<string> PlayerIds { get; } = new List<string>() as IReadOnlyList<string>;
-
-    // 注: PlayerIds は上位レイヤー（NetworkManager 統合時）で管理し、
-    //     PlayerNumber 条件の評価時に渡す。本クラスは番号を管理しない。
+    // 注: プレイヤー一覧（入室順番号 = プレイヤー番号）は上位レイヤー
+    //     （NetworkManager 統合時）で管理し、GimmickEngine に渡す。本クラスは番号を管理しない。
 
     // ── Private ───────────────────────────────────────────────────────────────
 

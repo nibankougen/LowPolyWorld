@@ -56,8 +56,12 @@ public class GimmickValueResolver
         return total;
     }
 
+    // 範囲乱数のデフォルト実装。本番ではルームオーナーが生成した値を
+    // randomProvider 経由で全プレイヤーに共有する（world-creation.md セクション 9.7）。
+    private static readonly Random SharedRandom = new Random();
+
     private static int DefaultRandom(int min, int max) =>
-        min >= max ? min : UnityEngine.Random.Range(min, max + 1);
+        min >= max ? min : SharedRandom.Next(min, max + 1);
 
     // ── 比較演算評価 ──────────────────────────────────────────────────────────
 
