@@ -104,6 +104,7 @@ public class GimmickEngine
             GimmickEventType.PlayerTouchObject
                 or GimmickEventType.ObjectTap
                 or GimmickEventType.AreaEnter
+                or GimmickEventType.AreaExit
                 or GimmickEventType.InRoomPortalUsed =>
                 string.IsNullOrEmpty(trigger.TargetId) || trigger.TargetId == ctx.ObjectId,
 
@@ -161,6 +162,13 @@ public class GimmickEngine
                 int number = FindPlayerIndex(_allPlayerIds, playerId) + 1; // 1-origin
                 int rhs = _resolver.Resolve(cond.ThresholdRef, ctx, _allPlayerIds);
                 return GimmickValueResolver.Evaluate(number, cond.Op, rhs);
+            }
+
+            case GimmickConditionType.TimerCompare:
+            {
+                int lhs = (int)Math.Floor(_timers.GetElapsed(cond.TimerIndex));
+                int rhs = _resolver.Resolve(cond.ThresholdRef, ctx, _allPlayerIds);
+                return GimmickValueResolver.Evaluate(lhs, cond.Op, rhs, cond.ModBy, cond.ModResult);
             }
 
             case GimmickConditionType.HasInventoryObject:
@@ -297,6 +305,19 @@ public class GimmickEngine
             case GimmickActionType.PlayEffect:
                 foreach (var pid in ResolvePlayerIds(action.PlayerTarget, ctx))
                     effects.Add(new PlayEffectEffect(pid, action.TargetId));
+                break;
+
+            case GimmickActionType.SetMoveSpeed:
+            {
+                float percent = Math.Clamp(action.FloatParam, 0f, 200f);
+                foreach (var pid in ResolvePlayerIds(action.PlayerTarget, ctx))
+                    effects.Add(new PlayerMoveSpeedEffect(pid, percent));
+                break;
+            }
+
+            case GimmickActionType.SetPlayerMarker:
+                foreach (var pid in ResolvePlayerIds(action.PlayerTarget, ctx))
+                    effects.Add(new PlayerMarkerEffect(pid, action.TargetId, action.BoolParam));
                 break;
         }
     }

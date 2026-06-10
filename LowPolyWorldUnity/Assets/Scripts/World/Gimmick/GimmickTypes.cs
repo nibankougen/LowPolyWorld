@@ -14,6 +14,7 @@ public enum GimmickEventType
     PlayerTouchObject,
     ObjectTap,
     AreaEnter,
+    AreaExit,
     TimerReached,
     ActionButton,
     PlayerTouchPlayer,
@@ -62,6 +63,7 @@ public enum GimmickConditionType
     PlayerStateCompare,
     PlayerCount,
     PlayerNumber,
+    TimerCompare,        // 指定タイマーの経過秒（切り捨て整数）の比較
     HasInventoryObject,
     PlayersOverlapping,  // 物理判定 — IPhysicsQuery 経由
     PlayerDistance,      // 物理判定 — IPhysicsQuery 経由
@@ -88,6 +90,8 @@ public enum GimmickActionType
     TeleportPlayer,
     ResetState,
     PlayEffect,
+    SetMoveSpeed,    // 移動速度変更（0〜200%・0% = 移動不可）
+    SetPlayerMarker, // 頭上マーカー表示 / 非表示
 }
 
 // ── ステート変更演算 ──────────────────────────────────────────────────────────
@@ -106,6 +110,7 @@ public readonly struct ValueRef
     public PlayerTarget PlayerTarget { get; } // Kind=PlayerState
     public int RandomMin { get; }    // Kind=RandomRange
     public int RandomMax { get; }    // Kind=RandomRange
+    public bool RandomMaxIsPlayerCount { get; } // Kind=RandomRange（最大値 = 現在人数）
 
     public static ValueRef Fixed(int v) =>
         new ValueRef(ValueRefKind.Fixed, fixedValue: v);
@@ -122,13 +127,18 @@ public readonly struct ValueRef
     public static ValueRef Random(int min, int max) =>
         new ValueRef(ValueRefKind.RandomRange, randomMin: min, randomMax: max);
 
+    /// <summary>最大値 = 現在人数 の範囲乱数（鬼のランダム選出など）。</summary>
+    public static ValueRef RandomToPlayerCount(int min) =>
+        new ValueRef(ValueRefKind.RandomRange, randomMin: min, randomMaxIsPlayerCount: true);
+
     private ValueRef(
         ValueRefKind kind,
         int fixedValue = 0,
         int stateIndex = 0,
         PlayerTarget playerTarget = PlayerTarget.InputPlayer,
         int randomMin = 0,
-        int randomMax = 0)
+        int randomMax = 0,
+        bool randomMaxIsPlayerCount = false)
     {
         Kind = kind;
         FixedValue = fixedValue;
@@ -136,6 +146,7 @@ public readonly struct ValueRef
         PlayerTarget = playerTarget;
         RandomMin = randomMin;
         RandomMax = randomMax;
+        RandomMaxIsPlayerCount = randomMaxIsPlayerCount;
     }
 }
 
@@ -193,6 +204,9 @@ public class GimmickEventContext
     public static GimmickEventContext AreaEnter(string playerId, string areaId) =>
         new GimmickEventContext(GimmickEventType.AreaEnter, playerId, objectId: areaId);
 
+    public static GimmickEventContext AreaExit(string playerId, string areaId) =>
+        new GimmickEventContext(GimmickEventType.AreaExit, playerId, objectId: areaId);
+
     public static GimmickEventContext TimerReached(string playerId, int timerIndex, double secs) =>
         new GimmickEventContext(GimmickEventType.TimerReached, playerId,
             timerIndex: timerIndex, timerTargetSeconds: secs);
@@ -233,6 +247,7 @@ public class RuntimeGimmickCondition
 {
     public GimmickConditionType Type { get; }
     public int StateIndex { get; }
+    public int TimerIndex { get; }  // TimerCompare 用
     public CompareOp Op { get; }
     public ValueRef ThresholdRef { get; }
     public int ModBy { get; }     // ModEquals 用
@@ -250,10 +265,12 @@ public class RuntimeGimmickCondition
         int modResult = 0,
         PlayerTarget playerTarget = PlayerTarget.InputPlayer,
         string objectId = "",
-        float physicsDistance = 0f)
+        float physicsDistance = 0f,
+        int timerIndex = 0)
     {
         Type = type;
         StateIndex = stateIndex;
+        TimerIndex = timerIndex;
         Op = op;
         ThresholdRef = thresholdRef ?? ValueRef.Fixed(0);
         ModBy = modBy;
@@ -441,6 +458,34 @@ public class PlayEffectEffect : GimmickEffect
     public string PlayerId { get; }
     public string EffectId { get; }
     public PlayEffectEffect(string pid, string effectId) { PlayerId = pid; EffectId = effectId; }
+}
+
+public class PlayerMoveSpeedEffect : GimmickEffect
+{
+    public string PlayerId { get; }
+
+    /// <summary>移動速度（0〜200%・100 = 通常速度・0 = 移動不可）。</summary>
+    public float SpeedPercent { get; }
+
+    public PlayerMoveSpeedEffect(string playerId, float speedPercent)
+    {
+        PlayerId = playerId;
+        SpeedPercent = speedPercent;
+    }
+}
+
+public class PlayerMarkerEffect : GimmickEffect
+{
+    public string PlayerId { get; }
+    public string MarkerId { get; }
+    public bool Visible { get; }
+
+    public PlayerMarkerEffect(string playerId, string markerId, bool visible)
+    {
+        PlayerId = playerId;
+        MarkerId = markerId;
+        Visible = visible;
+    }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

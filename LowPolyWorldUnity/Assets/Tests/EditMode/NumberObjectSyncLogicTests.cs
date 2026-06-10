@@ -5,13 +5,22 @@ public class NumberObjectSyncLogicTests
 {
     private NumberObjectSyncLogic _sync;
     private GimmickStateManager _state;
+    private GimmickTimerLogic _timers;
+    private FakeClock _clock;
     private List<string> _players;
+
+    private class FakeClock : GimmickTimerLogic.ITimeProvider
+    {
+        public double NowSeconds { get; set; }
+    }
 
     [SetUp]
     public void SetUp()
     {
         _sync = new NumberObjectSyncLogic();
         _state = new GimmickStateManager();
+        _clock = new FakeClock();
+        _timers = new GimmickTimerLogic(_clock);
         _players = new List<string> { "p1", "p2" };
     }
 
@@ -95,7 +104,7 @@ public class NumberObjectSyncLogicTests
         _state.SetWorldState(3, 42);
         _sync.TryAdd(WorldRef("num_1", 3));
 
-        Assert.AreEqual(42, _sync.ResolveValue("num_1", _state, _players));
+        Assert.AreEqual(42, _sync.ResolveValue("num_1", _state, _timers, _players));
     }
 
     [Test]
@@ -104,7 +113,7 @@ public class NumberObjectSyncLogicTests
         _state.SetPlayerState("p2", 1, 77);
         _sync.TryAdd(PlayerRef("num_1", playerNumber: 2, stateIndex: 1));
 
-        Assert.AreEqual(77, _sync.ResolveValue("num_1", _state, _players),
+        Assert.AreEqual(77, _sync.ResolveValue("num_1", _state, _timers, _players),
             "参加 2 番目のプレイヤー (p2) のステートを表示");
     }
 
@@ -113,7 +122,7 @@ public class NumberObjectSyncLogicTests
     {
         _sync.TryAdd(PlayerRef("num_1", playerNumber: 5, stateIndex: 0));
 
-        Assert.AreEqual(0, _sync.ResolveValue("num_1", _state, _players),
+        Assert.AreEqual(0, _sync.ResolveValue("num_1", _state, _timers, _players),
             "参照先プレイヤー不在: 0 を表示");
     }
 
@@ -123,13 +132,82 @@ public class NumberObjectSyncLogicTests
         _sync.TryAdd(new NumberObjectSyncLogic.NumberObjectDefinition(
             "num_1", NumberObjectSyncLogic.SourceKind.Fixed, fixedValue: 123));
 
-        Assert.AreEqual(123, _sync.ResolveValue("num_1", _state, _players));
+        Assert.AreEqual(123, _sync.ResolveValue("num_1", _state, _timers, _players));
     }
 
     [Test]
     public void ResolveValue_UnknownObjectId_ReturnsZero()
     {
-        Assert.AreEqual(0, _sync.ResolveValue("unknown", _state, _players));
+        Assert.AreEqual(0, _sync.ResolveValue("unknown", _state, _timers, _players));
+    }
+
+    // ── タイマー参照 ──────────────────────────────────────────────────────────
+
+    [Test]
+    public void ResolveValue_Timer_ReturnsElapsedSecondsFloored()
+    {
+        _sync.TryAdd(new NumberObjectSyncLogic.NumberObjectDefinition(
+            "num_1", NumberObjectSyncLogic.SourceKind.Timer, timerIndex: 0));
+
+        _clock.NowSeconds = 100.0;
+        _timers.Start(0);
+        _clock.NowSeconds = 112.8; // 経過 12.8 秒
+
+        Assert.AreEqual(12, _sync.ResolveValue("num_1", _state, _timers, _players),
+            "経過秒は小数切り捨ての整数");
+    }
+
+    [Test]
+    public void ResolveValue_TimerCountdown_ReturnsRemainingSeconds()
+    {
+        _sync.TryAdd(new NumberObjectSyncLogic.NumberObjectDefinition(
+            "num_1", NumberObjectSyncLogic.SourceKind.Timer,
+            timerIndex: 0, countdownFromSeconds: 60));
+
+        _clock.NowSeconds = 100.0;
+        _timers.Start(0);
+        _clock.NowSeconds = 112.0; // 経過 12 秒
+
+        Assert.AreEqual(48, _sync.ResolveValue("num_1", _state, _timers, _players),
+            "カウントダウン: 60 - 12 = 48");
+    }
+
+    [Test]
+    public void ResolveValue_TimerCountdownExpired_ClampsToZero()
+    {
+        _sync.TryAdd(new NumberObjectSyncLogic.NumberObjectDefinition(
+            "num_1", NumberObjectSyncLogic.SourceKind.Timer,
+            timerIndex: 0, countdownFromSeconds: 10));
+
+        _clock.NowSeconds = 100.0;
+        _timers.Start(0);
+        _clock.NowSeconds = 125.0; // 経過 25 秒 > 10 秒
+
+        Assert.AreEqual(0, _sync.ResolveValue("num_1", _state, _timers, _players),
+            "カウントダウンの負は 0 に丸める");
+    }
+
+    [Test]
+    public void TryAdd_TimerIndexOutOfRange_Fails()
+    {
+        Assert.IsFalse(_sync.TryAdd(new NumberObjectSyncLogic.NumberObjectDefinition(
+            "num_a", NumberObjectSyncLogic.SourceKind.Timer,
+            timerIndex: GimmickTimerLogic.MaxTimers)));
+        Assert.IsFalse(_sync.TryAdd(new NumberObjectSyncLogic.NumberObjectDefinition(
+            "num_b", NumberObjectSyncLogic.SourceKind.Timer, timerIndex: -1)));
+        Assert.IsFalse(_sync.TryAdd(new NumberObjectSyncLogic.NumberObjectDefinition(
+            "num_c", NumberObjectSyncLogic.SourceKind.Timer,
+            timerIndex: 0, countdownFromSeconds: -5)), "カウントダウン秒は 0 以上");
+    }
+
+    [Test]
+    public void GetTimerObjectIds_ReturnsOnlyTimerSourceObjects()
+    {
+        _sync.TryAdd(new NumberObjectSyncLogic.NumberObjectDefinition(
+            "num_timer", NumberObjectSyncLogic.SourceKind.Timer, timerIndex: 0));
+        _sync.TryAdd(WorldRef("num_world", 0));
+
+        CollectionAssert.AreEquivalent(new[] { "num_timer" }, _sync.GetTimerObjectIds());
     }
 
     // ── ステート更新時の影響特定 ──────────────────────────────────────────────

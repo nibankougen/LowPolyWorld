@@ -29,7 +29,7 @@ public class GimmickValueResolver
             ValueRefKind.WorldState => _state.GetWorldState(valueRef.StateIndex),
             ValueRefKind.PlayerState => ResolvePlayerState(valueRef, ctx),
             ValueRefKind.AllPlayersStateSum => ResolveAllPlayersSum(valueRef, allPlayerIds),
-            ValueRefKind.RandomRange => _randomProvider(valueRef.RandomMin, valueRef.RandomMax),
+            ValueRefKind.RandomRange => ResolveRandom(valueRef, allPlayerIds),
             _ => 0,
         };
     }
@@ -45,6 +45,14 @@ public class GimmickValueResolver
             _ => ctx.InputPlayerId,
         };
         return _state.GetPlayerState(playerId, valueRef.StateIndex);
+    }
+
+    // 範囲乱数を解決する。最大値に「現在人数」が指定されている場合は人数を使う。
+    // randomProvider には min >= max のとき min を返すことを期待する（DefaultRandom 準拠）
+    private int ResolveRandom(ValueRef valueRef, IReadOnlyList<string> allPlayerIds)
+    {
+        int max = valueRef.RandomMaxIsPlayerCount ? (allPlayerIds?.Count ?? 0) : valueRef.RandomMax;
+        return _randomProvider(valueRef.RandomMin, max);
     }
 
     private int ResolveAllPlayersSum(ValueRef valueRef, IReadOnlyList<string> allPlayerIds)

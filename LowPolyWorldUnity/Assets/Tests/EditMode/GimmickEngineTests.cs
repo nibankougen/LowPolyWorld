@@ -525,6 +525,125 @@ public class GimmickEngineTests
         Assert.IsFalse(effect.IsGrant, "「持つ」は配置オブジェクトの取得");
     }
 
+    // ── ゲーム内ゲーム拡張（エリア退出 / タイマー比較 / 速度 / マーカー / 人数乱数） ──
+
+    [Test]
+    public void Fire_AreaExitTrigger_MatchesSpecificArea()
+    {
+        var rule = new RuntimeGimmickRule("r1", "",
+            new[] { new RuntimeGimmickTrigger(GimmickEventType.AreaExit, "area_safe") },
+            System.Array.Empty<RuntimeGimmickCondition>(),
+            new[] { new RuntimeGimmickAction(GimmickActionType.SetWorldState,
+                stateIndex: 0, stateOp: StateOp.Add, valueRef: ValueRef.Fixed(1)) });
+
+        var engine = Build(new[] { rule });
+
+        engine.Fire(GimmickEventContext.AreaEnter("p1", "area_safe")); // 侵入では発火しない
+        Assert.AreEqual(0, _state.GetWorldState(0), "エリア侵入: 発火しない");
+
+        engine.Fire(GimmickEventContext.AreaExit("p1", "area_other")); // 別エリア
+        Assert.AreEqual(0, _state.GetWorldState(0), "別エリア: 発火しない");
+
+        engine.Fire(GimmickEventContext.AreaExit("p1", "area_safe"));
+        Assert.AreEqual(1, _state.GetWorldState(0), "対象エリアからの退出: 発火する");
+    }
+
+    private class FakeClock : GimmickTimerLogic.ITimeProvider
+    {
+        public double NowSeconds { get; set; }
+    }
+
+    [Test]
+    public void Fire_TimerCompareCondition_ComparesElapsedSeconds()
+    {
+        var clock = new FakeClock { NowSeconds = 100.0 };
+        var timers = new GimmickTimerLogic(clock);
+        timers.Start(0);
+
+        var cond = new RuntimeGimmickCondition(
+            GimmickConditionType.TimerCompare,
+            timerIndex: 0,
+            op: CompareOp.LessThan,
+            thresholdRef: ValueRef.Fixed(30));
+
+        var rule = new RuntimeGimmickRule("r1", "制限時間内にゴール",
+            new[] { new RuntimeGimmickTrigger(GimmickEventType.AreaEnter, "area_goal") },
+            new[] { cond },
+            new[] { new RuntimeGimmickAction(GimmickActionType.SetWorldState,
+                stateIndex: 0, stateOp: StateOp.Set, valueRef: ValueRef.Fixed(1)) });
+
+        var engine = new GimmickEngine(new[] { rule }, _state, timers, _players);
+
+        clock.NowSeconds = 125.9; // 経過 25.9 秒 → 25 < 30 で成立
+        engine.Fire(GimmickEventContext.AreaEnter("p1", "area_goal"));
+        Assert.AreEqual(1, _state.GetWorldState(0), "制限時間内: 条件成立");
+
+        _state.SetWorldState(0, 0);
+        clock.NowSeconds = 135.0; // 経過 35 秒 → 不成立
+        engine.Fire(GimmickEventContext.AreaEnter("p1", "area_goal"));
+        Assert.AreEqual(0, _state.GetWorldState(0), "制限時間超過: 条件不成立");
+    }
+
+    [Test]
+    public void Fire_SetMoveSpeedAllPlayers_EmitsClampedEffectPerPlayer()
+    {
+        var rule = new RuntimeGimmickRule("r1", "",
+            new[] { new RuntimeGimmickTrigger(GimmickEventType.RoomStart) },
+            System.Array.Empty<RuntimeGimmickCondition>(),
+            new[] { new RuntimeGimmickAction(GimmickActionType.SetMoveSpeed,
+                floatParam: 500f, playerTarget: PlayerTarget.AllPlayers) });
+
+        var result = Build(new[] { rule }).Fire(GimmickEventContext.RoomStart());
+
+        Assert.AreEqual(2, result.Effects.Count);
+        foreach (var e in result.Effects)
+        {
+            var speed = e as PlayerMoveSpeedEffect;
+            Assert.IsNotNull(speed);
+            Assert.AreEqual(200f, speed.SpeedPercent, 0.001f, "0〜200% にクランプ");
+        }
+    }
+
+    [Test]
+    public void Fire_SetPlayerMarkerAction_EmitsMarkerEffect()
+    {
+        var rule = new RuntimeGimmickRule("r1", "鬼マーカー",
+            new[] { new RuntimeGimmickTrigger(GimmickEventType.PlayerTouchPlayer) },
+            System.Array.Empty<RuntimeGimmickCondition>(),
+            new[] { new RuntimeGimmickAction(GimmickActionType.SetPlayerMarker,
+                targetId: "marker_oni", boolParam: true,
+                playerTarget: PlayerTarget.OpponentPlayer) });
+
+        var result = Build(new[] { rule }).Fire(GimmickEventContext.PlayerTouchPlayer("p1", "p2"));
+
+        Assert.AreEqual(1, result.Effects.Count);
+        var marker = result.Effects[0] as PlayerMarkerEffect;
+        Assert.IsNotNull(marker);
+        Assert.AreEqual("p2", marker.PlayerId, "接触相手に鬼マーカー");
+        Assert.AreEqual("marker_oni", marker.MarkerId);
+        Assert.IsTrue(marker.Visible);
+    }
+
+    [Test]
+    public void Fire_RandomToPlayerCount_UsesCurrentPlayerCountAsMax()
+    {
+        // randomProvider に (min, max) => max を渡し、最大値に現在人数が入ることを検証
+        var rule = new RuntimeGimmickRule("r1", "鬼のランダム選出",
+            new[] { new RuntimeGimmickTrigger(GimmickEventType.RoomStart) },
+            System.Array.Empty<RuntimeGimmickCondition>(),
+            new[] { new RuntimeGimmickAction(GimmickActionType.SetWorldState,
+                stateIndex: 0, stateOp: StateOp.Set,
+                valueRef: ValueRef.RandomToPlayerCount(1)) });
+
+        var engine = new GimmickEngine(
+            new[] { rule }, _state, _timers, _players, (min, max) => max);
+
+        engine.Fire(GimmickEventContext.RoomStart());
+
+        Assert.AreEqual(_players.Count, _state.GetWorldState(0),
+            "乱数の最大値 = 現在人数（2）");
+    }
+
     [Test]
     public void Fire_GrantObjectActionAllPlayers_EmitsGrantEffectPerPlayer()
     {

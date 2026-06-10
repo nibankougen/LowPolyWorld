@@ -18,6 +18,7 @@ public class NumberObjectSyncLogic
     {
         WorldState,
         PlayerState,
+        Timer,
         Fixed,
     }
 
@@ -27,6 +28,11 @@ public class NumberObjectSyncLogic
         public SourceKind Source { get; }
         public int StateIndex { get; }    // WorldState / PlayerState 用
         public int PlayerNumber { get; }  // PlayerState 用（ルーム参加順・1 起点）
+        public int TimerIndex { get; }    // Timer 用
+
+        // Timer 用: 0 = 経過秒のカウントアップ表示 / 1 以上 = 指定秒からのカウントダウン表示（負は 0）
+        public int CountdownFromSeconds { get; }
+
         public int FixedValue { get; }    // Fixed 用
 
         public NumberObjectDefinition(
@@ -34,12 +40,16 @@ public class NumberObjectSyncLogic
             SourceKind source,
             int stateIndex = 0,
             int playerNumber = 1,
+            int timerIndex = 0,
+            int countdownFromSeconds = 0,
             int fixedValue = 0)
         {
             ObjectId = objectId ?? "";
             Source = source;
             StateIndex = stateIndex;
             PlayerNumber = playerNumber;
+            TimerIndex = timerIndex;
+            CountdownFromSeconds = countdownFromSeconds;
             FixedValue = fixedValue;
         }
     }
@@ -72,8 +82,8 @@ public class NumberObjectSyncLogic
     }
 
     // 参照インデックスを登録時に検証する。ワールド定義 JSON は UGC 由来のため、
-    // 不正な定義を弾いて ResolveValue が GimmickStateManager の範囲外例外を
-    // 起こさないようにする。
+    // 不正な定義を弾いて ResolveValue が GimmickStateManager / GimmickTimerLogic の
+    // 範囲外例外を起こさないようにする。
     private static bool IsValidSource(NumberObjectDefinition def) =>
         def.Source switch
         {
@@ -81,6 +91,8 @@ public class NumberObjectSyncLogic
                 (uint)def.StateIndex < GimmickStateManager.MaxWorldStates,
             SourceKind.PlayerState =>
                 (uint)def.StateIndex < GimmickStateManager.MaxPlayerStates && def.PlayerNumber >= 1,
+            SourceKind.Timer =>
+                (uint)def.TimerIndex < GimmickTimerLogic.MaxTimers && def.CountdownFromSeconds >= 0,
             SourceKind.Fixed => true,
             _ => false,
         };
@@ -99,9 +111,13 @@ public class NumberObjectSyncLogic
     /// <summary>
     /// 数字オブジェクトの現在の表示値を解決する。
     /// 参照先プレイヤーが不在（参加順番号超過）の場合は 0 を返す。
+    /// タイマー参照は経過秒の切り捨て整数（カウントダウン指定時は 指定秒 − 経過秒・負は 0）。
     /// </summary>
     public int ResolveValue(
-        string objectId, GimmickStateManager state, IReadOnlyList<string> playerIds)
+        string objectId,
+        GimmickStateManager state,
+        GimmickTimerLogic timers,
+        IReadOnlyList<string> playerIds)
     {
         if (objectId == null || !_byId.TryGetValue(objectId, out var def))
             return 0;
@@ -117,6 +133,16 @@ public class NumberObjectSyncLogic
                 if (playerIds == null || index < 0 || index >= playerIds.Count)
                     return 0;
                 return state.GetPlayerState(playerIds[index], def.StateIndex);
+            }
+
+            case SourceKind.Timer:
+            {
+                if (timers == null)
+                    return 0;
+                int elapsed = (int)System.Math.Floor(timers.GetElapsed(def.TimerIndex));
+                if (def.CountdownFromSeconds > 0)
+                    return System.Math.Max(0, def.CountdownFromSeconds - elapsed);
+                return elapsed;
             }
 
             case SourceKind.Fixed:
@@ -161,6 +187,21 @@ public class NumberObjectSyncLogic
                 affected.Add(def.ObjectId);
         }
         return affected;
+    }
+
+    /// <summary>
+    /// タイマー参照の数字オブジェクト ID 一覧。タイマーは連続的に進むため、
+    /// 上位レイヤーはこれらを毎秒（または毎フレーム）再表示する。
+    /// </summary>
+    public IReadOnlyList<string> GetTimerObjectIds()
+    {
+        var ids = new List<string>();
+        foreach (var def in _objects)
+        {
+            if (def.Source == SourceKind.Timer)
+                ids.Add(def.ObjectId);
+        }
+        return ids;
     }
 
     /// <summary>
