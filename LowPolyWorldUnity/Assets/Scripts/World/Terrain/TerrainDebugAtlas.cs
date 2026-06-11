@@ -83,8 +83,9 @@ public static class TerrainDebugAtlas
 
     private static void FillCell(Color32[] pixels, int x0, int y0, Color color)
     {
-        Color32 fill = color;
-        Color32 border = color * 0.55f;
+        // Color * float はアルファも乗算してカットアウト閾値 (0.5) を下回るため、必ず不透明に固定する
+        Color32 fill = Opaque(color);
+        Color32 border = Opaque(color * 0.55f);
         for (int y = 0; y < Cell; y++)
         {
             for (int x = 0; x < Cell; x++)
@@ -94,5 +95,7 @@ public static class TerrainDebugAtlas
             }
         }
     }
+
+    private static Color32 Opaque(Color color) => new Color(color.r, color.g, color.b, 1f);
 }
 #endif
