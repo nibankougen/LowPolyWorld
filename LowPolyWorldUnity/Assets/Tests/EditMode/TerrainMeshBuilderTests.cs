@@ -7,10 +7,10 @@ public class TerrainMeshBuilderTests
 {
     private const float Delta = 1e-4f;
 
-    // AO 明度の期待値（15.16: brightness = 0.75 × (1 − darkness / 2)）
+    // AO 明度の期待値（15.16: brightness = 0.75 × (1 − darkness / 3)）
     private const float AoNone = 0.75f;       // darkness 0
-    private const float AoOne = 0.375f;       // darkness 1（グループ1 参照 1 つ）
-    private const float AoSlopeAbove = 0.46875f; // darkness 0.75（グループ2 高端・真上のみ）
+    private const float AoOne = 0.5f;         // darkness 1（グループ1 参照 1 つ）
+    private const float AoSlopeAbove = 0.5625f; // darkness 0.75（グループ2 高端・真上のみ）
 
     private TerrainVoxelStore _store;
     private TerrainMeshBuilder _builder;
@@ -294,13 +294,36 @@ public class TerrainMeshBuilderTests
     public void BuildChunk_SlopeAo_HighEndDarkenedByBlockAbove()
     {
         Set(5, 15, 5, TerrainShape.RampN, 1);
-        Set(5, 16, 5, TerrainShape.DiagNW, 2); // 真上（隣チャンク）: diag は斜面を隠さない
+        Set(5, 16, 5, TerrainShape.Cube, 2); // 真上（隣チャンク）: 斜面はカリングされず常に描画
         var data = Build(0, 0, 0);
 
         Assert.AreEqual(18, data.Vertices.Count);
-        Assert.AreEqual(4, CountRegion(data, TerrainFaceRegion.Top), "異種なので上面領域のまま");
-        // 高端 2 頂点のみ darkness = AO_RAMP_HIGH_PRIMARY (0.75) → 0.75 × (1 − 0.375)
+        // 高端 2 頂点のみ darkness = AO_RAMP_HIGH_PRIMARY (0.75) → 0.75 × (1 − 0.25)
         Assert.AreEqual(2, CountVerts(data, (p, c) => NearColor(c, AoSlopeAbove)));
+    }
+
+    [Test]
+    public void BuildChunk_Group1Ao_RampOccupiesOnlyHighSideCorners()
+    {
+        Set(15, 5, 5, TerrainShape.Cube);
+        Set(16, 5, 5, TerrainShape.RampE); // 東隣の坂（低い側が cube に接する）
+        var data = Build(0, 0, 0);
+
+        // ramp_E の低い側（West）の角は占有しない → cube 上面の東端 2 頂点は暗くならない
+        AssertAllColorAt(data, p => Mathf.Approximately(p.y, 3.0f), AoNone);
+    }
+
+    [Test]
+    public void BuildChunk_Group1Ao_DiagonalCornerBlockDarkensSharedVertex()
+    {
+        // 角に斜め接するブロック: 上面の共有頂点がどの面から見ても同じ明度になる（継ぎ目なし）
+        Set(15, 5, 5, TerrainShape.Cube);
+        Set(16, 6, 6, TerrainShape.Cube); // 斜め上の角ブロック（隣チャンク・メッシュ化対象外）
+        var data = Build(0, 0, 0);
+
+        // 上面 NE 頂点 (8.0, 3.0, 3.0) のみ斜め角参照で darkness 1 → 0.5
+        AssertAnyVertexWithColor(data, p => SamePos(p, 8.0f, 3.0f, 3.0f), AoOne);
+        AssertAllColorAt(data, p => SamePos(p, 7.5f, 3.0f, 2.5f), AoNone);
     }
 
     [Test]

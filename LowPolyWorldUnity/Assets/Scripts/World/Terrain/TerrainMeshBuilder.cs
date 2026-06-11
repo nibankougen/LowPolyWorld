@@ -199,7 +199,9 @@ public class TerrainMeshBuilder
         for (int i = 0; i < 4; i++)
         {
             var (sx, sz) = RotDirXZ(RampSlopeSideX[i], 0, k); // 側方向（canonical では ±X）
-            brightness[i] = SlopeBrightness(x, y, z, hx, hz, sx, sz, RampSlopeIsTop[i]);
+            int px = x + (verts[i].x > 0.5f ? 1 : 0);
+            int pz = z + (verts[i].z > 0.5f ? 1 : 0);
+            brightness[i] = SlopeBrightness(x, y, z, hx, hz, sx, sz, RampSlopeIsTop[i], px, pz);
         }
         AddFace(_meshes.Solid, x, y, z, verts, RampSlopeUv, brightness, rect, NoUv2);
     }
@@ -215,10 +217,12 @@ public class TerrainMeshBuilder
         for (int i = 0; i < 4; i++)
         {
             int dy = DiagHypotenuseIsTop[i] ? 1 : -1;
+            int px = x + (verts[i].x > 0.5f ? 1 : 0);
+            int pz = z + (verts[i].z > 0.5f ? 1 : 0);
             float darkness = 0f;
-            if (PresentForAo(x + nx, y + dy, z))
+            if (OccludesAt(x + nx, y + dy, z, px, pz))
                 darkness += TerrainAo.WeightStandard;
-            if (PresentForAo(x, y + dy, z + nz))
+            if (OccludesAt(x, y + dy, z + nz, px, pz))
                 darkness += TerrainAo.WeightStandard;
             brightness[i] = TerrainAo.Brightness(darkness);
         }
@@ -270,29 +274,40 @@ public class TerrainMeshBuilder
     // ── 頂点 AO（15.16） ──────────────────────────────────────────────────────
 
     /// <summary>
-    /// グループ1（通常面）: 各頂点について「面の 2 辺方向それぞれ + 法線方向」の
-    /// 合成オフセット先のブロックをウェイト 1.0 で加算する。
+    /// グループ1（通常面）: 各頂点（格子点）について、面の法線方向に 1 つ進んだレイヤーのうち
+    /// 頂点に接する 4 ブロック（正面・辺方向 2・斜め角）を等ウェイト 1.0 で加算する。
+    /// 4 ブロックの等ウェイト和は対称なため、同一平面上で頂点を共有する面同士の明度が必ず一致し、
+    /// 面の継ぎ目でグラデーションが連続になる（15.16）。
     /// </summary>
     private float Group1Brightness(int x, int y, int z, int nx, int ny, int nz, Vector3 local)
     {
+        int sx = local.x > 0.5f ? 1 : -1;
+        int sy = local.y > 0.5f ? 1 : -1;
+        int sz = local.z > 0.5f ? 1 : -1;
+        int px = x + (local.x > 0.5f ? 1 : 0); // 頂点の格子点 XZ（占有判定用）
+        int pz = z + (local.z > 0.5f ? 1 : 0);
+
         float darkness = 0f;
-        if (nx == 0)
+        for (int i = 0; i <= 1; i++)
         {
-            int sx = local.x > 0.5f ? 1 : -1;
-            if (PresentForAo(x + sx, y + ny, z + nz))
-                darkness += TerrainAo.WeightStandard;
-        }
-        if (ny == 0)
-        {
-            int sy = local.y > 0.5f ? 1 : -1;
-            if (PresentForAo(x + nx, y + sy, z + nz))
-                darkness += TerrainAo.WeightStandard;
-        }
-        if (nz == 0)
-        {
-            int sz = local.z > 0.5f ? 1 : -1;
-            if (PresentForAo(x + nx, y + ny, z + sz))
-                darkness += TerrainAo.WeightStandard;
+            for (int j = 0; j <= 1; j++)
+            {
+                int ox, oy, oz;
+                if (nx != 0)
+                {
+                    ox = nx; oy = i * sy; oz = j * sz;
+                }
+                else if (ny != 0)
+                {
+                    ox = i * sx; oy = ny; oz = j * sz;
+                }
+                else
+                {
+                    ox = i * sx; oy = j * sy; oz = nz;
+                }
+                if (OccludesAt(x + ox, y + oy, z + oz, px, pz))
+                    darkness += TerrainAo.WeightStandard;
+            }
         }
         return TerrainAo.Brightness(darkness);
     }
@@ -301,33 +316,63 @@ public class TerrainMeshBuilder
     /// グループ2（坂の斜め面）: グループ A（主方向）は存在ブロックの最大ウェイトを採用し、
     /// グループ B（側方向）の存在ウェイトを加算する。(hx, hz) = 高い側、(sx, sz) = 側方向。
     /// </summary>
-    private float SlopeBrightness(int x, int y, int z, int hx, int hz, int sx, int sz, bool isTop)
+    private float SlopeBrightness(int x, int y, int z, int hx, int hz, int sx, int sz, bool isTop, int px, int pz)
     {
         float groupA = 0f;
         if (isTop)
         {
-            if (PresentForAo(x, y + 1, z))
+            if (OccludesAt(x, y + 1, z, px, pz))
                 groupA = TerrainAo.RampHighPrimary;
-            if (PresentForAo(x + hx, y + 1, z + hz))
+            if (OccludesAt(x + hx, y + 1, z + hz, px, pz))
                 groupA = Math.Max(groupA, TerrainAo.RampHighSecondary);
-            float darkness = groupA + (PresentForAo(x + sx, y + 1, z + sz) ? TerrainAo.RampHighSide : 0f);
+            float darkness = groupA + (OccludesAt(x + sx, y + 1, z + sz, px, pz) ? TerrainAo.RampHighSide : 0f);
             return TerrainAo.Brightness(darkness);
         }
         else
         {
-            if (PresentForAo(x - hx, y, z - hz))
+            if (OccludesAt(x - hx, y, z - hz, px, pz))
                 groupA = TerrainAo.RampLowPrimary;
-            if (PresentForAo(x - hx + sx, y, z - hz + sz))
+            if (OccludesAt(x - hx + sx, y, z - hz + sz, px, pz))
                 groupA = Math.Max(groupA, TerrainAo.RampLowSecondary);
-            float darkness = groupA + (PresentForAo(x + sx, y, z + sz) ? TerrainAo.RampLowSide : 0f);
+            float darkness = groupA + (OccludesAt(x + sx, y, z + sz, px, pz) ? TerrainAo.RampLowSide : 0f);
             return TerrainAo.Brightness(darkness);
         }
     }
 
-    // AO の隣接参照。ワールド下端の下の仮想地形は「ブロックなし」として扱う
-    //（存在しない床との接地影を作らないため。面カリングの「地形あり」扱いとは別）
-    private bool PresentForAo(int x, int y, int z) =>
-        y >= 0 && !TerrainVoxel.IsEmpty(_sampler.GetVoxel(x, y, z));
+    /// <summary>
+    /// AO の遮蔽判定。参照ブロックの「頂点（格子点）に接する角の占有」で判定する（15.16）。
+    /// cube は全角・ramp は高い側の 2 角・diag は直角の 1 角のみ占有
+    /// （坂の低い側や diag の空き半分に面した地面が不当に暗くならないようにするため）。
+    /// グループ2・3 で頂点に接しない参照ブロックは最も近い角で判定する。
+    /// ワールド下端の下の仮想地形は「ブロックなし」として扱う（面カリングの「地形あり」扱いとは別）。
+    /// </summary>
+    private bool OccludesAt(int rx, int ry, int rz, int vertexLatticeX, int vertexLatticeZ)
+    {
+        if (ry < 0)
+            return false;
+        var shape = TerrainVoxel.GetShape(_sampler.GetVoxel(rx, ry, rz));
+        if (shape == TerrainShape.Empty)
+            return false;
+        if (shape == TerrainShape.Cube)
+            return true;
+
+        int dx = vertexLatticeX - rx;
+        int dz = vertexLatticeZ - rz;
+        dx = dx < 0 ? 0 : (dx > 1 ? 1 : dx); // 0 = West 側の角, 1 = East 側の角
+        dz = dz < 0 ? 0 : (dz > 1 ? 1 : dz); // 0 = South 側の角, 1 = North 側の角
+        switch (shape)
+        {
+            case TerrainShape.RampN: return dz == 1;
+            case TerrainShape.RampE: return dx == 1;
+            case TerrainShape.RampS: return dz == 0;
+            case TerrainShape.RampW: return dx == 0;
+            case TerrainShape.DiagNW: return dx == 0 && dz == 1;
+            case TerrainShape.DiagNE: return dx == 1 && dz == 1;
+            case TerrainShape.DiagSE: return dx == 1 && dz == 0;
+            case TerrainShape.DiagSW: return dx == 0 && dz == 0;
+            default: return true;
+        }
+    }
 
     // ── 頂点バッファへの発行 ──────────────────────────────────────────────────
 

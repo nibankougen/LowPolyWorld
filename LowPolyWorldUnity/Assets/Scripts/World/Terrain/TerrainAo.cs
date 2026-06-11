@@ -11,7 +11,7 @@ public static class TerrainAo
     public const float RampLowPrimary = 0.75f;    // グループ2 低端・グループA主ウェイト
     public const float RampLowSecondary = 0.25f;  // グループ2 低端・グループA副ウェイト（max のみ採用）
     public const float RampLowSide = 0.50f;       // グループ2 低端・グループBウェイト
-    public const float Normalize = 2.00f;         // 正規化係数（全グループ共通）
+    public const float Normalize = 3.00f;         // 正規化係数（全グループ共通。グループ1は最大4参照・clampで明度0）
 
     /// <summary>隣接ブロックがない状態での頂点カラー明度（ベース暗さ）。</summary>
     public const float BaseBrightness = 0.75f;
