@@ -162,16 +162,19 @@ public class TerrainMeshBuilderTests
         // 斜面は境界平面に接しないため真上に cube があってもカリングしない（15.12）。
         // ramp 18 頂点（全面）+ cube 24 頂点（下面も ramp に隠されない）
         Assert.AreEqual(42, data.Vertices.Count);
-        Assert.AreEqual(4, CountRegion(data, TerrainFaceRegion.TopMiddle), "上に同種あり → 斜面は上面中間領域");
+        Assert.AreEqual(0, CountRegion(data, TerrainFaceRegion.TopMiddle), "露出している斜面は常に上面領域（15.8）");
+        Assert.AreEqual(8, CountRegion(data, TerrainFaceRegion.Top), "斜面 4 + cube 上面 4");
     }
 
     [Test]
-    public void BuildChunk_CubeUnderSameKindDiag_TopFaceUsesTopMiddle()
+    public void BuildChunk_CubeUnderSameKindDiag_ExposedTopUsesTopRegion()
     {
         Set(5, 5, 5, TerrainShape.Cube, 3);
         Set(5, 6, 5, TerrainShape.DiagNW, 3);
         var data = Build();
-        Assert.AreEqual(4, CountRegion(data, TerrainFaceRegion.TopMiddle), "上に同種あり（diag は隠さない）→ 上面中間");
+        // diag は上面を隠さない → 露出している上面は同種でも通常の上面領域（15.8 — 上面中間は隠れ面専用）
+        Assert.AreEqual(0, CountRegion(data, TerrainFaceRegion.TopMiddle));
+        Assert.AreEqual(4 + 3, CountRegion(data, TerrainFaceRegion.Top), "cube 上面 + diag 上面三角形");
     }
 
     [Test]

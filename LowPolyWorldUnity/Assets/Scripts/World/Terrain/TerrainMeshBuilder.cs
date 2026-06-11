@@ -142,18 +142,20 @@ public class TerrainMeshBuilder
     private void EmitTopFace(int x, int y, int z, byte voxel, Vector3[] verts, Vector2[] uvs)
     {
         byte above = _sampler.GetVoxel(x, y + 1, z);
-        var region = TerrainNeighborRules.IsSameKind(voxel, above)
-            ? TerrainFaceRegion.TopMiddle
-            : TerrainFaceRegion.Top;
         if (TerrainNeighborRules.HidesTopFace(above))
         {
             // 直上ブロックでカリングされた上面 → Height Culling で直上が消えたときだけ表示する
             // 上面中間フェイス。UV2.x = 上面の Y グリッドインデックス（シェーダーが閾値と比較）
+            var region = TerrainNeighborRules.IsSameKind(voxel, above)
+                ? TerrainFaceRegion.TopMiddle
+                : TerrainFaceRegion.Top;
             EmitGroup1Face(_meshes.HiddenTops, x, y, z, voxel, TerrainFaceDir.Up, region, verts, uvs, y + 1);
         }
         else
         {
-            EmitGroup1Face(_meshes.Solid, x, y, z, voxel, TerrainFaceDir.Up, region, verts, uvs);
+            // 露出している上面は直上が同種（diag など）でも通常の上面領域を使う
+            //（上面中間は「隠されている面」専用 — 15.8）
+            EmitGroup1Face(_meshes.Solid, x, y, z, voxel, TerrainFaceDir.Up, TerrainFaceRegion.Top, verts, uvs);
         }
     }
 
@@ -187,12 +189,9 @@ public class TerrainMeshBuilder
     private void EmitRampSlope(int x, int y, int z, byte voxel, int k)
     {
         // 斜面はどの隣接平面とも接しないためカリングしない（真上に cube があっても生成する。
-        // カリングすると側面方向から内部が見えてしまう — 15.12）
-        byte above = _sampler.GetVoxel(x, y + 1, z);
-        var region = TerrainNeighborRules.IsSameKind(voxel, above)
-            ? TerrainFaceRegion.TopMiddle
-            : TerrainFaceRegion.Top;
-        Rect rect = GetUvRect(x, y, z, voxel, region, TerrainFaceDir.Slope);
+        // カリングすると側面方向から内部が見えてしまう — 15.12）。
+        // 常に露出するため領域も常に上面（上面中間は「隠されている面」専用 — 15.8）
+        Rect rect = GetUvRect(x, y, z, voxel, TerrainFaceRegion.Top, TerrainFaceDir.Slope);
 
         var verts = Rot(RampSlopeQuad, k);
         var (hx, hz) = RotDirXZ(0, 1, k); // 高い側の方向
