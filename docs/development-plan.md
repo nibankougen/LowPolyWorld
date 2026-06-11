@@ -1020,7 +1020,7 @@
     - [x] 頂点カラー AO 計算（メッシュ生成時に 1 度だけ実行・頂点カラーとして保存）— `TerrainAo` + `TerrainMeshBuilder`
       - [x] 通常面（cube）: 隣接ブロックの有無をウェイト 1.0 で加算し明度 0〜0.75 にマッピング
       - [x] 坂/斜め面（ramp/diag）: 斜め面限定で同高さ隣接ブロックも参照・重複ウェイトは大きい方を採用する形状 × 頂点ごとのルールテーブルを実装
-    - [ ] コライダー生成（グリーディーメッシュ法・XZ 優先 BoxCollider 結合。ramp/diag は全体近似）
+    - [x] コライダー生成ロジック（グリーディーメッシュ法・XZ 優先 BoxCollider 結合 + Y 結合。ramp は薄板 4 段の階段近似 / diag は XZ 内側階段近似 — 15.15）— `TerrainColliderBuilder`（BoxCollider 適用・stepOffset 0.26 設定は Mesh 構築 MonoBehaviour 実装時）
     - [ ] Height Culling（プレイヤー真上レイキャスト → 閾値以上を非表示・上面中間テクスチャ切り替え）
     - [ ] **地形タブ UI**（セクション 11.7.2）
       - [ ] 斜め上固定カメラ・高さスライス表示・グリッド境界描画

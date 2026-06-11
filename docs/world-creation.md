@@ -1236,18 +1236,31 @@ per chunk:
 
 #### ramp / diag の扱い
 
-ramp・diag ブロックは結合対象から外し、それぞれ個別に**薄い水平 BoxCollider の階段近似**を割り当てる（MeshCollider は使用しない）。
+ramp・diag ブロックは結合対象から外し、それぞれ個別に **BoxCollider の階段近似**を割り当てる（MeshCollider は使用しない）。
 
-**階段近似の仕様:**
+**ramp（坂）— 高さ方向の階段近似:**
 
-- 各 ramp/diag ブロックに対して、高さ方向を 2〜4 段に分割した薄い水平 BoxCollider を生成する
-- 1 段あたりの高さ: 約 0.125〜0.25m（分割数に応じて調整）
-- 回転は使用しない（水平 BoxCollider のみ）
-- `CharacterController.stepOffset` を **0.26m** に設定し、各 BoxCollider の段差をキャラクターが乗り越えられるようにする
+- 斜面の昇り方向を **4 段**に分割し、薄い水平 BoxCollider を階段状に並べる
+- 段 i（低い側から 0〜3）: footprint = 昇り方向 1/4 のストリップ × ブロック全幅、
+  高さ範囲 = [i × 0.125m, (i+1) × 0.125m]（厚さ 0.125m。段の上面 = その区間の斜面の高い側の高さ）
+- 1 段の段差 = **0.125m**
+
+**diag（斜め）— XZ 平面の階段近似:**
+
+- diag は垂直の三角柱で高さ方向に勾配がないため、高さ分割ではなく **XZ 平面の階段近似**を行う
+- 斜辺と直交する方向に 4 分割したストリップごとに、solid 領域に内接する**全高（0.5m）**の
+  BoxCollider を配置する（最後のストリップは奥行き 0 になるため box は 3 個）
+- **内側近似**とする: コライダーは solid 領域の内側に収め、見えない壁（phantom wall）を作らない
+  （斜辺付近にわずかな食い込み余地が生まれるが、キャラクターの capsule 半径で実用上問題にならない）
+
+**共通:**
+
+- 回転は使用しない（軸平行 BoxCollider のみ）
+- `CharacterController.stepOffset` を **0.26m** に設定し、ramp の各段差（0.125m）をキャラクターが乗り越えられるようにする
 
 **この方式を選択する理由:**
 - MeshCollider（Non-Convex）はモバイルで BVH 構築コストが高く、三角形判定も重い
-- 水平 BoxCollider は PhysX の AABB/OBB 判定で O(1) かつ軽量
+- 軸平行 BoxCollider は PhysX の AABB/OBB 判定で O(1) かつ軽量
 - 回転 BoxCollider（全体近似）は非スロープ面で phantom wall と通り抜けが発生するため不採用
 
 #### チャンク境界
