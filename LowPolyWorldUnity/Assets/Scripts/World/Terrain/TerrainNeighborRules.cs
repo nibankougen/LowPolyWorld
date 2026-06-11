@@ -17,7 +17,10 @@ public static class TerrainNeighborRules
     public static bool IsDiag(TerrainShape shape) =>
         shape >= TerrainShape.DiagNW && shape <= TerrainShape.DiagSW;
 
-    /// <summary>真上の隣接ブロックが A の上面（坂の斜め上面を含む）を隠すか。</summary>
+    /// <summary>
+    /// 真上の隣接ブロックが A の上面（上の平面に接する面 = cube の上面・diag の上面三角形）を隠すか。
+    /// 坂の斜面は平面に接しないためカリング対象外（常に生成する）。
+    /// </summary>
     public static bool HidesTopFace(byte neighborAbove)
     {
         var shape = TerrainVoxel.GetShape(neighborAbove);

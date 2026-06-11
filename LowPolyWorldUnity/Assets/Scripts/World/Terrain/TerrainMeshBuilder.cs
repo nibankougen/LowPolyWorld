@@ -175,9 +175,9 @@ public class TerrainMeshBuilder
 
     private void EmitRampSlope(int x, int y, int z, byte voxel, int k)
     {
+        // 斜面はどの隣接平面とも接しないためカリングしない（真上に cube があっても生成する。
+        // カリングすると側面方向から内部が見えてしまう — 15.12）
         byte above = _sampler.GetVoxel(x, y + 1, z);
-        if (TerrainNeighborRules.HidesTopFace(above))
-            return;
         var region = TerrainNeighborRules.IsSameKind(voxel, above)
             ? TerrainFaceRegion.TopMiddle
             : TerrainFaceRegion.Top;

@@ -1016,7 +1016,7 @@
     - [x] ランダム地形テクスチャのバリアント選択ハッシュ関数実装 — `TerrainTextureHash`
     - [x] UV 設定: 領域内 [0.005,0.005]〜[0.995,0.995] + アトラス変換・坂面三角形 UV — `TerrainAtlasMap`
     - [ ] Filter Mode: Point (no filter) を地形テクスチャに設定
-    - [ ] `Graphics.DrawMeshInstanced` によるバッチレンダリング（地形種別 × 面種でグループ化）
+    - [ ] チャンク単位の結合メッシュレンダリング（地形アトラス 1 マテリアル・Mesh 構築 MonoBehaviour。仕様変更により面単位 DrawMeshInstanced は不採用 — 15.14）
     - [x] 頂点カラー AO 計算（メッシュ生成時に 1 度だけ実行・頂点カラーとして保存）— `TerrainAo` + `TerrainMeshBuilder`
       - [x] 通常面（cube）: 隣接ブロックの有無をウェイト 1.0 で加算し明度 0〜0.75 にマッピング
       - [x] 坂/斜め面（ramp/diag）: 斜め面限定で同高さ隣接ブロックも参照・重複ウェイトは大きい方を採用する形状 × 頂点ごとのルールテーブルを実装

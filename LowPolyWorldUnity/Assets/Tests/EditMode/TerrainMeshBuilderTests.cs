@@ -153,6 +153,19 @@ public class TerrainMeshBuilderTests
     }
 
     [Test]
+    public void BuildChunk_RampSlope_NotCulledByCubeAbove()
+    {
+        Set(5, 5, 5, TerrainShape.RampN, 1);
+        Set(5, 6, 5, TerrainShape.Cube, 1);
+        var data = Build();
+
+        // 斜面は境界平面に接しないため真上に cube があってもカリングしない（15.12）。
+        // ramp 18 頂点（全面）+ cube 24 頂点（下面も ramp に隠されない）
+        Assert.AreEqual(42, data.Vertices.Count);
+        Assert.AreEqual(4, CountRegion(data, TerrainFaceRegion.TopMiddle), "上に同種あり → 斜面は上面中間領域");
+    }
+
+    [Test]
     public void BuildChunk_CubeUnderSameKindDiag_TopFaceUsesTopMiddle()
     {
         Set(5, 5, 5, TerrainShape.Cube, 3);
