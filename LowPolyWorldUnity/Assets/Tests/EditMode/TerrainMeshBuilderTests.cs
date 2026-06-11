@@ -10,6 +10,7 @@ public class TerrainMeshBuilderTests
     // AO 明度の期待値（15.16: brightness = 0.75 × (1 − darkness / 3)）
     private const float AoNone = 0.75f;       // darkness 0
     private const float AoOne = 0.5f;         // darkness 1（グループ1 参照 1 つ）
+    private const float AoHalfOcc = 0.625f;   // darkness 0.5（占有ウェイト 0.5 の角 1 つ）
     private const float AoSlopeAbove = 0.5625f; // darkness 0.75（グループ2 高端・真上のみ）
 
     private TerrainVoxelStore _store;
@@ -303,14 +304,32 @@ public class TerrainMeshBuilderTests
     }
 
     [Test]
-    public void BuildChunk_Group1Ao_RampOccupiesOnlyHighSideCorners()
+    public void BuildChunk_Group1Ao_RampOccupancy_HighSideFullLowSideHalf()
     {
-        Set(15, 5, 5, TerrainShape.Cube);
-        Set(16, 5, 5, TerrainShape.RampE); // 東隣の坂（低い側が cube に接する）
+        Set(13, 5, 5, TerrainShape.Cube);  // 坂の低い側の cube
+        Set(14, 5, 5, TerrainShape.RampE); // East 側が高い坂
+        Set(15, 5, 5, TerrainShape.Cube);  // 坂の高い側の cube
         var data = Build(0, 0, 0);
 
-        // ramp_E の低い側（West）の角は占有しない → cube 上面の東端 2 頂点は暗くならない
-        AssertAllColorAt(data, p => Mathf.Approximately(p.y, 3.0f), AoNone);
+        // 低い側の cube 東面: ramp の低い側の角 = 占有 0.5 → darkness 0.5
+        AssertAnyVertexWithColor(data, p => SamePos(p, 7.0f, 3.0f, 2.5f), AoHalfOcc);
+        // 高い側の cube 西面: ramp の高い側の角 = 占有 1.0 → darkness 1
+        AssertAnyVertexWithColor(data, p => SamePos(p, 7.5f, 3.0f, 2.5f), AoOne);
+        // cube 上面（y+1 レイヤー参照）は同じ高さの ramp の影響を受けない
+        AssertAnyVertexWithColor(data, p => SamePos(p, 6.5f, 3.0f, 2.5f), AoNone);
+    }
+
+    [Test]
+    public void BuildChunk_Group1Ao_DiagTipOccupancyIsHalf()
+    {
+        Set(15, 5, 5, TerrainShape.Cube);
+        Set(16, 5, 5, TerrainShape.DiagNE); // 東隣の diag（斜辺の端が cube の北東角を通る）
+        var data = Build(0, 0, 0);
+
+        // cube 東面の北端 2 頂点: diag_NE の NW 角 = 斜辺の端 → 占有 0.5
+        AssertAnyVertexWithColor(data, p => SamePos(p, 8.0f, 3.0f, 3.0f), AoHalfOcc);
+        // cube 東面の南端 2 頂点: diag_NE の SW 角 = 空き側 → 占有 0
+        AssertAllColorAt(data, p => SamePos(p, 8.0f, 3.0f, 2.5f), AoNone);
     }
 
     [Test]

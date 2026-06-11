@@ -219,11 +219,9 @@ public class TerrainMeshBuilder
             int dy = DiagHypotenuseIsTop[i] ? 1 : -1;
             int px = x + (verts[i].x > 0.5f ? 1 : 0);
             int pz = z + (verts[i].z > 0.5f ? 1 : 0);
-            float darkness = 0f;
-            if (OccludesAt(x + nx, y + dy, z, px, pz))
-                darkness += TerrainAo.WeightStandard;
-            if (OccludesAt(x, y + dy, z + nz, px, pz))
-                darkness += TerrainAo.WeightStandard;
+            float darkness =
+                TerrainAo.WeightStandard * OcclusionAt(x + nx, y + dy, z, px, pz)
+                + TerrainAo.WeightStandard * OcclusionAt(x, y + dy, z + nz, px, pz);
             brightness[i] = TerrainAo.Brightness(darkness);
         }
         AddFace(_meshes.Solid, x, y, z, verts, DiagHypotenuseUv, brightness, rect, NoUv2);
@@ -305,8 +303,7 @@ public class TerrainMeshBuilder
                 {
                     ox = i * sx; oy = j * sy; oz = nz;
                 }
-                if (OccludesAt(x + ox, y + oy, z + oz, px, pz))
-                    darkness += TerrainAo.WeightStandard;
+                darkness += TerrainAo.WeightStandard * OcclusionAt(x + ox, y + oy, z + oz, px, pz);
             }
         }
         return TerrainAo.Brightness(darkness);
@@ -318,43 +315,40 @@ public class TerrainMeshBuilder
     /// </summary>
     private float SlopeBrightness(int x, int y, int z, int hx, int hz, int sx, int sz, bool isTop, int px, int pz)
     {
-        float groupA = 0f;
+        float groupA;
+        float darkness;
         if (isTop)
         {
-            if (OccludesAt(x, y + 1, z, px, pz))
-                groupA = TerrainAo.RampHighPrimary;
-            if (OccludesAt(x + hx, y + 1, z + hz, px, pz))
-                groupA = Math.Max(groupA, TerrainAo.RampHighSecondary);
-            float darkness = groupA + (OccludesAt(x + sx, y + 1, z + sz, px, pz) ? TerrainAo.RampHighSide : 0f);
-            return TerrainAo.Brightness(darkness);
+            groupA = TerrainAo.RampHighPrimary * OcclusionAt(x, y + 1, z, px, pz);
+            groupA = Math.Max(groupA, TerrainAo.RampHighSecondary * OcclusionAt(x + hx, y + 1, z + hz, px, pz));
+            darkness = groupA + TerrainAo.RampHighSide * OcclusionAt(x + sx, y + 1, z + sz, px, pz);
         }
         else
         {
-            if (OccludesAt(x - hx, y, z - hz, px, pz))
-                groupA = TerrainAo.RampLowPrimary;
-            if (OccludesAt(x - hx + sx, y, z - hz + sz, px, pz))
-                groupA = Math.Max(groupA, TerrainAo.RampLowSecondary);
-            float darkness = groupA + (OccludesAt(x + sx, y, z + sz, px, pz) ? TerrainAo.RampLowSide : 0f);
-            return TerrainAo.Brightness(darkness);
+            groupA = TerrainAo.RampLowPrimary * OcclusionAt(x - hx, y, z - hz, px, pz);
+            groupA = Math.Max(groupA, TerrainAo.RampLowSecondary * OcclusionAt(x - hx + sx, y, z - hz + sz, px, pz));
+            darkness = groupA + TerrainAo.RampLowSide * OcclusionAt(x + sx, y, z + sz, px, pz);
         }
+        return TerrainAo.Brightness(darkness);
     }
 
     /// <summary>
-    /// AO の遮蔽判定。参照ブロックの「頂点（格子点）に接する角の占有」で判定する（15.16）。
-    /// cube は全角・ramp は高い側の 2 角・diag は直角の 1 角のみ占有
-    /// （坂の低い側や diag の空き半分に面した地面が不当に暗くならないようにするため）。
+    /// AO の遮蔽判定。参照ブロックの「頂点（格子点）に接する角の占有ウェイト 0〜1」を返す（15.16）。
+    /// cube = 全角 1.0 / ramp = 高い側の 2 角 1.0・低い側の 2 角 0.5 /
+    /// diag = 直角 1.0・斜辺両端の 2 角 0.5（全高の壁が角を通る）・空き角 0。
+    /// 部分占有ウェイトにより、坂・斜め周辺の地面の暗さが面の下端の暗さと連続的につながる。
     /// グループ2・3 で頂点に接しない参照ブロックは最も近い角で判定する。
     /// ワールド下端の下の仮想地形は「ブロックなし」として扱う（面カリングの「地形あり」扱いとは別）。
     /// </summary>
-    private bool OccludesAt(int rx, int ry, int rz, int vertexLatticeX, int vertexLatticeZ)
+    private float OcclusionAt(int rx, int ry, int rz, int vertexLatticeX, int vertexLatticeZ)
     {
         if (ry < 0)
-            return false;
+            return 0f;
         var shape = TerrainVoxel.GetShape(_sampler.GetVoxel(rx, ry, rz));
         if (shape == TerrainShape.Empty)
-            return false;
+            return 0f;
         if (shape == TerrainShape.Cube)
-            return true;
+            return 1f;
 
         int dx = vertexLatticeX - rx;
         int dz = vertexLatticeZ - rz;
@@ -362,16 +356,25 @@ public class TerrainMeshBuilder
         dz = dz < 0 ? 0 : (dz > 1 ? 1 : dz); // 0 = South 側の角, 1 = North 側の角
         switch (shape)
         {
-            case TerrainShape.RampN: return dz == 1;
-            case TerrainShape.RampE: return dx == 1;
-            case TerrainShape.RampS: return dz == 0;
-            case TerrainShape.RampW: return dx == 0;
-            case TerrainShape.DiagNW: return dx == 0 && dz == 1;
-            case TerrainShape.DiagNE: return dx == 1 && dz == 1;
-            case TerrainShape.DiagSE: return dx == 1 && dz == 0;
-            case TerrainShape.DiagSW: return dx == 0 && dz == 0;
-            default: return true;
+            case TerrainShape.RampN: return dz == 1 ? 1f : TerrainAo.OccupancyRampLow;
+            case TerrainShape.RampE: return dx == 1 ? 1f : TerrainAo.OccupancyRampLow;
+            case TerrainShape.RampS: return dz == 0 ? 1f : TerrainAo.OccupancyRampLow;
+            case TerrainShape.RampW: return dx == 0 ? 1f : TerrainAo.OccupancyRampLow;
+            case TerrainShape.DiagNW: return DiagOcclusion(dx, dz, 0, 1);
+            case TerrainShape.DiagNE: return DiagOcclusion(dx, dz, 1, 1);
+            case TerrainShape.DiagSE: return DiagOcclusion(dx, dz, 1, 0);
+            case TerrainShape.DiagSW: return DiagOcclusion(dx, dz, 0, 0);
+            default: return 1f;
         }
+    }
+
+    private static float DiagOcclusion(int dx, int dz, int solidDx, int solidDz)
+    {
+        if (dx == solidDx && dz == solidDz)
+            return 1f; // 直角（solid 側）の角
+        if (dx == 1 - solidDx && dz == 1 - solidDz)
+            return 0f; // 空き側の角
+        return TerrainAo.OccupancyDiagTip; // 斜辺の両端
     }
 
     // ── 頂点バッファへの発行 ──────────────────────────────────────────────────
