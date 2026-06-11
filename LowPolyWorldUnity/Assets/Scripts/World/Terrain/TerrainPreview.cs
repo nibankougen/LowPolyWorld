@@ -17,13 +17,18 @@ public class TerrainPreview : MonoBehaviour
     [Tooltip("Height Culling 閾値（-1 = 無効）。建物の天井が y=5 にあるので 5 で 1 階内部が見える")]
     public int heightCullThreshold = -1;
 
+    [Tooltip("ON で白一色テクスチャにして AO（頂点カラー）だけを確認する。変更後は右クリック → 再構築")]
+    public bool plainWhiteTexture;
+
+    [ContextMenu("再構築")]
     public void BuildSample()
     {
         var terrainRenderer = GetComponent<TerrainRenderer>();
         if (terrainRenderer == null)
             terrainRenderer = gameObject.AddComponent<TerrainRenderer>();
 
-        terrainRenderer.Build(CreateSampleStore(), TerrainDebugAtlas.CreateAtlasMap(), TerrainDebugAtlas.CreateTexture());
+        terrainRenderer.Build(
+            CreateSampleStore(), TerrainDebugAtlas.CreateAtlasMap(), TerrainDebugAtlas.CreateTexture(plainWhiteTexture));
         terrainRenderer.ApplyHeightCullingThreshold(heightCullThreshold);
     }
 

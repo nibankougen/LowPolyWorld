@@ -9,12 +9,18 @@ public static class TerrainPreviewMenu
     private const string PreviewObjectName = "TerrainPreview";
 
     [MenuItem("Tools/LowPolyWorld/地形プレビューを生成")]
-    public static void CreatePreview()
+    public static void CreatePreview() => CreatePreview(false);
+
+    [MenuItem("Tools/LowPolyWorld/地形プレビューを生成（AO確認・白一色）")]
+    public static void CreatePlainPreview() => CreatePreview(true);
+
+    private static void CreatePreview(bool plainWhiteTexture)
     {
         RemovePreview();
 
         var go = new GameObject(PreviewObjectName);
         var preview = go.AddComponent<TerrainPreview>();
+        preview.plainWhiteTexture = plainWhiteTexture;
         preview.BuildSample();
         Selection.activeGameObject = go;
         SceneView.lastActiveSceneView?.Frame(new Bounds(new Vector3(8f, 2f, 8f), new Vector3(18f, 8f, 18f)), false);

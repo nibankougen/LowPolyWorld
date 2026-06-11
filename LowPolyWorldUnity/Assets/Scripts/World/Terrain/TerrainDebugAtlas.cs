@@ -22,16 +22,30 @@ public static class TerrainDebugAtlas
             new TerrainAtlasMap.Entry(true, FixedTextureRect),
         });
 
-    public static Texture2D CreateTexture()
+    /// <summary>
+    /// プレースホルダーアトラスを生成する。
+    /// plainWhite = true で全面白一色（AO の頂点カラーだけを確認するモード）。
+    /// </summary>
+    public static Texture2D CreateTexture(bool plainWhite = false)
     {
         var texture = new Texture2D(AtlasSize, AtlasSize, TextureFormat.RGBA32, false)
         {
-            name = "TerrainDebugAtlas",
+            name = plainWhite ? "TerrainDebugAtlasPlain" : "TerrainDebugAtlas",
             filterMode = FilterMode.Point,
             wrapMode = TextureWrapMode.Clamp,
         };
 
         var pixels = new Color32[AtlasSize * AtlasSize];
+        if (plainWhite)
+        {
+            var white = new Color32(255, 255, 255, 255);
+            for (int i = 0; i < pixels.Length; i++)
+                pixels[i] = white;
+            texture.SetPixels32(pixels);
+            texture.Apply(false, false);
+            return texture;
+        }
+
         var unused = new Color32(60, 60, 70, 255);
         for (int i = 0; i < pixels.Length; i++)
             pixels[i] = unused;
