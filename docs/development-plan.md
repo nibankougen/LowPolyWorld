@@ -979,7 +979,7 @@
   - [ ] 配置・メッシュ表示（数字レンダリング — 描画方式は桁メッシュ切替 / 数字アトラス UV のいずれかを実装時に選定・プレミアム制限・ステート変更エフェクトとのワイヤリング・タイマー参照分の毎秒更新）
 - [x] 背景レンダリング（単色・グラデーション・テクスチャ）— `WorldBackgroundController`（テクスチャ: API統合後）
 - [x] 環境カラー対応
-  - [ ] 地形シェーダーに `_AmbientColor` プロパティを追加（`texel × vertex_AO × ambient`）— 地形システム実装時
+  - [x] 地形シェーダーに `_AmbientColor` プロパティを追加（`texel × vertex_AO × ambient`）— `LowPolyTerrain.shader`
   - [x] 共通 Unlit シェーダー（アバター・オブジェクト用）に `_AmbientColor` プロパティを追加（`texel × ambient`）— `LowPolyUnlit.shader`
   - [x] ワールド読み込み時に `ambientColor` を JSON から取得してシェーダーに渡す — `WorldEnvironmentController`
   - [x] world JSON への `ambientColor` フィールド対応（保存・読み込み。デフォルト `#FFFFFF`）— `WorldDefinitionJson`
@@ -1015,8 +1015,8 @@
     - [x] テクスチャ領域選択ルール（上面/上面中間/側面系/坂側面系/下面）— `TerrainFaceRegion` + `TerrainTextureLayout`
     - [x] ランダム地形テクスチャのバリアント選択ハッシュ関数実装 — `TerrainTextureHash`
     - [x] UV 設定: 領域内 [0.005,0.005]〜[0.995,0.995] + アトラス変換・坂面三角形 UV — `TerrainAtlasMap`
-    - [ ] Filter Mode: Point (no filter) を地形テクスチャに設定
-    - [ ] チャンク単位の結合メッシュレンダリング（地形アトラス 1 マテリアル・Mesh 構築 MonoBehaviour。仕様変更により面単位 DrawMeshInstanced は不採用 — 15.14）
+    - [x] Filter Mode: Point (no filter) を地形テクスチャに設定 — `TerrainRenderer.EnsureMaterials`（サーバー配信テクスチャは API 連携時にも適用）
+    - [x] チャンク単位の結合メッシュレンダリング（地形アトラス 1 マテリアル・Mesh 構築 MonoBehaviour。仕様変更により面単位 DrawMeshInstanced は不採用 — 15.14）— `LowPolyTerrain.shader` + `TerrainRenderer`（BoxCollider 適用含む。プレビュー: Tools/LowPolyWorld/地形プレビューを生成）
     - [x] 頂点カラー AO 計算（メッシュ生成時に 1 度だけ実行・頂点カラーとして保存）— `TerrainAo` + `TerrainMeshBuilder`
       - [x] 通常面（cube）: 隣接ブロックの有無をウェイト 1.0 で加算し明度 0〜0.75 にマッピング
       - [x] 坂/斜め面（ramp/diag）: 斜め面限定で同高さ隣接ブロックも参照・重複ウェイトは大きい方を採用する形状 × 頂点ごとのルールテーブルを実装
@@ -1025,7 +1025,8 @@
       - [x] 閾値計算・非表示判定ロジック（ボクセル列走査 — 物理レイキャスト不要）— `TerrainHeightCulling`
       - [x] 表示反映方式の決定: シェーダークリップ（`_CullHeightY` グローバル uniform + 完全上方チャンクのレンダラー無効化 — 15.11 表示反映方式）
       - [x] 上面中間フェイスの hidden tops メッシュ生成（UV2.x = ブロック上面 grid Y）— `TerrainMeshBuilder` → `TerrainChunkMeshes`
-      - [ ] 地形シェーダーの clip + UV2 切替実装・適用 MonoBehaviour（オブジェクト/他プレイヤー非表示含む）— レンダリング統合時
+      - [x] 地形シェーダーの clip + UV2 切替実装・適用 MonoBehaviour — `LowPolyTerrain.shader`（_CullHeightY / _CullGridY / _HIDDEN_TOP_MODE）+ `TerrainRenderer.ApplyHeightCullingThreshold`
+      - [ ] オブジェクト・他プレイヤーの非表示適用（`TerrainHeightCulling.IsWorldYHidden` をワールドモード統合時に接続）
     - [ ] **地形タブ UI**（セクション 11.7.2）
       - [ ] 斜め上固定カメラ・高さスライス表示・グリッド境界描画
       - [ ] 高さバー（右側スクロール）・上方半透明表示・上方非表示トグル
