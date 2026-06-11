@@ -11,6 +11,8 @@ using UnityEngine;
 /// - UV は領域内 [0.005, 0.995] を使用し、坂の三角形側面は領域左下の直角三角形を使う（15.10）
 /// - 頂点カラーへ簡易 AO を焼き込む（15.16 グループ1〜3）
 /// - ramp / diag は North 基準の形状を XZ 回転して導出する
+/// - 直上ブロックでカリングされた上面は HiddenTops（上面中間フェイス）として別バッファに生成し、
+///   UV2.x にブロック上面の Y グリッドインデックスを焼き込む（Height Culling 用 — 15.11）
 /// - 出力座標は store グリッド基準の Unity 単位（1 ブロック = 0.5m）。ワールド中心への
 ///   平行移動は上位レイヤー（MonoBehaviour）が transform で行う
 /// </summary>
@@ -22,12 +24,14 @@ public class TerrainMeshBuilder
     private const float UvMin = 0.005f;
     private const float UvRange = 0.99f;
 
+    private const float NoUv2 = -1f;
+
     private ITerrainVoxelSampler _sampler;
     private ITerrainAtlasMap _atlas;
-    private TerrainMeshData _data;
+    private TerrainChunkMeshes _meshes;
 
     /// <summary>指定チャンクのメッシュデータを生成する（隣接変化時は該当チャンクのみ再生成する）。</summary>
-    public TerrainMeshData BuildChunk(ITerrainVoxelSampler sampler, ITerrainAtlasMap atlasMap, int cx, int cy, int cz)
+    public TerrainChunkMeshes BuildChunk(ITerrainVoxelSampler sampler, ITerrainAtlasMap atlasMap, int cx, int cy, int cz)
     {
         if (sampler == null)
             throw new ArgumentNullException(nameof(sampler));
@@ -38,7 +42,7 @@ public class TerrainMeshBuilder
 
         _sampler = sampler;
         _atlas = atlasMap;
-        _data = new TerrainMeshData();
+        _meshes = new TerrainChunkMeshes();
 
         int ox = cx * TerrainChunk.Size;
         int oy = cy * TerrainChunk.Size;
@@ -62,10 +66,10 @@ public class TerrainMeshBuilder
             }
         }
 
-        var result = _data;
+        var result = _meshes;
         _sampler = null;
         _atlas = null;
-        _data = null;
+        _meshes = null;
         return result;
     }
 
@@ -138,12 +142,19 @@ public class TerrainMeshBuilder
     private void EmitTopFace(int x, int y, int z, byte voxel, Vector3[] verts, Vector2[] uvs)
     {
         byte above = _sampler.GetVoxel(x, y + 1, z);
-        if (TerrainNeighborRules.HidesTopFace(above))
-            return;
         var region = TerrainNeighborRules.IsSameKind(voxel, above)
             ? TerrainFaceRegion.TopMiddle
             : TerrainFaceRegion.Top;
-        EmitGroup1Face(x, y, z, voxel, TerrainFaceDir.Up, region, verts, uvs);
+        if (TerrainNeighborRules.HidesTopFace(above))
+        {
+            // 直上ブロックでカリングされた上面 → Height Culling で直上が消えたときだけ表示する
+            // 上面中間フェイス。UV2.x = 上面の Y グリッドインデックス（シェーダーが閾値と比較）
+            EmitGroup1Face(_meshes.HiddenTops, x, y, z, voxel, TerrainFaceDir.Up, region, verts, uvs, y + 1);
+        }
+        else
+        {
+            EmitGroup1Face(_meshes.Solid, x, y, z, voxel, TerrainFaceDir.Up, region, verts, uvs);
+        }
     }
 
     private void EmitBottomFace(int x, int y, int z, byte voxel, Vector3[] verts, Vector2[] uvs)
@@ -151,7 +162,7 @@ public class TerrainMeshBuilder
         byte below = _sampler.GetVoxel(x, y - 1, z);
         if (TerrainNeighborRules.HidesBottomFace(below))
             return;
-        EmitGroup1Face(x, y, z, voxel, TerrainFaceDir.Down, TerrainFaceRegion.Bottom, verts, uvs);
+        EmitGroup1Face(_meshes.Solid, x, y, z, voxel, TerrainFaceDir.Down, TerrainFaceRegion.Bottom, verts, uvs);
     }
 
     private void EmitSideFace(int x, int y, int z, byte voxel, TerrainFaceDir dir, Vector3[] verts, Vector2[] uvs)
@@ -160,7 +171,7 @@ public class TerrainMeshBuilder
         byte neighbor = _sampler.GetVoxel(x + dx, y, z + dz);
         if (TerrainNeighborRules.HidesSideFace(neighbor, dir))
             return;
-        EmitGroup1Face(x, y, z, voxel, dir, SideRegion(x, y, z, voxel), verts, uvs);
+        EmitGroup1Face(_meshes.Solid, x, y, z, voxel, dir, SideRegion(x, y, z, voxel), verts, uvs);
     }
 
     private void EmitRampTriangle(int x, int y, int z, byte voxel, TerrainFaceDir dir, Vector3[] verts, Vector2[] uvs)
@@ -170,7 +181,7 @@ public class TerrainMeshBuilder
         if (TerrainNeighborRules.HidesSideFace(neighbor, dir))
             return;
         var region = IsSameKindBelow(x, y, z, voxel) ? TerrainFaceRegion.RampSide : TerrainFaceRegion.RampSideBottom;
-        EmitGroup1Face(x, y, z, voxel, dir, region, verts, uvs);
+        EmitGroup1Face(_meshes.Solid, x, y, z, voxel, dir, region, verts, uvs);
     }
 
     private void EmitRampSlope(int x, int y, int z, byte voxel, int k)
@@ -191,7 +202,7 @@ public class TerrainMeshBuilder
             var (sx, sz) = RotDirXZ(RampSlopeSideX[i], 0, k); // 側方向（canonical では ±X）
             brightness[i] = SlopeBrightness(x, y, z, hx, hz, sx, sz, RampSlopeIsTop[i]);
         }
-        AddFace(x, y, z, verts, RampSlopeUv, brightness, rect);
+        AddFace(_meshes.Solid, x, y, z, verts, RampSlopeUv, brightness, rect, NoUv2);
     }
 
     private void EmitDiagHypotenuse(int x, int y, int z, byte voxel, int k)
@@ -212,20 +223,22 @@ public class TerrainMeshBuilder
                 darkness += TerrainAo.WeightStandard;
             brightness[i] = TerrainAo.Brightness(darkness);
         }
-        AddFace(x, y, z, verts, DiagHypotenuseUv, brightness, rect);
+        AddFace(_meshes.Solid, x, y, z, verts, DiagHypotenuseUv, brightness, rect, NoUv2);
     }
 
     private void EmitGroup1Face(
+        TerrainMeshData target,
         int x, int y, int z, byte voxel,
         TerrainFaceDir dir, TerrainFaceRegion region,
-        Vector3[] verts, Vector2[] uvs)
+        Vector3[] verts, Vector2[] uvs,
+        float uv2X = NoUv2)
     {
         Rect rect = GetUvRect(x, y, z, voxel, region, dir);
         var (nx, ny, nz) = TerrainFaceDirUtil.Offset(dir);
         var brightness = new float[verts.Length];
         for (int i = 0; i < verts.Length; i++)
             brightness[i] = Group1Brightness(x, y, z, nx, ny, nz, verts[i]);
-        AddFace(x, y, z, verts, uvs, brightness, rect);
+        AddFace(target, x, y, z, verts, uvs, brightness, rect, uv2X);
     }
 
     // ── テクスチャ領域選択（15.8）・UV ────────────────────────────────────────
@@ -319,27 +332,31 @@ public class TerrainMeshBuilder
 
     // ── 頂点バッファへの発行 ──────────────────────────────────────────────────
 
-    private void AddFace(int x, int y, int z, Vector3[] verts, Vector2[] uvs, float[] brightness, Rect rect)
+    private void AddFace(
+        TerrainMeshData target, int x, int y, int z,
+        Vector3[] verts, Vector2[] uvs, float[] brightness, Rect rect, float uv2X)
     {
-        int baseIndex = _data.Vertices.Count;
+        int baseIndex = target.Vertices.Count;
         for (int i = 0; i < verts.Length; i++)
         {
-            _data.Vertices.Add(new Vector3(x + verts[i].x, y + verts[i].y, z + verts[i].z) * BlockSize);
-            _data.Uvs.Add(new Vector2(
+            target.Vertices.Add(new Vector3(x + verts[i].x, y + verts[i].y, z + verts[i].z) * BlockSize);
+            target.Uvs.Add(new Vector2(
                 rect.x + (UvMin + uvs[i].x * UvRange) * rect.width,
                 rect.y + (UvMin + uvs[i].y * UvRange) * rect.height));
+            if (uv2X >= 0f)
+                target.Uvs2.Add(new Vector2(uv2X, 0f));
             float b = brightness[i];
-            _data.Colors.Add(new Color(b, b, b, 1f));
+            target.Colors.Add(new Color(b, b, b, 1f));
         }
 
-        _data.Triangles.Add(baseIndex);
-        _data.Triangles.Add(baseIndex + 1);
-        _data.Triangles.Add(baseIndex + 2);
+        target.Triangles.Add(baseIndex);
+        target.Triangles.Add(baseIndex + 1);
+        target.Triangles.Add(baseIndex + 2);
         if (verts.Length == 4)
         {
-            _data.Triangles.Add(baseIndex);
-            _data.Triangles.Add(baseIndex + 2);
-            _data.Triangles.Add(baseIndex + 3);
+            target.Triangles.Add(baseIndex);
+            target.Triangles.Add(baseIndex + 2);
+            target.Triangles.Add(baseIndex + 3);
         }
     }
 

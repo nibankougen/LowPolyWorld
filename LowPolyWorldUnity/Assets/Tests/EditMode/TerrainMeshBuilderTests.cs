@@ -313,6 +313,50 @@ public class TerrainMeshBuilderTests
         AssertAnyVertexWithColor(data, p => SamePos(p, 8.0f, 3.0f, 3.0f), AoOne);
     }
 
+    // ── 上面中間フェイス（Height Culling 用 hidden tops — 15.11） ─────────────
+
+    [Test]
+    public void BuildChunk_IsolatedCube_NoHiddenTops()
+    {
+        Set(5, 5, 5, TerrainShape.Cube);
+        Assert.IsTrue(BuildMeshes().HiddenTops.IsEmpty, "直上に何もなければ上面中間フェイスは生成しない");
+    }
+
+    [Test]
+    public void BuildChunk_StackedSameKindCubes_LowerTopEmittedAsHiddenTop()
+    {
+        Set(5, 5, 5, TerrainShape.Cube, 1);
+        Set(5, 6, 5, TerrainShape.Cube, 1);
+        var hidden = BuildMeshes().HiddenTops;
+
+        Assert.AreEqual(4, hidden.Vertices.Count, "カリングされた下段の上面 1 面のみ");
+        Assert.AreEqual(4, hidden.Uvs2.Count);
+        Assert.AreEqual(4, CountRegion(hidden, TerrainFaceRegion.TopMiddle), "上に同種あり → 上面中間領域");
+        foreach (var uv2 in hidden.Uvs2)
+            Assert.AreEqual(6f, uv2.x, Delta, "UV2.x = 上面の Y グリッドインデックス（ブロック Y + 1）");
+        foreach (var p in hidden.Vertices)
+            Assert.AreEqual(3.0f, p.y, Delta, "上面は y = 6 × 0.5m");
+    }
+
+    [Test]
+    public void BuildChunk_CubeUnderDifferentKindCube_HiddenTopUsesTopRegion()
+    {
+        Set(5, 5, 5, TerrainShape.Cube, 1);
+        Set(5, 6, 5, TerrainShape.Cube, 2);
+        var meshes = BuildMeshes();
+
+        // 上段の上面は通常表示（Solid 側）、hidden tops に入るのは下段の上面 1 面のみ
+        Assert.AreEqual(4, meshes.HiddenTops.Vertices.Count);
+        Assert.AreEqual(4, CountRegion(meshes.HiddenTops, TerrainFaceRegion.Top), "上に同種なし → 上面領域（15.8）");
+    }
+
+    [Test]
+    public void BuildChunk_SolidMesh_HasNoUv2()
+    {
+        Set(5, 5, 5, TerrainShape.Cube);
+        Assert.AreEqual(0, BuildMeshes().Solid.Uvs2.Count, "UV2 は hidden tops のみ使用");
+    }
+
     // ── UV・バリアント選択 ────────────────────────────────────────────────────
 
     [Test]
@@ -355,7 +399,9 @@ public class TerrainMeshBuilderTests
 
     // ── ヘルパー ──────────────────────────────────────────────────────────────
 
-    private TerrainMeshData Build(int cx = 0, int cy = 0, int cz = 0) =>
+    private TerrainMeshData Build(int cx = 0, int cy = 0, int cz = 0) => BuildMeshes(cx, cy, cz).Solid;
+
+    private TerrainChunkMeshes BuildMeshes(int cx = 0, int cy = 0, int cz = 0) =>
         _builder.BuildChunk(new TerrainStoreSampler(_store), _map, cx, cy, cz);
 
     private void Set(int x, int y, int z, TerrainShape shape, int palette = 0) =>

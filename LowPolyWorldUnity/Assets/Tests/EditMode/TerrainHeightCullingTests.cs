@@ -87,6 +87,17 @@ public class TerrainHeightCullingTests
         Assert.IsFalse(TerrainHeightCulling.IsWorldYHidden(99f, TerrainHeightCulling.NoCulling));
     }
 
+    [Test]
+    public void IsChunkFullyHidden_ChunkBottomAtOrAboveThreshold()
+    {
+        // チャンク cy=1 はブロック y=16〜31 を含む
+        Assert.IsTrue(TerrainHeightCulling.IsChunkFullyHidden(1, 16), "チャンク下端 = 閾値 → 全体非表示");
+        Assert.IsTrue(TerrainHeightCulling.IsChunkFullyHidden(1, 10));
+        Assert.IsFalse(TerrainHeightCulling.IsChunkFullyHidden(1, 17), "閾値がチャンク内 → シェーダークリップ側で処理");
+        Assert.IsFalse(TerrainHeightCulling.IsChunkFullyHidden(0, 5));
+        Assert.IsFalse(TerrainHeightCulling.IsChunkFullyHidden(1, TerrainHeightCulling.NoCulling));
+    }
+
     private int Compute(Vector3 playerPosition) =>
         TerrainHeightCulling.ComputeThreshold(new TerrainStoreSampler(_store), playerPosition);
 

@@ -1023,7 +1023,9 @@
     - [x] コライダー生成ロジック（グリーディーメッシュ法・XZ 優先 BoxCollider 結合 + Y 結合。ramp は薄板 4 段の階段近似 / diag は XZ 内側階段近似 — 15.15）— `TerrainColliderBuilder`（BoxCollider 適用・stepOffset 0.26 設定は Mesh 構築 MonoBehaviour 実装時）
     - [ ] Height Culling（プレイヤー真上の判定 → 閾値以上を非表示・上面中間テクスチャ切り替え）
       - [x] 閾値計算・非表示判定ロジック（ボクセル列走査 — 物理レイキャスト不要）— `TerrainHeightCulling`
-      - [ ] 表示反映（チャンクメッシュの Y スライス or シェーダークリップ・上面中間フェイスの生成と表示切替・オブジェクト/他プレイヤー非表示 — レンダリング統合時に方式選定）
+      - [x] 表示反映方式の決定: シェーダークリップ（`_CullHeightY` グローバル uniform + 完全上方チャンクのレンダラー無効化 — 15.11 表示反映方式）
+      - [x] 上面中間フェイスの hidden tops メッシュ生成（UV2.x = ブロック上面 grid Y）— `TerrainMeshBuilder` → `TerrainChunkMeshes`
+      - [ ] 地形シェーダーの clip + UV2 切替実装・適用 MonoBehaviour（オブジェクト/他プレイヤー非表示含む）— レンダリング統合時
     - [ ] **地形タブ UI**（セクション 11.7.2）
       - [ ] 斜め上固定カメラ・高さスライス表示・グリッド境界描画
       - [ ] 高さバー（右側スクロール）・上方半透明表示・上方非表示トグル

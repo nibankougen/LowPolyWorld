@@ -51,4 +51,11 @@ public static class TerrainHeightCulling
     /// </summary>
     public static bool IsWorldYHidden(float storeUnityY, int threshold) =>
         threshold != NoCulling && storeUnityY >= threshold * TerrainMeshBuilder.BlockSize;
+
+    /// <summary>
+    /// チャンク全体が閾値より上にあるか（true ならシェーダークリップを待たず
+    /// チャンクのレンダラーごと無効化して頂点コストも削減できる — 15.11 表示反映方式）。
+    /// </summary>
+    public static bool IsChunkFullyHidden(int chunkY, int threshold) =>
+        threshold != NoCulling && chunkY * TerrainChunk.Size >= threshold;
 }
