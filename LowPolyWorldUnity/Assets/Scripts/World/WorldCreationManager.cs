@@ -42,6 +42,12 @@ public class WorldCreationManager : MonoBehaviour
     public void LoadWorldDefinition(string json, bool isPremium)
     {
         _currentDef = WorldDefinition.FromJson(json);
+        if (_currentDef == null)
+        {
+            // 解析失敗・フォーマットバージョン不一致（後方互換なし — シリアライズ規約）
+            Debug.LogError("ワールド定義 JSON の読み込みに失敗しました（解析失敗または version 不一致）");
+            _currentDef = WorldDefinition.CreateBlank();
+        }
         _settingsLogic = new WorldSettingsPanelLogic(isPremium);
         _settingsLogic.LoadFrom(_currentDef);
         ApplyBgmToPlayer();

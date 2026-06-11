@@ -259,21 +259,21 @@ public class GimmickRuleConverterTests
     }
 
     [Test]
-    public void Convert_MoveObject_MapsPositionAndSpeed()
+    public void Convert_MoveObject_ConvertsGridPositionToMeters()
     {
         var action = new GimmickAction
         {
             type = "moveObject",
             targetId = "inst_door",
             floatParam = 2.5f,
-            position = new Vec3Json(1f, 0f, 3f),
+            position = new IntVec3Json(2, 0, 6), // グリッド整数（0.5m 単位）
         };
         var result = GimmickRuleConverter.Convert(
             new[] { Rule(actions: new[] { action }) }, FullRefs());
 
         Assert.AreEqual(1, result.Rules.Count);
         var rt = result.Rules[0].Actions[0];
-        Assert.AreEqual(new Vector3(1f, 0f, 3f), rt.PositionParam);
+        Assert.AreEqual(new Vector3(1f, 0f, 3f), rt.PositionParam, "2,0,6 グリッド × 0.5m = 1,0,3 m");
         Assert.AreEqual(2.5f, rt.FloatParam);
     }
 

@@ -17,10 +17,11 @@ public class GimmickStateManager
     public const int MaxStateValue = 255;
 
     private readonly int[] _worldStates = new int[MaxWorldStates];
-    private readonly int[] _worldInitials; // 定義ファイルの初期値（リセット時に使用）
+    private readonly int[] _worldInitials;  // 定義ファイルの初期値（リセット時に使用）
+    private readonly int[] _playerInitials; // プレイヤーステートの初期値（入場時・リセット時に使用・全プレイヤー共通）
     private readonly Dictionary<string, int[]> _playerStates = new();
 
-    public GimmickStateManager(int[] worldInitials = null)
+    public GimmickStateManager(int[] worldInitials = null, int[] playerInitials = null)
     {
         _worldInitials = new int[MaxWorldStates];
         if (worldInitials != null)
@@ -29,6 +30,13 @@ public class GimmickStateManager
                 _worldInitials[i] = Clamp(worldInitials[i]);
         }
         Array.Copy(_worldInitials, _worldStates, MaxWorldStates);
+
+        _playerInitials = new int[MaxPlayerStates];
+        if (playerInitials != null)
+        {
+            for (int i = 0; i < Math.Min(playerInitials.Length, MaxPlayerStates); i++)
+                _playerInitials[i] = Clamp(playerInitials[i]);
+        }
     }
 
     // ── ワールドステート ───────────────────────────────────────────────────────
@@ -100,19 +108,19 @@ public class GimmickStateManager
     public void ResetWorldStates() =>
         Array.Copy(_worldInitials, _worldStates, MaxWorldStates);
 
-    /// <summary>指定プレイヤーのステートを全て 0 にリセットする。</summary>
+    /// <summary>指定プレイヤーのステートを初期値に戻す（world-creation.md 9.1）。</summary>
     public void ResetPlayerStates(string playerId)
     {
         if (_playerStates.TryGetValue(playerId, out var states))
-            Array.Clear(states, 0, MaxPlayerStates);
+            Array.Copy(_playerInitials, states, MaxPlayerStates);
     }
 
-    /// <summary>全プレイヤーのステートを 0 にリセットし、ワールドステートを初期値に戻す。</summary>
+    /// <summary>全プレイヤー・ワールドのステートを初期値に戻す。</summary>
     public void ResetAll()
     {
         ResetWorldStates();
         foreach (var states in _playerStates.Values)
-            Array.Clear(states, 0, MaxPlayerStates);
+            Array.Copy(_playerInitials, states, MaxPlayerStates);
     }
 
     /// <summary>プレイヤーが退出したとき: そのプレイヤーのステートエントリを削除する。</summary>
@@ -127,7 +135,9 @@ public class GimmickStateManager
     {
         if (!_playerStates.TryGetValue(playerId, out var states))
         {
+            // 入場時点で初期値にリセットされる（world-creation.md 9.1）
             states = new int[MaxPlayerStates];
+            Array.Copy(_playerInitials, states, MaxPlayerStates);
             _playerStates[playerId] = states;
         }
         return states;

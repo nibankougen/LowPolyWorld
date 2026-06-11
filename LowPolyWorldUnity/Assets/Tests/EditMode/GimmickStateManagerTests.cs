@@ -166,4 +166,39 @@ public class GimmickStateManagerTests
         Assert.AreEqual(0, _mgr.GetWorldState(0));
         Assert.AreEqual(0, _mgr.GetPlayerState("p1", 0));
     }
+
+    // ── プレイヤーステート初期値（world-creation.md 9.1 / 11.7.4） ─────────────
+
+    [Test]
+    public void PlayerInitials_NewPlayerStartsAtInitialValues()
+    {
+        var mgr = new GimmickStateManager(playerInitials: new[] { 100, 50 });
+
+        Assert.AreEqual(100, mgr.GetPlayerState("p1", 0), "入場時点で初期値");
+        Assert.AreEqual(50, mgr.GetPlayerState("p1", 1));
+        Assert.AreEqual(0, mgr.GetPlayerState("p1", 2), "未指定分は 0");
+    }
+
+    [Test]
+    public void PlayerInitials_ResetRestoresInitialValues()
+    {
+        var mgr = new GimmickStateManager(playerInitials: new[] { 100 });
+        mgr.SetPlayerState("p1", 0, 10);
+
+        mgr.ResetPlayerStates("p1");
+        Assert.AreEqual(100, mgr.GetPlayerState("p1", 0), "リセットは 0 ではなく初期値に戻す");
+
+        mgr.SetPlayerState("p1", 0, 10);
+        mgr.ResetAll();
+        Assert.AreEqual(100, mgr.GetPlayerState("p1", 0), "ResetAll も初期値に戻す");
+    }
+
+    [Test]
+    public void PlayerInitials_ClampedTo0To255()
+    {
+        var mgr = new GimmickStateManager(playerInitials: new[] { 300, -5 });
+
+        Assert.AreEqual(255, mgr.GetPlayerState("p1", 0));
+        Assert.AreEqual(0, mgr.GetPlayerState("p1", 1));
+    }
 }

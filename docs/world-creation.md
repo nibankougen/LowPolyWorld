@@ -345,7 +345,8 @@ UI 仕様: `docs/screens-and-modes.md` セクション 12 参照
 
 - 各プレイヤーにつき最大 4 種類
 - 各状態: 0 〜 255 の整数値
-- ルームに入場した時点で全て 0 にリセット
+- 名前ラベルと**初期値**（0〜255・全プレイヤー共通・デフォルト 0）をワールド作成モードで設定可能（11.7.4）
+- ルームに入場した時点で全て**初期値**にリセット（状態リセットアクションも初期値に戻す）
 
 **同期:**
 
@@ -511,7 +512,7 @@ UI 仕様: `docs/screens-and-modes.md` セクション 12 参照
 
 | 対象 | リセットされるもの |
 |---|---|
-| 入力プレイヤー / 相手プレイヤー / 全プレイヤー | 対象プレイヤーのステート（0 に戻す）+ インベントリ返却（配置由来は元の位置へ・付与品は消滅）+ 移動速度 100% に復帰 + 頭上マーカー消去 |
+| 入力プレイヤー / 相手プレイヤー / 全プレイヤー | 対象プレイヤーのステート（初期値に戻す — 9.1）+ インベントリ返却（配置由来は元の位置へ・付与品は消滅）+ 移動速度 100% に復帰 + 頭上マーカー消去 |
 | ワールド | ワールドステート（初期値に戻す）+ BGM オーバーライド解除（デフォルト BGM に復帰）+ オブジェクトの表示 / 種類切り替え状態を初期状態へ |
 | すべて | 上記の「全プレイヤー」+「ワールド」のすべて + 全タイマーをリセット（0 で停止）+ オブジェクト位置をワールド初期配置へ（進行中の移動は中断） |
 
@@ -765,7 +766,7 @@ UI 仕様: `docs/screens-and-modes.md` セクション 12 参照
 
 ```json
 {
-  "version": 2,
+  "version": 3,
   "worldName": "string",
   "tags": ["string"],
   "maxPlayers": 6,
@@ -793,11 +794,14 @@ UI 仕様: `docs/screens-and-modes.md` セクション 12 参照
       "instanceId": "uuid",
       "objectTypeId": "string",
       "savedVariantId": "string | null",
-      "position": { "x": 0.0, "y": 0.0, "z": 0.0 },
+      "groupId": "",
+      "position": { "x": 0, "y": 0, "z": 0 },
       "rotationY": 0,
-      "visible": true,
-      "size": { "x": 1.0, "y": 1.0, "z": 1.0 }
+      "size": { "x": 0, "y": 0, "z": 0 }
     }
+  ],
+  "objectGroups": [
+    { "groupId": "uuid", "name": "string", "parentGroupId": "", "sortOrder": 0 }
   ],
   "worldObjectCustomizations": {
     "objectTypeId": {
@@ -807,20 +811,39 @@ UI 仕様: `docs/screens-and-modes.md` セクション 12 参照
     }
   },
   "specialObjects": {
-    "spawn": { "position": { "x": 0.0, "y": 0.0, "z": 0.0 }, "rotationY": 0 },
+    "spawn": { "position": { "x": 0, "y": 0, "z": 0 }, "rotationY": 0 },
     "portals": [...],
     "worldPortals": [...],
     "areas": [...]
   },
+  "numberObjects": [
+    {
+      "instanceId": "uuid",
+      "source": "worldState | playerState | timer | fixed",
+      "stateIndex": 0,
+      "playerNumber": 1,
+      "timerIndex": 0,
+      "countdownFromSeconds": 0,
+      "fixedValue": 0
+    }
+  ],
   "gimmicks": [
     {
       "ruleId": "uuid",
-      "trigger": { "type": "string", "targetId": "string" },
-      "conditions": [ { "type": "string", "stateIndex": 0, "operator": "eq|gt|lt", "value": 0 } ],
-      "actions": [ { "type": "string", "targetId": "string", "params": {} } ]
+      "label": "string",
+      "groupId": "",
+      "triggers": [ { "type": "string", "targetId": "string", "timerIndex": 0, "timerSeconds": 0.0 } ],
+      "conditions": [ { "type": "string", "stateIndex": 0, "op": "eq", "threshold": { "kind": "fixed", "value": 0 } } ],
+      "actions": [ { "type": "string", "targetId": "string", "stateOp": "set", "value": { "kind": "fixed", "value": 0 } } ]
     }
   ],
+  "gimmickGroups": [
+    { "groupId": "uuid", "name": "string", "parentGroupId": "", "sortOrder": 0 }
+  ],
   "worldStates": [
+    { "index": 0, "label": "string", "initialValue": 0 }
+  ],
+  "playerStates": [
     { "index": 0, "label": "string", "initialValue": 0 }
   ],
   "timers": [
@@ -842,7 +865,11 @@ UI 仕様: `docs/screens-and-modes.md` セクション 12 参照
 
 - `maxPlayers`: ルームの最大収容人数（デフォルト 6。通常ユーザー: 2〜6 の整数、プレミアム: 2〜24 の整数）
 - `objects[].savedVariantId`: 保存バリアントを使う場合に指定。`null` の場合は `worldObjectCustomizations` のカスタマイズ（なければデフォルト）を使用
-- `objects[].size`: インスタンスごとのサイズ上書き（W / D / H、0.25m 単位）。省略（`null`）の場合はオブジェクトタイプの規定サイズを使用
+- `objects[].size`: インスタンスごとのサイズ上書き（W / D / H、0.25m 単位の整数）。**`(0,0,0)` はオブジェクトタイプの規定サイズを使用するセンチネル**
+- `objectGroups` / `gimmickGroups`: オブジェクトタブ / ギミックタブのグループツリー（編集 UI 復元用メタデータ。最大 4 段ネスト）
+- `numberObjects`: 数字オブジェクトの設定（セクション 3.9）。`instanceId` で配置オブジェクトに紐づく
+- `playerStates`: プレイヤーステート 0〜3 の名前ラベルと初期値（セクション 9.1）
+- `gimmicks`: ギミックルール（セクション 9。詳細スキーマは `WorldDefinition.cs` の GimmickRule 系クラスが正）
 - `worldObjectCustomizations`: このワールドのオブジェクト種別ごとのスコープカスタマイズ（ワールド保存時に更新）
 - `atlasUVMap` のキー: objectTypeId（ワールドスコープカスタマイズまたはデフォルト）または savedVariantId（保存バリアント）のいずれか
 - `terrain.palette`: 使用する地形種別の UID（int64 を文字列化）の配列（最大 16 要素）
@@ -856,6 +883,21 @@ UI 仕様: `docs/screens-and-modes.md` セクション 12 参照
 - `fog.endDistance`: フォグが 100% 適用される距離（m）。この距離以降はフォグカラーのみ（デフォルト `50.0`）。`endDistance > startDistance` が必須
 - `screenEffect.type`: スクリーンオーバーレイエフェクトの種類（`"none"` / `"rain"`。デフォルト `"none"`。将来プレミアム向け種類を追加予定）
 - `screenEffect.intensity`: エフェクトの強度（0〜100。デフォルト `100`）
+
+### 12.2b シリアライズ規約
+
+- **version**: フォーマットバージョン（現行 **3**）。クライアント・サーバーとも**一致しない version は読み込み拒否**する
+  （リリース前のため後方互換なし。リリース後の互換ポリシーはメジャーアップデート時に別途定義）
+- **座標はグリッド整数**で保存する（float メートルは使わない — 浮動小数誤差の排除・範囲検証の単純化）:
+  - 位置: **0.5m 単位**の整数（原点中心。X/Z: −31〜31・Y: −15〜15）
+  - サイズ: **0.25m 単位**の整数
+  - 回転: **45° 単位**の整数（rotationY: 0〜7 相当）
+- **null は使わない**: 「未設定」はセンチネル値で表現する（オブジェクトサイズ `(0,0,0)` = 種別デフォルト）。
+  JsonUtility が null のオブジェクト参照を往復できないため
+- **配列順が正**: `objects` の配列順 = 描画順 / `gimmicks` の配列順 = 実行順。
+  エディタはグループツリーの**深さ優先順**で書き出す。`objectGroups` / `gimmickGroups` は
+  ツリー復元用メタデータ（`sortOrder` = 親内での表示位置）であり、実行・描画には影響しない
+- **最大サイズ**: ワールド定義 JSON は **2MB** まで（サーバー保存時に検証・超過は拒否）
 
 ### 12.3 ランタイム読み込みフロー
 

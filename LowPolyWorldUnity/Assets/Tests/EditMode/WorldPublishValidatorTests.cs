@@ -16,7 +16,7 @@ public class WorldPublishValidatorTests
             worldName = "テストワールド",
             specialObjects = new SpecialObjectsData
             {
-                spawn = new SpawnPointData { isSet = true, position = new Vec3Json(0f, 0f, 0f) },
+                spawn = new SpawnPointData { isSet = true, position = new IntVec3Json(0, 0, 0) },
             },
         };
 
@@ -89,7 +89,7 @@ public class WorldPublishValidatorTests
     {
         // (0,0,0) は isSet=true なら有効なスポーン位置
         var def = ValidDef();
-        def.specialObjects.spawn = new SpawnPointData { isSet = true, position = new Vec3Json(0f, 0f, 0f) };
+        def.specialObjects.spawn = new SpawnPointData { isSet = true, position = new IntVec3Json(0, 0, 0) };
         var errors = Run(def);
         CollectionAssert.DoesNotContain(errors, PublishError.SpawnNotSet);
     }

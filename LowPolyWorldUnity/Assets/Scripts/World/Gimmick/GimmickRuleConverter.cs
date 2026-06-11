@@ -368,7 +368,8 @@ public static class GimmickRuleConverter
             boolParam: json.visible,
             timerIndex: json.timerIndex,
             floatParam: json.floatParam,
-            positionParam: json.position?.ToVector3() ?? default,
+            // JSON はグリッド整数（0.5m 単位）・ランタイムはメートル
+            positionParam: json.position?.ToVector3(WorldDefinition.PositionUnit) ?? default,
             resetTarget: resetTarget);
     }
 
