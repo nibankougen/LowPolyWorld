@@ -81,6 +81,20 @@ public class TerrainRenderer : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 地形タブの高さスライス表示: threshold 以上の Y グリッドの地形を市松模様ディザで半透明風にする
+    /// （screens-and-modes.md 11.7.2「上方半透明」。TerrainHeightCulling.NoCulling で解除）。
+    /// 編集対象の高さ h を渡す場合は threshold = h + 1（h より上をディザ）。
+    /// </summary>
+    public void ApplyDitherThreshold(int threshold)
+    {
+        if (_solidMaterial == null)
+            return;
+        bool active = threshold != TerrainHeightCulling.NoCulling;
+        _solidMaterial.SetFloat("_DitherHeightY",
+            active ? transform.position.y + threshold * TerrainMeshBuilder.BlockSize : CullDisabled);
+    }
+
     /// <summary>全チャンクオブジェクトと生成リソースを破棄する。</summary>
     public void Clear()
     {

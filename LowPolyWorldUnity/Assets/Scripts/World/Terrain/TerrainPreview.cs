@@ -17,6 +17,10 @@ public class TerrainPreview : MonoBehaviour
     [Tooltip("Height Culling 閾値（-1 = 無効）。建物の天井が y=5 にあるので 5 で 1 階内部が見える")]
     public int heightCullThreshold = -1;
 
+    [Range(-1, 31)]
+    [Tooltip("地形タブの上方半透明（ディザ）閾値（-1 = 無効）。この高さ以上の地形が市松模様になる")]
+    public int ditherThreshold = -1;
+
     [Tooltip("ON で白一色テクスチャにして AO（頂点カラー）だけを確認する。変更後は右クリック → 再構築")]
     public bool plainWhiteTexture;
 
@@ -45,8 +49,10 @@ public class TerrainPreview : MonoBehaviour
         if (this == null)
             return; // 破棄済み
         var terrainRenderer = GetComponent<TerrainRenderer>();
-        if (terrainRenderer != null)
-            terrainRenderer.ApplyHeightCullingThreshold(heightCullThreshold);
+        if (terrainRenderer == null)
+            return;
+        terrainRenderer.ApplyHeightCullingThreshold(heightCullThreshold);
+        terrainRenderer.ApplyDitherThreshold(ditherThreshold);
     }
 
     private static TerrainVoxelStore CreateSampleStore()

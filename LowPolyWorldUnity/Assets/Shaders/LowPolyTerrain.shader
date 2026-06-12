@@ -11,6 +11,8 @@ Shader "LowPoly/Terrain"
         // Height Culling（TerrainRenderer が設定。1e6 = 無効）
         _CullHeightY ("Cull Height (World Y)", Float) = 1000000
         _CullGridY ("Cull Threshold (Grid Y)", Float) = 1000000
+        // 地形タブの上方半透明（市松模様ディザ。1e6 = 無効）
+        _DitherHeightY ("Dither Height (World Y)", Float) = 1000000
         [Toggle(_HIDDEN_TOP_MODE)] _HiddenTopMode ("Hidden Top Mode", Float) = 0
         // Set globally via Shader.SetGlobalColor("_AmbientColor", ...) by WorldEnvironmentController
         [HideInInspector] _AmbientColor ("Ambient Color", Color) = (1, 1, 1, 1)
@@ -51,6 +53,7 @@ Shader "LowPoly/Terrain"
                 half _Cutoff;
                 float _CullHeightY;
                 float _CullGridY;
+                float _DitherHeightY;
             CBUFFER_END
 
             // Global ambient color set by WorldEnvironmentController
@@ -103,6 +106,14 @@ Shader "LowPoly/Terrain"
                 // 上向きの面（頂点カラー α = 1）はカット平面と一致する高さでも表示し、
                 // 非表示ブロックの下面（同じ高さ・α = 0）は浮動小数の揺らぎなく確実に破棄する
                 clip(_CullHeightY + input.color.a * 0.25 - input.worldY - 0.0002);
+
+                // 地形タブの上方半透明: _DitherHeightY 以上を市松模様ディザで間引く
+                // （screens-and-modes.md §11.7.2 — 透明禁止制約のためアルファブレンドは使わない）
+                if (input.worldY + 0.0002 - input.color.a * 0.25 >= _DitherHeightY)
+                {
+                    uint2 pixel = (uint2)input.positionHCS.xy;
+                    clip((float)((pixel.x + pixel.y) & 1) - 0.5);
+                }
                 #endif
 
                 half4 texColor = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, input.uv);
