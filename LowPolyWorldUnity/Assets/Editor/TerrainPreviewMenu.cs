@@ -1,5 +1,6 @@
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 /// <summary>
 /// 地形プレビューの生成・削除メニュー（見た目確認用 — docs/world-creation.md セクション 15）。
@@ -7,6 +8,7 @@ using UnityEngine;
 public static class TerrainPreviewMenu
 {
     private const string PreviewObjectName = "TerrainPreview";
+    private const string UiPreviewObjectName = "WorldEditorUIPreview";
 
     [MenuItem("Tools/LowPolyWorld/地形プレビューを生成")]
     public static void CreatePreview() => CreatePreview(false);
@@ -33,5 +35,28 @@ public static class TerrainPreviewMenu
         var existing = GameObject.Find(PreviewObjectName);
         if (existing != null)
             Object.DestroyImmediate(existing);
+
+        var uiPreview = GameObject.Find(UiPreviewObjectName);
+        if (uiPreview != null)
+            Object.DestroyImmediate(uiPreview);
+    }
+
+    [MenuItem("Tools/LowPolyWorld/ワールドエディタ UI プレビューを生成")]
+    public static void CreateUiPreview()
+    {
+        var existing = GameObject.Find(UiPreviewObjectName);
+        if (existing != null)
+            Object.DestroyImmediate(existing);
+
+        var go = new GameObject(UiPreviewObjectName);
+        var doc = go.AddComponent<UIDocument>();
+        doc.panelSettings =
+            AssetDatabase.LoadAssetAtPath<PanelSettings>("Assets/Settings/UI_PanelSettings.asset");
+        doc.visualTreeAsset =
+            AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/UI/Screens/WorldEditor.uxml");
+        go.AddComponent<WorldEditorController>();
+        go.AddComponent<WorldEditorUiPreview>();
+        Selection.activeGameObject = go;
+        Debug.Log("ワールドエディタ UI プレビューを生成しました。Play モードに入り、下部の「地形」タブをタップして確認してください。");
     }
 }
