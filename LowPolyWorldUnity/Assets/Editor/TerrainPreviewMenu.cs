@@ -44,6 +44,37 @@ public static class TerrainPreviewMenu
     [MenuItem("Tools/LowPolyWorld/ワールドエディタ UI プレビューを生成")]
     public static void CreateUiPreview()
     {
+        var go = CreateEditorUiObject();
+        go.AddComponent<WorldEditorUiPreview>();
+        Selection.activeGameObject = go;
+        Debug.Log("ワールドエディタ UI プレビューを生成しました。Play モードに入り、下部の「地形」タブをタップして確認してください。");
+    }
+
+    [MenuItem("Tools/LowPolyWorld/地形タブ統合プレビューを生成")]
+    public static void CreateTerrainEditPreview()
+    {
+        RemovePreview();
+        var uiGo = CreateEditorUiObject();
+
+        var cameraGo = new GameObject("TerrainEditCamera");
+        cameraGo.transform.SetParent(uiGo.transform, false);
+        var camera = cameraGo.AddComponent<Camera>();
+        camera.clearFlags = CameraClearFlags.SolidColor;
+        camera.backgroundColor = new Color(0.12f, 0.13f, 0.18f);
+
+        var terrainGo = new GameObject(PreviewObjectName);
+        terrainGo.AddComponent<TerrainRenderer>();
+        terrainGo.AddComponent<TerrainEditSceneController>();
+        var preview = terrainGo.AddComponent<TerrainEditScenePreview>();
+        preview.editorController = uiGo.GetComponent<WorldEditorController>();
+        preview.editCamera = camera;
+
+        Selection.activeGameObject = terrainGo;
+        Debug.Log("地形タブ統合プレビューを生成しました。Play モードに入ると地形タブで実際に編集できます。");
+    }
+
+    private static GameObject CreateEditorUiObject()
+    {
         var existing = GameObject.Find(UiPreviewObjectName);
         if (existing != null)
             Object.DestroyImmediate(existing);
@@ -55,8 +86,6 @@ public static class TerrainPreviewMenu
         doc.visualTreeAsset =
             AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/UI/Screens/WorldEditor.uxml");
         go.AddComponent<WorldEditorController>();
-        go.AddComponent<WorldEditorUiPreview>();
-        Selection.activeGameObject = go;
-        Debug.Log("ワールドエディタ UI プレビューを生成しました。Play モードに入り、下部の「地形」タブをタップして確認してください。");
+        return go;
     }
 }

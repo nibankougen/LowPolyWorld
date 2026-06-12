@@ -1032,7 +1032,9 @@
       - [x] 上方半透明（市松模様ディザ — 11.7.2 実装方式）— `LowPolyTerrain.shader` `_DitherHeightY` + `TerrainRenderer.ApplyDitherThreshold`
       - [x] タブ UI（編集バー・高さバーオーバーレイ・上方非表示トグル・サブタブ・地形一覧・コピー/ペースト・フラッシュ）— `WorldEditor.uxml/uss` + `TerrainTabController`
       - [x] レイ → グリッドセル変換 — `TerrainGridPicker`
-      - [ ] 斜め上固定カメラ・グリッド境界描画・タッチ入力 → `TerrainEditLogic`/`TerrainRenderer` への配線（ワールドエディタシーン統合時）
+      - [x] ポインタ操作のモード別ディスパッチ（タップ/スライド・ドラッグ矩形プレビュー・フラッシュ判定 — 純粋 C#）— `TerrainEditSession`
+      - [x] シーン統合（斜め上固定カメラ・グリッド境界/選択範囲/ドラッグ範囲のライン描画・ポインタ入力配線・Dirty チャンク再構築・上方半透明/非表示切替）— `TerrainEditSceneController`（統合プレビュー: Tools/LowPolyWorld/地形タブ統合プレビューを生成）
+      - [ ] WorldCreationManager / ワールド管理タブからのエディタ起動接続（ワールド定義 JSON ⇔ ボクセルストアの読み書き・カメラのパン/ズーム — エディタ画面遷移実装時）
       - [ ] 地形一覧の実データ接続（利用中 / 保存・編集 / 所有 — API 連携時）・透明地形 `!` 判定の実データ化
       - [ ] 図形モードの円形（仕様 TBD — 四角形のみ先行実装）
     - [ ] 地形テクスチャ編集（ベースレイヤー編集可・透明ピクセル対応）

@@ -59,6 +59,8 @@ public class TerrainEditLogic
     public IReadOnlyCollection<(int x, int z)> Selection => _selection;
     public bool HasClipboard => _hasClipboard;
 
+    public bool IsSelected(int x, int z) => _selection.Contains((x, z));
+
     /// <summary>矩形範囲を選択する（addToSelection = true で複数範囲）。空セルも選択に含む。</summary>
     public void SelectRect(int x0, int z0, int x1, int z1, bool addToSelection = false)
     {
