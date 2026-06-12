@@ -1299,8 +1299,9 @@ ramp・diag ブロックは結合対象から外し、それぞれ個別に **Bo
 - 頂点カラーは**無彩色（グレースケール）**
 - 隣接ブロックがない状態での頂点カラー明度: **0.75**（ベース暗さ）
 - 隣接ブロックが増えるほど黒（明度 0）に近づく
-- 最終的な頂点カラー明度: `brightness = 0.75 × clamp01(1 − normalized_darkness)` （明度は 0〜0.75 の範囲）
-- **正規化係数: 全グループ共通 3.0**（`normalized_darkness = darkness / 3.0`。グループ1 は最大 darkness 4 で clamp により明度 0）
+- 最終的な頂点カラー明度: `brightness = max(AO_MIN_BRIGHTNESS, 0.75 × clamp01(1 − normalized_darkness))`
+  （明度は 0.1875〜0.75 の範囲。下限により部屋の内側の隅などで参照が全部埋まっても真っ黒にならない）
+- **正規化係数: 全グループ共通 3.0**（`normalized_darkness = darkness / 3.0`）
 
 #### 参照ブロックの占有判定（形状考慮）
 
@@ -1336,6 +1337,7 @@ AO_RAMP_LOW_SIDE          = 0.50   // グループ2 低端・グループBウェ
 AO_NORMALIZE              = 3.00   // 正規化係数（全グループ共通）
 AO_OCCUPANCY_RAMP_LOW     = 0.50   // ramp の低い側の角の占有ウェイト
 AO_OCCUPANCY_DIAG_TIP     = 0.50   // diag の斜辺両端の角の占有ウェイト
+AO_MIN_BRIGHTNESS         = 0.1875 // 明度下限（直線壁の足元 0.25 よりわずかに暗い値）
 ```
 
 #### 座標系

@@ -20,7 +20,13 @@ public static class TerrainAo
     /// <summary>隣接ブロックがない状態での頂点カラー明度（ベース暗さ）。</summary>
     public const float BaseBrightness = 0.75f;
 
-    /// <summary>darkness（参照ブロックのウェイト合算）→ 頂点カラー明度（0〜0.75）。</summary>
+    /// <summary>
+    /// 明度下限（部屋の内側の隅などで参照が全部埋まっても真っ黒にならないように）。
+    /// 直線壁の足元（darkness 2 = 0.25）よりわずかに暗い値で、隅の陰のアクセントは残す。
+    /// </summary>
+    public const float MinBrightness = 0.1875f;
+
+    /// <summary>darkness（参照ブロックのウェイト合算）→ 頂点カラー明度（MinBrightness〜0.75）。</summary>
     public static float Brightness(float darkness)
     {
         float t = 1f - darkness / Normalize;
@@ -28,6 +34,7 @@ public static class TerrainAo
             t = 0f;
         else if (t > 1f)
             t = 1f;
-        return BaseBrightness * t;
+        float brightness = BaseBrightness * t;
+        return brightness < MinBrightness ? MinBrightness : brightness;
     }
 }
