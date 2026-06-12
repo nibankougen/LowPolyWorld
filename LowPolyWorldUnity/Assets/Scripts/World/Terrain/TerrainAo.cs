@@ -17,14 +17,17 @@ public static class TerrainAo
     public const float OccupancyRampLow = 0.50f;  // ramp の低い側の 2 角
     public const float OccupancyDiagTip = 0.50f;  // diag の斜辺両端の 2 角（全高の壁が角を通る）
 
-    /// <summary>隣接ブロックがない状態での頂点カラー明度（ベース暗さ）。</summary>
-    public const float BaseBrightness = 0.75f;
+    /// <summary>
+    /// 隣接ブロックがない状態での頂点カラー明度。1.0 = テクスチャの色をそのまま表示する
+    /// （アバター・オブジェクトの共通 Unlit と基準が揃い、テクスチャの色の印象が乖離しない）。
+    /// </summary>
+    public const float BaseBrightness = 1.00f;
 
     /// <summary>
     /// 明度下限（部屋の内側の隅などで参照が全部埋まっても真っ黒にならないように）。
     /// darkness 3 の明度と同値で、それ以上は暗くならない。
     /// </summary>
-    public const float MinBrightness = 0.1875f;
+    public const float MinBrightness = 0.25f;
 
     /// <summary>darkness（参照ブロックのウェイト合算）→ 頂点カラー明度（MinBrightness〜0.75）。</summary>
     public static float Brightness(float darkness)

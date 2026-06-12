@@ -13,9 +13,9 @@ public class TerrainAoTests
     [Test]
     public void Brightness_LinearMapping()
     {
-        Assert.AreEqual(0.5625f, TerrainAo.Brightness(1f), Delta);
-        Assert.AreEqual(0.375f, TerrainAo.Brightness(2f), Delta);
-        Assert.AreEqual(0.65625f, TerrainAo.Brightness(0.5f), Delta);
+        Assert.AreEqual(0.75f, TerrainAo.Brightness(1f), Delta);
+        Assert.AreEqual(0.5f, TerrainAo.Brightness(2f), Delta);
+        Assert.AreEqual(0.875f, TerrainAo.Brightness(0.5f), Delta);
     }
 
     [Test]

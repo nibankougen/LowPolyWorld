@@ -7,11 +7,11 @@ public class TerrainMeshBuilderTests
 {
     private const float Delta = 1e-4f;
 
-    // AO 明度の期待値（15.16: brightness = 0.75 × (1 − darkness / 4)）
-    private const float AoNone = 0.75f;        // darkness 0
-    private const float AoOne = 0.5625f;       // darkness 1（グループ1 参照 1 つ）
-    private const float AoHalfOcc = 0.65625f;  // darkness 0.5（占有ウェイト 0.5 の角 1 つ）
-    private const float AoSlopeAbove = 0.609375f; // darkness 0.75（グループ2 高端・真上のみ）
+    // AO 明度の期待値（15.16: brightness = 1.0 − darkness / 4）
+    private const float AoNone = 1.0f;        // darkness 0（テクスチャ色をそのまま表示）
+    private const float AoOne = 0.75f;        // darkness 1（グループ1 参照 1 つ）
+    private const float AoHalfOcc = 0.875f;   // darkness 0.5（占有ウェイト 0.5 の角 1 つ）
+    private const float AoSlopeAbove = 0.8125f; // darkness 0.75（グループ2 高端・真上のみ）
 
     private TerrainVoxelStore _store;
     private TerrainMeshBuilder _builder;
@@ -72,7 +72,7 @@ public class TerrainMeshBuilderTests
         for (int i = 0; i < data.Colors.Count; i++)
         {
             Color c = data.Colors[i];
-            Assert.AreEqual(AoNone, c.r, Delta, "隣接なし → ベース明度 0.75");
+            Assert.AreEqual(AoNone, c.r, Delta, "隣接なし → ベース明度 1.0（テクスチャ色をそのまま表示）");
             Assert.AreEqual(c.r, c.g, Delta, "無彩色");
             Assert.AreEqual(c.r, c.b, Delta);
             float expectedAlpha = (int)Mathf.Floor(data.Uvs[i].x) == (int)TerrainFaceRegion.Top ? 1f : 0f;
@@ -330,12 +330,12 @@ public class TerrainMeshBuilderTests
         Set(5, 5, 6, TerrainShape.Cube);  // 上の坂の支持ブロック
         var data = Build();
 
-        // つなぎ目 (y=3.0, z=3.0): 修正前は下の坂の高端 2 頂点が上の坂を副参照して 0.6875 に暗くなり、
-        // 同位置の上の坂の低端 (0.75) と段差が出ていた。同方向 ramp は斜面の連続として遮蔽から除外される
+        // つなぎ目 (y=3.0, z=3.0): 修正前は下の坂の高端 2 頂点が上の坂を副参照して 0.9375 に暗くなり、
+        // 同位置の上の坂の低端 (1.0) と段差が出ていた。同方向 ramp は斜面の連続として遮蔽から除外される
         bool OnSeam(Vector3 p) => Mathf.Approximately(p.y, 3.0f) && Mathf.Approximately(p.z, 3.0f);
         Assert.AreEqual(
             0,
-            CountVerts(data, (p, c) => OnSeam(p) && Mathf.Abs(c.r - 0.6875f) < Delta),
+            CountVerts(data, (p, c) => OnSeam(p) && Mathf.Abs(c.r - 0.9375f) < Delta),
             "つなぎ目に AO の明度段差が出ない");
         Assert.GreaterOrEqual(
             CountVerts(data, (p, c) => OnSeam(p) && NearColor(c, AoNone)),
