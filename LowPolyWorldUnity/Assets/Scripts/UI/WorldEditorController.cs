@@ -42,6 +42,12 @@ public class WorldEditorController : MonoBehaviour
     private VisualElement _panelSettings;
     private VisualElement _tabContent;
 
+    // ── 地形タブ ──────────────────────────────────────────────────────────────
+    private TerrainTabController _terrainTab;
+
+    /// <summary>地形タブ UI（シーン統合時に編集ロジック・レンダラーへ接続する）。</summary>
+    public TerrainTabController TerrainTab => _terrainTab;
+
     // ── 設定タブ: 基本 ────────────────────────────────────────────────────────
     private TextField _settingsWorldName;
     private VisualElement _tagChips;
@@ -121,6 +127,7 @@ public class WorldEditorController : MonoBehaviour
         BindElements();
         RegisterCallbacks();
         BuildBgmTrackList();
+        _terrainTab = new TerrainTabController(_root);
     }
 
     // ── 公開 API ─────────────────────────────────────────────────────────────
@@ -331,6 +338,9 @@ public class WorldEditorController : MonoBehaviour
             tabs[i].EnableInClassList("bottom-tab--active", active);
             panels[i].EnableInClassList("overlay-hidden", !active);
         }
+
+        // 高さバー・上方非表示は地形タブ選択中のみ 3D ビューに表示
+        _terrainTab?.SetViewOverlayVisible(index == 0);
 
         if (!_tabContentVisible)
         {

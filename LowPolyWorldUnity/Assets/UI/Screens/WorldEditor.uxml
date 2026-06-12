@@ -27,6 +27,21 @@
                 </ui:VisualElement>
                 <ui:Label name="cost-label" class="cost-label" text="0 / 4096" />
             </ui:VisualElement>
+
+            <!-- 地形タブ用オーバーレイ（地形タブ選択中のみ表示） -->
+            <ui:VisualElement name="terrain-view-overlay" class="terrain-view-overlay overlay-hidden"
+                              picking-mode="Ignore">
+                <!-- 上方非表示トグル（左上） -->
+                <ui:Button name="terrain-btn-hide-above" class="terrain-hide-above" text="上方非表示" />
+                <!-- 高さバー（右側） -->
+                <ui:VisualElement class="terrain-height-bar">
+                    <ui:Button name="terrain-height-up" class="terrain-height-btn" text="▲" />
+                    <ui:Label name="terrain-height-label" class="terrain-height-label" text="0" />
+                    <ui:Button name="terrain-height-down" class="terrain-height-btn" text="▼" />
+                </ui:VisualElement>
+                <!-- フラッシュメッセージ（中央下） -->
+                <ui:Label name="terrain-flash" class="terrain-flash overlay-hidden" text="" />
+            </ui:VisualElement>
         </ui:VisualElement>
 
         <!-- ── 下部タブバー ── -->
@@ -41,9 +56,36 @@
         <!-- ── タブコンテンツ ── -->
         <ui:VisualElement name="tab-content" class="tab-content">
 
-            <!-- 地形タブ（スタブ） -->
+            <!-- ───── 地形タブ ───── -->
             <ui:VisualElement name="panel-terrain" class="tab-panel overlay-hidden">
-                <ui:Label class="stub-label" text="地形システム（実装予定）" />
+
+                <!-- 編集バー -->
+                <ui:VisualElement class="terrain-edit-bar">
+                    <ui:Button name="terrain-mode-brush"  class="terrain-mode-btn terrain-mode-btn--active" text="ブラシ" />
+                    <ui:Button name="terrain-mode-eraser" class="terrain-mode-btn" text="消しゴム" />
+                    <ui:Button name="terrain-mode-shape"  class="terrain-mode-btn" text="図形" />
+                    <ui:Button name="terrain-mode-type"   class="terrain-mode-btn" text="タイプ変更" />
+                    <ui:Button name="terrain-mode-select" class="terrain-mode-btn" text="範囲選択" />
+                    <ui:Button name="terrain-mode-move"   class="terrain-mode-btn" text="移動" />
+                    <ui:Button name="terrain-btn-copy"  class="terrain-action-btn overlay-hidden" text="コピー" />
+                    <ui:Button name="terrain-btn-paste" class="terrain-action-btn overlay-hidden" text="ペースト" />
+                </ui:VisualElement>
+
+                <!-- 範囲選択の選択方法表示（範囲選択モード時のみ） -->
+                <ui:Label name="terrain-select-method" class="terrain-select-method overlay-hidden"
+                          text="選択方法: 四角形（ボタン再タップで切替）" />
+
+                <!-- 地形サブタブ -->
+                <ui:VisualElement class="terrain-subtab-bar">
+                    <ui:Button name="terrain-subtab-used"  class="terrain-subtab terrain-subtab--active" text="利用中地形" />
+                    <ui:Button name="terrain-subtab-saved" class="terrain-subtab" text="保存・編集地形" />
+                    <ui:Button name="terrain-subtab-owned" class="terrain-subtab" text="所有地形" />
+                </ui:VisualElement>
+
+                <!-- 地形一覧 -->
+                <ui:ScrollView class="terrain-list-scroll">
+                    <ui:VisualElement name="terrain-list" class="terrain-list" />
+                </ui:ScrollView>
             </ui:VisualElement>
 
             <!-- オブジェクトタブ（スタブ） -->

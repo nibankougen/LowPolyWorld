@@ -497,3 +497,189 @@
     font-size: 18px;
     padding: 2px 0;
 }
+
+/* ── 地形タブ（11.7.2） ── */
+.terrain-view-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+}
+
+.terrain-hide-above {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    height: 40px;
+    padding: 0 14px;
+    background-color: rgba(0, 0, 0, 0.55);
+    border-width: 1px;
+    border-color: rgb(70, 70, 100);
+    border-radius: 8px;
+    color: rgb(180, 180, 210);
+    font-size: 18px;
+}
+
+.terrain-hide-above--active {
+    background-color: rgb(60, 80, 170);
+    border-color: rgb(100, 130, 240);
+    color: white;
+}
+
+.terrain-height-bar {
+    position: absolute;
+    top: 60px;
+    right: 10px;
+    width: 56px;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.55);
+    border-radius: 10px;
+    padding: 6px 0;
+}
+
+.terrain-height-btn {
+    width: 44px;
+    height: 44px;
+    background-color: rgb(40, 40, 60);
+    border-width: 1px;
+    border-color: rgb(70, 70, 100);
+    border-radius: 8px;
+    color: rgb(180, 180, 210);
+    font-size: 20px;
+    margin: 2px 0;
+}
+
+.terrain-height-label {
+    color: white;
+    font-size: 22px;
+    -unity-font-style: bold;
+    margin: 4px 0;
+}
+
+.terrain-flash {
+    position: absolute;
+    bottom: 16px;
+    align-self: center;
+    padding: 8px 18px;
+    background-color: rgba(70, 20, 20, 0.92);
+    border-radius: 10px;
+    color: rgb(255, 170, 170);
+    font-size: 20px;
+}
+
+.terrain-edit-bar {
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding: 6px 8px;
+    background-color: rgba(15, 15, 20, 0.80);
+}
+
+.terrain-mode-btn {
+    height: 40px;
+    padding: 0 12px;
+    background-color: rgb(40, 40, 60);
+    border-width: 1px;
+    border-color: rgb(70, 70, 100);
+    border-radius: 6px;
+    color: rgb(180, 180, 210);
+    font-size: 17px;
+    margin: 2px 3px;
+}
+
+.terrain-mode-btn--active {
+    background-color: rgb(60, 80, 170);
+    border-color: rgb(100, 130, 240);
+    color: white;
+}
+
+.terrain-action-btn {
+    height: 40px;
+    padding: 0 12px;
+    background-color: transparent;
+    border-width: 1px;
+    border-color: rgb(100, 170, 255);
+    border-radius: 6px;
+    color: rgb(100, 170, 255);
+    font-size: 17px;
+    margin: 2px 3px;
+}
+
+.terrain-select-method {
+    color: rgb(160, 160, 190);
+    font-size: 16px;
+    padding: 2px 12px;
+}
+
+.terrain-subtab-bar {
+    flex-direction: row;
+    border-bottom-width: 1px;
+    border-color: rgb(44, 44, 60);
+}
+
+.terrain-subtab {
+    flex-grow: 1;
+    height: 42px;
+    background-color: transparent;
+    border-width: 0;
+    color: rgb(150, 150, 180);
+    font-size: 18px;
+}
+
+.terrain-subtab--active {
+    color: rgb(100, 170, 255);
+    border-bottom-width: 2px;
+    border-color: rgb(100, 170, 255);
+}
+
+.terrain-list-scroll {
+    flex-grow: 1;
+}
+
+.terrain-list {
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding: 8px;
+}
+
+.terrain-item {
+    width: 92px;
+    align-items: center;
+    margin: 4px;
+    padding: 6px;
+    background-color: rgb(30, 30, 42);
+    border-width: 1px;
+    border-color: rgb(55, 55, 75);
+    border-radius: 8px;
+}
+
+.terrain-item--selected {
+    border-color: rgb(100, 170, 255);
+    background-color: rgb(40, 50, 80);
+}
+
+.terrain-item-thumb {
+    width: 64px;
+    height: 64px;
+    border-radius: 6px;
+    background-color: rgb(80, 120, 80);
+}
+
+.terrain-item-name {
+    color: rgb(200, 200, 220);
+    font-size: 14px;
+    margin-top: 4px;
+    overflow: hidden;
+}
+
+.terrain-item-warn {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 22px;
+    height: 22px;
+    background-color: rgb(200, 150, 30);
+    border-radius: 11px;
+    color: white;
+    font-size: 15px;
+    -unity-text-align: middle-center;
+    border-width: 0;
+    padding: 0;
+}
