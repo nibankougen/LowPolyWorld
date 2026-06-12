@@ -34,6 +34,16 @@ public class TerrainPreview : MonoBehaviour
 
     private void OnValidate()
     {
+        // OnValidate 中の SetActive はレンダラーへの SendMessage（OnBecameInvisible）警告になるため、
+        // 1 フレーム遅延して適用する
+        UnityEditor.EditorApplication.delayCall -= ApplyThresholdDeferred;
+        UnityEditor.EditorApplication.delayCall += ApplyThresholdDeferred;
+    }
+
+    private void ApplyThresholdDeferred()
+    {
+        if (this == null)
+            return; // 破棄済み
         var terrainRenderer = GetComponent<TerrainRenderer>();
         if (terrainRenderer != null)
             terrainRenderer.ApplyHeightCullingThreshold(heightCullThreshold);
