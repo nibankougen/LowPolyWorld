@@ -155,7 +155,7 @@ public class TerrainMeshBuilder
             var brightness = new float[verts.Length];
             for (int i = 0; i < verts.Length; i++)
                 brightness[i] = TerrainAo.BaseBrightness;
-            AddFace(_meshes.HiddenTops, x, y, z, verts, uvs, brightness, rect, y + 1);
+            AddFace(_meshes.HiddenTops, x, y, z, verts, uvs, brightness, rect, y + 1, 1f);
         }
         else
         {
@@ -210,7 +210,7 @@ public class TerrainMeshBuilder
             int pz = z + (verts[i].z > 0.5f ? 1 : 0);
             brightness[i] = SlopeBrightness(x, y, z, hx, hz, sx, sz, RampSlopeIsTop[i], px, pz, rampShape);
         }
-        AddFace(_meshes.Solid, x, y, z, verts, RampSlopeUv, brightness, rect, NoUv2);
+        AddFace(_meshes.Solid, x, y, z, verts, RampSlopeUv, brightness, rect, NoUv2, 1f);
     }
 
     private void EmitDiagHypotenuse(int x, int y, int z, byte voxel, int k)
@@ -231,7 +231,7 @@ public class TerrainMeshBuilder
                 + TerrainAo.WeightStandard * OcclusionAt(x, y + dy, z + nz, px, pz);
             brightness[i] = TerrainAo.Brightness(darkness);
         }
-        AddFace(_meshes.Solid, x, y, z, verts, DiagHypotenuseUv, brightness, rect, NoUv2);
+        AddFace(_meshes.Solid, x, y, z, verts, DiagHypotenuseUv, brightness, rect, NoUv2, 0f);
     }
 
     private void EmitGroup1Face(
@@ -246,7 +246,7 @@ public class TerrainMeshBuilder
         var brightness = new float[verts.Length];
         for (int i = 0; i < verts.Length; i++)
             brightness[i] = Group1Brightness(x, y, z, nx, ny, nz, verts[i]);
-        AddFace(target, x, y, z, verts, uvs, brightness, rect, uv2X);
+        AddFace(target, x, y, z, verts, uvs, brightness, rect, uv2X, dir == TerrainFaceDir.Up ? 1f : 0f);
     }
 
     // ── テクスチャ領域選択（15.8）・UV ────────────────────────────────────────
@@ -392,7 +392,7 @@ public class TerrainMeshBuilder
 
     private void AddFace(
         TerrainMeshData target, int x, int y, int z,
-        Vector3[] verts, Vector2[] uvs, float[] brightness, Rect rect, float uv2X)
+        Vector3[] verts, Vector2[] uvs, float[] brightness, Rect rect, float uv2X, float upFacing)
     {
         int baseIndex = target.Vertices.Count;
         for (int i = 0; i < verts.Length; i++)
@@ -404,7 +404,8 @@ public class TerrainMeshBuilder
             if (uv2X >= 0f)
                 target.Uvs2.Add(new Vector2(uv2X, 0f));
             float b = brightness[i];
-            target.Colors.Add(new Color(b, b, b, 1f));
+            // α = 上向きの面フラグ（Height Culling のカット平面と一致する高さでの表示判定に使用 — 15.11）
+            target.Colors.Add(new Color(b, b, b, upFacing));
         }
 
         target.Triangles.Add(baseIndex);

@@ -69,12 +69,14 @@ public class TerrainMeshBuilderTests
             Assert.LessOrEqual(p.y, 3.0f + Delta);
         }
 
-        foreach (var c in data.Colors)
+        for (int i = 0; i < data.Colors.Count; i++)
         {
+            Color c = data.Colors[i];
             Assert.AreEqual(AoNone, c.r, Delta, "隣接なし → ベース明度 0.75");
             Assert.AreEqual(c.r, c.g, Delta, "無彩色");
             Assert.AreEqual(c.r, c.b, Delta);
-            Assert.AreEqual(1f, c.a, Delta);
+            float expectedAlpha = (int)Mathf.Floor(data.Uvs[i].x) == (int)TerrainFaceRegion.Top ? 1f : 0f;
+            Assert.AreEqual(expectedAlpha, c.a, Delta, "α = 上向きの面フラグ（15.11 カット平面の表示判定）");
         }
 
         foreach (var uv in data.Uvs)

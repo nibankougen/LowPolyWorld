@@ -99,8 +99,10 @@ Shader "LowPoly/Terrain"
                 // 上面中間フェイス: 閾値の 1 段下のブロック上面（grid Y == 閾値）のみ表示
                 clip(0.5 - abs(input.gridTopY - _CullGridY));
                 #else
-                // Height Culling: world Y ≥ 閾値のフラグメントを破棄（§15.11 表示反映方式）
-                clip(_CullHeightY - input.worldY);
+                // Height Culling: world Y ≥ 閾値のフラグメントを破棄（§15.11 表示反映方式）。
+                // 上向きの面（頂点カラー α = 1）はカット平面と一致する高さでも表示し、
+                // 非表示ブロックの下面（同じ高さ・α = 0）は浮動小数の揺らぎなく確実に破棄する
+                clip(_CullHeightY + input.color.a * 0.25 - input.worldY - 0.0002);
                 #endif
 
                 half4 texColor = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, input.uv);

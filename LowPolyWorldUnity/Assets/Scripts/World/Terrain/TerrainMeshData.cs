@@ -3,7 +3,9 @@ using UnityEngine;
 
 /// <summary>
 /// TerrainMeshBuilder の出力バッファ。UnityEngine.Mesh への反映は MonoBehaviour 層が行う。
-/// 座標は store グリッド基準の Unity 単位（1 ブロック = 0.5m）、Colors は頂点 AO（15.16）。
+/// 座標は store グリッド基準の Unity 単位（1 ブロック = 0.5m）。
+/// Colors の RGB は頂点 AO（15.16）、A は「上向きの面 = 1 / その他 = 0」
+/// （Height Culling のカット平面と一致する高さでの表示判定 — 15.11）。
 /// Uvs2 は hidden tops メッシュのみ使用（x = ブロック上面の Y グリッドインデックス。15.11 参照）。
 /// </summary>
 public class TerrainMeshData
