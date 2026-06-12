@@ -7,11 +7,11 @@ public class TerrainMeshBuilderTests
 {
     private const float Delta = 1e-4f;
 
-    // AO 明度の期待値（15.16: brightness = 0.75 × (1 − darkness / 3)）
-    private const float AoNone = 0.75f;       // darkness 0
-    private const float AoOne = 0.5f;         // darkness 1（グループ1 参照 1 つ）
-    private const float AoHalfOcc = 0.625f;   // darkness 0.5（占有ウェイト 0.5 の角 1 つ）
-    private const float AoSlopeAbove = 0.5625f; // darkness 0.75（グループ2 高端・真上のみ）
+    // AO 明度の期待値（15.16: brightness = 0.75 × (1 − darkness / 4)）
+    private const float AoNone = 0.75f;        // darkness 0
+    private const float AoOne = 0.5625f;       // darkness 1（グループ1 参照 1 つ）
+    private const float AoHalfOcc = 0.65625f;  // darkness 0.5（占有ウェイト 0.5 の角 1 つ）
+    private const float AoSlopeAbove = 0.609375f; // darkness 0.75（グループ2 高端・真上のみ）
 
     private TerrainVoxelStore _store;
     private TerrainMeshBuilder _builder;

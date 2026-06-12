@@ -1310,7 +1310,7 @@ ramp・diag ブロックは結合対象から外し、それぞれ個別に **Bo
 - 隣接ブロックが増えるほど黒（明度 0）に近づく
 - 最終的な頂点カラー明度: `brightness = max(AO_MIN_BRIGHTNESS, 0.75 × clamp01(1 − normalized_darkness))`
   （明度は 0.1875〜0.75 の範囲。下限により部屋の内側の隅などで参照が全部埋まっても真っ黒にならない）
-- **正規化係数: 全グループ共通 3.0**（`normalized_darkness = darkness / 3.0`）
+- **正規化係数: 全グループ共通 4.0**（`normalized_darkness = darkness / 4.0`）
 
 #### 参照ブロックの占有判定（形状考慮）
 
@@ -1343,10 +1343,10 @@ AO_RAMP_HIGH_SIDE         = 0.50   // グループ2 高端・グループB側方
 AO_RAMP_LOW_PRIMARY       = 0.75   // グループ2 低端・グループA主ウェイト
 AO_RAMP_LOW_SECONDARY     = 0.25   // グループ2 低端・グループA副ウェイト（maxのみ採用）
 AO_RAMP_LOW_SIDE          = 0.50   // グループ2 低端・グループBウェイト
-AO_NORMALIZE              = 3.00   // 正規化係数（全グループ共通）
+AO_NORMALIZE              = 4.00   // 正規化係数（全グループ共通）
 AO_OCCUPANCY_RAMP_LOW     = 0.50   // ramp の低い側の角の占有ウェイト
 AO_OCCUPANCY_DIAG_TIP     = 0.50   // diag の斜辺両端の角の占有ウェイト
-AO_MIN_BRIGHTNESS         = 0.1875 // 明度下限（直線壁の足元 0.25 よりわずかに暗い値）
+AO_MIN_BRIGHTNESS         = 0.1875 // 明度下限（darkness 3 の明度と同値。これ以上は暗くならない）
 ```
 
 #### 座標系
@@ -1363,7 +1363,7 @@ AO_MIN_BRIGHTNESS         = 0.1875 // 明度下限（直線壁の足元 0.25 よ
 
 **ルール**: 各頂点（格子点）について、**面の法線方向に 1 つ進んだレイヤーのうち頂点に接する 4 ブロック**
 （正面 = 法線のみ / 辺方向 1 + 法線 / 辺方向 2 + 法線 / 斜め角 = 両辺 + 法線）を参照し、
-占有していればそれぞれ `AO_WEIGHT_STANDARD` を加算する。最大 darkness = 4.0（clamp により明度 0）。
+占有していればそれぞれ `AO_WEIGHT_STANDARD` を加算する。最大 darkness = 4.0（明度は `AO_MIN_BRIGHTNESS` でクランプ）。
 
 **cube 上面（法線 +Y、辺方向 X・Z）の例:**
 

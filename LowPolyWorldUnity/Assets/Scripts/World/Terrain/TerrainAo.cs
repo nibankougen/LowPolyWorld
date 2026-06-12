@@ -11,7 +11,7 @@ public static class TerrainAo
     public const float RampLowPrimary = 0.75f;    // グループ2 低端・グループA主ウェイト
     public const float RampLowSecondary = 0.25f;  // グループ2 低端・グループA副ウェイト（max のみ採用）
     public const float RampLowSide = 0.50f;       // グループ2 低端・グループBウェイト
-    public const float Normalize = 3.00f;         // 正規化係数（全グループ共通。グループ1は最大4参照・clampで明度0）
+    public const float Normalize = 4.00f;         // 正規化係数（全グループ共通。グループ1は最大4参照）
 
     // 参照ブロックの角占有ウェイト（形状の部分占有 — 周囲の面との明度の連続性のため）
     public const float OccupancyRampLow = 0.50f;  // ramp の低い側の 2 角
@@ -22,7 +22,7 @@ public static class TerrainAo
 
     /// <summary>
     /// 明度下限（部屋の内側の隅などで参照が全部埋まっても真っ黒にならないように）。
-    /// 直線壁の足元（darkness 2 = 0.25）よりわずかに暗い値で、隅の陰のアクセントは残す。
+    /// darkness 3 の明度と同値で、それ以上は暗くならない。
     /// </summary>
     public const float MinBrightness = 0.1875f;
 
