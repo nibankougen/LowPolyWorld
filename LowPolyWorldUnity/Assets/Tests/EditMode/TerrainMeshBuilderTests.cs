@@ -344,6 +344,26 @@ public class TerrainMeshBuilderTests
     }
 
     [Test]
+    public void BuildChunk_QuadDiagonal_DefaultSplitWhenUniform()
+    {
+        Set(15, 5, 5, TerrainShape.Cube);
+        var data = Build(0, 0, 0);
+        // 明度が均一なら既定の対角線 (0,2) で分割
+        CollectionAssert.AreEqual(new[] { 0, 1, 2, 0, 2, 3 }, data.Triangles.GetRange(0, 6));
+    }
+
+    [Test]
+    public void BuildChunk_QuadDiagonal_FlipsThroughOddBrightnessVertex()
+    {
+        Set(15, 5, 5, TerrainShape.Cube);
+        Set(16, 6, 4, TerrainShape.Cube); // 上面の SE 頂点（index 3）だけを暗くする斜め上ブロック
+        var data = Build(0, 0, 0);
+        // 仲間外れの暗い頂点を両方の三角形が共有するよう対角線 (1,3) に反転
+        //（3 頂点同色の平坦な三角形が出ないように — 15.16）
+        CollectionAssert.AreEqual(new[] { 1, 2, 3, 1, 3, 0 }, data.Triangles.GetRange(0, 6));
+    }
+
+    [Test]
     public void BuildChunk_Group1Ao_DiagTipOccupancyIsHalf()
     {
         Set(15, 5, 5, TerrainShape.Cube);

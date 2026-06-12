@@ -408,14 +408,25 @@ public class TerrainMeshBuilder
             target.Colors.Add(new Color(b, b, b, upFacing));
         }
 
-        target.Triangles.Add(baseIndex);
-        target.Triangles.Add(baseIndex + 1);
-        target.Triangles.Add(baseIndex + 2);
         if (verts.Length == 4)
         {
+            // 明度差の大きい方の対角線を分割線に選ぶ（15.16）。
+            // 仲間外れの明度の頂点（暗い角・明るい角）を両方の三角形が共有することで、
+            // 3 頂点が同色の平坦な三角形が現れて分割線が目立つのを防ぐ
+            bool flip = Math.Abs(brightness[1] - brightness[3]) > Math.Abs(brightness[0] - brightness[2]) + 1e-5f;
+            int d = flip ? 1 : 0; // 対角線 (1,3) または (0,2)
+            target.Triangles.Add(baseIndex + d);
+            target.Triangles.Add(baseIndex + d + 1);
+            target.Triangles.Add(baseIndex + d + 2);
+            target.Triangles.Add(baseIndex + d);
+            target.Triangles.Add(baseIndex + d + 2);
+            target.Triangles.Add(baseIndex + (d + 3) % 4);
+        }
+        else
+        {
             target.Triangles.Add(baseIndex);
+            target.Triangles.Add(baseIndex + 1);
             target.Triangles.Add(baseIndex + 2);
-            target.Triangles.Add(baseIndex + 3);
         }
     }
 
