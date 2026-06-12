@@ -17,7 +17,7 @@ public class TerrainEditSceneController : MonoBehaviour
 {
     [SerializeField] private float cameraPitch = 55f;
     [SerializeField] private float cameraYaw = 0f;
-    [SerializeField] private float cameraDistance = 24f;
+    [SerializeField] private float cameraDistance = 12f;
 
     private TerrainRenderer _terrainRenderer;
     private TerrainVoxelStore _store;
