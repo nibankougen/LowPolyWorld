@@ -195,13 +195,14 @@ public class TerrainMeshBuilder
 
         var verts = Rot(RampSlopeQuad, k);
         var (hx, hz) = RotDirXZ(0, 1, k); // 高い側の方向
+        var rampShape = TerrainVoxel.GetShape(voxel);
         var brightness = new float[4];
         for (int i = 0; i < 4; i++)
         {
             var (sx, sz) = RotDirXZ(RampSlopeSideX[i], 0, k); // 側方向（canonical では ±X）
             int px = x + (verts[i].x > 0.5f ? 1 : 0);
             int pz = z + (verts[i].z > 0.5f ? 1 : 0);
-            brightness[i] = SlopeBrightness(x, y, z, hx, hz, sx, sz, RampSlopeIsTop[i], px, pz);
+            brightness[i] = SlopeBrightness(x, y, z, hx, hz, sx, sz, RampSlopeIsTop[i], px, pz, rampShape);
         }
         AddFace(_meshes.Solid, x, y, z, verts, RampSlopeUv, brightness, rect, NoUv2);
     }
@@ -313,14 +314,18 @@ public class TerrainMeshBuilder
     /// グループ2（坂の斜め面）: グループ A（主方向）は存在ブロックの最大ウェイトを採用し、
     /// グループ B（側方向）の存在ウェイトを加算する。(hx, hz) = 高い側、(sx, sz) = 側方向。
     /// </summary>
-    private float SlopeBrightness(int x, int y, int z, int hx, int hz, int sx, int sz, bool isTop, int px, int pz)
+    private float SlopeBrightness(
+        int x, int y, int z, int hx, int hz, int sx, int sz, bool isTop, int px, int pz, TerrainShape rampShape)
     {
         float groupA;
         float darkness;
         if (isTop)
         {
             groupA = TerrainAo.RampHighPrimary * OcclusionAt(x, y + 1, z, px, pz);
-            groupA = Math.Max(groupA, TerrainAo.RampHighSecondary * OcclusionAt(x + hx, y + 1, z + hz, px, pz));
+            // 高い側の上が同方向の ramp なら斜面の連続（solid は斜面の下側で遮蔽しない）。
+            // つなぎ目の AO 段差を防ぐため副参照から除外する（15.16）
+            if (TerrainVoxel.GetShape(_sampler.GetVoxel(x + hx, y + 1, z + hz)) != rampShape)
+                groupA = Math.Max(groupA, TerrainAo.RampHighSecondary * OcclusionAt(x + hx, y + 1, z + hz, px, pz));
             darkness = groupA + TerrainAo.RampHighSide * OcclusionAt(x + sx, y + 1, z + sz, px, pz);
         }
         else

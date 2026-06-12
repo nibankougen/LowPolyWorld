@@ -320,6 +320,28 @@ public class TerrainMeshBuilderTests
     }
 
     [Test]
+    public void BuildChunk_SlopeAo_ContinuousRampsHaveNoSeam()
+    {
+        // 連続する坂（階段状）: 下の坂の高端と上の坂の低端は同一平面上の同じ位置
+        Set(5, 5, 5, TerrainShape.RampN);
+        Set(5, 6, 6, TerrainShape.RampN); // 1 段上の同方向の坂
+        Set(5, 5, 6, TerrainShape.Cube);  // 上の坂の支持ブロック
+        var data = Build();
+
+        // つなぎ目 (y=3.0, z=3.0): 修正前は下の坂の高端 2 頂点が上の坂を副参照して 0.6875 に暗くなり、
+        // 同位置の上の坂の低端 (0.75) と段差が出ていた。同方向 ramp は斜面の連続として遮蔽から除外される
+        bool OnSeam(Vector3 p) => Mathf.Approximately(p.y, 3.0f) && Mathf.Approximately(p.z, 3.0f);
+        Assert.AreEqual(
+            0,
+            CountVerts(data, (p, c) => OnSeam(p) && Mathf.Abs(c.r - 0.6875f) < Delta),
+            "つなぎ目に AO の明度段差が出ない");
+        Assert.GreaterOrEqual(
+            CountVerts(data, (p, c) => OnSeam(p) && NearColor(c, AoNone)),
+            4,
+            "下の坂の高端 2 + 上の坂の低端 2 はベース明度のまま");
+    }
+
+    [Test]
     public void BuildChunk_Group1Ao_DiagTipOccupancyIsHalf()
     {
         Set(15, 5, 5, TerrainShape.Cube);
