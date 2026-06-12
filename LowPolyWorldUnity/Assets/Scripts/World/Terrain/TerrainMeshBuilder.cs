@@ -210,7 +210,9 @@ public class TerrainMeshBuilder
             int pz = z + (verts[i].z > 0.5f ? 1 : 0);
             brightness[i] = SlopeBrightness(x, y, z, hx, hz, sx, sz, RampSlopeIsTop[i], px, pz, rampShape);
         }
-        AddFace(_meshes.Solid, x, y, z, verts, RampSlopeUv, brightness, rect, NoUv2, 1f);
+        // 斜面は面自体がカット平面より上に伸びるため、上向きマージンは与えない（α = 0 — 15.11。
+        // α = 1 にすると非表示の坂の斜面下部がマージン分はみ出して見える）
+        AddFace(_meshes.Solid, x, y, z, verts, RampSlopeUv, brightness, rect, NoUv2, 0f);
     }
 
     private void EmitDiagHypotenuse(int x, int y, int z, byte voxel, int k)

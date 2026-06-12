@@ -344,6 +344,30 @@ public class TerrainMeshBuilderTests
     }
 
     [Test]
+    public void BuildChunk_UpFacingAlpha_SlopeExcludedFromMargin()
+    {
+        // 斜面（上面領域だが非水平）は α = 0、diag の上面三角形（水平）は α = 1
+        Set(5, 5, 5, TerrainShape.RampN);
+        var rampData = Build();
+        for (int i = 0; i < rampData.Colors.Count; i++)
+            if ((int)Mathf.Floor(rampData.Uvs[i].x) == (int)TerrainFaceRegion.Top)
+                Assert.AreEqual(0f, rampData.Colors[i].a, Delta, "斜面はカット平面より上に伸びるためマージン対象外");
+
+        _store = new TerrainVoxelStore();
+        Set(5, 5, 5, TerrainShape.DiagNW);
+        var diagData = Build();
+        int upCount = 0;
+        for (int i = 0; i < diagData.Colors.Count; i++)
+        {
+            if ((int)Mathf.Floor(diagData.Uvs[i].x) != (int)TerrainFaceRegion.Top)
+                continue;
+            Assert.AreEqual(1f, diagData.Colors[i].a, Delta, "水平な上面三角形はマージン対象");
+            upCount++;
+        }
+        Assert.AreEqual(3, upCount);
+    }
+
+    [Test]
     public void BuildChunk_QuadDiagonal_DefaultSplitWhenUniform()
     {
         Set(15, 5, 5, TerrainShape.Cube);
