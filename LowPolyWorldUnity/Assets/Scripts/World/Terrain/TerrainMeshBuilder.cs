@@ -145,11 +145,17 @@ public class TerrainMeshBuilder
         if (TerrainNeighborRules.HidesTopFace(above))
         {
             // 直上ブロックでカリングされた上面 → Height Culling で直上が消えたときだけ表示する
-            // 上面中間フェイス。UV2.x = 上面の Y グリッドインデックス（シェーダーが閾値と比較）
+            // 上面中間フェイス。UV2.x = 上面の Y グリッドインデックス（シェーダーが閾値と比較）。
+            // AO の参照先（y+1 レイヤー）は表示時に必ず全部非表示になっているため、
+            // AO は焼き込まずベース明度固定にする（15.16）
             var region = TerrainNeighborRules.IsSameKind(voxel, above)
                 ? TerrainFaceRegion.TopMiddle
                 : TerrainFaceRegion.Top;
-            EmitGroup1Face(_meshes.HiddenTops, x, y, z, voxel, TerrainFaceDir.Up, region, verts, uvs, y + 1);
+            Rect rect = GetUvRect(x, y, z, voxel, region, TerrainFaceDir.Up);
+            var brightness = new float[verts.Length];
+            for (int i = 0; i < verts.Length; i++)
+                brightness[i] = TerrainAo.BaseBrightness;
+            AddFace(_meshes.HiddenTops, x, y, z, verts, uvs, brightness, rect, y + 1);
         }
         else
         {

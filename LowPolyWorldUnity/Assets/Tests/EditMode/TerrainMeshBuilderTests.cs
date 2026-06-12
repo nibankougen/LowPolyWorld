@@ -403,6 +403,8 @@ public class TerrainMeshBuilderTests
             Assert.AreEqual(6f, uv2.x, Delta, "UV2.x = 上面の Y グリッドインデックス（ブロック Y + 1）");
         foreach (var p in hidden.Vertices)
             Assert.AreEqual(3.0f, p.y, Delta, "上面は y = 6 × 0.5m");
+        foreach (var c in hidden.Colors)
+            Assert.AreEqual(AoNone, c.r, Delta, "hidden tops は AO を焼き込まずベース明度固定（参照先は表示時に必ず非表示）");
     }
 
     [Test]
