@@ -11,8 +11,9 @@ Shader "LowPoly/Terrain"
         // Height Culling（TerrainRenderer が設定。1e6 = 無効）
         _CullHeightY ("Cull Height (World Y)", Float) = 1000000
         _CullGridY ("Cull Threshold (Grid Y)", Float) = 1000000
-        // 地形タブの上方半透明（市松模様ディザ。1e6 = 無効）
-        _DitherHeightY ("Dither Height (World Y)", Float) = 1000000
+        // 地形タブの編集レイヤー強調（レイヤー帯の外を市松模様ディザ。±1e6 = 無効）
+        _DitherAboveY ("Dither Above (World Y)", Float) = 1000000
+        _DitherBelowY ("Dither Below (World Y)", Float) = -1000000
         [Toggle(_HIDDEN_TOP_MODE)] _HiddenTopMode ("Hidden Top Mode", Float) = 0
         // Set globally via Shader.SetGlobalColor("_AmbientColor", ...) by WorldEnvironmentController
         [HideInInspector] _AmbientColor ("Ambient Color", Color) = (1, 1, 1, 1)
@@ -53,7 +54,8 @@ Shader "LowPoly/Terrain"
                 half _Cutoff;
                 float _CullHeightY;
                 float _CullGridY;
-                float _DitherHeightY;
+                float _DitherAboveY;
+                float _DitherBelowY;
             CBUFFER_END
 
             // Global ambient color set by WorldEnvironmentController
@@ -107,9 +109,11 @@ Shader "LowPoly/Terrain"
                 // 非表示ブロックの下面（同じ高さ・α = 0）は浮動小数の揺らぎなく確実に破棄する
                 clip(_CullHeightY + input.color.a * 0.25 - input.worldY - 0.0002);
 
-                // 地形タブの上方半透明: _DitherHeightY 以上を市松模様ディザで間引く
-                // （screens-and-modes.md §11.7.2 — 透明禁止制約のためアルファブレンドは使わない）
-                if (input.worldY + 0.0002 - input.color.a * 0.25 >= _DitherHeightY)
+                // 地形タブの編集レイヤー強調: 編集中レイヤーの帯の外（上・下）を市松模様ディザで間引く
+                // （screens-and-modes.md §11.7.2 — 透明禁止制約のためアルファブレンドは使わない。
+                //   上向きの面（α = 1）は自レイヤーの帯に含めて判定する）
+                float layerY = input.worldY - input.color.a * 0.25;
+                if (layerY + 0.0002 >= _DitherAboveY || layerY <= _DitherBelowY - 0.0002)
                 {
                     uint2 pixel = (uint2)input.positionHCS.xy;
                     clip((float)((pixel.x + pixel.y) & 1) - 0.5);

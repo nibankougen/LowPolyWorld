@@ -17,7 +17,7 @@ public class TerrainEditSceneController : MonoBehaviour
 {
     [SerializeField] private float cameraPitch = 55f;
     [SerializeField] private float cameraYaw = 0f;
-    [SerializeField] private float cameraDistance = 30f;
+    [SerializeField] private float cameraDistance = 24f;
 
     private TerrainRenderer _terrainRenderer;
     private TerrainVoxelStore _store;
@@ -189,12 +189,15 @@ public class TerrainEditSceneController : MonoBehaviour
         RefreshDragRectOverlay();
     }
 
-    // 上方非表示 ON: クリップで完全非表示 / OFF: 市松ディザの疑似半透明（11.7.2）
+    // 編集レイヤー強調: 編集中レイヤー以外（上・下）を市松ディザの疑似半透明にする。
+    // 上方非表示 ON のときは上をクリップで完全非表示にし、下のみディザ（11.7.2）
     private void ApplyVisibility()
     {
-        int threshold = _edit.CurrentHeight + 1;
-        _terrainRenderer.ApplyHeightCullingThreshold(_hideAbove ? threshold : TerrainHeightCulling.NoCulling);
-        _terrainRenderer.ApplyDitherThreshold(_hideAbove ? TerrainHeightCulling.NoCulling : threshold);
+        int height = _edit.CurrentHeight;
+        _terrainRenderer.ApplyHeightCullingThreshold(
+            _hideAbove ? height + 1 : TerrainHeightCulling.NoCulling);
+        _terrainRenderer.ApplyDitherRange(
+            height, _hideAbove ? TerrainHeightCulling.NoCulling : height + 1);
     }
 
     private void ApplyCamera()

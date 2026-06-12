@@ -18,8 +18,8 @@ public class TerrainPreview : MonoBehaviour
     public int heightCullThreshold = -1;
 
     [Range(-1, 31)]
-    [Tooltip("地形タブの上方半透明（ディザ）閾値（-1 = 無効）。この高さ以上の地形が市松模様になる")]
-    public int ditherThreshold = -1;
+    [Tooltip("編集レイヤー強調の確認（-1 = 無効）。この高さのレイヤー以外（上・下）が市松ディザになる")]
+    public int focusLayerHeight = -1;
 
     [Tooltip("ON で白一色テクスチャにして AO（頂点カラー）だけを確認する。変更後は右クリック → 再構築")]
     public bool plainWhiteTexture;
@@ -52,7 +52,10 @@ public class TerrainPreview : MonoBehaviour
         if (terrainRenderer == null)
             return;
         terrainRenderer.ApplyHeightCullingThreshold(heightCullThreshold);
-        terrainRenderer.ApplyDitherThreshold(ditherThreshold);
+        if (focusLayerHeight < 0)
+            terrainRenderer.ApplyDitherRange(TerrainHeightCulling.NoCulling, TerrainHeightCulling.NoCulling);
+        else
+            terrainRenderer.ApplyDitherRange(focusLayerHeight, focusLayerHeight + 1);
     }
 
     private static TerrainVoxelStore CreateSampleStore()

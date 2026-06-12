@@ -82,17 +82,23 @@ public class TerrainRenderer : MonoBehaviour
     }
 
     /// <summary>
-    /// 地形タブの高さスライス表示: threshold 以上の Y グリッドの地形を市松模様ディザで半透明風にする
-    /// （screens-and-modes.md 11.7.2「上方半透明」。TerrainHeightCulling.NoCulling で解除）。
-    /// 編集対象の高さ h を渡す場合は threshold = h + 1（h より上をディザ）。
+    /// 地形タブの編集レイヤー強調: belowThreshold 未満 / aboveThreshold 以上の Y グリッドの地形を
+    /// 市松模様ディザで半透明風にする（screens-and-modes.md 11.7.2。各側 TerrainHeightCulling.NoCulling で解除）。
+    /// 編集対象の高さ h のレイヤーだけを通常表示する場合は ApplyDitherRange(h, h + 1)。
     /// </summary>
-    public void ApplyDitherThreshold(int threshold)
+    public void ApplyDitherRange(int belowThreshold, int aboveThreshold)
     {
         if (_solidMaterial == null)
             return;
-        bool active = threshold != TerrainHeightCulling.NoCulling;
-        _solidMaterial.SetFloat("_DitherHeightY",
-            active ? transform.position.y + threshold * TerrainMeshBuilder.BlockSize : CullDisabled);
+        float rootY = transform.position.y;
+        _solidMaterial.SetFloat("_DitherBelowY",
+            belowThreshold != TerrainHeightCulling.NoCulling
+                ? rootY + belowThreshold * TerrainMeshBuilder.BlockSize
+                : -CullDisabled);
+        _solidMaterial.SetFloat("_DitherAboveY",
+            aboveThreshold != TerrainHeightCulling.NoCulling
+                ? rootY + aboveThreshold * TerrainMeshBuilder.BlockSize
+                : CullDisabled);
     }
 
     /// <summary>全チャンクオブジェクトと生成リソースを破棄する。</summary>
