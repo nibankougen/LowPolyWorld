@@ -318,23 +318,33 @@ public class TerrainEditSceneController : MonoBehaviour
                 return;
 
             const float cell = TerrainMeshBuilder.BlockSize;
-            float y = height * cell + _yOffset;
-            var vertices = new List<Vector3>(cells.Count * 8);
-            var indices = new List<int>(cells.Count * 8);
+            // レイヤーの下面と上面の両方に枠線を描く
+            //（ブロックが配置済みのセルでは下面側の枠線が隠れて見えなくなるため）
+            float bottomY = height * cell + _yOffset;
+            float topY = (height + 1) * cell + _yOffset;
+            var vertices = new List<Vector3>(cells.Count * 16);
+            var indices = new List<int>(cells.Count * 16);
             foreach (var (x, z) in cells)
             {
                 float x0 = x * cell;
                 float x1 = x0 + cell;
                 float z0 = z * cell;
                 float z1 = z0 + cell;
-                AddLine(vertices, indices, new Vector3(x0, y, z0), new Vector3(x1, y, z0));
-                AddLine(vertices, indices, new Vector3(x1, y, z0), new Vector3(x1, y, z1));
-                AddLine(vertices, indices, new Vector3(x1, y, z1), new Vector3(x0, y, z1));
-                AddLine(vertices, indices, new Vector3(x0, y, z1), new Vector3(x0, y, z0));
+                AddCellOutline(vertices, indices, x0, z0, x1, z1, bottomY);
+                AddCellOutline(vertices, indices, x0, z0, x1, z1, topY);
             }
             _mesh.SetVertices(vertices);
             _mesh.SetIndices(indices, MeshTopology.Lines, 0);
             _mesh.RecalculateBounds();
+        }
+
+        private static void AddCellOutline(
+            List<Vector3> vertices, List<int> indices, float x0, float z0, float x1, float z1, float y)
+        {
+            AddLine(vertices, indices, new Vector3(x0, y, z0), new Vector3(x1, y, z0));
+            AddLine(vertices, indices, new Vector3(x1, y, z0), new Vector3(x1, y, z1));
+            AddLine(vertices, indices, new Vector3(x1, y, z1), new Vector3(x0, y, z1));
+            AddLine(vertices, indices, new Vector3(x0, y, z1), new Vector3(x0, y, z0));
         }
 
         private static void AddLine(List<Vector3> vertices, List<int> indices, Vector3 a, Vector3 b)
