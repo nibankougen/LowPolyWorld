@@ -623,6 +623,20 @@
     background-image: url("../../Textures/UI/Icons/icon_tool_move.png");
 }
 
+.terrain-icon--type {
+    background-image: url("../../Textures/UI/Icons/icon_change_terrain_type.png");
+}
+
+.terrain-icon--copy {
+    background-image: url("../../Textures/UI/Icons/icon_copy.png");
+}
+
+/* コピー等のアクションボタンをアイコン表示にする（正方形・パディング 0） */
+.terrain-action-btn--icon {
+    width: 46px;
+    padding: 0;
+}
+
 .terrain-action-btn {
     height: 44px;
     padding: 0 14px;
