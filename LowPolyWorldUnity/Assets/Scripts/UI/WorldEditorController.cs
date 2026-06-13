@@ -48,6 +48,21 @@ public class WorldEditorController : MonoBehaviour
     /// <summary>地形タブ UI（シーン統合時に編集ロジック・レンダラーへ接続する）。</summary>
     public TerrainTabController TerrainTab => _terrainTab;
 
+    // ── オブジェクトタブ ──────────────────────────────────────────────────────
+    private ObjectTabController _objectTab;
+
+    /// <summary>オブジェクトタブ UI（シーン統合時に配置ストア・3D ビューへ接続する）。</summary>
+    public ObjectTabController ObjectTab => _objectTab;
+
+    /// <summary>ギズモ操作モード（上部ギズモバー）。</summary>
+    public enum WorldGizmoMode { Move, Scale, Rotate }
+
+    /// <summary>ギズモモードが切り替わったときに発火する。</summary>
+    public event System.Action<WorldGizmoMode> GizmoModeChanged;
+
+    /// <summary>現在のギズモモード。</summary>
+    public WorldGizmoMode CurrentGizmoMode { get; private set; } = WorldGizmoMode.Move;
+
     // ── 設定タブ: 基本 ────────────────────────────────────────────────────────
     private TextField _settingsWorldName;
     private VisualElement _tagChips;
@@ -128,6 +143,7 @@ public class WorldEditorController : MonoBehaviour
         RegisterCallbacks();
         BuildBgmTrackList();
         _terrainTab = new TerrainTabController(_root);
+        _objectTab = new ObjectTabController(_root);
     }
 
     // ── 公開 API ─────────────────────────────────────────────────────────────
@@ -342,6 +358,10 @@ public class WorldEditorController : MonoBehaviour
         // 高さバー・上方非表示は地形タブ選択中のみ 3D ビューに表示
         _terrainTab?.SetViewOverlayVisible(index == 0);
 
+        // ギズモバーはオブジェクトタブ以外では隠す（選択中の表示はシーン統合側が制御）
+        if (index != 1)
+            ShowGizmoBar(false);
+
         if (!_tabContentVisible)
         {
             _tabContentVisible = true;
@@ -364,7 +384,8 @@ public class WorldEditorController : MonoBehaviour
         var btns = new[] { _btnGizmoMove, _btnGizmoScale, _btnGizmoRotate };
         for (int i = 0; i < btns.Length; i++)
             btns[i].EnableInClassList("gizmo-btn--active", i == index);
-        // TODO: ギズモシステムに通知
+        CurrentGizmoMode = (WorldGizmoMode)index;
+        GizmoModeChanged?.Invoke(CurrentGizmoMode);
     }
 
     public void ShowGizmoBar(bool show) =>

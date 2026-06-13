@@ -9,6 +9,7 @@ public static class TerrainPreviewMenu
 {
     private const string PreviewObjectName = "TerrainPreview";
     private const string UiPreviewObjectName = "WorldEditorUIPreview";
+    private const string ObjectPreviewObjectName = "ObjectEditPreview";
 
     [MenuItem("Tools/LowPolyWorld/地形プレビューを生成")]
     public static void CreatePreview() => CreatePreview(false);
@@ -39,6 +40,10 @@ public static class TerrainPreviewMenu
         var uiPreview = GameObject.Find(UiPreviewObjectName);
         if (uiPreview != null)
             Object.DestroyImmediate(uiPreview);
+
+        var objPreview = GameObject.Find(ObjectPreviewObjectName);
+        if (objPreview != null)
+            Object.DestroyImmediate(objPreview);
     }
 
     [MenuItem("Tools/LowPolyWorld/ワールドエディタ UI プレビューを生成")]
@@ -71,6 +76,29 @@ public static class TerrainPreviewMenu
 
         Selection.activeGameObject = terrainGo;
         Debug.Log("地形タブ統合プレビューを生成しました。Play モードに入ると地形タブで実際に編集できます。");
+    }
+
+    [MenuItem("Tools/LowPolyWorld/オブジェクトタブ統合プレビューを生成")]
+    public static void CreateObjectEditPreview()
+    {
+        RemovePreview();
+        var uiGo = CreateEditorUiObject();
+
+        var objGo = new GameObject(ObjectPreviewObjectName);
+        objGo.AddComponent<ObjectEditSceneController>();
+
+        var cameraGo = new GameObject("ObjectEditCamera");
+        cameraGo.transform.SetParent(objGo.transform, false);
+        var camera = cameraGo.AddComponent<Camera>();
+        camera.clearFlags = CameraClearFlags.SolidColor;
+        camera.backgroundColor = new Color(0.12f, 0.13f, 0.18f);
+
+        var preview = objGo.AddComponent<ObjectEditScenePreview>();
+        preview.editorController = uiGo.GetComponent<WorldEditorController>();
+        preview.editCamera = camera;
+
+        Selection.activeGameObject = objGo;
+        Debug.Log("オブジェクトタブ統合プレビューを生成しました。Play モードに入るとオブジェクトを配置・操作できます。");
     }
 
     private static GameObject CreateEditorUiObject()

@@ -88,9 +88,67 @@
                 </ui:ScrollView>
             </ui:VisualElement>
 
-            <!-- オブジェクトタブ（スタブ） -->
+            <!-- ───── オブジェクトタブ ───── -->
             <ui:VisualElement name="panel-objects" class="tab-panel">
-                <ui:Label class="stub-label" text="オブジェクト配置（実装予定）" />
+
+                <!-- 固定ヘッダー: オブジェクト数 -->
+                <ui:VisualElement class="object-header">
+                    <ui:Label class="object-header-label" text="オブジェクト数" />
+                    <ui:Label name="object-count-label" class="object-count-label" text="0 / 400" />
+                </ui:VisualElement>
+
+                <!-- 選択ツールバー（オブジェクト選択中のみ表示） -->
+                <ui:VisualElement name="object-selection-bar" class="object-selection-bar overlay-hidden">
+                    <ui:Button name="object-btn-duplicate" class="object-action-btn" text="複製" />
+                    <ui:Button name="object-btn-delete" class="object-action-btn" text="削除" />
+                    <ui:VisualElement class="object-scale-group">
+                        <ui:Label class="object-scale-axis" text="W" />
+                        <ui:Button name="object-scale-w-dec" class="object-scale-btn" text="−" />
+                        <ui:Label name="object-scale-w-label" class="object-scale-label" text="1m" />
+                        <ui:Button name="object-scale-w-inc" class="object-scale-btn" text="+" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="object-scale-group">
+                        <ui:Label class="object-scale-axis" text="D" />
+                        <ui:Button name="object-scale-d-dec" class="object-scale-btn" text="−" />
+                        <ui:Label name="object-scale-d-label" class="object-scale-label" text="1m" />
+                        <ui:Button name="object-scale-d-inc" class="object-scale-btn" text="+" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="object-scale-group">
+                        <ui:Label class="object-scale-axis" text="H" />
+                        <ui:Button name="object-scale-h-dec" class="object-scale-btn" text="−" />
+                        <ui:Label name="object-scale-h-label" class="object-scale-label" text="1m" />
+                        <ui:Button name="object-scale-h-inc" class="object-scale-btn" text="+" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+
+                <!-- サブタブ -->
+                <ui:VisualElement class="object-subtab-bar">
+                    <ui:Button name="object-subtab-used"  class="object-subtab" text="利用中" />
+                    <ui:Button name="object-subtab-saved" class="object-subtab" text="保存・編集" />
+                    <ui:Button name="object-subtab-owned" class="object-subtab object-subtab--active" text="所有" />
+                </ui:VisualElement>
+
+                <!-- 利用中オブジェクト一覧 -->
+                <ui:VisualElement name="object-used-container" class="object-subtab-content overlay-hidden">
+                    <ui:ScrollView class="object-list-scroll">
+                        <ui:VisualElement name="object-used-list" class="object-list" />
+                    </ui:ScrollView>
+                </ui:VisualElement>
+
+                <!-- 保存・編集オブジェクト（スタブ） -->
+                <ui:VisualElement name="object-saved-container" class="object-subtab-content overlay-hidden">
+                    <ui:Label class="stub-label" text="保存・編集オブジェクト（実装予定）" />
+                </ui:VisualElement>
+
+                <!-- 所有オブジェクトパレット -->
+                <ui:VisualElement name="object-owned-container" class="object-subtab-content">
+                    <ui:ScrollView class="object-list-scroll">
+                        <ui:VisualElement name="object-owned-list" class="object-list" />
+                    </ui:ScrollView>
+                </ui:VisualElement>
+
+                <!-- フラッシュメッセージ -->
+                <ui:Label name="object-flash" class="object-flash overlay-hidden" text="" />
             </ui:VisualElement>
 
             <!-- ギミックタブ（スタブ） -->
