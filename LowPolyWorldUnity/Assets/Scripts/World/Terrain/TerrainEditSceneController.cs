@@ -28,6 +28,10 @@ public class TerrainEditSceneController : MonoBehaviour
     private Vector2 _prevTouchMid;
     private float _prevTouchDist;
 
+    // マウスによるカメラ操作（中ボタンドラッグ = パン / ホイール = ズーム。左クリックは編集）
+    private bool _mousePanActive;
+    private Vector2 _prevMousePos;
+
     private TerrainRenderer _terrainRenderer;
     private TerrainVoxelStore _store;
     private TerrainEditLogic _edit;
@@ -116,6 +120,14 @@ public class TerrainEditSceneController : MonoBehaviour
 
         // 2 本指タッチ中はカメラ操作（パン/ズーム）。ブラシ等の編集・高さ長押しは抑止する。
         if (TryHandleTwoFingerCamera())
+        {
+            CancelActiveEditing();
+            return;
+        }
+
+        // マウス: ホイールでズーム（編集は妨げない）/ 中ボタンドラッグでパン（パン中は編集を抑止）
+        HandleMouseScrollZoom();
+        if (HandleMousePan())
         {
             CancelActiveEditing();
             return;
@@ -240,6 +252,46 @@ public class TerrainEditSceneController : MonoBehaviour
             _currentDistance = Mathf.Clamp(_currentDistance * (prevDist / curDist), MinCamDistance, MaxCamDistance);
 
         ApplyCamera();
+    }
+
+    // ── マウスによるカメラ操作（中ボタンドラッグ = パン / ホイール = ズーム） ──
+
+    private void HandleMouseScrollZoom()
+    {
+        var mouse = Mouse.current;
+        if (mouse == null)
+            return;
+        float scroll = mouse.scroll.ReadValue().y;
+        if (Mathf.Abs(scroll) < 0.01f)
+            return;
+        // スクロール上（奥）で寄る・下で引く
+        _currentDistance = Mathf.Clamp(
+            _currentDistance * (scroll > 0f ? 0.9f : 1f / 0.9f), MinCamDistance, MaxCamDistance);
+        ApplyCamera();
+    }
+
+    /// <summary>中ボタンドラッグでパン。ドラッグ中は true（編集を抑止する）。</summary>
+    private bool HandleMousePan()
+    {
+        var mouse = Mouse.current;
+        if (mouse == null || !mouse.middleButton.isPressed)
+        {
+            _mousePanActive = false;
+            return false;
+        }
+        Vector2 cur = mouse.position.ReadValue();
+        if (_mousePanActive)
+        {
+            var plane = new Plane(Vector3.up, CameraTargetCenter());
+            if (ProjectToPlane(_prevMousePos, plane, out var wPrev) && ProjectToPlane(cur, plane, out var wCur))
+            {
+                _panOffset -= wCur - wPrev;
+                ApplyCamera();
+            }
+        }
+        _mousePanActive = true;
+        _prevMousePos = cur;
+        return true;
     }
 
     private bool ProjectToPlane(Vector2 screenPos, Plane plane, out Vector3 world)
