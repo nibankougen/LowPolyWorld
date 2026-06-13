@@ -364,9 +364,11 @@ public class ObjectEditSceneController : MonoBehaviour
     {
         if (_camera == null)
             return;
+        // 斜め上から原点（地面中央）を見下ろす固定カメラ。ピッチを上げてより俯瞰寄りにする。
+        // ピッチ 55°・距離 15m で原点を注視: pos = (0, 15·sin55, −15·cos55)
         _camera.transform.SetParent(transform, false);
         _camera.transform.SetPositionAndRotation(
-            new Vector3(0f, 9f, -11f), Quaternion.Euler(38f, 0f, 0f));
+            new Vector3(0f, 12.3f, -8.6f), Quaternion.Euler(55f, 0f, 0f));
     }
 
     private static void DestroyIfCreated(Object obj)

@@ -15,7 +15,7 @@ using UnityEngine.UIElements;
 [RequireComponent(typeof(TerrainRenderer))]
 public class TerrainEditSceneController : MonoBehaviour
 {
-    [SerializeField] private float cameraPitch = 55f;
+    [SerializeField] private float cameraPitch = 65f; // 斜め上からの俯瞰（大きいほど真上に近い）
     [SerializeField] private float cameraYaw = 0f;
     [SerializeField] private float cameraDistance = 12f;
 
