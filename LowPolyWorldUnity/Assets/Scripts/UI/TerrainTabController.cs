@@ -90,8 +90,8 @@ public class TerrainTabController
         _btnHideAbove = root.Q<Button>("terrain-btn-hide-above");
         _btnHideAbove.clicked += ToggleHideAbove;
         _heightLabel = root.Q<Label>("terrain-height-label");
-        root.Q<Button>("terrain-height-up").clicked += () => SetHeight(Height + 1);
-        root.Q<Button>("terrain-height-down").clicked += () => SetHeight(Height - 1);
+        SetupHeightButton(root.Q<Button>("terrain-height-up"), +1);
+        SetupHeightButton(root.Q<Button>("terrain-height-down"), -1);
 
         _selectMethodLabel = root.Q<Label>("terrain-select-method");
         _flashLabel = root.Q<Label>("terrain-flash");
@@ -184,6 +184,45 @@ public class TerrainTabController
         Height = clamped;
         RefreshHeightLabel();
         HeightChanged?.Invoke(Height);
+    }
+
+    // 長押し連続移動: 0.5 秒以上の長押しで連続的に高さが変わる（11.7.2 高さバー）
+    private const long HoldRepeatDelayMs = 500;    // 連続移動を開始するまでの長押し時間
+    private const long HoldRepeatIntervalMs = 100; // 連続移動の間隔
+
+    /// <summary>
+    /// 高さ上下ボタンに「押した瞬間に 1 段移動 + 0.5 秒以上の長押しで連続移動」を設定する。
+    /// ポインタをキャプチャして、指がボタンから外れても離すまで連続移動を継続する。
+    /// </summary>
+    private void SetupHeightButton(Button btn, int delta)
+    {
+        if (btn == null)
+            return;
+        IVisualElementScheduledItem repeat = null;
+
+        void StopRepeat()
+        {
+            repeat?.Pause();
+            repeat = null;
+        }
+
+        btn.RegisterCallback<PointerDownEvent>(evt =>
+        {
+            SetHeight(Height + delta); // 押した瞬間に 1 段
+            btn.CapturePointer(evt.pointerId);
+            StopRepeat();
+            repeat = btn.schedule
+                .Execute(() => SetHeight(Height + delta))
+                .StartingIn(HoldRepeatDelayMs)
+                .Every(HoldRepeatIntervalMs);
+        });
+        btn.RegisterCallback<PointerUpEvent>(evt =>
+        {
+            StopRepeat();
+            if (btn.HasPointerCapture(evt.pointerId))
+                btn.ReleasePointer(evt.pointerId);
+        });
+        btn.RegisterCallback<PointerCaptureOutEvent>(_ => StopRepeat());
     }
 
     // ── Private ───────────────────────────────────────────────────────────────
