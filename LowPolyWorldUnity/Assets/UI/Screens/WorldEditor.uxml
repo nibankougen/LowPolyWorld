@@ -59,14 +59,14 @@
             <!-- ───── 地形タブ ───── -->
             <ui:VisualElement name="panel-terrain" class="tab-panel overlay-hidden">
 
-                <!-- 編集バー -->
+                <!-- 編集バー（アイコンボタン） -->
                 <ui:VisualElement class="terrain-edit-bar">
-                    <ui:Button name="terrain-mode-brush"  class="terrain-mode-btn terrain-mode-btn--active" text="ブラシ" />
-                    <ui:Button name="terrain-mode-eraser" class="terrain-mode-btn" text="消しゴム" />
-                    <ui:Button name="terrain-mode-shape"  class="terrain-mode-btn" text="図形" />
-                    <ui:Button name="terrain-mode-type"   class="terrain-mode-btn" text="タイプ変更" />
-                    <ui:Button name="terrain-mode-select" class="terrain-mode-btn" text="範囲選択" />
-                    <ui:Button name="terrain-mode-move"   class="terrain-mode-btn" text="移動" />
+                    <ui:Button name="terrain-mode-brush"  class="terrain-mode-btn terrain-icon terrain-icon--brush terrain-mode-btn--active" tooltip="ブラシ" />
+                    <ui:Button name="terrain-mode-eraser" class="terrain-mode-btn terrain-icon terrain-icon--eraser" tooltip="消しゴム" />
+                    <ui:Button name="terrain-mode-shape"  class="terrain-mode-btn terrain-icon terrain-icon--shape" tooltip="図形" />
+                    <ui:Button name="terrain-mode-type"   class="terrain-mode-btn" text="↻" tooltip="タイプ変更" />
+                    <ui:Button name="terrain-mode-select" class="terrain-mode-btn terrain-icon terrain-icon--select" tooltip="範囲選択" />
+                    <ui:Button name="terrain-mode-move"   class="terrain-mode-btn terrain-icon terrain-icon--move" tooltip="移動" />
                     <ui:Button name="terrain-btn-copy"  class="terrain-action-btn overlay-hidden" text="コピー" />
                     <ui:Button name="terrain-btn-paste" class="terrain-action-btn overlay-hidden" text="ペースト" />
                 </ui:VisualElement>

@@ -575,14 +575,16 @@
 }
 
 .terrain-mode-btn {
-    height: 40px;
-    padding: 0 12px;
+    width: 46px;
+    height: 44px;
+    padding: 0;
     background-color: rgb(40, 40, 60);
     border-width: 1px;
     border-color: rgb(70, 70, 100);
     border-radius: 6px;
     color: rgb(180, 180, 210);
-    font-size: 17px;
+    font-size: 24px;
+    -unity-text-align: middle-center;
     margin: 2px 3px;
 }
 
@@ -592,15 +594,44 @@
     color: white;
 }
 
+/* 編集ツールのアイコン画像（Assets/Textures/UI/Icons・128×128 PNG） */
+.terrain-icon {
+    -unity-background-scale-mode: scale-to-fit;
+    background-size: 64% 64%;
+    background-position-x: center;
+    background-position-y: center;
+    background-repeat: no-repeat;
+}
+
+.terrain-icon--brush {
+    background-image: url("../../Textures/UI/Icons/icon_tool_brush.png");
+}
+
+.terrain-icon--eraser {
+    background-image: url("../../Textures/UI/Icons/icon_tool_eraser.png");
+}
+
+.terrain-icon--shape {
+    background-image: url("../../Textures/UI/Icons/icon_tool_shape.png");
+}
+
+.terrain-icon--select {
+    background-image: url("../../Textures/UI/Icons/icon_tool_select.png");
+}
+
+.terrain-icon--move {
+    background-image: url("../../Textures/UI/Icons/icon_tool_move.png");
+}
+
 .terrain-action-btn {
-    height: 40px;
-    padding: 0 12px;
+    height: 44px;
+    padding: 0 14px;
     background-color: transparent;
     border-width: 1px;
     border-color: rgb(100, 170, 255);
     border-radius: 6px;
     color: rgb(100, 170, 255);
-    font-size: 17px;
+    font-size: 18px;
     margin: 2px 3px;
 }
 
