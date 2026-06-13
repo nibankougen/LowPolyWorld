@@ -1,5 +1,7 @@
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem.UI;
 using UnityEngine.UIElements;
 
 /// <summary>
@@ -114,6 +116,20 @@ public static class TerrainPreviewMenu
         doc.visualTreeAsset =
             AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/UI/Screens/WorldEditor.uxml");
         go.AddComponent<WorldEditorController>();
+
+        // UI Toolkit ランタイムパネルがポインタ入力を受け取るには EventSystem + 入力モジュールが必要
+        // （3D 編集は Pointer.current 直読みで動くが、UI ボタンはこれが無いと反応しない）
+        EnsureEventSystem(go);
         return go;
+    }
+
+    private static void EnsureEventSystem(GameObject parent)
+    {
+        if (Object.FindFirstObjectByType<EventSystem>() != null)
+            return;
+        var esGo = new GameObject("EventSystem");
+        esGo.transform.SetParent(parent.transform, false);
+        esGo.AddComponent<EventSystem>();
+        esGo.AddComponent<InputSystemUIInputModule>().AssignDefaultActions();
     }
 }
