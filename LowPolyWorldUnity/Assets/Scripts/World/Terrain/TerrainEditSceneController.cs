@@ -19,6 +19,15 @@ public class TerrainEditSceneController : MonoBehaviour
     [SerializeField] private float cameraYaw = 0f;
     [SerializeField] private float cameraDistance = 12f;
 
+    // 2 本指タッチによるカメラ操作（パン + ピンチズーム）。角度は固定のまま。
+    private const float MinCamDistance = 4f;
+    private const float MaxCamDistance = 40f;
+    private float _currentDistance;
+    private Vector3 _panOffset;
+    private bool _twoFingerActive;
+    private Vector2 _prevTouchMid;
+    private float _prevTouchDist;
+
     private TerrainRenderer _terrainRenderer;
     private TerrainVoxelStore _store;
     private TerrainEditLogic _edit;
@@ -54,6 +63,7 @@ public class TerrainEditSceneController : MonoBehaviour
         _terrainRenderer = GetComponent<TerrainRenderer>();
         _tab = tab;
         _camera = editCamera;
+        _currentDistance = cameraDistance;
         _store = store;
         _edit = new TerrainEditLogic(store);
         _session = new TerrainEditSession(_edit);
@@ -103,6 +113,14 @@ public class TerrainEditSceneController : MonoBehaviour
     {
         if (!_initialized || !EditingEnabled || _camera == null)
             return;
+
+        // 2 本指タッチ中はカメラ操作（パン/ズーム）。ブラシ等の編集・高さ長押しは抑止する。
+        if (TryHandleTwoFingerCamera())
+        {
+            CancelActiveEditing();
+            return;
+        }
+
         var pointer = Pointer.current;
         if (pointer == null)
             return;
@@ -156,6 +174,95 @@ public class TerrainEditSceneController : MonoBehaviour
         Vector2 panelPos = RuntimePanelUtils.ScreenToPanel(
             _panel, new Vector2(screenPos.x, Screen.height - screenPos.y));
         return _panel.Pick(panelPos) == _viewArea;
+    }
+
+    // ── 2 本指カメラ操作（パン + ピンチズーム・角度は固定） ─────────────────────
+
+    /// <summary>
+    /// 2 本以上のタッチがある間、その中点の移動でパン・指間距離の比でズームする。
+    /// 誤作動防止: タッチスクリーンの指のみを数える（ペン・マウスは対象外）。
+    /// ペンで描画中（tip 押下）のときはカメラ操作を行わない。
+    /// </summary>
+    private bool TryHandleTwoFingerCamera()
+    {
+        // ペンで描画中は 2 本指カメラを起動しない（誤作動防止）
+        var pen = Pen.current;
+        if (pen != null && pen.press.isPressed)
+        {
+            _twoFingerActive = false;
+            return false;
+        }
+
+        var ts = Touchscreen.current;
+        if (ts == null)
+        {
+            _twoFingerActive = false;
+            return false;
+        }
+
+        Vector2 a = default, b = default;
+        int count = 0;
+        foreach (var touch in ts.touches)
+        {
+            if (!touch.press.isPressed)
+                continue;
+            if (count == 0)
+                a = touch.position.ReadValue();
+            else if (count == 1)
+                b = touch.position.ReadValue();
+            count++;
+        }
+        if (count < 2)
+        {
+            _twoFingerActive = false;
+            return false;
+        }
+
+        Vector2 mid = (a + b) * 0.5f;
+        float dist = Vector2.Distance(a, b);
+        if (_twoFingerActive)
+            ApplyPanZoom(_prevTouchMid, mid, _prevTouchDist, dist);
+        _twoFingerActive = true;
+        _prevTouchMid = mid;
+        _prevTouchDist = dist;
+        return true;
+    }
+
+    private void ApplyPanZoom(Vector2 prevMid, Vector2 curMid, float prevDist, float curDist)
+    {
+        // パン: 注視平面上での 2 指中点の移動分だけ注視点を逆方向へ動かす（地面を掴んで動かす感覚）
+        var plane = new Plane(Vector3.up, CameraTargetCenter());
+        if (ProjectToPlane(prevMid, plane, out var wPrev) && ProjectToPlane(curMid, plane, out var wCur))
+            _panOffset -= wCur - wPrev;
+
+        // ズーム: ピンチアウト（指間が広がる）で寄り、ピンチインで引く
+        if (prevDist > 1f && curDist > 1f)
+            _currentDistance = Mathf.Clamp(_currentDistance * (prevDist / curDist), MinCamDistance, MaxCamDistance);
+
+        ApplyCamera();
+    }
+
+    private bool ProjectToPlane(Vector2 screenPos, Plane plane, out Vector3 world)
+    {
+        Ray ray = _camera.ScreenPointToRay(screenPos);
+        if (plane.Raycast(ray, out float enter))
+        {
+            world = ray.GetPoint(enter);
+            return true;
+        }
+        world = default;
+        return false;
+    }
+
+    private void CancelActiveEditing()
+    {
+        _heldHeightButton = null;
+        if (_pointerActive)
+        {
+            _pointerActive = false;
+            ApplyResult(_session.OnPointerUp());
+            RefreshDragRectOverlay();
+        }
     }
 
     // ── 高さ ▲/▼ の長押し連続移動 ─────────────────────────────────────────────
@@ -260,13 +367,17 @@ public class TerrainEditSceneController : MonoBehaviour
     {
         if (_camera == null)
             return;
-        Vector3 center = transform.TransformPoint(new Vector3(
+        var rotation = Quaternion.Euler(cameraPitch, cameraYaw, 0f);
+        _camera.transform.SetPositionAndRotation(
+            CameraTargetCenter() - rotation * Vector3.forward * _currentDistance, rotation);
+    }
+
+    /// <summary>カメラの注視点（グリッド中央 + 2 本指パンのオフセット）。</summary>
+    private Vector3 CameraTargetCenter() =>
+        transform.TransformPoint(new Vector3(
             TerrainVoxelStore.SizeX * TerrainMeshBuilder.BlockSize * 0.5f,
             _edit.CurrentHeight * TerrainMeshBuilder.BlockSize,
-            TerrainVoxelStore.SizeZ * TerrainMeshBuilder.BlockSize * 0.5f));
-        var rotation = Quaternion.Euler(cameraPitch, cameraYaw, 0f);
-        _camera.transform.SetPositionAndRotation(center - rotation * Vector3.forward * cameraDistance, rotation);
-    }
+            TerrainVoxelStore.SizeZ * TerrainMeshBuilder.BlockSize * 0.5f)) + _panOffset;
 
     // ── オーバーレイ（ライン描画） ────────────────────────────────────────────
 
