@@ -451,12 +451,14 @@
     font-size: 18px;
 }
 
-.radio-btn:first-child {
+/* UI Toolkit は :first-child / :last-child 擬似クラスを未サポートのため、
+   UXML 側で先頭・末尾ボタンに明示クラスを付与して角丸を当てる */
+.radio-btn--first {
     border-top-left-radius: 8px;
     border-bottom-left-radius: 8px;
 }
 
-.radio-btn:last-child {
+.radio-btn--last {
     border-top-right-radius: 8px;
     border-bottom-right-radius: 8px;
 }

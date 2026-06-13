@@ -171,9 +171,9 @@
                     <ui:VisualElement class="settings-section">
                         <ui:Label class="settings-label" text="背景" />
                         <ui:VisualElement class="radio-row">
-                            <ui:Button name="btn-bg-solid"    class="radio-btn radio-btn--active" text="単色" />
+                            <ui:Button name="btn-bg-solid"    class="radio-btn radio-btn--first radio-btn--active" text="単色" />
                             <ui:Button name="btn-bg-gradient" class="radio-btn" text="グラデーション" />
-                            <ui:Button name="btn-bg-texture"  class="radio-btn" text="テクスチャ" />
+                            <ui:Button name="btn-bg-texture"  class="radio-btn radio-btn--last" text="テクスチャ" />
                         </ui:VisualElement>
                         <ui:VisualElement name="bg-color-row" class="settings-row">
                             <ui:Label class="settings-row-label" text="カラー" />
@@ -220,8 +220,8 @@
                     <ui:VisualElement class="settings-section">
                         <ui:Label class="settings-label" text="スクリーンエフェクト" />
                         <ui:VisualElement class="radio-row">
-                            <ui:Button name="btn-fx-none" class="radio-btn radio-btn--active" text="なし" />
-                            <ui:Button name="btn-fx-rain" class="radio-btn" text="雨" />
+                            <ui:Button name="btn-fx-none" class="radio-btn radio-btn--first radio-btn--active" text="なし" />
+                            <ui:Button name="btn-fx-rain" class="radio-btn radio-btn--last" text="雨" />
                         </ui:VisualElement>
                         <ui:VisualElement name="fx-intensity-row" class="settings-row overlay-hidden">
                             <ui:Label class="settings-row-label" text="強度" />
