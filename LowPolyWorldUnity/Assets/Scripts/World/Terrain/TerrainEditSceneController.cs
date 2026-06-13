@@ -110,6 +110,11 @@ public class TerrainEditSceneController : MonoBehaviour
         bool pressed = pointer.press.isPressed;
         Vector2 screenPos = pointer.position.ReadValue();
 
+        // 高さ ▲/▼ の長押し連続移動（単発タップは UI の clicked が担当）。
+        // UI Toolkit の Button キャプチャ挙動で schedule + ポインタイベント方式が不安定なため、
+        // 3D 編集と同じ Pointer.current のポーリングで実装する。
+        UpdateHeightHold(screenPos, pressed);
+
         if (pressed && !_pointerActive)
         {
             if (IsOverViewArea(screenPos) && TryPickCell(screenPos, out int x, out int z))
@@ -151,6 +156,57 @@ public class TerrainEditSceneController : MonoBehaviour
         Vector2 panelPos = RuntimePanelUtils.ScreenToPanel(
             _panel, new Vector2(screenPos.x, Screen.height - screenPos.y));
         return _panel.Pick(panelPos) == _viewArea;
+    }
+
+    // ── 高さ ▲/▼ の長押し連続移動 ─────────────────────────────────────────────
+
+    private const float HeightHoldDelaySec = 0.5f;     // 連続移動を始めるまでの長押し時間
+    private const float HeightHoldIntervalSec = 0.1f;  // 連続移動の間隔
+    private string _heldHeightButton;
+    private float _heightHoldElapsed;
+    private float _heightNextRepeat;
+
+    /// <summary>
+    /// 高さ ▲/▼ ボタンを 0.5 秒以上押し続けている間、0.1 秒ごとに高さを 1 段ずつ変える。
+    /// 単発タップは UI（clicked）が担当するため、ここでは押下開始後 0.5 秒経過分のみ処理する。
+    /// </summary>
+    private void UpdateHeightHold(Vector2 screenPos, bool pressed)
+    {
+        string name = pressed ? PickHeightButton(screenPos) : null;
+        if (name != _heldHeightButton)
+        {
+            _heldHeightButton = name;
+            _heightHoldElapsed = 0f;
+            _heightNextRepeat = HeightHoldDelaySec;
+            return;
+        }
+        if (name == null)
+            return;
+
+        _heightHoldElapsed += Time.deltaTime;
+        int delta = name == "terrain-height-up" ? 1 : -1;
+        while (_heightHoldElapsed >= _heightNextRepeat)
+        {
+            _tab.SetHeight(_tab.Height + delta);
+            _heightNextRepeat += HeightHoldIntervalSec;
+        }
+    }
+
+    /// <summary>ポインタ位置にある高さボタンの名前（terrain-height-up / -down）。無ければ null。</summary>
+    private string PickHeightButton(Vector2 screenPos)
+    {
+        if (_panel == null)
+            return null;
+        Vector2 panelPos = RuntimePanelUtils.ScreenToPanel(
+            _panel, new Vector2(screenPos.x, Screen.height - screenPos.y));
+        var picked = _panel.Pick(panelPos);
+        while (picked != null)
+        {
+            if (picked.name == "terrain-height-up" || picked.name == "terrain-height-down")
+                return picked.name;
+            picked = picked.parent;
+        }
+        return null;
     }
 
     private void ApplyResult(TerrainEditSession.EditResult result)

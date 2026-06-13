@@ -90,8 +90,11 @@ public class TerrainTabController
         _btnHideAbove = root.Q<Button>("terrain-btn-hide-above");
         _btnHideAbove.clicked += ToggleHideAbove;
         _heightLabel = root.Q<Label>("terrain-height-label");
-        SetupHeightButton(root.Q<Button>("terrain-height-up"), +1);
-        SetupHeightButton(root.Q<Button>("terrain-height-down"), -1);
+        // 単発（タップ）はここで処理。0.5 秒以上の長押し連続移動は TerrainEditSceneController が
+        // Pointer.current のポーリングで行う（UI Toolkit の Button キャプチャ挙動で
+        // schedule + ポインタイベント方式が不安定なため）。
+        root.Q<Button>("terrain-height-up").clicked += () => SetHeight(Height + 1);
+        root.Q<Button>("terrain-height-down").clicked += () => SetHeight(Height - 1);
 
         _selectMethodLabel = root.Q<Label>("terrain-select-method");
         _flashLabel = root.Q<Label>("terrain-flash");
@@ -184,45 +187,6 @@ public class TerrainTabController
         Height = clamped;
         RefreshHeightLabel();
         HeightChanged?.Invoke(Height);
-    }
-
-    // 長押し連続移動: 0.5 秒以上の長押しで連続的に高さが変わる（11.7.2 高さバー）
-    private const long HoldRepeatDelayMs = 500;    // 連続移動を開始するまでの長押し時間
-    private const long HoldRepeatIntervalMs = 100; // 連続移動の間隔
-
-    /// <summary>
-    /// 高さ上下ボタンに「タップで 1 段移動 + 0.5 秒以上の長押しで連続移動」を設定する。
-    ///
-    /// 単発は他の UI ボタンと同じ <see cref="Button.clicked"/> で処理する（ポインタキャプチャを使う
-    /// PointerDown 方式は、3D ビューオーバーレイ内のこのボタンでは反応しなくなる不具合があったため）。
-    /// 連続移動はポインタを押している間だけ schedule で繰り返し、離す / ボタンから外れる / キャプチャ喪失で止める。
-    /// </summary>
-    private void SetupHeightButton(Button btn, int delta)
-    {
-        if (btn == null)
-            return;
-
-        btn.clicked += () => SetHeight(Height + delta);
-
-        IVisualElementScheduledItem repeat = null;
-        void StopRepeat()
-        {
-            repeat?.Pause();
-            repeat = null;
-        }
-        // Button の Clickable がポインタをキャプチャするので、押している間はボタン外へ動いても
-        // PointerUp はこのボタンに届く。停止は PointerUp とキャプチャ喪失で行う。
-        // （PointerLeave はキャプチャ時に誘発され schedule を即停止してしまうため使わない）
-        btn.RegisterCallback<PointerDownEvent>(_ =>
-        {
-            StopRepeat();
-            repeat = btn.schedule
-                .Execute(() => SetHeight(Height + delta))
-                .StartingIn(HoldRepeatDelayMs)
-                .Every(HoldRepeatIntervalMs);
-        });
-        btn.RegisterCallback<PointerUpEvent>(_ => StopRepeat());
-        btn.RegisterCallback<PointerCaptureOutEvent>(_ => StopRepeat());
     }
 
     // ── Private ───────────────────────────────────────────────────────────────
