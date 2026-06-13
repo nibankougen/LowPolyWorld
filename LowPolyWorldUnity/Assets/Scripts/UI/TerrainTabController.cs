@@ -210,6 +210,9 @@ public class TerrainTabController
             repeat?.Pause();
             repeat = null;
         }
+        // Button の Clickable がポインタをキャプチャするので、押している間はボタン外へ動いても
+        // PointerUp はこのボタンに届く。停止は PointerUp とキャプチャ喪失で行う。
+        // （PointerLeave はキャプチャ時に誘発され schedule を即停止してしまうため使わない）
         btn.RegisterCallback<PointerDownEvent>(_ =>
         {
             StopRepeat();
@@ -219,7 +222,6 @@ public class TerrainTabController
                 .Every(HoldRepeatIntervalMs);
         });
         btn.RegisterCallback<PointerUpEvent>(_ => StopRepeat());
-        btn.RegisterCallback<PointerLeaveEvent>(_ => StopRepeat());
         btn.RegisterCallback<PointerCaptureOutEvent>(_ => StopRepeat());
     }
 
