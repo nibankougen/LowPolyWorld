@@ -144,6 +144,7 @@ public class TerrainEditLogicTests
         {
             TerrainShape.RampN, TerrainShape.RampE, TerrainShape.RampS, TerrainShape.RampW,
             TerrainShape.DiagNW, TerrainShape.DiagNE, TerrainShape.DiagSE, TerrainShape.DiagSW,
+            TerrainShape.CornerNW, TerrainShape.CornerNE, TerrainShape.CornerSE, TerrainShape.CornerSW,
             TerrainShape.Cube,
         };
         foreach (var shape in expected)
@@ -211,6 +212,50 @@ public class TerrainEditLogicTests
     public void CycleType_EmptyCell_NotChangeable()
     {
         Assert.AreEqual(TerrainEditLogic.TypeChangeResult.NotChangeable, _logic.CycleType(10, 10));
+    }
+
+    [Test]
+    public void CycleType_CornerRequiresEmptyAboveAndTwoOpenLowSides()
+    {
+        // 南・東のみ空き（北・西を埋める・真上は空）→ ramp/diag/corner のうち corner_NW（高 = NW）が条件を満たす。
+        // diag は直角 2 面（南+東）が空きなので diag_SW（solid = N/E）も成立するが、サイクル順で diag が先に来る。
+        // ここでは corner 単体の配置条件を直接確認するため、diag が不可になる配置（真上を塞がず南のみ空き）で検証する。
+        _logic.PaintCell(10, 10, 0);
+        _logic.PaintCell(10, 11, 0); // North 埋め
+        _logic.PaintCell(9, 10, 0);  // West 埋め
+        // South・East 空き・真上空き → corner_NW が有効（diag は南+東の直角空きで diag_SW も有効）
+        var seen = new System.Collections.Generic.List<TerrainShape>();
+        for (int i = 0; i < 12; i++)
+        {
+            if (_logic.CycleType(10, 10) != TerrainEditLogic.TypeChangeResult.Changed)
+                break;
+            var s = TerrainVoxel.GetShape(_store.GetVoxel(10, 5, 10));
+            seen.Add(s);
+            if (s == TerrainShape.Cube)
+                break;
+        }
+        Assert.Contains(TerrainShape.CornerNW, seen, "南・東が空きなら corner_NW（高 = NW）が出現する");
+        Assert.IsFalse(seen.Contains(TerrainShape.CornerSW), "北 or 西が塞がっている向きの corner は出ない");
+    }
+
+    [Test]
+    public void CycleType_CornerNeedsEmptyAbove()
+    {
+        // 真上を塞ぐと corner は出ない（ramp 同様に真上が空であること）。南・東のみ空きにする。
+        _logic.PaintCell(10, 10, 0);
+        _logic.PaintCell(10, 11, 0); // North
+        _logic.PaintCell(9, 10, 0);  // West
+        _store.SetVoxel(10, 6, 10, TerrainVoxel.Encode(TerrainShape.Cube, 0)); // 真上を塞ぐ
+        for (int i = 0; i < 12; i++)
+        {
+            if (_logic.CycleType(10, 10) != TerrainEditLogic.TypeChangeResult.Changed)
+                break;
+            var s = TerrainVoxel.GetShape(_store.GetVoxel(10, 5, 10));
+            Assert.IsFalse(
+                TerrainNeighborRules.IsCorner(s), "真上が塞がっていると corner は配置されない");
+            if (s == TerrainShape.Cube)
+                break;
+        }
     }
 
     [Test]

@@ -87,6 +87,12 @@ public class TerrainPreview : MonoBehaviour
         Set(19, 1, 10, TerrainShape.DiagSE);
         Set(21, 1, 10, TerrainShape.DiagSW);
 
+        // 4 方向の corner（外角・四面体。単独）
+        Set(15, 1, 12, TerrainShape.CornerNW);
+        Set(17, 1, 12, TerrainShape.CornerNE);
+        Set(19, 1, 12, TerrainShape.CornerSE);
+        Set(21, 1, 12, TerrainShape.CornerSW);
+
         // 坂の階段（北向きに昇る・下は cube で充填）
         for (int i = 0; i < 4; i++)
         {

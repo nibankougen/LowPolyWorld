@@ -13,7 +13,8 @@ using System.Collections.Generic;
 /// タイプ変更の向きの定義（仕様の「空いている側面の方向」の実装定義）:
 /// - ramp: 低い側（斜面が下る方向）= 空いている側面。真上も空であること
 /// - diag: 直角に隣り合う 2 側面が空 → その反対側 2 面が solid になる向き
-/// - サイクル順: cube → ramp N/E/S/W → diag NW/NE/SE/SW → cube（有効な向きのみ）
+/// - corner（外角・四面体）: 真上が空 + 低い側（斜面が下る）2 側面が空 → 高頂点がその反対の上角になる向き
+/// - サイクル順: cube → ramp N/E/S/W → diag NW/NE/SE/SW → corner NW/NE/SE/SW → cube（有効な向きのみ）
 /// </summary>
 public class TerrainEditLogic
 {
@@ -28,6 +29,7 @@ public class TerrainEditLogic
         TerrainShape.Cube,
         TerrainShape.RampN, TerrainShape.RampE, TerrainShape.RampS, TerrainShape.RampW,
         TerrainShape.DiagNW, TerrainShape.DiagNE, TerrainShape.DiagSE, TerrainShape.DiagSW,
+        TerrainShape.CornerNW, TerrainShape.CornerNE, TerrainShape.CornerSE, TerrainShape.CornerSW,
     };
 
     private readonly TerrainVoxelStore _store;
@@ -193,7 +195,10 @@ public class TerrainEditLogic
         return TypeChangeResult.NotChangeable;
     }
 
-    /// <summary>形状の配置条件（11.7.2）。ramp = 真上が空 + 低い側が空 / diag = 直角に隣り合う 2 側面が空。</summary>
+    /// <summary>
+    /// 形状の配置条件（11.7.2）。ramp = 真上が空 + 低い側が空 / diag = 直角に隣り合う 2 側面が空 /
+    /// corner = 真上が空 + 低い側（斜面が下る）2 側面が空（高頂点はその反対の上角）。
+    /// </summary>
     private bool IsShapeValid(TerrainShape shape, int x, int z)
     {
         int y = CurrentHeight;
@@ -212,6 +217,10 @@ public class TerrainEditLogic
             case TerrainShape.DiagNE: return southEmpty && westEmpty;
             case TerrainShape.DiagSE: return northEmpty && westEmpty;
             case TerrainShape.DiagSW: return northEmpty && eastEmpty;
+            case TerrainShape.CornerNW: return aboveEmpty && southEmpty && eastEmpty; // 高 = NW・開き = S/E
+            case TerrainShape.CornerNE: return aboveEmpty && southEmpty && westEmpty;
+            case TerrainShape.CornerSE: return aboveEmpty && northEmpty && westEmpty;
+            case TerrainShape.CornerSW: return aboveEmpty && northEmpty && eastEmpty;
             default: return false;
         }
     }

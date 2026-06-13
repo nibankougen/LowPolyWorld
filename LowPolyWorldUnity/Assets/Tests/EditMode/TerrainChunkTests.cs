@@ -67,7 +67,7 @@ public class TerrainChunkTests
         Assert.IsNull(TerrainChunk.FromBytes(new byte[100]), "長さ不一致");
 
         var bad = new byte[TerrainChunk.VoxelCount];
-        bad[0] = 0xA0; // shape 10 は未定義
+        bad[0] = 0xE0; // shape 14 は未定義（角 corner_SW = 13 までが有効）
         Assert.IsNull(TerrainChunk.FromBytes(bad), "不正なボクセルバイト");
     }
 }

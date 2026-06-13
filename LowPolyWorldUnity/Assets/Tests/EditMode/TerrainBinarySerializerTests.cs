@@ -35,6 +35,25 @@ public class TerrainBinarySerializerTests
     }
 
     [Test]
+    public void SerializeDeserialize_CornerShapes_RoundTrip()
+    {
+        var store = new TerrainVoxelStore();
+        store.SetVoxel(3, 5, 3, TerrainVoxel.Encode(TerrainShape.CornerNW, 1));
+        store.SetVoxel(4, 5, 3, TerrainVoxel.Encode(TerrainShape.CornerNE, 2));
+        store.SetVoxel(5, 5, 3, TerrainVoxel.Encode(TerrainShape.CornerSE, 0));
+        store.SetVoxel(6, 5, 3, TerrainVoxel.Encode(TerrainShape.CornerSW, 15));
+
+        var data = TerrainBinarySerializer.Serialize(store);
+        Assert.IsTrue(TerrainBinarySerializer.TryDeserialize(data, out var restored, out string error), error);
+
+        Assert.AreEqual(TerrainShape.CornerNW, TerrainVoxel.GetShape(restored.GetVoxel(3, 5, 3)));
+        Assert.AreEqual(TerrainShape.CornerNE, TerrainVoxel.GetShape(restored.GetVoxel(4, 5, 3)));
+        Assert.AreEqual(TerrainShape.CornerSE, TerrainVoxel.GetShape(restored.GetVoxel(5, 5, 3)));
+        Assert.AreEqual(TerrainShape.CornerSW, TerrainVoxel.GetShape(restored.GetVoxel(6, 5, 3)));
+        Assert.AreEqual(15, TerrainVoxel.GetPaletteIndex(restored.GetVoxel(6, 5, 3)));
+    }
+
+    [Test]
     public void Serialize_HeaderFormat_MatchesSpec()
     {
         var data = TerrainBinarySerializer.Serialize(new TerrainVoxelStore());

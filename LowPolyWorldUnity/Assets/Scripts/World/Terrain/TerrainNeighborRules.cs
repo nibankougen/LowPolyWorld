@@ -18,6 +18,13 @@ public static class TerrainNeighborRules
         shape >= TerrainShape.DiagNW && shape <= TerrainShape.DiagSW;
 
     /// <summary>
+    /// 角（外角・四面体）か。角は底面が半三角・上面が斜面・full 側面を持たないため、隣接ブロックの
+    /// 面を一切隠さない（HidesTopFace/HidesBottomFace/HidesSideFace はすべて false に fall-through する）。
+    /// </summary>
+    public static bool IsCorner(TerrainShape shape) =>
+        shape >= TerrainShape.CornerNW && shape <= TerrainShape.CornerSW;
+
+    /// <summary>
     /// 真上の隣接ブロックが A の上面（上の平面に接する面 = cube の上面・diag の上面三角形）を隠すか。
     /// 坂の斜面は平面に接しないためカリング対象外（常に生成する）。
     /// </summary>

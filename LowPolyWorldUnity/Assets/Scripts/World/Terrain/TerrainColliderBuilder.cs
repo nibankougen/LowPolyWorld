@@ -44,6 +44,9 @@ public class TerrainColliderBuilder
     /// <summary>diag の XZ 階段近似の分割数（最後の段は奥行き 0 のため box は 3 個）。</summary>
     public const int DiagStepCount = 4;
 
+    /// <summary>角（四面体）の高さ段数（最上段は断面 0 のため box は 3 個）。</summary>
+    public const int CornerStepCount = 4;
+
     /// <summary>各段差を乗り越えるために必要な CharacterController.stepOffset。</summary>
     public const float RequiredStepOffset = 0.26f;
 
@@ -189,6 +192,18 @@ public class TerrainColliderBuilder
                         case TerrainShape.DiagSW:
                             AddDiagStairs(result, x, y, z, 3);
                             break;
+                        case TerrainShape.CornerNW:
+                            AddCornerStairs(result, x, y, z, 0);
+                            break;
+                        case TerrainShape.CornerNE:
+                            AddCornerStairs(result, x, y, z, 1);
+                            break;
+                        case TerrainShape.CornerSE:
+                            AddCornerStairs(result, x, y, z, 2);
+                            break;
+                        case TerrainShape.CornerSW:
+                            AddCornerStairs(result, x, y, z, 3);
+                            break;
                     }
                 }
             }
@@ -226,6 +241,29 @@ public class TerrainColliderBuilder
                 continue;
             var (rx0, rz0, rx1, rz1) = RotRect(f0, f1, f1, 1f, k);
             result.Add(MakeLocalBox(x, y, z, rx0, 0f, rz0, rx1, 1f, rz1));
+        }
+    }
+
+    /// <summary>
+    /// 角（四面体）の階段近似。ramp の高さ階段と diag の内側近似の合成。
+    /// canonical（CornerNW = 高頂点 NW 上角・solid 領域は z ≥ x + y）では、高さ段 i（薄い水平ボックス・
+    /// 厚さ 0.125m）の上端 y = (i+1)/N における断面（高い NW 角へ縮む直角三角形）に内接する
+    /// 軸平行ボックスを配置する。段上端の小さい断面を使うため段全体が solid に収まり phantom wall を作らない。
+    /// 上面が斜面に沿って NW へ昇る階段になる。最上段は断面 0 のためスキップする（box は 3 個）。
+    /// </summary>
+    private static void AddCornerStairs(List<TerrainColliderBox> result, int x, int y, int z, int k)
+    {
+        for (int i = 0; i < CornerStepCount; i++)
+        {
+            float f0 = (float)i / CornerStepCount;
+            float f1 = (float)(i + 1) / CornerStepCount;
+            float len = 1f - f1; // 段上端での三角形断面の脚の長さ
+            if (len <= 0f)
+                continue;
+            float half = len * 0.5f; // 直角三角形に内接する軸平行ボックスの辺（遠端が斜辺に接する）
+            // canonical 断面: x ∈ [0, half], z ∈ [1−half, 1]（NW 角に内接）
+            var (rx0, rz0, rx1, rz1) = RotRect(0f, 1f - half, half, 1f, k);
+            result.Add(MakeLocalBox(x, y, z, rx0, f0, rz0, rx1, f1, rz1));
         }
     }
 

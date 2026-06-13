@@ -13,6 +13,12 @@ public enum TerrainShape : byte
     DiagSE = 7, // 斜め（\ 方向・SE 半分が solid）
     DiagNE = 8, // 斜め（/ 方向・NE 半分が solid）
     DiagSW = 9, // 斜め（/ 方向・SW 半分が solid）
+
+    // 角（外角・四面体。坂と斜めの組み合わせ。高い頂点が 1 つの上角にあり、対角の低い縁へ下る）
+    CornerNW = 10, // 高い頂点 = NW 上角（West・North 側面が壁、SE 側へ下る）
+    CornerNE = 11, // 高い頂点 = NE 上角
+    CornerSE = 12, // 高い頂点 = SE 上角
+    CornerSW = 13, // 高い頂点 = SW 上角
 }
 
 /// <summary>
@@ -25,7 +31,7 @@ public enum TerrainShape : byte
 public static class TerrainVoxel
 {
     public const int MaxPaletteIndex = 15;
-    public const byte MaxShapeValue = (byte)TerrainShape.DiagSW;
+    public const byte MaxShapeValue = (byte)TerrainShape.CornerSW;
 
     public const byte Empty = 0;
 

@@ -66,6 +66,22 @@ public class TerrainNeighborRulesTests
     }
 
     [Test]
+    public void Corner_DoesNotHideAnyNeighborFace()
+    {
+        // 角は底面が半三角・上面が斜面・full 側面を持たないため、隣接ブロックの面を一切隠さない。
+        byte cornerNW = V(TerrainShape.CornerNW);
+        Assert.IsTrue(TerrainNeighborRules.IsCorner(TerrainShape.CornerNW));
+        Assert.IsTrue(TerrainNeighborRules.IsCorner(TerrainShape.CornerSW));
+        Assert.IsFalse(TerrainNeighborRules.IsCorner(TerrainShape.DiagNW));
+
+        Assert.IsFalse(TerrainNeighborRules.HidesTopFace(cornerNW), "角の底面は半三角 → 上面を隠さない");
+        Assert.IsFalse(TerrainNeighborRules.HidesBottomFace(cornerNW), "角の上面は斜面 → 下面を隠さない");
+        foreach (TerrainFaceDir dir in new[]
+                 { TerrainFaceDir.North, TerrainFaceDir.South, TerrainFaceDir.East, TerrainFaceDir.West })
+            Assert.IsFalse(TerrainNeighborRules.HidesSideFace(cornerNW, dir), "角は full 側面を持たない");
+    }
+
+    [Test]
     public void IsSameKind_SamePaletteAndNonEmpty()
     {
         Assert.IsTrue(TerrainNeighborRules.IsSameKind(V(TerrainShape.Cube, 3), V(TerrainShape.RampN, 3)), "形状が違ってもパレットが同じなら同種");

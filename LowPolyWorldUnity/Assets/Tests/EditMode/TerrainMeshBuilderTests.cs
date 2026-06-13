@@ -276,6 +276,92 @@ public class TerrainMeshBuilderTests
         Assert.AreEqual(14 + 20, data2.Vertices.Count, "diag の南面と cube の北面が相互カリング");
     }
 
+    // ── corner（外角・四面体） ────────────────────────────────────────────────
+
+    [Test]
+    public void BuildChunk_IsolatedCornerNW_GeometryAndRegions()
+    {
+        Set(5, 5, 5, TerrainShape.CornerNW);
+        var data = Build();
+
+        Assert.AreEqual(12, data.Vertices.Count, "底面 3 + 斜面 3 + West 壁 3 + North 壁 3");
+        Assert.AreEqual(12, data.Triangles.Count, "4 面 × 1 三角形 × 3");
+        Assert.AreEqual(3, CountRegion(data, TerrainFaceRegion.Top), "斜面は上面領域");
+        Assert.AreEqual(3, CountRegion(data, TerrainFaceRegion.Bottom));
+        Assert.AreEqual(6, CountRegion(data, TerrainFaceRegion.RampSideBottom), "2 壁・下に同種なし → 坂側面下端");
+        Assert.AreEqual(0, CountRegion(data, TerrainFaceRegion.TopMiddle));
+
+        // 高頂点は NW 上角 (2.5, 3.0, 3.0) のみ（斜面・2 壁が共有 → 3 回出現）
+        Assert.AreEqual(3, CountVerts(data, p => Mathf.Approximately(p.y, 3.0f)), "y=3.0 は高頂点のみ");
+        Assert.AreEqual(3, CountVerts(data, p => SamePos(p, 2.5f, 3.0f, 3.0f)));
+
+        foreach (var c in data.Colors)
+            Assert.AreEqual(AoNone, c.r, Delta, "孤立した角は AO 参照なし → ベース明度");
+        foreach (var c in data.Colors)
+            Assert.AreEqual(0f, c.a, Delta, "角に水平な上向き面はない（斜面 α=0・壁/底面 α=0）");
+    }
+
+    [Test]
+    public void BuildChunk_CornerRotations_HighVertexAtExpectedCorner()
+    {
+        AssertCornerHighVertex(TerrainShape.CornerNW, 2.5f, 3.0f); // NW
+        AssertCornerHighVertex(TerrainShape.CornerNE, 3.0f, 3.0f); // NE
+        AssertCornerHighVertex(TerrainShape.CornerSE, 3.0f, 2.5f); // SE
+        AssertCornerHighVertex(TerrainShape.CornerSW, 2.5f, 2.5f); // SW
+    }
+
+    private void AssertCornerHighVertex(TerrainShape shape, float worldX, float worldZ)
+    {
+        _store = new TerrainVoxelStore();
+        Set(5, 5, 5, shape);
+        var data = Build();
+        Assert.AreEqual(12, data.Vertices.Count, $"{shape}");
+        Assert.AreEqual(3, CountVerts(data, p => Mathf.Approximately(p.y, 3.0f)), $"{shape}: 高頂点は 1 点のみ");
+        Assert.AreEqual(
+            3, CountVerts(data, p => SamePos(p, worldX, 3.0f, worldZ)), $"{shape}: 高頂点 ({worldX},3.0,{worldZ})");
+    }
+
+    [Test]
+    public void BuildChunk_CornerBottom_CulledByCubeBelow_SlopeAlwaysShown()
+    {
+        Set(5, 5, 5, TerrainShape.Cube, 1);
+        Set(5, 6, 5, TerrainShape.CornerNW, 1); // cube の上に角
+        var data = Build();
+
+        // 角の底面は直下の cube に隠される（9 頂点）。cube の上面は半三角の底面では隠されず表示（24 頂点）
+        Assert.AreEqual(24 + 9, data.Vertices.Count, "cube 全面 + 角（底面カリング）");
+        // 角の斜面（上面領域）は直上が空なので常に表示。cube 上面 4 + 角斜面 3
+        Assert.AreEqual(4 + 3, CountRegion(data, TerrainFaceRegion.Top));
+        Assert.AreEqual(6, CountRegion(data, TerrainFaceRegion.RampSide), "下に同種 cube あり → 坂側面（下端でない）");
+    }
+
+    [Test]
+    public void BuildChunk_CornerSlope_NotCulledByCubeAbove()
+    {
+        Set(5, 5, 5, TerrainShape.CornerNW);
+        Set(5, 6, 5, TerrainShape.Cube); // 真上に cube
+        var data = Build();
+
+        // 斜面は境界平面に接しないため真上に cube があってもカリングしない（15.12）
+        Assert.AreEqual(0, CountRegion(data, TerrainFaceRegion.TopMiddle), "露出している斜面は常に上面領域");
+        Assert.AreEqual(4 + 3, CountRegion(data, TerrainFaceRegion.Top), "cube 上面 4 + 角斜面 3（常に表示）");
+    }
+
+    [Test]
+    public void BuildChunk_CornerOcclusion_HighCornerFull_AdjacentCornerHalf()
+    {
+        Set(15, 5, 5, TerrainShape.Cube);       // メッシュ化する cube
+        Set(16, 5, 5, TerrainShape.CornerNW);   // 東隣（隣チャンク・非メッシュ化）の角
+        var data = Build(0, 0, 0);
+
+        // 角の高角 = NW（占有 1.0）→ cube 東面の北端 (z=3.0) は darkness 1 → 0.75
+        AssertAnyVertexWithColor(data, p => SamePos(p, 8.0f, 3.0f, 3.0f), AoOne);
+        AssertAnyVertexWithColor(data, p => SamePos(p, 8.0f, 2.5f, 3.0f), AoOne);
+        // 角の隣接低角 = SW（占有 0.5）→ cube 東面の南端 (z=2.5) は darkness 0.5 → 0.875
+        AssertAnyVertexWithColor(data, p => SamePos(p, 8.0f, 3.0f, 2.5f), AoHalfOcc);
+        AssertAnyVertexWithColor(data, p => SamePos(p, 8.0f, 2.5f, 2.5f), AoHalfOcc);
+    }
+
     // ── 頂点 AO ───────────────────────────────────────────────────────────────
 
     [Test]

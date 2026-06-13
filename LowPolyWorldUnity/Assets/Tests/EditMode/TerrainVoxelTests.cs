@@ -41,11 +41,25 @@ public class TerrainVoxelTests
     }
 
     [Test]
+    public void Encode_Corner_RoundTrips()
+    {
+        byte voxel = TerrainVoxel.Encode(TerrainShape.CornerNW, 5);
+        Assert.AreEqual(TerrainShape.CornerNW, TerrainVoxel.GetShape(voxel));
+        Assert.AreEqual(5, TerrainVoxel.GetPaletteIndex(voxel));
+        Assert.IsFalse(TerrainVoxel.IsEmpty(voxel));
+
+        // bit 7-4 = shape（CornerSW = 13 = 0xD）/ bit 3-0 = palette
+        Assert.AreEqual(0xD7, TerrainVoxel.Encode(TerrainShape.CornerSW, 7));
+    }
+
+    [Test]
     public void IsValid_RejectsUnknownShapeNibble()
     {
         Assert.IsTrue(TerrainVoxel.IsValid(0x00), "empty は有効");
         Assert.IsTrue(TerrainVoxel.IsValid(0x9F), "diag_SW + palette 15 は有効");
-        Assert.IsFalse(TerrainVoxel.IsValid(0xA0), "shape 10 は未定義");
+        Assert.IsTrue(TerrainVoxel.IsValid(0xA0), "corner_NW (shape 10) は有効");
+        Assert.IsTrue(TerrainVoxel.IsValid(0xDF), "corner_SW (shape 13) + palette 15 は有効");
+        Assert.IsFalse(TerrainVoxel.IsValid(0xE0), "shape 14 は未定義");
         Assert.IsFalse(TerrainVoxel.IsValid(0xF3), "shape 15 は未定義");
         Assert.IsFalse(TerrainVoxel.IsValid(0x05), "empty + palette ≠ 0 は不正（正規化前提）");
     }

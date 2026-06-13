@@ -106,6 +106,18 @@ public class TerrainMeshBuilder
             case TerrainShape.DiagSW:
                 EmitDiag(x, y, z, voxel, 3);
                 break;
+            case TerrainShape.CornerNW:
+                EmitCorner(x, y, z, voxel, 0);
+                break;
+            case TerrainShape.CornerNE:
+                EmitCorner(x, y, z, voxel, 1);
+                break;
+            case TerrainShape.CornerSE:
+                EmitCorner(x, y, z, voxel, 2);
+                break;
+            case TerrainShape.CornerSW:
+                EmitCorner(x, y, z, voxel, 3);
+                break;
         }
     }
 
@@ -135,6 +147,31 @@ public class TerrainMeshBuilder
         EmitSideFace(x, y, z, voxel, RotSideDir(TerrainFaceDir.North, k), Rot(CubeNorthQuad, k), SideQuadUv);
         EmitSideFace(x, y, z, voxel, RotSideDir(TerrainFaceDir.West, k), Rot(CubeWestQuad, k), SideQuadUv);
         EmitDiagHypotenuse(x, y, z, voxel, k);
+    }
+
+    private void EmitCorner(int x, int y, int z, byte voxel, int k)
+    {
+        // 角（外角・四面体）= 坂と斜めの組み合わせ。canonical（CornerNW）の高頂点は NW 上角。
+        // 底面（下面三角形）/ 斜面（上面三角形）/ West・North の坂側面三角形 2 枚。
+        EmitBottomFace(x, y, z, voxel, Rot(CornerBottomTri, k), CornerBottomUv);
+        EmitCornerSlope(x, y, z, voxel, k);
+        EmitRampTriangle(x, y, z, voxel, RotSideDir(TerrainFaceDir.West, k), Rot(CornerWestWallTri, k), CornerWestWallUv);
+        EmitRampTriangle(x, y, z, voxel, RotSideDir(TerrainFaceDir.North, k), Rot(CornerNorthWallTri, k), CornerNorthWallUv);
+    }
+
+    private void EmitCornerSlope(int x, int y, int z, byte voxel, int k)
+    {
+        // 斜面はどの隣接平面とも接しないためカリングしない（ramp 斜面と同じ。常に上面領域 — 15.8）。
+        Rect rect = GetUvRect(x, y, z, voxel, TerrainFaceRegion.Top, TerrainFaceDir.Slope);
+
+        var verts = Rot(CornerSlopeTri, k);
+        // 上向きの傾斜面のため、各頂点の AO は上面（法線 +Y）のグループ1 で計算する。
+        // グループ1 は対称な参照集合のため、隣接する地面の上面・角の斜面が共有格子点で明度一致する。
+        var brightness = new float[3];
+        for (int i = 0; i < 3; i++)
+            brightness[i] = Group1Brightness(x, y, z, 0, 1, 0, verts[i]);
+        // 斜面は面自体がカット平面より上に伸びるため上向きマージンを与えない（α = 0 — 15.11）。
+        AddFace(_meshes.Solid, x, y, z, verts, CornerSlopeUv, brightness, rect, NoUv2, 0f);
     }
 
     // ── 面種別ごとのカリング + 領域選択 + 発行 ────────────────────────────────
@@ -377,6 +414,10 @@ public class TerrainMeshBuilder
             case TerrainShape.DiagNE: return DiagOcclusion(dx, dz, 1, 1);
             case TerrainShape.DiagSE: return DiagOcclusion(dx, dz, 1, 0);
             case TerrainShape.DiagSW: return DiagOcclusion(dx, dz, 0, 0);
+            case TerrainShape.CornerNW: return CornerOcclusion(dx, dz, 0, 1);
+            case TerrainShape.CornerNE: return CornerOcclusion(dx, dz, 1, 1);
+            case TerrainShape.CornerSE: return CornerOcclusion(dx, dz, 1, 0);
+            case TerrainShape.CornerSW: return CornerOcclusion(dx, dz, 0, 0);
             default: return 1f;
         }
     }
@@ -388,6 +429,15 @@ public class TerrainMeshBuilder
         if (dx == 1 - solidDx && dz == 1 - solidDz)
             return 0f; // 空き側の角
         return TerrainAo.OccupancyDiagTip; // 斜辺の両端
+    }
+
+    private static float CornerOcclusion(int dx, int dz, int highDx, int highDz)
+    {
+        if (dx == highDx && dz == highDz)
+            return 1f; // 高い角（全高の垂直エッジ）
+        if (dx == 1 - highDx && dz == 1 - highDz)
+            return 0f; // 対角の空き角
+        return TerrainAo.OccupancyRampLow; // 隣接 2 角（低い側）
     }
 
     // ── 頂点バッファへの発行 ──────────────────────────────────────────────────
@@ -531,9 +581,10 @@ public class TerrainMeshBuilder
     {
         new Vector3(1, 0, 0), new Vector3(0, 0, 0), new Vector3(0, 1, 1), new Vector3(1, 1, 1),
     };
+    // 上面テクスチャの向きを cube 上面（u=East, v=North）に揃える（XZ 投影で SE→(1,0) SW→(0,0) NW→(0,1) NE→(1,1)）
     private static readonly Vector2[] RampSlopeUv =
     {
-        new Vector2(0, 0), new Vector2(1, 0), new Vector2(1, 1), new Vector2(0, 1),
+        new Vector2(1, 0), new Vector2(0, 0), new Vector2(0, 1), new Vector2(1, 1),
     };
     private static readonly int[] RampSlopeSideX = { 1, -1, -1, 1 };
     private static readonly bool[] RampSlopeIsTop = { false, false, true, true };
@@ -566,4 +617,45 @@ public class TerrainMeshBuilder
         new Vector2(0, 0), new Vector2(1, 0), new Vector2(1, 1), new Vector2(0, 1),
     };
     private static readonly bool[] DiagHypotenuseIsTop = { false, false, true, true };
+
+    // 角（canonical CornerNW）の各三角形面。高頂点 D=NW_top(0,1,1)・底角 A=NW(0,0,1)・S=SW(0,0,0)・E=NE(1,0,1)。
+    // 底面（下面・法線 −Y）: 頂点 A, S, E
+    private static readonly Vector3[] CornerBottomTri =
+    {
+        new Vector3(0, 0, 1), new Vector3(0, 0, 0), new Vector3(1, 0, 1),
+    };
+    private static readonly Vector2[] CornerBottomUv =
+    {
+        new Vector2(0, 1), new Vector2(0, 0), new Vector2(1, 1), // cube 下面と同じ u=East, v=North
+    };
+
+    // 斜面（上面・法線は up+East+South 方向）: 頂点 S, D, E。UV は XZ 投影で cube 上面向き（NW 半三角）
+    private static readonly Vector3[] CornerSlopeTri =
+    {
+        new Vector3(0, 0, 0), new Vector3(0, 1, 1), new Vector3(1, 0, 1),
+    };
+    private static readonly Vector2[] CornerSlopeUv =
+    {
+        new Vector2(0, 0), new Vector2(0, 1), new Vector2(1, 1),
+    };
+
+    // West 壁（法線 −X）: 頂点 S, A, D。直角 = 高い側下端 A を UV 原点（坂三角側面と同規約）
+    private static readonly Vector3[] CornerWestWallTri =
+    {
+        new Vector3(0, 0, 0), new Vector3(0, 0, 1), new Vector3(0, 1, 1),
+    };
+    private static readonly Vector2[] CornerWestWallUv =
+    {
+        new Vector2(1, 0), new Vector2(0, 0), new Vector2(0, 1),
+    };
+
+    // North 壁（法線 +Z）: 頂点 A, E, D。直角 = 高い側下端 A を UV 原点
+    private static readonly Vector3[] CornerNorthWallTri =
+    {
+        new Vector3(0, 0, 1), new Vector3(1, 0, 1), new Vector3(0, 1, 1),
+    };
+    private static readonly Vector2[] CornerNorthWallUv =
+    {
+        new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, 1),
+    };
 }

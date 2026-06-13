@@ -230,6 +230,51 @@ public class TerrainColliderBuilderTests
         AssertNoOverlap(boxes);
     }
 
+    // ── corner（四面体）の階段近似 ────────────────────────────────────────────
+
+    [Test]
+    public void BuildChunk_CornerNW_AscendingInnerBoxes()
+    {
+        Set(5, 5, 5, TerrainShape.CornerNW);
+        var boxes = Build();
+
+        Assert.AreEqual(3, boxes.Count, "最上段は断面 0 のためスキップ");
+        boxes.Sort((a, b) => a.Min.y.CompareTo(b.Min.y));
+        for (int i = 0; i < 3; i++)
+        {
+            Assert.AreEqual(0.125f, boxes[i].Size.y, Delta, "薄い水平段（厚さ 0.125m）");
+            Assert.AreEqual(2.5f + i * 0.125f, boxes[i].Min.y, Delta, $"段 {i} の下面");
+            Assert.AreEqual(2.5f, boxes[i].Min.x, Delta, "高頂点 NW の West 端に内接");
+            Assert.AreEqual(3.0f, boxes[i].Max.z, Delta, "高頂点 NW の North 端に内接");
+            // 内側近似: 段全体が solid 領域 (z ≥ x + y) に収まり phantom wall を作らない。
+            // 最も制約の厳しい角（min z・max x・max y）で確認する（ブロックローカル分率）。
+            float fMaxX = (boxes[i].Max.x - 2.5f) / 0.5f;
+            float fMinZ = (boxes[i].Min.z - 2.5f) / 0.5f;
+            float fMaxY = (boxes[i].Max.y - 2.5f) / 0.5f;
+            Assert.GreaterOrEqual(fMinZ + Delta, fMaxX + fMaxY, "solid (z ≥ x + y) に内接");
+        }
+        Assert.Greater(boxes[0].Size.x, boxes[2].Size.x, "高くなるほど断面は NW 角へ縮む");
+
+        for (int i = 1; i < 3; i++)
+            Assert.Less(boxes[i].Max.y - boxes[i - 1].Max.y, TerrainColliderBuilder.RequiredStepOffset);
+        AssertNoOverlap(boxes);
+    }
+
+    [Test]
+    public void BuildChunk_CornerSE_RotatedToSouthEast()
+    {
+        Set(5, 5, 5, TerrainShape.CornerSE);
+        var boxes = Build();
+
+        Assert.AreEqual(3, boxes.Count);
+        foreach (var box in boxes)
+        {
+            Assert.AreEqual(3.0f, box.Max.x, Delta, "高頂点 SE の East 端に内接");
+            Assert.AreEqual(2.5f, box.Min.z, Delta, "高頂点 SE の South 端に内接");
+        }
+        AssertNoOverlap(boxes);
+    }
+
     [Test]
     public void BuildChunk_MixedCubeAndRamp_RampNotMerged()
     {
