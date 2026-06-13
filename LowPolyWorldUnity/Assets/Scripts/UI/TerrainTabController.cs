@@ -191,37 +191,35 @@ public class TerrainTabController
     private const long HoldRepeatIntervalMs = 100; // 連続移動の間隔
 
     /// <summary>
-    /// 高さ上下ボタンに「押した瞬間に 1 段移動 + 0.5 秒以上の長押しで連続移動」を設定する。
-    /// ポインタをキャプチャして、指がボタンから外れても離すまで連続移動を継続する。
+    /// 高さ上下ボタンに「タップで 1 段移動 + 0.5 秒以上の長押しで連続移動」を設定する。
+    ///
+    /// 単発は他の UI ボタンと同じ <see cref="Button.clicked"/> で処理する（ポインタキャプチャを使う
+    /// PointerDown 方式は、3D ビューオーバーレイ内のこのボタンでは反応しなくなる不具合があったため）。
+    /// 連続移動はポインタを押している間だけ schedule で繰り返し、離す / ボタンから外れる / キャプチャ喪失で止める。
     /// </summary>
     private void SetupHeightButton(Button btn, int delta)
     {
         if (btn == null)
             return;
-        IVisualElementScheduledItem repeat = null;
 
+        btn.clicked += () => SetHeight(Height + delta);
+
+        IVisualElementScheduledItem repeat = null;
         void StopRepeat()
         {
             repeat?.Pause();
             repeat = null;
         }
-
-        btn.RegisterCallback<PointerDownEvent>(evt =>
+        btn.RegisterCallback<PointerDownEvent>(_ =>
         {
-            SetHeight(Height + delta); // 押した瞬間に 1 段
-            btn.CapturePointer(evt.pointerId);
             StopRepeat();
             repeat = btn.schedule
                 .Execute(() => SetHeight(Height + delta))
                 .StartingIn(HoldRepeatDelayMs)
                 .Every(HoldRepeatIntervalMs);
         });
-        btn.RegisterCallback<PointerUpEvent>(evt =>
-        {
-            StopRepeat();
-            if (btn.HasPointerCapture(evt.pointerId))
-                btn.ReleasePointer(evt.pointerId);
-        });
+        btn.RegisterCallback<PointerUpEvent>(_ => StopRepeat());
+        btn.RegisterCallback<PointerLeaveEvent>(_ => StopRepeat());
         btn.RegisterCallback<PointerCaptureOutEvent>(_ => StopRepeat());
     }
 
