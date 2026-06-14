@@ -151,9 +151,43 @@
                 <ui:Label name="object-flash" class="object-flash overlay-hidden" text="" />
             </ui:VisualElement>
 
-            <!-- ギミックタブ（スタブ） -->
+            <!-- ───── ギミックタブ ───── -->
             <ui:VisualElement name="panel-gimmicks" class="tab-panel overlay-hidden">
-                <ui:Label class="stub-label" text="ギミックエディタ（実装予定）" />
+
+                <!-- 固定ヘッダー: ルール・グループ合計 -->
+                <ui:VisualElement class="object-header">
+                    <ui:Label class="object-header-label" text="ルール・グループ合計" />
+                    <ui:Label name="gimmick-total-label" class="object-count-label" text="0 / 100" />
+                </ui:VisualElement>
+
+                <ui:ScrollView class="gimmick-scroll">
+
+                    <!-- ステート定義エリア（折りたたみ可） -->
+                    <ui:VisualElement class="gimmick-section">
+                        <ui:Button name="gimmick-states-toggle" class="gimmick-collapse-header" text="▼ ステート定義" />
+                        <ui:VisualElement name="gimmick-states-body" class="gimmick-states-body">
+                            <ui:Label class="gimmick-subhead" text="ワールドステート（0〜9）" />
+                            <ui:VisualElement name="gimmick-world-states" class="gimmick-state-list" />
+                            <ui:Label class="gimmick-subhead" text="プレイヤーステート（0〜3）" />
+                            <ui:VisualElement name="gimmick-player-states" class="gimmick-state-list" />
+                            <ui:Label class="gimmick-subhead" text="タイマー（0〜4）" />
+                            <ui:VisualElement name="gimmick-timer-states" class="gimmick-state-list" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+
+                    <!-- ルール一覧 -->
+                    <ui:VisualElement class="gimmick-section">
+                        <ui:VisualElement class="gimmick-rules-header">
+                            <ui:Label class="gimmick-subhead" text="ルール" />
+                            <ui:Button name="gimmick-add-rule" class="gimmick-add-btn gimmick-icon-btn gimmick-icon-btn--plus" text="" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="gimmick-rule-list" class="gimmick-rule-list" />
+                    </ui:VisualElement>
+
+                </ui:ScrollView>
+
+                <!-- フラッシュメッセージ -->
+                <ui:Label name="gimmick-flash" class="object-flash overlay-hidden" text="" />
             </ui:VisualElement>
 
             <!-- ───── 設定タブ ───── -->

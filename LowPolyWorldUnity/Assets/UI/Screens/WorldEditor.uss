@@ -884,3 +884,154 @@
     color: rgb(255, 170, 170);
     font-size: 20px;
 }
+
+/* ───── ギミックタブ ───── */
+
+.gimmick-scroll {
+    flex-grow: 1;
+}
+
+.gimmick-section {
+    padding: 6px 10px;
+    border-bottom-width: 1px;
+    border-color: rgb(40, 40, 56);
+}
+
+.gimmick-collapse-header {
+    height: 36px;
+    background-color: transparent;
+    border-width: 0;
+    color: rgb(190, 190, 215);
+    font-size: 16px;
+    -unity-text-align: middle-left;
+    padding: 0 2px;
+}
+
+.gimmick-states-body {
+    padding-bottom: 4px;
+}
+
+.gimmick-subhead {
+    color: rgb(150, 150, 180);
+    font-size: 14px;
+    margin: 6px 2px 2px 2px;
+}
+
+.gimmick-state-list {
+    flex-direction: column;
+}
+
+.gimmick-state-row {
+    flex-direction: row;
+    align-items: center;
+    margin: 2px 0;
+}
+
+.gimmick-state-index {
+    width: 22px;
+    color: rgb(120, 120, 150);
+    font-size: 14px;
+    -unity-text-align: middle-center;
+}
+
+.gimmick-state-name {
+    flex-grow: 1;
+    margin: 0 4px;
+}
+
+.gimmick-state-value {
+    width: 64px;
+}
+
+.gimmick-rules-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.gimmick-add-btn {
+    width: 34px;
+    height: 34px;
+    background-color: rgb(40, 40, 60);
+    border-width: 1px;
+    border-color: rgb(100, 170, 255);
+    border-radius: 8px;
+    color: rgb(100, 170, 255);
+    font-size: 20px;
+    padding: 0;
+}
+
+.gimmick-rule-list {
+    flex-direction: column;
+    padding: 4px 0;
+}
+
+.gimmick-rule-row {
+    flex-direction: row;
+    align-items: center;
+    height: 44px;
+    margin: 3px 0;
+    padding: 0 6px;
+    background-color: rgb(30, 30, 42);
+    border-width: 1px;
+    border-color: rgb(55, 55, 75);
+    border-radius: 8px;
+}
+
+.gimmick-rule-name {
+    flex-grow: 1;
+    color: rgb(205, 205, 225);
+    font-size: 16px;
+    -unity-text-align: middle-left;
+    background-color: transparent;
+    border-width: 0;
+    padding: 0 4px;
+}
+
+.gimmick-rule-btn {
+    width: 32px;
+    height: 32px;
+    margin-left: 4px;
+    background-color: rgb(40, 40, 58);
+    border-width: 1px;
+    border-color: rgb(70, 70, 100);
+    border-radius: 6px;
+    color: rgb(200, 200, 220);
+    font-size: 16px;
+    padding: 0;
+}
+
+.gimmick-rule-empty {
+    color: rgb(120, 120, 150);
+    font-size: 14px;
+    -unity-text-align: middle-center;
+    padding: 12px;
+}
+
+/* アイコンボタン（白シルエット PNG・mipmap 無効・内側に収める） */
+.gimmick-icon-btn {
+    -unity-background-scale-mode: scale-to-fit;
+    background-size: 62% 62%;
+    background-position-x: center;
+    background-position-y: center;
+}
+
+.gimmick-icon-btn--plus {
+    background-image: url("../../Textures/UI/Icons/icon_plus.png");
+}
+
+.gimmick-icon-btn--edit {
+    background-image: url("../../Textures/UI/Icons/icon_edit.png");
+}
+
+.gimmick-icon-btn--up {
+    background-image: url("../../Textures/UI/Icons/icon_up.png");
+}
+
+.gimmick-icon-btn--down {
+    background-image: url("../../Textures/UI/Icons/icon_down.png");
+}
+
+.gimmick-icon-btn--close {
+    background-image: url("../../Textures/UI/Icons/icon_close.png");
+}

@@ -54,6 +54,12 @@ public class WorldEditorController : MonoBehaviour
     /// <summary>オブジェクトタブ UI（シーン統合時に配置ストア・3D ビューへ接続する）。</summary>
     public ObjectTabController ObjectTab => _objectTab;
 
+    // ── ギミックタブ ──────────────────────────────────────────────────────────
+    private GimmickTabController _gimmickTab;
+
+    /// <summary>ギミックタブ UI（ステート定義・ルール一覧）。</summary>
+    public GimmickTabController GimmickTab => _gimmickTab;
+
     /// <summary>ギズモ操作モード（上部ギズモバー）。</summary>
     public enum WorldGizmoMode { Move, Scale, Rotate }
 
@@ -144,6 +150,7 @@ public class WorldEditorController : MonoBehaviour
         BuildBgmTrackList();
         _terrainTab = new TerrainTabController(_root);
         _objectTab = new ObjectTabController(_root);
+        _gimmickTab = new GimmickTabController(_root);
     }
 
     // ── 公開 API ─────────────────────────────────────────────────────────────
@@ -177,6 +184,11 @@ public class WorldEditorController : MonoBehaviour
         _hasThumbnail = hasThumbnail;
 
         ApplySettingsToUI();
+
+        // ギミックタブ（ステート定義・ルール一覧）を読み込む
+        _gimmickTab?.Logic.LoadFrom(WorldCreationManager.Instance?.CurrentDefinition ?? def);
+        _gimmickTab?.Refresh();
+
         UpdateCostDisplay(0, 0);
         UpdatePublishButton();
 
@@ -720,6 +732,8 @@ public class WorldEditorController : MonoBehaviour
         // CommitSettingsChanges のみで正しく保存される（二重適用なし）
         if (mgr?.CurrentDefinition == null) return;
         mgr.CommitSettingsChanges();
+        // ギミックタブの編集（ステート定義・ルール一覧）を定義へ書き戻す
+        _gimmickTab?.Logic.WriteTo(mgr.CurrentDefinition);
     }
 
     private void UpdatePublishButton()

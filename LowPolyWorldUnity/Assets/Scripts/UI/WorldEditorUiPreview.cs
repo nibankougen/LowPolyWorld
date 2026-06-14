@@ -26,6 +26,40 @@ public class WorldEditorUiPreview : MonoBehaviour
         });
         // 選択ありの状態のコピー / ペーストボタン表示も確認できるようにする
         controller.TerrainTab.SetSelectionState(true, true);
+
+        SeedGimmickTab(controller);
+    }
+
+    // ギミックタブの見た目確認用ダミーデータ（ステート名・初期値・ルール数件）
+    private static void SeedGimmickTab(WorldEditorController controller)
+    {
+        if (controller.GimmickTab == null)
+            return;
+
+        var def = new WorldDefinitionJson
+        {
+            worldStates = new[]
+            {
+                new WorldStateData { index = 0, label = "スコア", initialValue = 0 },
+                new WorldStateData { index = 1, label = "残り時間", initialValue = 60 },
+            },
+            playerStates = new[]
+            {
+                new WorldStateData { index = 0, label = "ライフ", initialValue = 3 },
+            },
+            timers = new[]
+            {
+                new TimerData { index = 0, label = "メインタイマー" },
+            },
+            gimmicks = new[]
+            {
+                new GimmickRule { ruleId = "r1", label = "開始時に得点リセット" },
+                new GimmickRule { ruleId = "r2", label = "ゴール接触で加点" },
+                new GimmickRule { ruleId = "r3", label = "ルール3" },
+            },
+        };
+        controller.GimmickTab.Logic.LoadFrom(def);
+        controller.GimmickTab.Refresh();
     }
 }
 #endif
