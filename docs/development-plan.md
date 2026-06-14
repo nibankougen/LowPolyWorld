@@ -926,8 +926,9 @@
 - [ ] 保存バリアントスロット管理 UI（「保存バリアントに保存」ボタン・バリアント名入力・スロット一覧・削除・上限超過エラー）
 - [ ] CacheManager: マイワールドオブジェクト GLB を persistentDataPath に永続保存
 - [ ] 特殊オブジェクトのゲームロジック
-  - [ ] スポーン位置: 1×1.5×1 コライダー・原点 (0.5,0,0.5)・入場時プレイヤースポーン
-  - [ ] ルーム内ポータル: 白（入口）→ 黒（出口）への転送処理・最大 8 つ
+  - [~] 転送先解決ロジック `SpecialObjectTransform`（純粋C#・テスト済み）: スポーン/出口ポータルのグリッド→出現ワールド座標（原点 0.5,0,0.5）・向き（45°段）解決。`TryGetSpawn` / `TryResolveExitPortal`（ギミック `TeleportPlayerEffect` 用・出口ID）/ `TryGetEntryExitTarget`（組み込み転送・入口IDからペア出口）。接触検知・実テレポート適用の MonoBehaviour 層は未
+  - [ ] スポーン位置: 1×1.5×1 コライダー・原点 (0.5,0,0.5)・入場時プレイヤースポーン（出現座標解決は `SpecialObjectTransform.TryGetSpawn` 済み・コライダー/入場配線は未）
+  - [ ] ルーム内ポータル: 白（入口）→ 黒（出口）への転送処理・最大 8 つ（転送先解決は `SpecialObjectTransform.TryGetEntryExitTarget` 済み・接触検知/転送適用は未）
   - [ ] ワールドポータル: 別ワールドのスポーン位置へ遷移・サムネイル表示・最大 4 つ
   - [~] 公開条件チェック: 全入口ポータルに出口設定済み・スポーン/ポータルの重複なし — `WorldPublishValidator`（出口未設定 `PortalExitMissing` / 重複 `SpawnPortalOverlap`）+ `SpecialObjectOverlap` + 占有クエリ（`WorldOccupancy.cs`）実装済み。MonoBehaviour 配線（占有クエリへの地形/オブジェクト供給）は未
 - [ ] **ギミックタブ UI**（セクション 11.7.4）
