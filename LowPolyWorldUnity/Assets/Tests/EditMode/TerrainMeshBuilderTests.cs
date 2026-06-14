@@ -347,6 +347,64 @@ public class TerrainMeshBuilderTests
         Assert.AreEqual(4 + 3, CountRegion(data, TerrainFaceRegion.Top), "cube 上面 4 + 角斜面 3（常に表示）");
     }
 
+    // ── concave（凹角・内角） ──────────────────────────────────────────────────
+
+    [Test]
+    public void BuildChunk_IsolatedConcaveNW_GeometryAndRegions()
+    {
+        Set(5, 5, 5, TerrainShape.ConcaveNW);
+        var data = Build();
+
+        // 上面三角形 3 + 下面 4 + South full 4 + East full 4 + West 壁 3 + North 壁 3 + 切り欠き斜面 3
+        Assert.AreEqual(24, data.Vertices.Count);
+        Assert.AreEqual(30, data.Triangles.Count, "三角形 10 枚（上面1+下面2+S2+E2+West1+North1+斜面1）× 3");
+        Assert.AreEqual(3 + 3, CountRegion(data, TerrainFaceRegion.Top), "上面三角形 3 + 切り欠き斜面 3");
+        Assert.AreEqual(4, CountRegion(data, TerrainFaceRegion.Bottom), "下面は full");
+        Assert.AreEqual(8, CountRegion(data, TerrainFaceRegion.SideTopBottom), "South・East の full 側面");
+        Assert.AreEqual(6, CountRegion(data, TerrainFaceRegion.RampSideBottom), "West・North の三角形側面");
+
+        // 切り欠き角 NW 上 (2.5, 3.0, 3.0) には頂点が無い。他 3 つの上角には頂点がある
+        Assert.AreEqual(0, CountVerts(data, p => SamePos(p, 2.5f, 3.0f, 3.0f)), "NW 上角は切り落とされる");
+        Assert.Greater(CountVerts(data, p => SamePos(p, 2.5f, 3.0f, 2.5f)), 0, "SW 上角あり");
+        Assert.Greater(CountVerts(data, p => SamePos(p, 3.0f, 3.0f, 2.5f)), 0, "SE 上角あり");
+        Assert.Greater(CountVerts(data, p => SamePos(p, 3.0f, 3.0f, 3.0f)), 0, "NE 上角あり");
+    }
+
+    [Test]
+    public void BuildChunk_ConcaveRotations_CutCornerAtExpectedTopCorner()
+    {
+        AssertConcaveCutCorner(TerrainShape.ConcaveNW, 2.5f, 3.0f); // NW
+        AssertConcaveCutCorner(TerrainShape.ConcaveNE, 3.0f, 3.0f); // NE
+        AssertConcaveCutCorner(TerrainShape.ConcaveSE, 3.0f, 2.5f); // SE
+        AssertConcaveCutCorner(TerrainShape.ConcaveSW, 2.5f, 2.5f); // SW
+    }
+
+    private void AssertConcaveCutCorner(TerrainShape shape, float worldX, float worldZ)
+    {
+        _store = new TerrainVoxelStore();
+        Set(5, 5, 5, shape);
+        var data = Build();
+        Assert.AreEqual(24, data.Vertices.Count, $"{shape}");
+        Assert.AreEqual(
+            0, CountVerts(data, p => SamePos(p, worldX, 3.0f, worldZ)), $"{shape}: 切り欠き上角 ({worldX},3.0,{worldZ}) は無い");
+        // y=3.0 の頂点インスタンスは 11（上面三角形3 + 斜面2 + South2 + East2 + West1 + North1。
+        // 残る 3 つの上角を各面が共有するため頂点は重複する）
+        Assert.AreEqual(11, CountVerts(data, p => Mathf.Approximately(p.y, 3.0f)), $"{shape}: 上角の頂点インスタンス");
+    }
+
+    [Test]
+    public void BuildChunk_ConcaveTopCulledByCubeAbove_SlopeAlwaysShown()
+    {
+        Set(5, 5, 5, TerrainShape.ConcaveNW);
+        Set(5, 6, 5, TerrainShape.Cube); // 真上に cube（下面 full なので凹角の上面三角形を隠す。同種＝palette 0）
+        var meshes = BuildMeshes();
+
+        // 上面三角形は直上の同種 cube に隠れて HiddenTops の上面中間領域へ（3 頂点）
+        Assert.AreEqual(3, CountRegion(meshes.HiddenTops, TerrainFaceRegion.TopMiddle), "上面三角形は隠れて上面中間へ");
+        // 切り欠き斜面は境界平面に接しないため常に Solid に表示（cube 上面 4 + 凹角斜面 3 = 7）
+        Assert.AreEqual(7, CountRegion(meshes.Solid, TerrainFaceRegion.Top), "cube 上面 4 + 凹角斜面 3");
+    }
+
     [Test]
     public void BuildChunk_CornerOcclusion_HighCornerFull_AdjacentCornerHalf()
     {

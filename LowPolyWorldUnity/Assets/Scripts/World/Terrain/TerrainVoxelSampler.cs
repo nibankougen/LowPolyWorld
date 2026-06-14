@@ -7,11 +7,11 @@ using System;
 public interface ITerrainVoxelSampler
 {
     /// <summary>
-    /// ワールド座標のボクセルバイトを返す。
+    /// ワールド座標のボクセル値を返す。
     /// ワールド下端より下（y &lt; 0）は「地形あり」（仮想 cube）、その他の範囲外は empty を返すこと。
     /// ストリーミング実装では未ロードチャンクも「地形あり」を返すこと（見えすぎ回避）。
     /// </summary>
-    byte GetVoxel(int x, int y, int z);
+    ushort GetVoxel(int x, int y, int z);
 }
 
 /// <summary>
@@ -19,7 +19,7 @@ public interface ITerrainVoxelSampler
 /// </summary>
 public class TerrainStoreSampler : ITerrainVoxelSampler
 {
-    private static readonly byte VirtualGround = TerrainVoxel.Encode(TerrainShape.Cube, 0);
+    private static readonly ushort VirtualGround = TerrainVoxel.Encode(TerrainShape.Cube, 0);
 
     private readonly TerrainVoxelStore _store;
 
@@ -28,7 +28,7 @@ public class TerrainStoreSampler : ITerrainVoxelSampler
         _store = store ?? throw new ArgumentNullException(nameof(store));
     }
 
-    public byte GetVoxel(int x, int y, int z)
+    public ushort GetVoxel(int x, int y, int z)
     {
         if (y < 0)
             return VirtualGround; // ワールド下端の下は「地形あり」扱い（地表の底面を生成しない）

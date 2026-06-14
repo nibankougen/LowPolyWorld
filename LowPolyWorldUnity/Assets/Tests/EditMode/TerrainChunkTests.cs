@@ -17,7 +17,7 @@ public class TerrainChunkTests
     public void SetGetVoxel_RoundTrips()
     {
         var chunk = new TerrainChunk();
-        byte voxel = TerrainVoxel.Encode(TerrainShape.Cube, 3);
+        ushort voxel = TerrainVoxel.Encode(TerrainShape.Cube, 3);
 
         chunk.SetVoxel(5, 7, 9, voxel);
 
@@ -46,13 +46,13 @@ public class TerrainChunkTests
     }
 
     [Test]
-    public void ToBytes_FromBytes_RoundTrips()
+    public void ToVoxels_FromVoxels_RoundTrips()
     {
         var chunk = new TerrainChunk();
         chunk.SetVoxel(1, 2, 3, TerrainVoxel.Encode(TerrainShape.RampN, 5));
-        chunk.SetVoxel(15, 15, 15, TerrainVoxel.Encode(TerrainShape.DiagNE, 15));
+        chunk.SetVoxel(15, 15, 15, TerrainVoxel.Encode(TerrainShape.ConcaveNE, 15));
 
-        var restored = TerrainChunk.FromBytes(chunk.ToBytes());
+        var restored = TerrainChunk.FromVoxels(chunk.ToVoxels());
 
         Assert.IsNotNull(restored);
         Assert.AreEqual(chunk.GetVoxel(1, 2, 3), restored.GetVoxel(1, 2, 3));
@@ -61,13 +61,13 @@ public class TerrainChunkTests
     }
 
     [Test]
-    public void FromBytes_InvalidInput_ReturnsNull()
+    public void FromVoxels_InvalidInput_ReturnsNull()
     {
-        Assert.IsNull(TerrainChunk.FromBytes(null));
-        Assert.IsNull(TerrainChunk.FromBytes(new byte[100]), "長さ不一致");
+        Assert.IsNull(TerrainChunk.FromVoxels(null));
+        Assert.IsNull(TerrainChunk.FromVoxels(new ushort[100]), "長さ不一致");
 
-        var bad = new byte[TerrainChunk.VoxelCount];
-        bad[0] = 0xE0; // shape 14 は未定義（角 corner_SW = 13 までが有効）
-        Assert.IsNull(TerrainChunk.FromBytes(bad), "不正なボクセルバイト");
+        var bad = new ushort[TerrainChunk.VoxelCount];
+        bad[0] = 18 << 4; // shape 18 は未定義（凹角 concave_SW = 17 までが有効）
+        Assert.IsNull(TerrainChunk.FromVoxels(bad), "不正なボクセル値");
     }
 }

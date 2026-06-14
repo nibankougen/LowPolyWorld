@@ -56,6 +56,11 @@ public class TerrainEditSession
     public bool IsDragging => _dragging;
 
     /// <summary>
+    /// 追加系のモードか（ブラシ・図形）。隣接セルも上面で反応させてよいかの判定に使う。
+    /// </summary>
+    public bool IsAdditiveMode => Mode == TerrainEditMode.Brush || Mode == TerrainEditMode.Shape;
+
+    /// <summary>
     /// 図形・範囲選択（四角形）のドラッグ中プレビュー矩形。プレビュー表示が不要なら false。
     /// </summary>
     public bool TryGetDragRect(out int x0, out int z0, out int x1, out int z1)

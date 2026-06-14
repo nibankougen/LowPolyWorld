@@ -5,23 +5,23 @@ using System.IO;
 /// ボクセルバイナリファイルのシリアライズ / デシリアライズ
 /// （world-creation.md セクション 15.13）。
 ///
-/// フォーマット:
+/// フォーマット（version 2 — ボクセル 2 byte 化に伴い v1 から変更。リリース前のため後方互換なし）:
 ///   [4 bytes] magic: ASCII "LWVT"（0x4C 0x57 0x56 0x54）
-///   [4 bytes] version: 1（リトルエンディアン）
+///   [4 bytes] version: 2（リトルエンディアン）
 ///   [4 bytes] chunk count（リトルエンディアン・非空チャンクのみ）
 ///   per chunk:
 ///     [1 byte]  cx
 ///     [1 byte]  cy
 ///     [1 byte]  cz
 ///     [2 bytes] RLE data length（リトルエンディアン）
-///     [N bytes] RLE data: (value, count) ペア
+///     [N bytes] RLE data: (ushort value LE, byte count) の 3 バイトペア
 ///
 /// ファイルは UGC 由来のため、デシリアライズは TryDeserialize で防御的に検証し、
 /// 不正データはエラー理由付きで拒否する（サーバー側はワールド保存時に同等の検証で拒否）。
 /// </summary>
 public static class TerrainBinarySerializer
 {
-    public const int Version = 1;
+    public const int Version = 2;
 
     private static readonly byte[] Magic = { 0x4C, 0x57, 0x56, 0x54 }; // "LWVT"
 
@@ -41,7 +41,7 @@ public static class TerrainBinarySerializer
 
         foreach (var (cx, cy, cz, chunk) in store.EnumerateNonEmptyChunks())
         {
-            byte[] rle = TerrainRle.Encode(chunk.ToBytes());
+            byte[] rle = TerrainRle.Encode(chunk.ToVoxels());
             writer.Write((byte)cx);
             writer.Write((byte)cy);
             writer.Write((byte)cz);
@@ -123,17 +123,17 @@ public static class TerrainBinarySerializer
             }
 
             byte[] rle = reader.ReadBytes(rleLength);
-            byte[] voxels = TerrainRle.Decode(rle, TerrainChunk.VoxelCount);
+            ushort[] voxels = TerrainRle.Decode(rle, TerrainChunk.VoxelCount);
             if (voxels == null)
             {
                 error = $"チャンク ({cx}, {cy}, {cz}) の RLE データが不正です";
                 return false;
             }
 
-            var chunk = TerrainChunk.FromBytes(voxels);
+            var chunk = TerrainChunk.FromVoxels(voxels);
             if (chunk == null)
             {
-                error = $"チャンク ({cx}, {cy}, {cz}) に不正なボクセルバイトが含まれています";
+                error = $"チャンク ({cx}, {cy}, {cz}) に不正なボクセル値が含まれています";
                 return false;
             }
             if (!IsPaddingEmpty(cx, cy, cz, chunk))

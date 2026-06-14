@@ -168,6 +168,22 @@ public class WorldPublishValidatorTests
         CollectionAssert.DoesNotContain(errors, PublishError.PortalExitMissing);
     }
 
+    // ── スポーン/ポータルの重複 ──────────────────────────────────────────────
+
+    [Test]
+    public void SpawnPortalOverlap_ReturnsError()
+    {
+        var errors = _validator.Validate(ValidDef(), 0, 0, true, 0, spawnPortalOverlap: true);
+        Assert.Contains(PublishError.SpawnPortalOverlap, (System.Collections.ICollection)errors);
+    }
+
+    [Test]
+    public void NoSpawnPortalOverlap_NoError()
+    {
+        var errors = _validator.Validate(ValidDef(), 0, 0, true, 0, spawnPortalOverlap: false);
+        CollectionAssert.DoesNotContain(errors, PublishError.SpawnPortalOverlap);
+    }
+
     // ── 複数エラー ────────────────────────────────────────────────────────────
 
     [Test]

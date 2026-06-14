@@ -5,8 +5,8 @@ public class TerrainBinarySerializerTests
     private static TerrainVoxelStore BuildSampleStore()
     {
         var store = new TerrainVoxelStore();
-        byte grass = TerrainVoxel.Encode(TerrainShape.Cube, 0);
-        byte brick = TerrainVoxel.Encode(TerrainShape.RampN, 3);
+        ushort grass = TerrainVoxel.Encode(TerrainShape.Cube, 0);
+        ushort brick = TerrainVoxel.Encode(TerrainShape.RampN, 3);
 
         // 地表 1 層（チャンク (0,0,0)〜(1,0,1) にまたがる）
         for (int x = 0; x < 20; x++)
@@ -63,8 +63,8 @@ public class TerrainBinarySerializerTests
         Assert.AreEqual(0x57, data[1]);
         Assert.AreEqual(0x56, data[2]);
         Assert.AreEqual(0x54, data[3]);
-        // version 1（リトルエンディアン）
-        Assert.AreEqual(1, System.BitConverter.ToInt32(data, 4));
+        // version 2（リトルエンディアン）
+        Assert.AreEqual(2, System.BitConverter.ToInt32(data, 4));
         // chunk count 0
         Assert.AreEqual(0, System.BitConverter.ToInt32(data, 8));
         Assert.AreEqual(12, data.Length, "空ワールドはヘッダーのみ");
@@ -74,7 +74,7 @@ public class TerrainBinarySerializerTests
     public void Serialize_EmptyChunks_AreOmitted()
     {
         var store = new TerrainVoxelStore();
-        byte v = TerrainVoxel.Encode(TerrainShape.Cube, 0);
+        ushort v = TerrainVoxel.Encode(TerrainShape.Cube, 0);
         store.SetVoxel(0, 0, 0, v);
         store.SetVoxel(0, 0, 0, TerrainVoxel.Empty); // 空に戻す
 
@@ -159,9 +159,9 @@ public class TerrainBinarySerializerTests
     }
 
     // 指定座標の 1 チャンク（全セルを fillVoxel で埋める）だけを含むバイナリを手組みする
-    private static byte[] BuildSingleChunkBinary(int cx, int cy, int cz, byte fillVoxel)
+    private static byte[] BuildSingleChunkBinary(int cx, int cy, int cz, ushort fillVoxel)
     {
-        var voxels = new byte[TerrainChunk.VoxelCount];
+        var voxels = new ushort[TerrainChunk.VoxelCount];
         for (int i = 0; i < voxels.Length; i++)
             voxels[i] = fillVoxel;
         var rle = TerrainRle.Encode(voxels);
@@ -169,7 +169,7 @@ public class TerrainBinarySerializerTests
         using var ms = new System.IO.MemoryStream();
         using var writer = new System.IO.BinaryWriter(ms);
         writer.Write(new byte[] { 0x4C, 0x57, 0x56, 0x54 });
-        writer.Write(1);          // version
+        writer.Write(TerrainBinarySerializer.Version); // version
         writer.Write(1);          // chunk count
         writer.Write((byte)cx);
         writer.Write((byte)cy);

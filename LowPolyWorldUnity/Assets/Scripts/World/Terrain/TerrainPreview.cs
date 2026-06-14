@@ -93,6 +93,21 @@ public class TerrainPreview : MonoBehaviour
         Set(19, 1, 12, TerrainShape.CornerSE);
         Set(21, 1, 12, TerrainShape.CornerSW);
 
+        // 4 方向の concave（凹角・内角。単独。下面 full + 上面三角形 + 切り欠き斜面）
+        Set(15, 1, 8, TerrainShape.ConcaveNW);
+        Set(17, 1, 8, TerrainShape.ConcaveNE);
+        Set(19, 1, 8, TerrainShape.ConcaveSE);
+        Set(21, 1, 8, TerrainShape.ConcaveSW);
+
+        // 凹角の内側コーナー作例: ConcaveNW を 2 坂（西=RampS・北=RampE。ともに北西へ下る）の内側に配置
+        Set(25, 1, 8, TerrainShape.ConcaveNW);
+        Set(24, 1, 8, TerrainShape.RampS); // West 隣
+        Set(25, 1, 9, TerrainShape.RampE); // North 隣
+
+        // V 字の溝（隣接する反対向きの坂。z=7/8 境界が鋭い谷底）
+        Set(10, 1, 8, TerrainShape.RampN); // 高い側 North・南へ下る
+        Set(10, 1, 7, TerrainShape.RampS); // 高い側 South・北へ下る
+
         // 坂の階段（北向きに昇る・下は cube で充填）
         for (int i = 0; i < 4; i++)
         {

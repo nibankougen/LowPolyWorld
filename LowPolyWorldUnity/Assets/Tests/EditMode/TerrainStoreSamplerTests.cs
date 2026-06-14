@@ -6,7 +6,7 @@ public class TerrainStoreSamplerTests
     public void GetVoxel_InBounds_ReturnsStoreValue()
     {
         var store = new TerrainVoxelStore();
-        byte v = TerrainVoxel.Encode(TerrainShape.RampE, 5);
+        ushort v = TerrainVoxel.Encode(TerrainShape.RampE, 5);
         store.SetVoxel(10, 10, 10, v);
 
         var sampler = new TerrainStoreSampler(store);
@@ -18,7 +18,7 @@ public class TerrainStoreSamplerTests
     public void GetVoxel_BelowWorldBottom_ReturnsVirtualGround()
     {
         var sampler = new TerrainStoreSampler(new TerrainVoxelStore());
-        byte below = sampler.GetVoxel(5, -1, 5);
+        ushort below = sampler.GetVoxel(5, -1, 5);
         Assert.IsFalse(TerrainVoxel.IsEmpty(below), "ワールド下端の下は「地形あり」扱い（15.14）");
         Assert.AreEqual(TerrainShape.Cube, TerrainVoxel.GetShape(below));
     }

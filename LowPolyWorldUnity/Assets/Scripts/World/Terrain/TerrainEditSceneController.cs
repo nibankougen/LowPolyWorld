@@ -51,6 +51,10 @@ public class TerrainEditSceneController : MonoBehaviour
     private bool _hideAbove;
     private bool _initialized;
 
+    // 上面判定に使う「編集開始時の現在高さレイヤーのブロック存在」スナップショット。
+    // ストローク中（ポインタ押下〜離す）は固定し、自分の編集で判定がぶれないようにする。
+    private readonly HashSet<(int x, int z)> _editSliceBlocks = new HashSet<(int, int)>();
+
     /// <summary>地形タブが選択されている間のみ true（WorldEditorController 側が制御）。</summary>
     public bool EditingEnabled { get; set; } = true;
 
@@ -125,7 +129,7 @@ public class TerrainEditSceneController : MonoBehaviour
             return;
         }
 
-        // マウス: ホイールでズーム（編集は妨げない）/ 中ボタンドラッグでパン（パン中は編集を抑止）
+        // マウス: ホイールでズーム（編集は妨げない）/ 中ボタン・右ボタンドラッグでパン（パン中は編集を抑止）
         HandleMouseScrollZoom();
         if (HandleMousePan())
         {
@@ -147,11 +151,16 @@ public class TerrainEditSceneController : MonoBehaviour
 
         if (pressed && !_pointerActive)
         {
-            if (IsOverViewArea(screenPos) && TryPickCell(screenPos, out int x, out int z))
+            if (IsOverViewArea(screenPos))
             {
-                _pointerActive = true;
-                ApplyResult(_session.OnPointerDown(x, z));
-                RefreshDragRectOverlay();
+                // 編集開始時に現在高さレイヤーのブロック存在をスナップショット（上面判定の基準を固定）
+                CaptureEditSliceBlocks();
+                if (TryPickCell(screenPos, out int x, out int z))
+                {
+                    _pointerActive = true;
+                    ApplyResult(_session.OnPointerDown(x, z));
+                    RefreshDragRectOverlay();
+                }
             }
         }
         else if (pressed && _pointerActive)
@@ -175,7 +184,23 @@ public class TerrainEditSceneController : MonoBehaviour
         Ray ray = _camera.ScreenPointToRay(screenPos);
         Vector3 localOrigin = transform.InverseTransformPoint(ray.origin);
         Vector3 localDir = transform.InverseTransformDirection(ray.direction);
-        return TerrainGridPicker.TryPickCell(localOrigin, localDir, _edit.CurrentHeight, out x, out z);
+        Vector3 localForward = transform.InverseTransformDirection(_camera.transform.forward);
+        // 既にブロックがあるセル（追加系では隣接セルも）は上面（カメラ側へ 15% ずらし）でも反応する。
+        // 判定は編集開始時のスナップショット（_editSliceBlocks）に基づき、ストローク中は固定する。
+        return TerrainGridPicker.TryPickEditCell(
+            localOrigin, localDir, _edit.CurrentHeight, localForward, _editSliceBlocks,
+            _session.IsAdditiveMode, out x, out z);
+    }
+
+    /// <summary>現在高さレイヤーでブロックがある (x, z) セルを _editSliceBlocks に取り込む（上面判定用）。</summary>
+    private void CaptureEditSliceBlocks()
+    {
+        _editSliceBlocks.Clear();
+        int y = _edit.CurrentHeight;
+        for (int z = 0; z < TerrainVoxelStore.SizeZ; z++)
+            for (int x = 0; x < TerrainVoxelStore.SizeX; x++)
+                if (!TerrainVoxel.IsEmpty(_store.GetVoxel(x, y, z)))
+                    _editSliceBlocks.Add((x, z));
     }
 
     // 3D ビュー領域上のポインタのみ編集対象（UI ボタン上の操作は無視）
@@ -254,7 +279,7 @@ public class TerrainEditSceneController : MonoBehaviour
         ApplyCamera();
     }
 
-    // ── マウスによるカメラ操作（中ボタンドラッグ = パン / ホイール = ズーム） ──
+    // ── マウスによるカメラ操作（中ボタン・右ボタンドラッグ = パン / ホイール = ズーム） ──
 
     private void HandleMouseScrollZoom()
     {
@@ -270,11 +295,11 @@ public class TerrainEditSceneController : MonoBehaviour
         ApplyCamera();
     }
 
-    /// <summary>中ボタンドラッグでパン。ドラッグ中は true（編集を抑止する）。</summary>
+    /// <summary>中ボタンまたは右ボタンドラッグでパン。ドラッグ中は true（編集を抑止する）。</summary>
     private bool HandleMousePan()
     {
         var mouse = Mouse.current;
-        if (mouse == null || !mouse.middleButton.isPressed)
+        if (mouse == null || !(mouse.middleButton.isPressed || mouse.rightButton.isPressed))
         {
             _mousePanActive = false;
             return false;

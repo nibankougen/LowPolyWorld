@@ -5,13 +5,14 @@ using System;
 ///
 /// - サイズ: 16 × 16 × 16 ブロック
 /// - 格納順: X → Z → Y（X が最内ループ。XZ 方向の繰り返しを RLE で圧縮しやすくするため）
+/// - ボクセルは 2 byte（ushort）
 /// </summary>
 public class TerrainChunk
 {
     public const int Size = 16;
     public const int VoxelCount = Size * Size * Size; // 4096
 
-    private readonly byte[] _voxels = new byte[VoxelCount];
+    private readonly ushort[] _voxels = new ushort[VoxelCount];
     private int _nonEmptyCount;
 
     /// <summary>全ボクセルが empty か（空チャンクはバイナリ保存時に省略される）。</summary>
@@ -24,12 +25,12 @@ public class TerrainChunk
         return x + z * Size + y * Size * Size;
     }
 
-    public byte GetVoxel(int x, int y, int z) => _voxels[Index(x, y, z)];
+    public ushort GetVoxel(int x, int y, int z) => _voxels[Index(x, y, z)];
 
-    public void SetVoxel(int x, int y, int z, byte voxel)
+    public void SetVoxel(int x, int y, int z, ushort voxel)
     {
         int index = Index(x, y, z);
-        byte prev = _voxels[index];
+        ushort prev = _voxels[index];
         if (prev == voxel)
             return;
 
@@ -41,27 +42,27 @@ public class TerrainChunk
         _voxels[index] = voxel;
     }
 
-    /// <summary>格納順どおりの生バイト列をコピーして返す（シリアライズ用）。</summary>
-    public byte[] ToBytes()
+    /// <summary>格納順どおりの生ボクセル列をコピーして返す（シリアライズ用）。</summary>
+    public ushort[] ToVoxels()
     {
-        var copy = new byte[VoxelCount];
+        var copy = new ushort[VoxelCount];
         Array.Copy(_voxels, copy, VoxelCount);
         return copy;
     }
 
     /// <summary>
-    /// 生バイト列（格納順 X → Z → Y・4096 バイト）からチャンクを復元する。
-    /// 不正な長さ・不正なボクセルバイトを含む場合は null を返す（UGC データの防御）。
+    /// 生ボクセル列（格納順 X → Z → Y・4096 要素）からチャンクを復元する。
+    /// 不正な長さ・不正なボクセル値を含む場合は null を返す（UGC データの防御）。
     /// </summary>
-    public static TerrainChunk FromBytes(byte[] bytes)
+    public static TerrainChunk FromVoxels(ushort[] voxels)
     {
-        if (bytes == null || bytes.Length != VoxelCount)
+        if (voxels == null || voxels.Length != VoxelCount)
             return null;
 
         var chunk = new TerrainChunk();
         for (int i = 0; i < VoxelCount; i++)
         {
-            byte v = bytes[i];
+            ushort v = voxels[i];
             if (!TerrainVoxel.IsValid(v))
                 return null;
             if (v != TerrainVoxel.Empty)

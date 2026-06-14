@@ -275,6 +275,33 @@ public class TerrainColliderBuilderTests
         AssertNoOverlap(boxes);
     }
 
+    // ── concave（凹角）の階段近似 ─────────────────────────────────────────────
+
+    [Test]
+    public void BuildChunk_ConcaveNW_ConservativeInnerBoxes()
+    {
+        Set(5, 5, 5, TerrainShape.ConcaveNW);
+        var boxes = Build();
+
+        Assert.AreEqual(6, boxes.Count, "3 段 × 2 ボックス（最上段は断面 0 でスキップ）");
+        foreach (var box in boxes)
+        {
+            // セル内に収まる
+            Assert.GreaterOrEqual(box.Min.x, 2.5f - Delta);
+            Assert.LessOrEqual(box.Max.x, 3.0f + Delta);
+            Assert.GreaterOrEqual(box.Min.y, 2.5f - Delta);
+            Assert.LessOrEqual(box.Max.y, 3.0f + Delta);
+            Assert.GreaterOrEqual(box.Min.z, 2.5f - Delta);
+            Assert.LessOrEqual(box.Max.z, 3.0f + Delta);
+            // 内側近似: solid 領域 (y ≤ x − z + 1) に収まり phantom wall を作らない。
+            // 最も制約の厳しい角（max y・min x・max z）で確認する（ブロックローカル分率）。
+            float fMaxY = (box.Max.y - 2.5f) / 0.5f;
+            float fMinX = (box.Min.x - 2.5f) / 0.5f;
+            float fMaxZ = (box.Max.z - 2.5f) / 0.5f;
+            Assert.LessOrEqual(fMaxY - fMinX + fMaxZ, 1f + Delta, "solid (y ≤ x − z + 1) に内接");
+        }
+    }
+
     [Test]
     public void BuildChunk_MixedCubeAndRamp_RampNotMerged()
     {

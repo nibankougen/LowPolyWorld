@@ -204,6 +204,18 @@ public class TerrainColliderBuilder
                         case TerrainShape.CornerSW:
                             AddCornerStairs(result, x, y, z, 3);
                             break;
+                        case TerrainShape.ConcaveNW:
+                            AddConcaveStairs(result, x, y, z, 0);
+                            break;
+                        case TerrainShape.ConcaveNE:
+                            AddConcaveStairs(result, x, y, z, 1);
+                            break;
+                        case TerrainShape.ConcaveSE:
+                            AddConcaveStairs(result, x, y, z, 2);
+                            break;
+                        case TerrainShape.ConcaveSW:
+                            AddConcaveStairs(result, x, y, z, 3);
+                            break;
                     }
                 }
             }
@@ -264,6 +276,29 @@ public class TerrainColliderBuilder
             // canonical 断面: x ∈ [0, half], z ∈ [1−half, 1]（NW 角に内接）
             var (rx0, rz0, rx1, rz1) = RotRect(0f, 1f - half, half, 1f, k);
             result.Add(MakeLocalBox(x, y, z, rx0, f0, rz0, rx1, f1, rz1));
+        }
+    }
+
+    /// <summary>
+    /// 凹角（内角）の階段近似。canonical（ConcaveNW = NW 上角を切り落とし・solid 領域は y ≤ x − z + 1）では、
+    /// 高さ段 i の上端 y = (i+1)/N における断面（z ≤ x + g、g = 1 − y）に内接する 2 個の軸平行ボックス
+    /// （South 帯 x[0,1]×z[0,g] と East 帯 x[1−g,1]×z[0,1]）を配置する。段上端の最小断面を使うため
+    /// solid に収まり phantom wall を作らない。最上段は g = 0 で断面が消えるためスキップする（box は最大 6 個）。
+    /// </summary>
+    private static void AddConcaveStairs(List<TerrainColliderBox> result, int x, int y, int z, int k)
+    {
+        for (int i = 0; i < CornerStepCount; i++)
+        {
+            float f0 = (float)i / CornerStepCount;
+            float f1 = (float)(i + 1) / CornerStepCount;
+            float g = 1f - f1; // 段上端での solid 断面の余裕（z ≤ x + g）
+            if (g <= 0f)
+                continue;
+
+            var (sx0, sz0, sx1, sz1) = RotRect(0f, 0f, 1f, g, k);     // South 帯
+            result.Add(MakeLocalBox(x, y, z, sx0, f0, sz0, sx1, f1, sz1));
+            var (ex0, ez0, ex1, ez1) = RotRect(1f - g, 0f, 1f, 1f, k); // East 帯
+            result.Add(MakeLocalBox(x, y, z, ex0, f0, ez0, ex1, f1, ez1));
         }
     }
 

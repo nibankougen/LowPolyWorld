@@ -35,7 +35,7 @@ public class TerrainEditScenePreview : MonoBehaviour
 
         // サンプル地形: 全面の地面（高さ 0）
         var store = new TerrainVoxelStore();
-        byte ground = TerrainVoxel.Encode(TerrainShape.Cube, 0);
+        ushort ground = TerrainVoxel.Encode(TerrainShape.Cube, 0);
         for (int x = 0; x < TerrainVoxelStore.SizeX; x++)
             for (int z = 0; z < TerrainVoxelStore.SizeZ; z++)
                 store.SetVoxel(x, 0, z, ground);

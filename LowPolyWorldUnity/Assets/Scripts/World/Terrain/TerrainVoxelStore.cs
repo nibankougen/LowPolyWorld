@@ -35,7 +35,7 @@ public class TerrainVoxelStore
 
     // ── ボクセルアクセス（ワールド座標・0 起点） ──────────────────────────────
 
-    public byte GetVoxel(int x, int y, int z)
+    public ushort GetVoxel(int x, int y, int z)
     {
         ValidateWorld(x, y, z);
         int key = ChunkKey(x >> 4, y >> 4, z >> 4);
@@ -44,7 +44,7 @@ public class TerrainVoxelStore
         return chunk.GetVoxel(x & 15, y & 15, z & 15);
     }
 
-    public void SetVoxel(int x, int y, int z, byte voxel)
+    public void SetVoxel(int x, int y, int z, ushort voxel)
     {
         ValidateWorld(x, y, z);
         int key = ChunkKey(x >> 4, y >> 4, z >> 4);

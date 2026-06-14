@@ -58,7 +58,7 @@ public class TerrainMeshBuilder
                     int z = oz + lz;
                     if (!TerrainVoxelStore.InBounds(x, y, z))
                         continue; // 端のチャンクのパディング領域
-                    byte voxel = sampler.GetVoxel(x, y, z);
+                    ushort voxel = sampler.GetVoxel(x, y, z);
                     if (TerrainVoxel.IsEmpty(voxel))
                         continue;
                     EmitBlock(x, y, z, voxel);
@@ -75,7 +75,7 @@ public class TerrainMeshBuilder
 
     // ── 形状ごとの面生成 ──────────────────────────────────────────────────────
 
-    private void EmitBlock(int x, int y, int z, byte voxel)
+    private void EmitBlock(int x, int y, int z, ushort voxel)
     {
         switch (TerrainVoxel.GetShape(voxel))
         {
@@ -118,10 +118,22 @@ public class TerrainMeshBuilder
             case TerrainShape.CornerSW:
                 EmitCorner(x, y, z, voxel, 3);
                 break;
+            case TerrainShape.ConcaveNW:
+                EmitConcave(x, y, z, voxel, 0);
+                break;
+            case TerrainShape.ConcaveNE:
+                EmitConcave(x, y, z, voxel, 1);
+                break;
+            case TerrainShape.ConcaveSE:
+                EmitConcave(x, y, z, voxel, 2);
+                break;
+            case TerrainShape.ConcaveSW:
+                EmitConcave(x, y, z, voxel, 3);
+                break;
         }
     }
 
-    private void EmitCube(int x, int y, int z, byte voxel)
+    private void EmitCube(int x, int y, int z, ushort voxel)
     {
         EmitTopFace(x, y, z, voxel, CubeTopQuad, CubeTopUv);
         EmitBottomFace(x, y, z, voxel, CubeBottomQuad, CubeBottomUv);
@@ -131,7 +143,7 @@ public class TerrainMeshBuilder
         EmitSideFace(x, y, z, voxel, TerrainFaceDir.West, CubeWestQuad, SideQuadUv);
     }
 
-    private void EmitRamp(int x, int y, int z, byte voxel, int k)
+    private void EmitRamp(int x, int y, int z, ushort voxel, int k)
     {
         EmitBottomFace(x, y, z, voxel, CubeBottomQuad, CubeBottomUv);
         EmitSideFace(x, y, z, voxel, RotSideDir(TerrainFaceDir.North, k), Rot(CubeNorthQuad, k), SideQuadUv);
@@ -140,7 +152,7 @@ public class TerrainMeshBuilder
         EmitRampSlope(x, y, z, voxel, k);
     }
 
-    private void EmitDiag(int x, int y, int z, byte voxel, int k)
+    private void EmitDiag(int x, int y, int z, ushort voxel, int k)
     {
         EmitTopFace(x, y, z, voxel, Rot(DiagTopTri, k), DiagTopUv);
         EmitBottomFace(x, y, z, voxel, Rot(DiagBottomTri, k), DiagBottomUv);
@@ -149,7 +161,7 @@ public class TerrainMeshBuilder
         EmitDiagHypotenuse(x, y, z, voxel, k);
     }
 
-    private void EmitCorner(int x, int y, int z, byte voxel, int k)
+    private void EmitCorner(int x, int y, int z, ushort voxel, int k)
     {
         // 角（外角・四面体）= 坂と斜めの組み合わせ。canonical（CornerNW）の高頂点は NW 上角。
         // 底面（下面三角形）/ 斜面（上面三角形）/ West・North の坂側面三角形 2 枚。
@@ -159,7 +171,7 @@ public class TerrainMeshBuilder
         EmitRampTriangle(x, y, z, voxel, RotSideDir(TerrainFaceDir.North, k), Rot(CornerNorthWallTri, k), CornerNorthWallUv);
     }
 
-    private void EmitCornerSlope(int x, int y, int z, byte voxel, int k)
+    private void EmitCornerSlope(int x, int y, int z, ushort voxel, int k)
     {
         // 斜面はどの隣接平面とも接しないためカリングしない（ramp 斜面と同じ。常に上面領域 — 15.8）。
         Rect rect = GetUvRect(x, y, z, voxel, TerrainFaceRegion.Top, TerrainFaceDir.Slope);
@@ -174,11 +186,39 @@ public class TerrainMeshBuilder
         AddFace(_meshes.Solid, x, y, z, verts, CornerSlopeUv, brightness, rect, NoUv2, 0f);
     }
 
+    private void EmitConcave(int x, int y, int z, ushort voxel, int k)
+    {
+        // 凹角（内角）= 立方体から canonical（ConcaveNW）の NW 上角を斜めに切り落とした形。
+        // 下面 full / 上面三角形 / South・East 側面 full / West・North 側面三角形 / 切り欠き斜面三角形。
+        EmitTopFace(x, y, z, voxel, Rot(ConcaveTopTri, k), ConcaveTopUv);
+        EmitBottomFace(x, y, z, voxel, CubeBottomQuad, CubeBottomUv);
+        // full 側面（canonical: South / East）
+        EmitSideFace(x, y, z, voxel, RotSideDir(TerrainFaceDir.South, k), Rot(CubeSouthQuad, k), SideQuadUv);
+        EmitSideFace(x, y, z, voxel, RotSideDir(TerrainFaceDir.East, k), Rot(CubeEastQuad, k), SideQuadUv);
+        // 三角形側面（canonical: West / North。切り欠き角に接する 2 側面）
+        EmitRampTriangle(x, y, z, voxel, RotSideDir(TerrainFaceDir.West, k), Rot(ConcaveWestWallTri, k), ConcaveWestWallUv);
+        EmitRampTriangle(x, y, z, voxel, RotSideDir(TerrainFaceDir.North, k), Rot(ConcaveNorthWallTri, k), ConcaveNorthWallUv);
+        EmitConcaveSlope(x, y, z, voxel, k);
+    }
+
+    private void EmitConcaveSlope(int x, int y, int z, ushort voxel, int k)
+    {
+        // 切り欠き斜面はどの隣接平面とも接しないためカリングしない（ramp 斜面と同じ・常に上面領域 — 15.8）。
+        Rect rect = GetUvRect(x, y, z, voxel, TerrainFaceRegion.Top, TerrainFaceDir.Slope);
+
+        var verts = Rot(ConcaveSlopeTri, k);
+        // 上向きの傾斜面のため AO は上面（法線 +Y）のグループ1 で計算する（角の斜面と同じ）。
+        var brightness = new float[3];
+        for (int i = 0; i < 3; i++)
+            brightness[i] = Group1Brightness(x, y, z, 0, 1, 0, verts[i]);
+        AddFace(_meshes.Solid, x, y, z, verts, ConcaveSlopeUv, brightness, rect, NoUv2, 0f);
+    }
+
     // ── 面種別ごとのカリング + 領域選択 + 発行 ────────────────────────────────
 
-    private void EmitTopFace(int x, int y, int z, byte voxel, Vector3[] verts, Vector2[] uvs)
+    private void EmitTopFace(int x, int y, int z, ushort voxel, Vector3[] verts, Vector2[] uvs)
     {
-        byte above = _sampler.GetVoxel(x, y + 1, z);
+        ushort above = _sampler.GetVoxel(x, y + 1, z);
         if (TerrainNeighborRules.HidesTopFace(above))
         {
             // 直上ブロックでカリングされた上面 → Height Culling で直上が消えたときだけ表示する
@@ -202,34 +242,34 @@ public class TerrainMeshBuilder
         }
     }
 
-    private void EmitBottomFace(int x, int y, int z, byte voxel, Vector3[] verts, Vector2[] uvs)
+    private void EmitBottomFace(int x, int y, int z, ushort voxel, Vector3[] verts, Vector2[] uvs)
     {
-        byte below = _sampler.GetVoxel(x, y - 1, z);
+        ushort below = _sampler.GetVoxel(x, y - 1, z);
         if (TerrainNeighborRules.HidesBottomFace(below))
             return;
         EmitGroup1Face(_meshes.Solid, x, y, z, voxel, TerrainFaceDir.Down, TerrainFaceRegion.Bottom, verts, uvs);
     }
 
-    private void EmitSideFace(int x, int y, int z, byte voxel, TerrainFaceDir dir, Vector3[] verts, Vector2[] uvs)
+    private void EmitSideFace(int x, int y, int z, ushort voxel, TerrainFaceDir dir, Vector3[] verts, Vector2[] uvs)
     {
         var (dx, _, dz) = TerrainFaceDirUtil.Offset(dir);
-        byte neighbor = _sampler.GetVoxel(x + dx, y, z + dz);
+        ushort neighbor = _sampler.GetVoxel(x + dx, y, z + dz);
         if (TerrainNeighborRules.HidesSideFace(neighbor, dir))
             return;
         EmitGroup1Face(_meshes.Solid, x, y, z, voxel, dir, SideRegion(x, y, z, voxel), verts, uvs);
     }
 
-    private void EmitRampTriangle(int x, int y, int z, byte voxel, TerrainFaceDir dir, Vector3[] verts, Vector2[] uvs)
+    private void EmitRampTriangle(int x, int y, int z, ushort voxel, TerrainFaceDir dir, Vector3[] verts, Vector2[] uvs)
     {
         var (dx, _, dz) = TerrainFaceDirUtil.Offset(dir);
-        byte neighbor = _sampler.GetVoxel(x + dx, y, z + dz);
+        ushort neighbor = _sampler.GetVoxel(x + dx, y, z + dz);
         if (TerrainNeighborRules.HidesSideFace(neighbor, dir))
             return;
         var region = IsSameKindBelow(x, y, z, voxel) ? TerrainFaceRegion.RampSide : TerrainFaceRegion.RampSideBottom;
         EmitGroup1Face(_meshes.Solid, x, y, z, voxel, dir, region, verts, uvs);
     }
 
-    private void EmitRampSlope(int x, int y, int z, byte voxel, int k)
+    private void EmitRampSlope(int x, int y, int z, ushort voxel, int k)
     {
         // 斜面はどの隣接平面とも接しないためカリングしない（真上に cube があっても生成する。
         // カリングすると側面方向から内部が見えてしまう — 15.12）。
@@ -252,7 +292,7 @@ public class TerrainMeshBuilder
         AddFace(_meshes.Solid, x, y, z, verts, RampSlopeUv, brightness, rect, NoUv2, 0f);
     }
 
-    private void EmitDiagHypotenuse(int x, int y, int z, byte voxel, int k)
+    private void EmitDiagHypotenuse(int x, int y, int z, ushort voxel, int k)
     {
         // 斜辺垂直面はどの隣接平面とも接しないためカリングしない
         Rect rect = GetUvRect(x, y, z, voxel, SideRegion(x, y, z, voxel), TerrainFaceDir.Hypotenuse);
@@ -275,7 +315,7 @@ public class TerrainMeshBuilder
 
     private void EmitGroup1Face(
         TerrainMeshData target,
-        int x, int y, int z, byte voxel,
+        int x, int y, int z, ushort voxel,
         TerrainFaceDir dir, TerrainFaceRegion region,
         Vector3[] verts, Vector2[] uvs,
         float uv2X = NoUv2)
@@ -290,7 +330,7 @@ public class TerrainMeshBuilder
 
     // ── テクスチャ領域選択（15.8）・UV ────────────────────────────────────────
 
-    private TerrainFaceRegion SideRegion(int x, int y, int z, byte voxel)
+    private TerrainFaceRegion SideRegion(int x, int y, int z, ushort voxel)
     {
         bool aboveSame = TerrainNeighborRules.IsSameKind(voxel, _sampler.GetVoxel(x, y + 1, z));
         bool belowSame = IsSameKindBelow(x, y, z, voxel);
@@ -304,10 +344,10 @@ public class TerrainMeshBuilder
     }
 
     // ワールド下端の下の仮想地形（カリング用）は「同種」とは見なさない
-    private bool IsSameKindBelow(int x, int y, int z, byte voxel) =>
+    private bool IsSameKindBelow(int x, int y, int z, ushort voxel) =>
         y > 0 && TerrainNeighborRules.IsSameKind(voxel, _sampler.GetVoxel(x, y - 1, z));
 
-    private Rect GetUvRect(int x, int y, int z, byte voxel, TerrainFaceRegion region, TerrainFaceDir dir)
+    private Rect GetUvRect(int x, int y, int z, ushort voxel, TerrainFaceRegion region, TerrainFaceDir dir)
     {
         int palette = TerrainVoxel.GetPaletteIndex(voxel);
         int count = _atlas.GetVariantCount(palette, region);
@@ -418,6 +458,10 @@ public class TerrainMeshBuilder
             case TerrainShape.CornerNE: return CornerOcclusion(dx, dz, 1, 1);
             case TerrainShape.CornerSE: return CornerOcclusion(dx, dz, 1, 0);
             case TerrainShape.CornerSW: return CornerOcclusion(dx, dz, 0, 0);
+            case TerrainShape.ConcaveNW: return ConcaveOcclusion(dx, dz, 0, 1);
+            case TerrainShape.ConcaveNE: return ConcaveOcclusion(dx, dz, 1, 1);
+            case TerrainShape.ConcaveSE: return ConcaveOcclusion(dx, dz, 1, 0);
+            case TerrainShape.ConcaveSW: return ConcaveOcclusion(dx, dz, 0, 0);
             default: return 1f;
         }
     }
@@ -439,6 +483,10 @@ public class TerrainMeshBuilder
             return 0f; // 対角の空き角
         return TerrainAo.OccupancyRampLow; // 隣接 2 角（低い側）
     }
+
+    // 凹角はほぼ立方体（切り欠き角のみ上部が欠ける）。切り欠き角は部分占有、他 3 角は full。
+    private static float ConcaveOcclusion(int dx, int dz, int cutDx, int cutDz) =>
+        dx == cutDx && dz == cutDz ? TerrainAo.OccupancyRampLow : 1f;
 
     // ── 頂点バッファへの発行 ──────────────────────────────────────────────────
 
@@ -657,5 +705,47 @@ public class TerrainMeshBuilder
     private static readonly Vector2[] CornerNorthWallUv =
     {
         new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, 1),
+    };
+
+    // 凹角（canonical ConcaveNW）。立方体から NW 上角 (0,1,1) を切り落とす。下面 4 頂点・上面 3 頂点。
+    // 上面三角形（法線 +Y）: SW_top(0,1,0), NE_top(1,1,1), SE_top(1,1,0)。UV は cube 上面向き u=East, v=North
+    private static readonly Vector3[] ConcaveTopTri =
+    {
+        new Vector3(0, 1, 0), new Vector3(1, 1, 1), new Vector3(1, 1, 0),
+    };
+    private static readonly Vector2[] ConcaveTopUv =
+    {
+        new Vector2(0, 0), new Vector2(1, 1), new Vector2(1, 0),
+    };
+
+    // West 壁（法線 −X・三角形）: SW_bot(0,0,0), NW_bot(0,0,1), SW_top(0,1,0)。直角 = SW_bot を UV 原点
+    private static readonly Vector3[] ConcaveWestWallTri =
+    {
+        new Vector3(0, 0, 0), new Vector3(0, 0, 1), new Vector3(0, 1, 0),
+    };
+    private static readonly Vector2[] ConcaveWestWallUv =
+    {
+        new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, 1),
+    };
+
+    // North 壁（法線 +Z・三角形）: NW_bot(0,0,1), NE_bot(1,0,1), NE_top(1,1,1)。直角 = NE_bot を UV 原点
+    private static readonly Vector3[] ConcaveNorthWallTri =
+    {
+        new Vector3(0, 0, 1), new Vector3(1, 0, 1), new Vector3(1, 1, 1),
+    };
+    private static readonly Vector2[] ConcaveNorthWallUv =
+    {
+        new Vector2(1, 0), new Vector2(0, 0), new Vector2(0, 1),
+    };
+
+    // 切り欠き斜面（外向き法線 = up+North+West）: SW_top(0,1,0), NW_bot(0,0,1), NE_top(1,1,1)。
+    // UV は cube 上面向き（XZ 投影 u=East, v=North）
+    private static readonly Vector3[] ConcaveSlopeTri =
+    {
+        new Vector3(0, 1, 0), new Vector3(0, 0, 1), new Vector3(1, 1, 1),
+    };
+    private static readonly Vector2[] ConcaveSlopeUv =
+    {
+        new Vector2(0, 0), new Vector2(0, 1), new Vector2(1, 1),
     };
 }

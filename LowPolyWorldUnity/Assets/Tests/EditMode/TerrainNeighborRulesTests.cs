@@ -2,7 +2,7 @@ using NUnit.Framework;
 
 public class TerrainNeighborRulesTests
 {
-    private static byte V(TerrainShape shape, int palette = 0) => TerrainVoxel.Encode(shape, palette);
+    private static ushort V(TerrainShape shape, int palette = 0) => TerrainVoxel.Encode(shape, palette);
 
     [Test]
     public void HidesTopFace_CubeAndRampHide_DiagAndEmptyDoNot()
@@ -36,7 +36,7 @@ public class TerrainNeighborRulesTests
     [Test]
     public void HidesSideFace_DiagNW_MatchesSpecExample()
     {
-        byte diagNW = V(TerrainShape.DiagNW);
+        ushort diagNW = V(TerrainShape.DiagNW);
 
         // A が B の West 側（A の East 面）→ B の West 面は full → 非表示
         Assert.IsTrue(TerrainNeighborRules.HidesSideFace(diagNW, TerrainFaceDir.East));
@@ -69,7 +69,7 @@ public class TerrainNeighborRulesTests
     public void Corner_DoesNotHideAnyNeighborFace()
     {
         // 角は底面が半三角・上面が斜面・full 側面を持たないため、隣接ブロックの面を一切隠さない。
-        byte cornerNW = V(TerrainShape.CornerNW);
+        ushort cornerNW = V(TerrainShape.CornerNW);
         Assert.IsTrue(TerrainNeighborRules.IsCorner(TerrainShape.CornerNW));
         Assert.IsTrue(TerrainNeighborRules.IsCorner(TerrainShape.CornerSW));
         Assert.IsFalse(TerrainNeighborRules.IsCorner(TerrainShape.DiagNW));
@@ -79,6 +79,46 @@ public class TerrainNeighborRulesTests
         foreach (TerrainFaceDir dir in new[]
                  { TerrainFaceDir.North, TerrainFaceDir.South, TerrainFaceDir.East, TerrainFaceDir.West })
             Assert.IsFalse(TerrainNeighborRules.HidesSideFace(cornerNW, dir), "角は full 側面を持たない");
+    }
+
+    [Test]
+    public void Concave_FullBottomHidesTopFace_TriangleTopDoesNotHideBottom()
+    {
+        ushort concaveNW = V(TerrainShape.ConcaveNW);
+        Assert.IsTrue(TerrainNeighborRules.IsConcave(TerrainShape.ConcaveNW));
+        Assert.IsTrue(TerrainNeighborRules.IsConcave(TerrainShape.ConcaveSW));
+        Assert.IsFalse(TerrainNeighborRules.IsConcave(TerrainShape.CornerNW));
+
+        Assert.IsTrue(TerrainNeighborRules.HidesTopFace(concaveNW), "凹角の下面は full → 真下の上面を隠す");
+        Assert.IsFalse(TerrainNeighborRules.HidesBottomFace(concaveNW), "凹角の上面は三角形 → 下面を隠さない");
+    }
+
+    [Test]
+    public void Concave_HidesOnlyTwoFullSideFaces()
+    {
+        // ConcaveNW: 切り欠き = NW → full 側面 = South / East、三角形側面 = North / West。
+        // HidesSideFace(neighbor, faceDir) は隣の Opposite(faceDir) 面が full のとき true。
+        ushort concaveNW = V(TerrainShape.ConcaveNW);
+        Assert.IsTrue(TerrainNeighborRules.HidesSideFace(concaveNW, TerrainFaceDir.North),
+            "隣の South 面（full）が自分の North 面を隠す");
+        Assert.IsTrue(TerrainNeighborRules.HidesSideFace(concaveNW, TerrainFaceDir.West),
+            "隣の East 面（full）が自分の West 面を隠す");
+        Assert.IsFalse(TerrainNeighborRules.HidesSideFace(concaveNW, TerrainFaceDir.South),
+            "隣の North 面（三角形）は隠さない");
+        Assert.IsFalse(TerrainNeighborRules.HidesSideFace(concaveNW, TerrainFaceDir.East),
+            "隣の West 面（三角形）は隠さない");
+    }
+
+    [Test]
+    public void ConcaveCoversFace_FullFacesPerOrientation()
+    {
+        Assert.IsTrue(TerrainNeighborRules.ConcaveCoversFace(TerrainShape.ConcaveNW, TerrainFaceDir.South));
+        Assert.IsTrue(TerrainNeighborRules.ConcaveCoversFace(TerrainShape.ConcaveNW, TerrainFaceDir.East));
+        Assert.IsTrue(TerrainNeighborRules.ConcaveCoversFace(TerrainShape.ConcaveSE, TerrainFaceDir.North));
+        Assert.IsTrue(TerrainNeighborRules.ConcaveCoversFace(TerrainShape.ConcaveSE, TerrainFaceDir.West));
+        Assert.IsFalse(TerrainNeighborRules.ConcaveCoversFace(TerrainShape.ConcaveNW, TerrainFaceDir.North));
+        Assert.IsFalse(TerrainNeighborRules.ConcaveCoversFace(TerrainShape.ConcaveNW, TerrainFaceDir.West));
+        Assert.IsFalse(TerrainNeighborRules.ConcaveCoversFace(TerrainShape.Cube, TerrainFaceDir.North));
     }
 
     [Test]

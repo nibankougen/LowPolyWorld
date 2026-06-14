@@ -11,10 +11,14 @@ using System.Collections.Generic;
 ///   上位レイヤーが ConsumeDirtyChunks() → TerrainRenderer.RebuildChunk で反映する
 ///
 /// タイプ変更の向きの定義（仕様の「空いている側面の方向」の実装定義）:
-/// - ramp: 低い側（斜面が下る方向）= 空いている側面。真上も空であること
+/// - ramp: 低い側（斜面が下る方向）= 空いている側面。真上も空であること。
+///   低い側が「反対向きの坂」（低い側を当該セルへ向けて下ってくる坂）の場合も開き扱い → 隣接 2 坂で V 字の溝になる
 /// - diag: 直角に隣り合う 2 側面が空 → その反対側 2 面が solid になる向き
 /// - corner（外角・四面体）: 真上が空 + 低い側（斜面が下る）2 側面が空 → 高頂点がその反対の上角になる向き
-/// - サイクル順: cube → ramp N/E/S/W → diag NW/NE/SE/SW → corner NW/NE/SE/SW → cube（有効な向きのみ）
+/// - concave（凹角・内角）: 真上が空 + 切り欠き角に接する 2 側面の隣が、対角セルへ下る三角形側面
+///   （坂・外角・凹角）を向けているとき（例 ConcaveNW: West 隣 = RampS/CornerSE/ConcaveNE のいずれか
+///   かつ North 隣 = RampE/CornerSE/ConcaveSW のいずれか）
+/// - サイクル順: cube → ramp → diag → corner → concave → cube（有効な向きのみ）
 /// </summary>
 public class TerrainEditLogic
 {
@@ -30,12 +34,13 @@ public class TerrainEditLogic
         TerrainShape.RampN, TerrainShape.RampE, TerrainShape.RampS, TerrainShape.RampW,
         TerrainShape.DiagNW, TerrainShape.DiagNE, TerrainShape.DiagSE, TerrainShape.DiagSW,
         TerrainShape.CornerNW, TerrainShape.CornerNE, TerrainShape.CornerSE, TerrainShape.CornerSW,
+        TerrainShape.ConcaveNW, TerrainShape.ConcaveNE, TerrainShape.ConcaveSE, TerrainShape.ConcaveSW,
     };
 
     private readonly TerrainVoxelStore _store;
     private readonly HashSet<(int x, int z)> _selection = new HashSet<(int, int)>();
     private readonly HashSet<(int cx, int cy, int cz)> _dirtyChunks = new HashSet<(int, int, int)>();
-    private readonly List<(int x, int z, byte voxel)> _clipboard = new List<(int, int, byte)>();
+    private readonly List<(int x, int z, ushort voxel)> _clipboard = new List<(int, int, ushort)>();
     private bool _hasClipboard;
 
     public TerrainEditLogic(TerrainVoxelStore store)
@@ -84,7 +89,7 @@ public class TerrainEditLogic
     {
         if (!InBoundsXZ(x, z))
             return false;
-        byte seed = _store.GetVoxel(x, CurrentHeight, z);
+        ushort seed = _store.GetVoxel(x, CurrentHeight, z);
         if (TerrainVoxel.IsEmpty(seed))
             return false;
         if (!addToSelection)
@@ -103,7 +108,7 @@ public class TerrainEditLogic
             {
                 if (!InBoundsXZ(nx, nz) || visited.Contains((nx, nz)))
                     continue;
-                byte v = _store.GetVoxel(nx, CurrentHeight, nz);
+                ushort v =_store.GetVoxel(nx, CurrentHeight, nz);
                 if (TerrainVoxel.IsEmpty(v) || TerrainVoxel.GetPaletteIndex(v) != palette)
                     continue;
                 visited.Add((nx, nz));
@@ -142,7 +147,7 @@ public class TerrainEditLogic
     {
         Normalize(ref x0, ref x1);
         Normalize(ref z0, ref z1);
-        byte voxel = TerrainVoxel.Encode(TerrainShape.Cube, paletteIndex);
+        ushort voxel = TerrainVoxel.Encode(TerrainShape.Cube, paletteIndex);
         int count = 0;
         for (int z = Math.Max(z0, 0); z <= Math.Min(z1, TerrainVoxelStore.SizeZ - 1); z++)
         {
@@ -168,7 +173,7 @@ public class TerrainEditLogic
     {
         if (!CanEdit(x, z))
             return TypeChangeResult.NotChangeable;
-        byte voxel = _store.GetVoxel(x, CurrentHeight, z);
+        ushort voxel = _store.GetVoxel(x, CurrentHeight, z);
         if (TerrainVoxel.IsEmpty(voxel))
             return TypeChangeResult.NotChangeable;
 
@@ -197,7 +202,9 @@ public class TerrainEditLogic
 
     /// <summary>
     /// 形状の配置条件（11.7.2）。ramp = 真上が空 + 低い側が空 / diag = 直角に隣り合う 2 側面が空 /
-    /// corner = 真上が空 + 低い側（斜面が下る）2 側面が空（高頂点はその反対の上角）。
+    /// corner = 真上が空 + 低い側（斜面が下る）2 側面が空（高頂点はその反対の上角） /
+    /// concave（凹角）= 真上が空 + 切り欠き角に接する 2 側面の隣が「対角セルへ下る三角形側面」を
+    /// 向けていること。三角形側面を持つのは坂・各種角ブロック（外角・凹角）。
     /// </summary>
     private bool IsShapeValid(TerrainShape shape, int x, int z)
     {
@@ -209,10 +216,11 @@ public class TerrainEditLogic
         bool westEmpty = IsEmptyAt(x - 1, y, z);
         switch (shape)
         {
-            case TerrainShape.RampN: return aboveEmpty && southEmpty; // 低い側 = South
-            case TerrainShape.RampE: return aboveEmpty && westEmpty;
-            case TerrainShape.RampS: return aboveEmpty && northEmpty;
-            case TerrainShape.RampW: return aboveEmpty && eastEmpty;
+            // 低い側が開いていること。空に加え「反対向きの坂」も開き扱い（V 字の溝を作れるように）。
+            case TerrainShape.RampN: return aboveEmpty && RampLowSideOpen(x, y, z, 0, -1, TerrainShape.RampS);
+            case TerrainShape.RampE: return aboveEmpty && RampLowSideOpen(x, y, z, -1, 0, TerrainShape.RampW);
+            case TerrainShape.RampS: return aboveEmpty && RampLowSideOpen(x, y, z, 0, 1, TerrainShape.RampN);
+            case TerrainShape.RampW: return aboveEmpty && RampLowSideOpen(x, y, z, 1, 0, TerrainShape.RampE);
             case TerrainShape.DiagNW: return southEmpty && eastEmpty; // solid = N/W
             case TerrainShape.DiagNE: return southEmpty && westEmpty;
             case TerrainShape.DiagSE: return northEmpty && westEmpty;
@@ -221,9 +229,79 @@ public class TerrainEditLogic
             case TerrainShape.CornerNE: return aboveEmpty && southEmpty && westEmpty;
             case TerrainShape.CornerSE: return aboveEmpty && northEmpty && westEmpty;
             case TerrainShape.CornerSW: return aboveEmpty && northEmpty && eastEmpty;
+            // 凹角: 切り欠き角に接する 2 側面の隣が、その対角セルへ下る三角形側面（坂・各種角）を向けている
+            case TerrainShape.ConcaveNW:
+                return aboveEmpty
+                    && HasDescendingTriangleSide(ShapeAt(x - 1, y, z), TerrainFaceDir.East, TerrainFaceDir.South)
+                    && HasDescendingTriangleSide(ShapeAt(x, y, z + 1), TerrainFaceDir.South, TerrainFaceDir.East);
+            case TerrainShape.ConcaveNE:
+                return aboveEmpty
+                    && HasDescendingTriangleSide(ShapeAt(x, y, z + 1), TerrainFaceDir.South, TerrainFaceDir.West)
+                    && HasDescendingTriangleSide(ShapeAt(x + 1, y, z), TerrainFaceDir.West, TerrainFaceDir.South);
+            case TerrainShape.ConcaveSE:
+                return aboveEmpty
+                    && HasDescendingTriangleSide(ShapeAt(x + 1, y, z), TerrainFaceDir.West, TerrainFaceDir.North)
+                    && HasDescendingTriangleSide(ShapeAt(x, y, z - 1), TerrainFaceDir.North, TerrainFaceDir.West);
+            case TerrainShape.ConcaveSW:
+                return aboveEmpty
+                    && HasDescendingTriangleSide(ShapeAt(x, y, z - 1), TerrainFaceDir.North, TerrainFaceDir.East)
+                    && HasDescendingTriangleSide(ShapeAt(x - 1, y, z), TerrainFaceDir.East, TerrainFaceDir.North);
             default: return false;
         }
     }
+
+    /// <summary>
+    /// 形状 <paramref name="shape"/> の <paramref name="faceDir"/> 側面が「降りる三角形側面」で、
+    /// その全高（高い側）の縦エッジが <paramref name="highDir"/> 側にあるか（凹角の隣接判定用）。
+    /// 三角形側面を持つのは坂・外角・凹角:
+    /// - ramp: 高い側の反対 2 側面が三角形（高エッジ = ramp の高い側）
+    /// - 外角: 高頂点に接する 2 側面が三角形（高エッジ = もう一方の構成方向）
+    /// - 凹角: 切り欠き角に接する 2 側面が三角形（高エッジ = もう一方の構成方向の反対）
+    /// </summary>
+    private static bool HasDescendingTriangleSide(TerrainShape shape, TerrainFaceDir faceDir, TerrainFaceDir highDir)
+    {
+        switch (shape)
+        {
+            case TerrainShape.RampN: return Vertical(faceDir) && highDir == TerrainFaceDir.North;
+            case TerrainShape.RampS: return Vertical(faceDir) && highDir == TerrainFaceDir.South;
+            case TerrainShape.RampE: return Horizontal(faceDir) && highDir == TerrainFaceDir.East;
+            case TerrainShape.RampW: return Horizontal(faceDir) && highDir == TerrainFaceDir.West;
+            case TerrainShape.CornerNW: return Wall(faceDir, highDir, TerrainFaceDir.North, TerrainFaceDir.West);
+            case TerrainShape.CornerNE: return Wall(faceDir, highDir, TerrainFaceDir.North, TerrainFaceDir.East);
+            case TerrainShape.CornerSE: return Wall(faceDir, highDir, TerrainFaceDir.South, TerrainFaceDir.East);
+            case TerrainShape.CornerSW: return Wall(faceDir, highDir, TerrainFaceDir.South, TerrainFaceDir.West);
+            case TerrainShape.ConcaveNW: return Cut(faceDir, highDir, TerrainFaceDir.North, TerrainFaceDir.West);
+            case TerrainShape.ConcaveNE: return Cut(faceDir, highDir, TerrainFaceDir.North, TerrainFaceDir.East);
+            case TerrainShape.ConcaveSE: return Cut(faceDir, highDir, TerrainFaceDir.South, TerrainFaceDir.East);
+            case TerrainShape.ConcaveSW: return Cut(faceDir, highDir, TerrainFaceDir.South, TerrainFaceDir.West);
+            default: return false;
+        }
+    }
+
+    // ramp の三角形側面は高い側に垂直な 2 面（North/South 高 → East/West 面 / East/West 高 → North/South 面）
+    private static bool Vertical(TerrainFaceDir d) => d == TerrainFaceDir.East || d == TerrainFaceDir.West;
+    private static bool Horizontal(TerrainFaceDir d) => d == TerrainFaceDir.North || d == TerrainFaceDir.South;
+
+    // 外角: 高頂点の 2 構成方向 a, b の面が三角形。a 面の高エッジ = b、b 面の高エッジ = a
+    private static bool Wall(TerrainFaceDir faceDir, TerrainFaceDir highDir, TerrainFaceDir a, TerrainFaceDir b) =>
+        (faceDir == a && highDir == b) || (faceDir == b && highDir == a);
+
+    // 凹角: 切り欠き角の 2 構成方向 a, b の面が三角形。a 面の高エッジ = Opposite(b)、b 面 = Opposite(a)
+    private static bool Cut(TerrainFaceDir faceDir, TerrainFaceDir highDir, TerrainFaceDir a, TerrainFaceDir b) =>
+        (faceDir == a && highDir == TerrainFaceDirUtil.Opposite(b))
+        || (faceDir == b && highDir == TerrainFaceDirUtil.Opposite(a));
+
+    /// <summary>
+    /// 坂の低い側（(dx, dz) 方向の隣）が斜面を塞がず開いているか。
+    /// 空のとき、または「反対向きの坂」（その低い側を当該セルへ向けて下ってくる坂）のとき true。
+    /// 後者により隣り合う 2 坂で V 字の溝（鋭い谷底）を作れる（11.7.2）。
+    /// </summary>
+    private bool RampLowSideOpen(int x, int y, int z, int dx, int dz, TerrainShape opposingRamp) =>
+        IsEmptyAt(x + dx, y, z + dz) || ShapeAt(x + dx, y, z + dz) == opposingRamp;
+
+    // 範囲外は Empty 扱い（凹角の隣接判定用）
+    private TerrainShape ShapeAt(int x, int y, int z) =>
+        TerrainVoxelStore.InBounds(x, y, z) ? TerrainVoxel.GetShape(_store.GetVoxel(x, y, z)) : TerrainShape.Empty;
 
     // ── 移動 / コピー&ペースト ────────────────────────────────────────────────
 
@@ -237,12 +315,12 @@ public class TerrainEditLogic
             return false;
 
         int y = CurrentHeight;
-        var cells = new List<(int x, int z, byte voxel)>();
+        var cells = new List<(int x, int z, ushort voxel)>();
         if (HasSelection)
         {
             foreach (var (x, z) in _selection)
             {
-                byte v = _store.GetVoxel(x, y, z);
+                ushort v =_store.GetVoxel(x, y, z);
                 if (!TerrainVoxel.IsEmpty(v))
                     cells.Add((x, z, v));
             }
@@ -252,7 +330,7 @@ public class TerrainEditLogic
             for (int z = 0; z < TerrainVoxelStore.SizeZ; z++)
                 for (int x = 0; x < TerrainVoxelStore.SizeX; x++)
                 {
-                    byte v = _store.GetVoxel(x, y, z);
+                    ushort v =_store.GetVoxel(x, y, z);
                     if (!TerrainVoxel.IsEmpty(v))
                         cells.Add((x, z, v));
                 }
@@ -287,7 +365,7 @@ public class TerrainEditLogic
             return false;
         foreach (var (x, z) in _selection)
         {
-            byte v = _store.GetVoxel(x, CurrentHeight, z);
+            ushort v =_store.GetVoxel(x, CurrentHeight, z);
             if (!TerrainVoxel.IsEmpty(v))
                 _clipboard.Add((x, z, v));
         }
@@ -328,7 +406,7 @@ public class TerrainEditLogic
     private bool IsEmptyAt(int x, int y, int z) =>
         !TerrainVoxelStore.InBounds(x, y, z) || TerrainVoxel.IsEmpty(_store.GetVoxel(x, y, z));
 
-    private void SetVoxel(int x, int y, int z, byte voxel)
+    private void SetVoxel(int x, int y, int z, ushort voxel)
     {
         if (_store.GetVoxel(x, y, z) == voxel)
             return;

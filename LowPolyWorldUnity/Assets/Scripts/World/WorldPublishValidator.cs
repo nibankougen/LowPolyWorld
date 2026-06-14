@@ -15,12 +15,17 @@ public class WorldPublishValidator
     /// <param name="objectCount">配置オブジェクト総数。</param>
     /// <param name="hasThumbnail">サムネイルが設定されているか。</param>
     /// <param name="publishedVersion">現在の公開バージョン番号（INT_MAX 到達チェック用）。</param>
+    /// <param name="spawnPortalOverlap">
+    /// スポーン位置・ポータルのいずれかが地形/オブジェクト/相互と重複しているか
+    /// （呼び出し側が <see cref="SpecialObjectOverlap"/> + 占有クエリで算出して渡す）。
+    /// </param>
     public IReadOnlyList<PublishError> Validate(
         WorldDefinitionJson def,
         int textureCost,
         int objectCount,
         bool hasThumbnail,
-        int publishedVersion = 0)
+        int publishedVersion = 0,
+        bool spawnPortalOverlap = false)
     {
         var errors = new List<PublishError>();
 
@@ -35,6 +40,9 @@ public class WorldPublishValidator
 
         if (HasPortalWithoutExit(def))
             errors.Add(PublishError.PortalExitMissing);
+
+        if (spawnPortalOverlap)
+            errors.Add(PublishError.SpawnPortalOverlap);
 
         if (textureCost > TextureCostCalculator.CostLimit)
             errors.Add(PublishError.TextureCostExceeded);
@@ -72,6 +80,7 @@ public enum PublishError
     ThumbnailMissing,
     SpawnNotSet,
     PortalExitMissing,
+    SpawnPortalOverlap, // スポーン/ポータルが地形・オブジェクト・相互と重複
     TextureCostExceeded,
     ObjectCountExceeded,
     VersionNumberOverflow,

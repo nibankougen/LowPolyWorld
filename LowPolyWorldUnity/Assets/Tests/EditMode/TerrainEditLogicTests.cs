@@ -37,7 +37,7 @@ public class TerrainEditLogicTests
     public void PaintCell_PlacesCubeWithPalette()
     {
         Assert.IsTrue(_logic.PaintCell(10, 12, 3));
-        byte v = _store.GetVoxel(10, 5, 12);
+        ushort v = _store.GetVoxel(10, 5, 12);
         Assert.AreEqual(TerrainShape.Cube, TerrainVoxel.GetShape(v));
         Assert.AreEqual(3, TerrainVoxel.GetPaletteIndex(v));
     }
@@ -47,7 +47,7 @@ public class TerrainEditLogicTests
     {
         _store.SetVoxel(10, 5, 12, TerrainVoxel.Encode(TerrainShape.RampN, 1));
         _logic.PaintCell(10, 12, 4);
-        byte v = _store.GetVoxel(10, 5, 12);
+        ushort v = _store.GetVoxel(10, 5, 12);
         Assert.AreEqual(TerrainShape.Cube, TerrainVoxel.GetShape(v), "配置済みは上書き");
         Assert.AreEqual(4, TerrainVoxel.GetPaletteIndex(v));
     }
@@ -203,7 +203,7 @@ public class TerrainEditLogicTests
         _store.SetVoxel(10, 6, 10, TerrainVoxel.Encode(TerrainShape.Cube, 0));
 
         Assert.AreEqual(TerrainEditLogic.TypeChangeResult.Changed, _logic.CycleType(10, 10));
-        byte v = _store.GetVoxel(10, 5, 10);
+        ushort v = _store.GetVoxel(10, 5, 10);
         Assert.AreEqual(TerrainShape.Cube, TerrainVoxel.GetShape(v));
         Assert.AreEqual(2, TerrainVoxel.GetPaletteIndex(v), "パレットは維持");
     }
@@ -270,6 +270,138 @@ public class TerrainEditLogicTests
         Assert.AreEqual(TerrainEditLogic.TypeChangeResult.NotChangeable, _logic.CycleType(10, 10));
     }
 
+    [Test]
+    public void CycleType_Ramp_OpposingRampLowSideMakesVGroove()
+    {
+        // 北隣に RampN（南＝こちらへ下る反対向きの坂）。RampS は低い側（北）がそれでも配置可 → V 字溝。
+        _store.SetVoxel(10, 5, 11, TerrainVoxel.Encode(TerrainShape.RampN, 0)); // North = 反対向きの坂
+        _store.SetVoxel(10, 5, 10, TerrainVoxel.Encode(TerrainShape.RampE, 0)); // サイクル上 RampS の直前
+
+        Assert.AreEqual(TerrainEditLogic.TypeChangeResult.Changed, _logic.CycleType(10, 10));
+        Assert.AreEqual(TerrainShape.RampS, TerrainVoxel.GetShape(_store.GetVoxel(10, 5, 10)),
+            "反対向きの坂が低い側にあれば V 字として RampS 可");
+    }
+
+    [Test]
+    public void CycleType_Ramp_SolidLowSideStillBlocks()
+    {
+        // 北隣が立方体（塞ぐ）なら RampS は不可のまま。
+        _store.SetVoxel(10, 5, 11, TerrainVoxel.Encode(TerrainShape.Cube, 0));
+        _store.SetVoxel(10, 5, 10, TerrainVoxel.Encode(TerrainShape.RampE, 0));
+
+        var seen = new System.Collections.Generic.List<TerrainShape>();
+        for (int i = 0; i < 18; i++)
+        {
+            if (_logic.CycleType(10, 10) != TerrainEditLogic.TypeChangeResult.Changed)
+                break;
+            var s = TerrainVoxel.GetShape(_store.GetVoxel(10, 5, 10));
+            seen.Add(s);
+            if (s == TerrainShape.Cube)
+                break;
+        }
+        Assert.IsFalse(seen.Contains(TerrainShape.RampS), "低い側が立方体なら RampS は出ない");
+    }
+
+    [Test]
+    public void CycleType_Ramp_SameDirectionRampLowSideStillBlocks()
+    {
+        // 北隣が RampS（同じ向き・北面が高い壁）なら塞ぐ。RampS は不可。
+        _store.SetVoxel(10, 5, 11, TerrainVoxel.Encode(TerrainShape.RampS, 0));
+        _store.SetVoxel(10, 5, 10, TerrainVoxel.Encode(TerrainShape.RampE, 0));
+
+        var seen = new System.Collections.Generic.List<TerrainShape>();
+        for (int i = 0; i < 18; i++)
+        {
+            if (_logic.CycleType(10, 10) != TerrainEditLogic.TypeChangeResult.Changed)
+                break;
+            var s = TerrainVoxel.GetShape(_store.GetVoxel(10, 5, 10));
+            seen.Add(s);
+            if (s == TerrainShape.Cube)
+                break;
+        }
+        Assert.IsFalse(seen.Contains(TerrainShape.RampS), "同じ向きの坂（高い壁）が低い側を塞ぐ");
+    }
+
+    [Test]
+    public void CycleType_Concave_RequiresTwoRampsDescendingToSameCell()
+    {
+        // ConcaveNW: West 隣 = RampS・North 隣 = RampE（ともに NW 対角セルへ下る）・真上空き。
+        // CornerSW（サイクル上 ConcaveNW の直前）から 1 ステップで ConcaveNW になる。
+        _store.SetVoxel(9, 5, 10, TerrainVoxel.Encode(TerrainShape.RampS, 0));  // West
+        _store.SetVoxel(10, 5, 11, TerrainVoxel.Encode(TerrainShape.RampE, 0)); // North
+        _store.SetVoxel(10, 5, 10, TerrainVoxel.Encode(TerrainShape.CornerSW, 0));
+
+        Assert.AreEqual(TerrainEditLogic.TypeChangeResult.Changed, _logic.CycleType(10, 10));
+        Assert.AreEqual(TerrainShape.ConcaveNW, TerrainVoxel.GetShape(_store.GetVoxel(10, 5, 10)));
+    }
+
+    [Test]
+    public void CycleType_Concave_NotPlacedWithoutMatchingRamps()
+    {
+        // North 隣を cube にすると ConcaveNW の条件（North = RampE）を満たさない。
+        // 凹角はどの向きも不可 → CornerSW から一周して立方体に戻る。
+        _store.SetVoxel(9, 5, 10, TerrainVoxel.Encode(TerrainShape.RampS, 0)); // West のみ ramp
+        _store.SetVoxel(10, 5, 11, TerrainVoxel.Encode(TerrainShape.Cube, 0)); // North = cube
+        _store.SetVoxel(10, 5, 10, TerrainVoxel.Encode(TerrainShape.CornerSW, 0));
+
+        Assert.AreEqual(TerrainEditLogic.TypeChangeResult.Changed, _logic.CycleType(10, 10));
+        Assert.AreEqual(TerrainShape.Cube, TerrainVoxel.GetShape(_store.GetVoxel(10, 5, 10)),
+            "対応する坂が無ければ凹角は配置されず立方体に戻る");
+    }
+
+    [Test]
+    public void CycleType_Concave_AcceptsCornerNeighborsWithMatchingTriangleSide()
+    {
+        // 坂以外の各種角ブロックも三角形側面を持つので隣として使える。
+        // ConcaveNW: West 隣・North 隣ともに CornerSE（East 面・South 面が高-South / 高-East の三角形壁）でも成立。
+        _store.SetVoxel(9, 5, 10, TerrainVoxel.Encode(TerrainShape.CornerSE, 0));  // West
+        _store.SetVoxel(10, 5, 11, TerrainVoxel.Encode(TerrainShape.CornerSE, 0)); // North
+        _store.SetVoxel(10, 5, 10, TerrainVoxel.Encode(TerrainShape.CornerSW, 0));
+
+        Assert.AreEqual(TerrainEditLogic.TypeChangeResult.Changed, _logic.CycleType(10, 10));
+        Assert.AreEqual(TerrainShape.ConcaveNW, TerrainVoxel.GetShape(_store.GetVoxel(10, 5, 10)));
+    }
+
+    [Test]
+    public void CycleType_Concave_AcceptsConcaveNeighborsWithMatchingTriangleSide()
+    {
+        // 凹角自身も三角形側面を持つので隣として使える。
+        // ConcaveNW: West 隣 = ConcaveNE（East 面が高-South）/ North 隣 = ConcaveSW（South 面が高-East）。
+        _store.SetVoxel(9, 5, 10, TerrainVoxel.Encode(TerrainShape.ConcaveNE, 0));  // West
+        _store.SetVoxel(10, 5, 11, TerrainVoxel.Encode(TerrainShape.ConcaveSW, 0)); // North
+        _store.SetVoxel(10, 5, 10, TerrainVoxel.Encode(TerrainShape.CornerSW, 0));
+
+        Assert.AreEqual(TerrainEditLogic.TypeChangeResult.Changed, _logic.CycleType(10, 10));
+        Assert.AreEqual(TerrainShape.ConcaveNW, TerrainVoxel.GetShape(_store.GetVoxel(10, 5, 10)));
+    }
+
+    [Test]
+    public void CycleType_Concave_RejectsWrongOrientedTriangleSide()
+    {
+        // 三角形側面の向きが合わない角は不可。CornerNE の East 面は高-North（高-South が必要なので不一致）。
+        _store.SetVoxel(9, 5, 10, TerrainVoxel.Encode(TerrainShape.CornerNE, 0));  // West（不一致）
+        _store.SetVoxel(10, 5, 11, TerrainVoxel.Encode(TerrainShape.RampE, 0));    // North（一致）
+        _store.SetVoxel(10, 5, 10, TerrainVoxel.Encode(TerrainShape.CornerSW, 0));
+
+        Assert.AreEqual(TerrainEditLogic.TypeChangeResult.Changed, _logic.CycleType(10, 10));
+        Assert.AreEqual(TerrainShape.Cube, TerrainVoxel.GetShape(_store.GetVoxel(10, 5, 10)),
+            "向きの合わない三角形側面では凹角にならず立方体に戻る");
+    }
+
+    [Test]
+    public void CycleType_Concave_NeedsEmptyAbove()
+    {
+        // 真上を塞ぐと凹角は配置されない（ramp/corner と同様）。
+        _store.SetVoxel(9, 5, 10, TerrainVoxel.Encode(TerrainShape.RampS, 0));
+        _store.SetVoxel(10, 5, 11, TerrainVoxel.Encode(TerrainShape.RampE, 0));
+        _store.SetVoxel(10, 6, 10, TerrainVoxel.Encode(TerrainShape.Cube, 0)); // 真上を塞ぐ
+        _store.SetVoxel(10, 5, 10, TerrainVoxel.Encode(TerrainShape.CornerSW, 0));
+
+        Assert.AreEqual(TerrainEditLogic.TypeChangeResult.Changed, _logic.CycleType(10, 10));
+        Assert.IsFalse(TerrainNeighborRules.IsConcave(TerrainVoxel.GetShape(_store.GetVoxel(10, 5, 10))),
+            "真上が塞がっていると凹角は配置されない");
+    }
+
     // ── 移動 ──────────────────────────────────────────────────────────────────
 
     [Test]
@@ -317,7 +449,7 @@ public class TerrainEditLogicTests
         _logic.SelectRect(10, 10, 10, 10);
         _logic.Move(1, 0);
 
-        byte v = _store.GetVoxel(11, 5, 10);
+        ushort v = _store.GetVoxel(11, 5, 10);
         Assert.AreEqual(TerrainShape.DiagSE, TerrainVoxel.GetShape(v), "形状ごと移動・移動先は上書き");
         Assert.AreEqual(3, TerrainVoxel.GetPaletteIndex(v));
     }

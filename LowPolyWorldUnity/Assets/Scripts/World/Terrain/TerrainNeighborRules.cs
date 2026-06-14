@@ -25,28 +25,37 @@ public static class TerrainNeighborRules
         shape >= TerrainShape.CornerNW && shape <= TerrainShape.CornerSW;
 
     /// <summary>
-    /// 真上の隣接ブロックが A の上面（上の平面に接する面 = cube の上面・diag の上面三角形）を隠すか。
-    /// 坂の斜面は平面に接しないためカリング対象外（常に生成する）。
+    /// 凹角（内角）か。凹角は下面が full・上面は三角形（half）・切り欠きの 2 側面が三角形・
+    /// 反対の 2 側面が full。下面が full なので「真下の上面」は隠すが、上面・三角形側面は隠さない。
     /// </summary>
-    public static bool HidesTopFace(byte neighborAbove)
+    public static bool IsConcave(TerrainShape shape) =>
+        shape >= TerrainShape.ConcaveNW && shape <= TerrainShape.ConcaveSW;
+
+    /// <summary>
+    /// 真上の隣接ブロックが A の上面（上の平面に接する面 = cube の上面・diag の上面三角形）を隠すか。
+    /// 隠すのは「下面が full」な形状（cube・ramp・凹角）。坂の斜面は平面に接しないためカリングしない。
+    /// </summary>
+    public static bool HidesTopFace(ushort neighborAbove)
     {
         var shape = TerrainVoxel.GetShape(neighborAbove);
-        return shape == TerrainShape.Cube || IsRamp(shape);
+        return shape == TerrainShape.Cube || IsRamp(shape) || IsConcave(shape);
     }
 
     /// <summary>真下の隣接ブロックが A の下面を隠すか（上面が full なのは cube のみ）。</summary>
-    public static bool HidesBottomFace(byte neighborBelow) =>
+    public static bool HidesBottomFace(ushort neighborBelow) =>
         TerrainVoxel.GetShape(neighborBelow) == TerrainShape.Cube;
 
     /// <summary>faceDir 方向の隣接ブロックが A の側面を隠すか。</summary>
-    public static bool HidesSideFace(byte neighbor, TerrainFaceDir faceDir)
+    public static bool HidesSideFace(ushort neighbor, TerrainFaceDir faceDir)
     {
         var shape = TerrainVoxel.GetShape(neighbor);
         if (shape == TerrainShape.Cube)
             return true;
         if (IsDiag(shape))
             return DiagCoversFace(shape, TerrainFaceDirUtil.Opposite(faceDir));
-        return false; // empty・ramp は側面を隠さない
+        if (IsConcave(shape))
+            return ConcaveCoversFace(shape, TerrainFaceDirUtil.Opposite(faceDir));
+        return false; // empty・ramp・外角は側面を隠さない
     }
 
     /// <summary>diag 形状の solid 部分が、自ブロックの face 方向の面を完全に覆うか。</summary>
@@ -68,9 +77,30 @@ public static class TerrainNeighborRules
     }
 
     /// <summary>
+    /// 凹角の solid 部分（full 側面 2 枚）が、自ブロックの face 方向の面を完全に覆うか。
+    /// 切り欠き角に接する 2 側面は三角形（partial）、反対の 2 側面が full。
+    /// </summary>
+    public static bool ConcaveCoversFace(TerrainShape concave, TerrainFaceDir face)
+    {
+        switch (concave)
+        {
+            case TerrainShape.ConcaveNW: // 切り欠き = NW → full = South, East
+                return face == TerrainFaceDir.South || face == TerrainFaceDir.East;
+            case TerrainShape.ConcaveNE: // 切り欠き = NE → full = South, West
+                return face == TerrainFaceDir.South || face == TerrainFaceDir.West;
+            case TerrainShape.ConcaveSE: // 切り欠き = SE → full = North, West
+                return face == TerrainFaceDir.North || face == TerrainFaceDir.West;
+            case TerrainShape.ConcaveSW: // 切り欠き = SW → full = North, East
+                return face == TerrainFaceDir.North || face == TerrainFaceDir.East;
+            default:
+                return false;
+        }
+    }
+
+    /// <summary>
     /// 同じ種類の地形か（テクスチャ領域選択 15.8 用 — 同一パレットインデックスかつ両方非 empty）。
     /// </summary>
-    public static bool IsSameKind(byte a, byte b) =>
+    public static bool IsSameKind(ushort a, ushort b) =>
         !TerrainVoxel.IsEmpty(a)
         && !TerrainVoxel.IsEmpty(b)
         && TerrainVoxel.GetPaletteIndex(a) == TerrainVoxel.GetPaletteIndex(b);
