@@ -406,11 +406,11 @@ public class WorldEditorController : MonoBehaviour
             _bgmPicker.Close();
 
         // ギミック / 設定タブはワールドの 3D オブジェクトを選択する必要がないので、
-        // タブパネルを通常より大きく（ヘッダー直下まで）開いた状態を既定にし、
-        // 右上のテクスチャコスト表示も隠す。
+        // タブパネルを通常より大きく（ヘッダー直下まで）開いた状態を既定にする。
         bool worldObjectTab = index == 0 || index == 1;
         _tabContent.EnableInClassList("tab-content--tall", !worldObjectTab);
-        _costDisplay?.EnableInClassList("overlay-hidden", !worldObjectTab);
+        // テクスチャコスト表示はオブジェクトタブでのみ表示する。
+        _costDisplay?.EnableInClassList("overlay-hidden", index != 1);
 
         if (!_tabContentVisible)
             SetTabContentVisible(true);
@@ -426,12 +426,16 @@ public class WorldEditorController : MonoBehaviour
         _tabContentVisible = visible;
         _btnMinimize.text = visible ? "▽" : "△";
 
+        bool terrainBarOnly = !visible && _currentTabIndex == 0;
+        // 地形タブ最小化中は編集バー（ツール）以外（サブタブ・一覧・選択方法）を隠す
+        _panelTerrain?.EnableInClassList("terrain-minimized", terrainBarOnly);
+
         if (visible)
         {
             _tabContent.EnableInClassList("tab-content--min", false);
             _tabContent.style.height = StyleKeyword.Null; // USS クラスの高さに戻す
         }
-        else if (_currentTabIndex == 0)
+        else if (terrainBarOnly)
         {
             // 地形タブ: 編集バーだけ残して最小化
             _tabContent.EnableInClassList("tab-content--min", false);

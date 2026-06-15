@@ -573,7 +573,7 @@
 
 .terrain-height-bar {
     position: absolute;
-    top: 60px;
+    top: 10px;
     right: 10px;
     width: 56px;
     align-items: center;
@@ -617,6 +617,13 @@
     flex-wrap: wrap;
     padding: 6px 8px;
     background-color: rgba(15, 15, 20, 0.80);
+}
+
+/* 地形タブ最小化中は編集バー（ツール）以外を隠す */
+.terrain-minimized .terrain-select-method,
+.terrain-minimized .terrain-subtab-bar,
+.terrain-minimized .terrain-list-scroll {
+    display: none;
 }
 
 .terrain-mode-btn {
