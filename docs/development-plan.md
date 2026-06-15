@@ -896,7 +896,7 @@
 - [x] 環境音プレイヤーへのワールド定義 JSON の反映（入場時に再生・退場時に停止）— `WorldCreationManager.ApplyBgmToPlayer()`
 - [x] ワールド選択画面のタグフィルター UI（横スクロールチップ・複数選択）— `WorldTab.uxml/uss` 更新
 - [x] ワールドエディタ UI（セクション 11.7）
-  - [x] レイアウト: ヘッダー・上部中央ギズモ切り替えボタン（移動/拡大縮小/回転）・3D ビュー・下部タブ（地形/オブジェクト/ギミック/設定）— `WorldEditor.uxml/uss` + `WorldEditorController`。ギミック/設定タブ（3D 選択不要）は下部タブパネルをヘッダー直下まで大きく開いた状態を既定化（`tab-content--tall`）し、右上コスト表示は非表示。メニュー開閉（▽/△）およびタブ切替時の高さ変化は height トランジションでアニメーション
+  - [x] レイアウト: ヘッダー・上部中央ギズモ切り替えボタン（移動/拡大縮小/回転）・3D ビュー・下部タブ（地形/オブジェクト/ギミック/設定）— `WorldEditor.uxml/uss` + `WorldEditorController`。ギミック/設定タブ（3D 選択不要）は下部タブパネルをヘッダー直下まで大きく開いた状態を既定化（`tab-content--tall`）し、右上コスト表示は非表示。メニュー開閉（▽/△）およびタブ切替時の高さ変化は height トランジションでアニメーション。地形タブの最小化時は編集バー（ブラシ等）を残す
   - [ ] グリッドスナップ（移動: 0.5m 単位 / 63×31×63 グリッド / 原点中心）— ロジック `ObjectGridSnap` / `ObjectGizmoLogic`（移動・回転45°・スケール0.25m・scaleLock）実装済み。3D ビュー/ギズモ配線は未
   - [ ] プレイヤーリスポーン: 64×64×64 の範囲外に出たらスポーン位置に自動リスポーン — 判定 `ObjectGridSnap.IsInsidePlayArea` 実装済み・PlayerController 配線は未
   - [ ] テクスチャコストのリアルタイム計算と表示（右上・上限 4,096）— 集計 `ObjectPlacementStore.CalculateCost` / `TextureCostCalculator` 実装済み・UI 表示は未

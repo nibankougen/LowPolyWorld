@@ -42,6 +42,8 @@ public class WorldEditorController : MonoBehaviour
     private VisualElement _panelGimmicks;
     private VisualElement _panelSettings;
     private VisualElement _tabContent;
+    private VisualElement _terrainEditBar;
+    private int _currentTabIndex = 1; // 既定タブ = オブジェクト（UXML 既定と一致）
 
     // ── 地形タブ ──────────────────────────────────────────────────────────────
     private TerrainTabController _terrainTab;
@@ -244,6 +246,7 @@ public class WorldEditorController : MonoBehaviour
         _btnMinimize = _root.Q<Button>("btn-minimize");
         _tabContent = _root.Q("tab-content");
 
+        _terrainEditBar = _root.Q(className: "terrain-edit-bar");
         _panelTerrain = _root.Q("panel-terrain");
         _panelObjects = _root.Q("panel-objects");
         _panelGimmicks = _root.Q("panel-gimmicks");
@@ -376,6 +379,7 @@ public class WorldEditorController : MonoBehaviour
 
     private void SwitchTab(int index)
     {
+        _currentTabIndex = index;
         var tabs = new[] { _tabTerrain, _tabObjects, _tabGimmicks, _tabSettings };
         var panels = new[] { _panelTerrain, _panelObjects, _panelGimmicks, _panelSettings };
 
@@ -409,19 +413,38 @@ public class WorldEditorController : MonoBehaviour
         _costDisplay?.EnableInClassList("overlay-hidden", !worldObjectTab);
 
         if (!_tabContentVisible)
-        {
-            _tabContentVisible = true;
-            _tabContent.EnableInClassList("tab-content--min", false);
-            _btnMinimize.text = "▽";
-        }
+            SetTabContentVisible(true);
     }
 
-    private void ToggleTabMinimize()
+    private void ToggleTabMinimize() => SetTabContentVisible(!_tabContentVisible);
+
+    // タブパネルの開閉。height のトランジションでアニメーションする。
+    // 地形タブの最小化時だけは編集バー（ブラシ等）を残すため、高さ 0 ではなく
+    // 編集バーの高さまで縮める（下のサブタブ・一覧は overflow で隠れる）。
+    private void SetTabContentVisible(bool visible)
     {
-        _tabContentVisible = !_tabContentVisible;
-        // overlay-hidden（display:none）ではなく max-height のトランジションで開閉をアニメーションさせる
-        _tabContent.EnableInClassList("tab-content--min", !_tabContentVisible);
-        _btnMinimize.text = _tabContentVisible ? "▽" : "△";
+        _tabContentVisible = visible;
+        _btnMinimize.text = visible ? "▽" : "△";
+
+        if (visible)
+        {
+            _tabContent.EnableInClassList("tab-content--min", false);
+            _tabContent.style.height = StyleKeyword.Null; // USS クラスの高さに戻す
+        }
+        else if (_currentTabIndex == 0)
+        {
+            // 地形タブ: 編集バーだけ残して最小化
+            _tabContent.EnableInClassList("tab-content--min", false);
+            float barHeight = _terrainEditBar?.resolvedStyle.height ?? 0f;
+            if (barHeight < 1f)
+                barHeight = 56f; // 未レイアウト時のフォールバック
+            _tabContent.style.height = barHeight;
+        }
+        else
+        {
+            _tabContent.style.height = StyleKeyword.Null;
+            _tabContent.EnableInClassList("tab-content--min", true);
+        }
     }
 
     // ── ギズモ ────────────────────────────────────────────────────────────────
