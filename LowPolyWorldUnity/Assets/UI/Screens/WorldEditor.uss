@@ -28,13 +28,40 @@
     font-size: 32px;
 }
 
-/* 戻る / 閉じる アイコン（icon_back を背景に表示） */
-.icon-back {
-    background-image: url("../../Textures/UI/Icons/icon_back.png");
+/* アイコン共通（白シルエット PNG を背景に表示・枠で囲わない） */
+.icon-back,
+.icon-plus,
+.icon-minus,
+.icon-next,
+.icon-play {
     -unity-background-scale-mode: scale-to-fit;
-    background-size: 55% 55%;
     background-position-x: center;
     background-position-y: center;
+}
+
+.icon-back {
+    background-image: url("../../Textures/UI/Icons/icon_back.png");
+    background-size: 55% 55%;
+}
+
+.icon-plus {
+    background-image: url("../../Textures/UI/Icons/icon_plus.png");
+    background-size: 42% 42%;
+}
+
+.icon-minus {
+    background-image: url("../../Textures/UI/Icons/icon_minus.png");
+    background-size: 42% 42%;
+}
+
+.icon-next {
+    background-image: url("../../Textures/UI/Icons/icon_next.png");
+    background-size: 80% 80%;
+}
+
+.icon-play {
+    background-image: url("../../Textures/UI/Icons/icon_play.png");
+    background-size: 92% 92%;
 }
 
 /* ワールド名は表示専用（編集は設定タブ） */
@@ -328,10 +355,22 @@
 
 /* ── テストプレイ ── */
 .btn-test-play {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
     height: 52px;
     background-color: rgb(40, 120, 60);
     border-width: 0;
     border-radius: 10px;
+}
+
+.btn-play-icon {
+    width: 24px;
+    height: 24px;
+    margin-right: 8px;
+}
+
+.btn-play-label {
     color: white;
     font-size: 22px;
 }
@@ -448,8 +487,8 @@
 }
 
 .bgm-select-chevron {
-    color: rgb(180, 200, 255);
-    font-size: 24px;
+    width: 22px;
+    height: 22px;
     margin-left: 8px;
 }
 
@@ -1128,21 +1167,32 @@
     border-color: rgb(40, 40, 56);
 }
 
+/* 戻る / 閉じるは枠で囲わずアイコンのみ（ヘッダー戻ると統一） */
 .gimmick-edit-back {
-    width: 40px;
-    height: 38px;
-    background-color: rgb(40, 40, 58);
-    border-width: 1px;
-    border-color: rgb(70, 70, 100);
-    border-radius: 6px;
-    color: rgb(205, 205, 225);
-    font-size: 18px;
+    width: 44px;
+    height: 44px;
+    background-color: transparent;
+    border-width: 0;
     padding: 0;
+}
+
+/* ルール名（ヘッダー直下の行） */
+.gimmick-edit-titlerow {
+    flex-direction: row;
+    align-items: center;
+    padding: 8px 10px;
+    border-bottom-width: 1px;
+    border-color: rgb(40, 40, 56);
+}
+
+.gimmick-edit-titlelabel {
+    width: 70px;
+    color: rgb(150, 150, 180);
+    font-size: 14px;
 }
 
 .gimmick-edit-title {
     flex-grow: 1;
-    margin-left: 8px;
 }
 
 .gimmick-edit-scroll {
@@ -1190,6 +1240,8 @@
 
 /* 種類セレクタボタン（タップで選択リストを開く・白い角丸で入力欄と統一） */
 .gimmick-edit-typebtn {
+    flex-direction: row;
+    align-items: center;
     flex-grow: 1;
     margin: 0 4px 0 0;
     height: 38px;
@@ -1197,10 +1249,22 @@
     border-width: 1px;
     border-color: rgb(170, 175, 190);
     border-radius: 8px;
+    padding: 0 10px;
+}
+
+.gimmick-edit-typebtn-label {
+    flex-grow: 1;
     color: rgb(35, 35, 45);
     font-size: 15px;
     -unity-text-align: middle-left;
-    padding: 0 10px;
+}
+
+/* 白背景上のため icon_next を暗色にティントして見えるようにする */
+.gimmick-edit-typebtn-next {
+    width: 18px;
+    height: 18px;
+    margin-left: 6px;
+    -unity-background-image-tint-color: rgb(90, 90, 110);
 }
 
 .gimmick-edit-row-btn {

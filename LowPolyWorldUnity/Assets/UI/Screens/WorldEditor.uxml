@@ -192,6 +192,12 @@
                 <ui:VisualElement name="gimmick-rule-editor" class="gimmick-rule-editor overlay-hidden">
                     <ui:VisualElement class="gimmick-edit-header">
                         <ui:Button name="rule-edit-back" class="gimmick-edit-back icon-back" text="" />
+                        <ui:Label class="gimmick-picker-title" text="ルールを設定" />
+                    </ui:VisualElement>
+
+                    <!-- ルール名（ヘッダー直下で設定） -->
+                    <ui:VisualElement class="gimmick-edit-titlerow">
+                        <ui:Label class="gimmick-edit-titlelabel" text="ルール名" />
                         <ui:TextField name="rule-edit-title" class="gimmick-edit-title" />
                     </ui:VisualElement>
 
@@ -243,7 +249,10 @@
 
                     <!-- テストプレイ -->
                     <ui:VisualElement class="settings-section">
-                        <ui:Button name="btn-test-play" class="btn-test-play" text="▶ テストプレイ" />
+                        <ui:Button name="btn-test-play" class="btn-test-play" text="">
+                            <ui:VisualElement class="btn-play-icon icon-play" picking-mode="Ignore" />
+                            <ui:Label class="btn-play-label" text="テストプレイ" picking-mode="Ignore" />
+                        </ui:Button>
                     </ui:VisualElement>
 
                     <!-- サムネイル -->
@@ -284,7 +293,7 @@
                                 <ui:Label name="bgm-current-name" class="bgm-current-name" text="なし" />
                                 <ui:Label name="bgm-current-author" class="bgm-current-author" text="" />
                             </ui:VisualElement>
-                            <ui:Label class="bgm-select-chevron" text="›" picking-mode="Ignore" />
+                            <ui:VisualElement class="bgm-select-chevron icon-next" picking-mode="Ignore" />
                         </ui:Button>
                         <!-- 音量スライダー -->
                         <ui:VisualElement class="settings-row">
@@ -299,9 +308,9 @@
                     <ui:VisualElement class="settings-section">
                         <ui:Label class="settings-label" text="人数上限" />
                         <ui:VisualElement class="stepper-row">
-                            <ui:Button name="btn-players-dec" class="stepper-btn" text="−" />
+                            <ui:Button name="btn-players-dec" class="stepper-btn icon-minus" text="" />
                             <ui:Label name="label-max-players" class="stepper-value" text="6" />
-                            <ui:Button name="btn-players-inc" class="stepper-btn" text="＋" />
+                            <ui:Button name="btn-players-inc" class="stepper-btn icon-plus" text="" />
                         </ui:VisualElement>
                         <ui:Label name="label-players-hint" class="settings-hint"
                                   text="2〜6人（プレミアム: 最大24人）" />

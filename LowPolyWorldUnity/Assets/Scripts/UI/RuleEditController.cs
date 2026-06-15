@@ -274,13 +274,20 @@ public class RuleEditController
         var main = new VisualElement();
         main.AddToClassList("gimmick-edit-row-main");
 
-        // 現在の種類を表示するセレクタボタン（タップで選択リストを開く）
+        // 現在の種類を表示するセレクタボタン（タップで選択リストを開く・右端に icon_next）
         var typeButton = new Button(() =>
-            _picker?.Open(pickerTitle, categories, labelOf, currentType, onTypeChanged))
-        {
-            text = labelOf(currentType),
-        };
+            _picker?.Open(pickerTitle, categories, labelOf, currentType, onTypeChanged));
         typeButton.AddToClassList("gimmick-edit-typebtn");
+
+        var typeLabel = new Label(labelOf(currentType)) { pickingMode = PickingMode.Ignore };
+        typeLabel.AddToClassList("gimmick-edit-typebtn-label");
+        typeButton.Add(typeLabel);
+
+        var chevron = new VisualElement { pickingMode = PickingMode.Ignore };
+        chevron.AddToClassList("gimmick-edit-typebtn-next");
+        chevron.AddToClassList("icon-next");
+        typeButton.Add(chevron);
+
         main.Add(typeButton);
 
         main.Add(MakeBtn("gimmick-icon-btn--up", "上へ移動", onMoveUp));
