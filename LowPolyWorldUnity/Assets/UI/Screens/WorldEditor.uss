@@ -1163,16 +1163,19 @@
     align-items: center;
 }
 
-/* 上段: カテゴリ（ジャンル）ドロップダウン */
-.gimmick-edit-category {
+/* 種類セレクタボタン（タップで選択リストを開く・白い角丸で入力欄と統一） */
+.gimmick-edit-typebtn {
     flex-grow: 1;
-    margin-right: 4px;
-}
-
-/* 下段: 選択カテゴリ内の種別ドロップダウン（全幅） */
-.gimmick-edit-type {
-    flex-grow: 1;
-    margin-top: 6px;
+    margin: 0 4px 0 0;
+    height: 38px;
+    background-color: white;
+    border-width: 1px;
+    border-color: rgb(170, 175, 190);
+    border-radius: 8px;
+    color: rgb(35, 35, 45);
+    font-size: 15px;
+    -unity-text-align: middle-left;
+    padding: 0 10px;
 }
 
 .gimmick-edit-row-btn {
@@ -1199,11 +1202,6 @@
     font-size: 16px;
 }
 
-.gimmick-edit-category,
-.gimmick-edit-type {
-    font-size: 15px;
-}
-
 .gimmick-edit-message-field {
     font-size: 15px;
 }
@@ -1216,7 +1214,44 @@
     min-height: 56px;
 }
 
-.gimmick-edit-category .unity-base-popup-field__input,
-.gimmick-edit-type .unity-base-popup-field__input {
-    min-height: 36px;
+/* ── 種類選択リスト（ピッカー・カテゴリ見出し付き） ── */
+.gimmick-picker-title {
+    flex-grow: 1;
+    margin-left: 8px;
+    color: rgb(210, 210, 230);
+    font-size: 16px;
+    -unity-text-align: middle-left;
+}
+
+.gimmick-picker-category {
+    color: rgb(150, 150, 180);
+    font-size: 13px;
+    -unity-font-style: bold;
+    margin: 12px 10px 2px 10px;
+    padding-bottom: 2px;
+    border-bottom-width: 1px;
+    border-color: rgb(55, 55, 75);
+}
+
+.gimmick-picker-item {
+    height: 42px;
+    margin: 2px 10px;
+    background-color: rgb(36, 36, 50);
+    border-width: 1px;
+    border-color: rgb(60, 60, 85);
+    border-radius: 8px;
+    color: rgb(210, 210, 230);
+    font-size: 15px;
+    -unity-text-align: middle-left;
+    padding: 0 12px;
+}
+
+.gimmick-picker-item:hover {
+    background-color: rgb(48, 50, 72);
+}
+
+.gimmick-picker-item--selected {
+    background-color: rgb(50, 80, 160);
+    border-color: rgb(120, 160, 240);
+    color: white;
 }

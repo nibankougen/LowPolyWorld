@@ -227,6 +227,15 @@
 
                     <ui:Label name="rule-edit-flash" class="object-flash overlay-hidden" text="" />
                 </ui:VisualElement>
+
+                <!-- 種類選択リスト（カテゴリ見出し付き・オーバーレイ） -->
+                <ui:VisualElement name="gimmick-type-picker" class="gimmick-rule-editor overlay-hidden">
+                    <ui:VisualElement class="gimmick-edit-header">
+                        <ui:Button name="type-picker-back" class="gimmick-edit-back" text="＜" />
+                        <ui:Label name="type-picker-title" class="gimmick-picker-title" text="種類を選択" />
+                    </ui:VisualElement>
+                    <ui:ScrollView name="type-picker-list" class="gimmick-edit-scroll" />
+                </ui:VisualElement>
             </ui:VisualElement>
 
             <!-- ───── 設定タブ ───── -->

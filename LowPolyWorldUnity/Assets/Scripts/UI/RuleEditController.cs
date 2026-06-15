@@ -30,12 +30,14 @@ public class RuleEditController
     private GimmickRuleEditLogic _edit;
     private string _ruleId;
     private IVisualElementScheduledItem _flashHide;
+    private readonly GimmickTypePickerController _picker;
 
     public RuleEditController(VisualElement root)
     {
         if (root == null)
             throw new ArgumentNullException(nameof(root));
 
+        _picker = new GimmickTypePickerController(root);
         _overlay = root.Q("gimmick-rule-editor");
         _btnBack = root.Q<Button>("rule-edit-back");
         _title = root.Q<TextField>("rule-edit-title");
@@ -79,6 +81,7 @@ public class RuleEditController
 
     public void Close()
     {
+        _picker?.Close();
         _overlay?.EnableInClassList("overlay-hidden", true);
         _edit = null;
         _tabLogic = null;
@@ -137,7 +140,7 @@ public class RuleEditController
         {
             int index = i;
             var row = BuildRow(
-                GimmickTypeCatalog.TriggerCategories, GimmickTypeCatalog.TriggerLabel, _edit.Triggers[i].type,
+                "入力イベントの種類", GimmickTypeCatalog.TriggerCategories, GimmickTypeCatalog.TriggerLabel, _edit.Triggers[i].type,
                 newType => { _edit.SetTriggerType(index, newType); RefreshTriggers(); },
                 () => { _edit.MoveTrigger(index, index - 1); RefreshTriggers(); },
                 () => { _edit.MoveTrigger(index, index + 1); RefreshTriggers(); },
@@ -170,7 +173,7 @@ public class RuleEditController
         {
             int index = i;
             var row = BuildRow(
-                GimmickTypeCatalog.ConditionCategories, GimmickTypeCatalog.ConditionLabel, _edit.Conditions[i].type,
+                "条件の種類", GimmickTypeCatalog.ConditionCategories, GimmickTypeCatalog.ConditionLabel, _edit.Conditions[i].type,
                 newType => { _edit.SetConditionType(index, newType); RefreshConditions(); },
                 () => { _edit.MoveCondition(index, index - 1); RefreshConditions(); },
                 () => { _edit.MoveCondition(index, index + 1); RefreshConditions(); },
@@ -204,7 +207,7 @@ public class RuleEditController
             int index = i;
             var action = _edit.Actions[i];
             var row = BuildRow(
-                GimmickTypeCatalog.ActionCategories, GimmickTypeCatalog.ActionLabel, action.type,
+                "アクションの種類", GimmickTypeCatalog.ActionCategories, GimmickTypeCatalog.ActionLabel, action.type,
                 newType => { _edit.SetActionType(index, newType); RefreshActions(); },
                 () => { _edit.MoveAction(index, index - 1); RefreshActions(); },
                 () => { _edit.MoveAction(index, index + 1); RefreshActions(); },
@@ -253,9 +256,10 @@ public class RuleEditController
 
     // ── 行ビルダー ────────────────────────────────────────────────────────────
 
-    // カテゴリ + 種別の 2 段ドロップダウン + 上 / 下 / 削除 ボタンの 1 行を生成する。
-    // 種別が多いので、まずカテゴリ（ジャンル）で絞り込んでから種別を選ぶ。
+    // 種類セレクタボタン + 上 / 下 / 削除 ボタンの 1 行を生成する。
+    // セレクタをタップすると、カテゴリ見出し付きの選択リスト（ピッカー）が開く。
     private VisualElement BuildRow(
+        string pickerTitle,
         IReadOnlyList<GimmickTypeCatalog.Category> categories,
         Func<string, string> labelOf,
         string currentType,
@@ -267,51 +271,23 @@ public class RuleEditController
         var row = new VisualElement();
         row.AddToClassList("gimmick-edit-row");
 
-        // 上段: カテゴリドロップダウン + 並び替え / 削除ボタン
         var main = new VisualElement();
         main.AddToClassList("gimmick-edit-row-main");
 
-        int catIndex = GimmickTypeCatalog.CategoryIndexOf(categories, currentType);
-        var category = categories[catIndex];
-
-        var catChoices = new List<string>(categories.Count);
-        foreach (var cat in categories)
-            catChoices.Add(cat.Label);
-
-        var categoryDropdown = new DropdownField(catChoices, catIndex);
-        categoryDropdown.AddToClassList("gimmick-edit-category");
-        categoryDropdown.RegisterValueChangedCallback(_ =>
+        // 現在の種類を表示するセレクタボタン（タップで選択リストを開く）
+        var typeButton = new Button(() =>
+            _picker?.Open(pickerTitle, categories, labelOf, currentType, onTypeChanged))
         {
-            int idx = categoryDropdown.index;
-            if ((uint)idx < (uint)categories.Count)
-                // カテゴリ変更時はそのカテゴリの先頭種別に切り替える（再構築で種別欄が更新される）
-                onTypeChanged(categories[idx].TypeIds[0]);
-        });
-        main.Add(categoryDropdown);
+            text = labelOf(currentType),
+        };
+        typeButton.AddToClassList("gimmick-edit-typebtn");
+        main.Add(typeButton);
 
         main.Add(MakeBtn("gimmick-icon-btn--up", "上へ移動", onMoveUp));
         main.Add(MakeBtn("gimmick-icon-btn--down", "下へ移動", onMoveDown));
         main.Add(MakeBtn("gimmick-icon-btn--close", "削除", onRemove));
+
         row.Add(main);
-
-        // 下段: 選択中カテゴリ内の種別ドロップダウン
-        var typeChoices = new List<string>(category.TypeIds.Length);
-        foreach (var id in category.TypeIds)
-            typeChoices.Add(labelOf(id));
-
-        int typeIndex = Array.IndexOf(category.TypeIds, currentType);
-        if (typeIndex < 0) typeIndex = 0;
-
-        var typeDropdown = new DropdownField(typeChoices, typeIndex);
-        typeDropdown.AddToClassList("gimmick-edit-type");
-        typeDropdown.RegisterValueChangedCallback(_ =>
-        {
-            int idx = typeDropdown.index;
-            if ((uint)idx < (uint)category.TypeIds.Length)
-                onTypeChanged(category.TypeIds[idx]);
-        });
-        row.Add(typeDropdown);
-
         return row;
     }
 
