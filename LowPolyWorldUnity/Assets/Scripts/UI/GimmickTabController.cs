@@ -203,16 +203,11 @@ public class GimmickTabController
         var row = new VisualElement();
         row.AddToClassList("gimmick-rule-row");
 
-        var name = new TextField { value = label, maxLength = GimmickTabLogic.LabelMaxLength };
+        // 一覧では名前は表示のみ（編集はルール編集画面で行う）。
+        // タップするとルール編集画面に入る（11.7.4）。
+        var name = new Label(label);
         name.AddToClassList("gimmick-rule-name");
-        // 空入力での確定は元の名前に戻す（命名ルール: 空不可）。
-        name.RegisterCallback<FocusOutEvent>(_ =>
-        {
-            if (!_logic.RenameRule(ruleId, name.value))
-                name.SetValueWithoutNotify(label);
-            else
-                label = name.value.Trim();
-        });
+        name.RegisterCallback<ClickEvent>(_ => RuleEditRequested?.Invoke(ruleId));
         row.Add(name);
 
         row.Add(BuildRuleButton("gimmick-icon-btn--edit", "編集", () => RuleEditRequested?.Invoke(ruleId)));

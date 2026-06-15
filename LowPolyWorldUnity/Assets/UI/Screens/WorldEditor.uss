@@ -1071,7 +1071,6 @@
 .gimmick-edit-title {
     flex-grow: 1;
     margin-left: 8px;
-    font-size: 16px;
 }
 
 .gimmick-edit-scroll {
@@ -1123,15 +1122,13 @@
 }
 
 .gimmick-edit-row-btn {
-    width: 30px;
-    height: 30px;
+    width: 32px;
+    height: 32px;
     margin-left: 4px;
     background-color: rgb(40, 40, 58);
     border-width: 1px;
     border-color: rgb(70, 70, 100);
-    border-radius: 6px;
-    color: rgb(200, 200, 220);
-    font-size: 15px;
+    border-radius: 8px;
     padding: 0;
 }
 
@@ -1141,4 +1138,30 @@
 
 .gimmick-edit-message-field {
     margin-top: 4px;
+}
+
+/* 入力欄・ドロップダウンを角丸ボタン風に統一する */
+.gimmick-edit-title .unity-base-text-field__input,
+.gimmick-edit-message-field .unity-base-text-field__input,
+.gimmick-edit-type .unity-base-popup-field__input {
+    background-color: rgb(40, 40, 58);
+    border-width: 1px;
+    border-color: rgb(70, 70, 100);
+    border-radius: 8px;
+    color: rgb(210, 210, 230);
+    padding: 6px 10px;
+    font-size: 15px;
+}
+
+.gimmick-edit-title .unity-base-text-field__input {
+    min-height: 38px;
+}
+
+.gimmick-edit-message-field .unity-base-text-field__input {
+    min-height: 56px;
+}
+
+.gimmick-edit-type .unity-base-popup-field__input {
+    min-height: 36px;
+    -unity-text-align: middle-left;
 }

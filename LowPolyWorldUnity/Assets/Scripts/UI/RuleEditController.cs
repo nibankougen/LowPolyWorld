@@ -286,18 +286,21 @@ public class RuleEditController
         });
         main.Add(dropdown);
 
-        main.Add(MakeBtn("▲", "上へ移動", onMoveUp));
-        main.Add(MakeBtn("▼", "下へ移動", onMoveDown));
-        main.Add(MakeBtn("×", "削除", onRemove));
+        main.Add(MakeBtn("gimmick-icon-btn--up", "上へ移動", onMoveUp));
+        main.Add(MakeBtn("gimmick-icon-btn--down", "下へ移動", onMoveDown));
+        main.Add(MakeBtn("gimmick-icon-btn--close", "削除", onRemove));
 
         row.Add(main);
         return row;
     }
 
-    private static Button MakeBtn(string text, string tooltip, Action onClick)
+    // アイコンボタン（背景画像は USS の修飾クラスで割り当て）
+    private static Button MakeBtn(string iconClass, string tooltip, Action onClick)
     {
-        var btn = new Button(onClick) { text = text, tooltip = tooltip };
+        var btn = new Button(onClick) { text = "", tooltip = tooltip };
         btn.AddToClassList("gimmick-edit-row-btn");
+        btn.AddToClassList("gimmick-icon-btn");
+        btn.AddToClassList(iconClass);
         return btn;
     }
 
