@@ -33,10 +33,28 @@
 .icon-plus,
 .icon-minus,
 .icon-next,
-.icon-play {
+.icon-play,
+.icon-up,
+.icon-down,
+.icon-right {
     -unity-background-scale-mode: scale-to-fit;
     background-position-x: center;
     background-position-y: center;
+}
+
+.icon-up {
+    background-image: url("../../Textures/UI/Icons/icon_up.png");
+    background-size: 70% 70%;
+}
+
+.icon-down {
+    background-image: url("../../Textures/UI/Icons/icon_down.png");
+    background-size: 70% 70%;
+}
+
+.icon-right {
+    background-image: url("../../Textures/UI/Icons/icon_right.png");
+    background-size: 70% 70%;
 }
 
 .icon-back {
@@ -199,8 +217,7 @@
     height: 56px;
     background-color: transparent;
     border-width: 0;
-    color: rgb(100, 100, 130);
-    font-size: 18px;
+    background-size: 28% 28%;
 }
 
 /* ── タブコンテンツ ── */
@@ -1006,6 +1023,8 @@
 }
 
 .gimmick-collapse-header {
+    flex-direction: row;
+    align-items: center;
     height: 36px;
     background-color: transparent;
     border-width: 0;
@@ -1013,6 +1032,12 @@
     font-size: 16px;
     -unity-text-align: middle-left;
     padding: 0 2px;
+}
+
+.gimmick-collapse-arrow {
+    width: 16px;
+    height: 16px;
+    margin-right: 6px;
 }
 
 .gimmick-states-body {

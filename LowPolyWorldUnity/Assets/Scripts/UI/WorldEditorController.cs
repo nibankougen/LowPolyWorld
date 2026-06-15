@@ -423,7 +423,9 @@ public class WorldEditorController : MonoBehaviour
     private void SetTabContentVisible(bool visible)
     {
         _tabContentVisible = visible;
-        _btnMinimize.text = visible ? "▽" : "△";
+        // 開いている時は ▽（icon_down）・最小化時は △（icon_up）
+        _btnMinimize.EnableInClassList("icon-down", visible);
+        _btnMinimize.EnableInClassList("icon-up", !visible);
 
         bool terrainBarOnly = !visible && _currentTabIndex == 0;
         // 地形タブ最小化中は編集バー（ツール）以外（サブタブ・一覧・選択方法）を隠す

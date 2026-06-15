@@ -49,7 +49,7 @@
             <ui:Button name="tab-objects"  class="bottom-tab bottom-tab--active" text="オブジェクト" />
             <ui:Button name="tab-gimmicks" class="bottom-tab" text="ギミック" />
             <ui:Button name="tab-settings" class="bottom-tab" text="設定" />
-            <ui:Button name="btn-minimize" class="bottom-tab-minimize" text="▽" />
+            <ui:Button name="btn-minimize" class="bottom-tab-minimize icon-down" text="" />
         </ui:VisualElement>
 
         <!-- ── タブコンテンツ ── -->
@@ -76,9 +76,9 @@
 
                 <!-- 地形サブタブ -->
                 <ui:VisualElement class="terrain-subtab-bar">
-                    <ui:Button name="terrain-subtab-used"  class="terrain-subtab terrain-subtab--active" text="利用中地形" />
-                    <ui:Button name="terrain-subtab-saved" class="terrain-subtab" text="保存・編集地形" />
-                    <ui:Button name="terrain-subtab-owned" class="terrain-subtab" text="所有地形" />
+                    <ui:Button name="terrain-subtab-used"  class="terrain-subtab terrain-subtab--active" text="利用中" />
+                    <ui:Button name="terrain-subtab-saved" class="terrain-subtab" text="保存・編集" />
+                    <ui:Button name="terrain-subtab-owned" class="terrain-subtab" text="所有" />
                 </ui:VisualElement>
 
                 <!-- 地形一覧 -->
@@ -163,7 +163,10 @@
 
                     <!-- ステート定義エリア（折りたたみ可） -->
                     <ui:VisualElement class="gimmick-section">
-                        <ui:Button name="gimmick-states-toggle" class="gimmick-collapse-header" text="▼ ステート定義" />
+                        <ui:Button name="gimmick-states-toggle" class="gimmick-collapse-header" text="">
+                            <ui:VisualElement name="gimmick-states-arrow" class="gimmick-collapse-arrow icon-down" picking-mode="Ignore" />
+                            <ui:Label text="ステート定義" picking-mode="Ignore" />
+                        </ui:Button>
                         <ui:VisualElement name="gimmick-states-body" class="gimmick-states-body">
                             <ui:Label class="gimmick-subhead" text="ワールドステート（0〜9）" />
                             <ui:VisualElement name="gimmick-world-states" class="gimmick-state-list" />

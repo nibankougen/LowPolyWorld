@@ -18,6 +18,7 @@ public class GimmickTabController
 
     private readonly Label _totalLabel;
     private readonly Button _statesToggle;
+    private readonly VisualElement _statesArrow;
     private readonly VisualElement _statesBody;
     private readonly VisualElement _worldStateList;
     private readonly VisualElement _playerStateList;
@@ -37,6 +38,7 @@ public class GimmickTabController
 
         _totalLabel = root.Q<Label>("gimmick-total-label");
         _statesToggle = root.Q<Button>("gimmick-states-toggle");
+        _statesArrow = root.Q("gimmick-states-arrow");
         _statesBody = root.Q("gimmick-states-body");
         _worldStateList = root.Q("gimmick-world-states");
         _playerStateList = root.Q("gimmick-player-states");
@@ -68,8 +70,9 @@ public class GimmickTabController
     {
         _statesExpanded = !_statesExpanded;
         _statesBody?.EnableInClassList("overlay-hidden", !_statesExpanded);
-        if (_statesToggle != null)
-            _statesToggle.text = (_statesExpanded ? "▼" : "▶") + " ステート定義";
+        // 開いている時は ▼（icon_down）・閉じている時は ▶（icon_right）
+        _statesArrow?.EnableInClassList("icon-down", _statesExpanded);
+        _statesArrow?.EnableInClassList("icon-right", !_statesExpanded);
     }
 
     private void BuildStateRows()
