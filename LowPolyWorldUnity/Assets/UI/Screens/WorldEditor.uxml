@@ -34,9 +34,9 @@
                 <ui:Button name="terrain-btn-hide-above" class="terrain-hide-above" text="上方非表示" />
                 <!-- 高さバー（右側） -->
                 <ui:VisualElement class="terrain-height-bar">
-                    <ui:Button name="terrain-height-up" class="terrain-height-btn" text="▲" />
+                    <ui:Button name="terrain-height-up" class="terrain-height-btn icon-up" text="" />
                     <ui:Label name="terrain-height-label" class="terrain-height-label" text="0" />
-                    <ui:Button name="terrain-height-down" class="terrain-height-btn" text="▼" />
+                    <ui:Button name="terrain-height-down" class="terrain-height-btn icon-down" text="" />
                 </ui:VisualElement>
                 <!-- フラッシュメッセージ（中央下） -->
                 <ui:Label name="terrain-flash" class="terrain-flash overlay-hidden" text="" />

@@ -217,7 +217,8 @@
     height: 56px;
     background-color: transparent;
     border-width: 0;
-    background-size: 28% 28%;
+    /* ボタンが正方形でないため px 指定でアスペクト比 1:1 を保つ */
+    background-size: 15px 15px;
 }
 
 /* ── タブコンテンツ ── */
@@ -662,9 +663,8 @@
     border-width: 1px;
     border-color: rgb(70, 70, 100);
     border-radius: 8px;
-    color: rgb(180, 180, 210);
-    font-size: 20px;
     margin: 2px 0;
+    background-size: 20px 20px;
 }
 
 .terrain-height-label {
