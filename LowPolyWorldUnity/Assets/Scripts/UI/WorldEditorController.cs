@@ -25,6 +25,7 @@ public class WorldEditorController : MonoBehaviour
     private Button _btnGizmoRotate;
 
     // ── 3D ビュー ─────────────────────────────────────────────────────────────
+    private VisualElement _costDisplay;
     private VisualElement _costBarFill;
     private Label _costLabel;
 
@@ -232,6 +233,7 @@ public class WorldEditorController : MonoBehaviour
         _btnGizmoScale = _root.Q<Button>("btn-gizmo-scale");
         _btnGizmoRotate = _root.Q<Button>("btn-gizmo-rotate");
 
+        _costDisplay = _root.Q("cost-display");
         _costBarFill = _root.Q("cost-bar-fill");
         _costLabel = _root.Q<Label>("cost-label");
 
@@ -400,8 +402,11 @@ public class WorldEditorController : MonoBehaviour
             _bgmPicker.Close();
 
         // ギミック / 設定タブはワールドの 3D オブジェクトを選択する必要がないので、
-        // タブパネルを通常より大きく（ヘッダー直下まで）開いた状態を既定にする。
-        _tabContent.EnableInClassList("tab-content--tall", index == 2 || index == 3);
+        // タブパネルを通常より大きく（ヘッダー直下まで）開いた状態を既定にし、
+        // 右上のテクスチャコスト表示も隠す。
+        bool worldObjectTab = index == 0 || index == 1;
+        _tabContent.EnableInClassList("tab-content--tall", !worldObjectTab);
+        _costDisplay?.EnableInClassList("overlay-hidden", !worldObjectTab);
 
         if (!_tabContentVisible)
         {

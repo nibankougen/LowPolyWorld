@@ -21,7 +21,7 @@
         <!-- ── 3D ビュー領域（透過・カメラがこの後ろに描画される） ── -->
         <ui:VisualElement name="view3d-area" class="view3d-area">
             <!-- テクスチャコスト表示（右上） -->
-            <ui:VisualElement class="cost-display">
+            <ui:VisualElement name="cost-display" class="cost-display">
                 <ui:VisualElement class="cost-bar-track">
                     <ui:VisualElement name="cost-bar-fill" class="cost-bar-fill" />
                 </ui:VisualElement>

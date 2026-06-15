@@ -162,19 +162,19 @@
 /* ── タブコンテンツ ── */
 .tab-content {
     background-color: rgba(15, 15, 22, 0.95);
-    max-height: 55%;
+    height: 55%;
     overflow: hidden;
-    transition: max-height 0.22s ease-in-out;
+    transition: height 0.22s ease-in-out;
 }
 
 /* ギミック / 設定タブ: ヘッダー直下まで大きく開いた状態を既定にする */
 .tab-content--tall {
-    max-height: 92%;
+    height: 92%;
 }
 
-/* メニュー最小化（▽）: max-height を 0 にしてアニメーションで閉じる */
+/* メニュー最小化（▽）: 高さを 0 にしてアニメーションで閉じる */
 .tab-content--min {
-    max-height: 0;
+    height: 0;
 }
 
 .tab-panel {
