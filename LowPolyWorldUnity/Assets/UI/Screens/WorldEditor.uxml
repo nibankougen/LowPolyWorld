@@ -4,9 +4,8 @@
 
         <!-- ── ヘッダー ── -->
         <ui:VisualElement class="editor-header">
-            <ui:Button name="btn-back" class="editor-btn-icon" text="‹" />
-            <ui:TextField name="field-world-name" class="editor-world-name"
-                          placeholder-text="ワールド名を入力..." />
+            <ui:Button name="btn-back" class="editor-btn-icon icon-back" text="" />
+            <ui:Label name="field-world-name" class="editor-world-name" text="" />
             <ui:Button name="btn-save" class="editor-btn-secondary" text="保存" />
             <ui:Button name="btn-publish" class="editor-btn-primary" text="公開" />
         </ui:VisualElement>
@@ -192,7 +191,7 @@
                 <!-- ルール編集画面（タップでタブ拡大・オーバーレイ） -->
                 <ui:VisualElement name="gimmick-rule-editor" class="gimmick-rule-editor overlay-hidden">
                     <ui:VisualElement class="gimmick-edit-header">
-                        <ui:Button name="rule-edit-back" class="gimmick-edit-back" text="＜" />
+                        <ui:Button name="rule-edit-back" class="gimmick-edit-back icon-back" text="" />
                         <ui:TextField name="rule-edit-title" class="gimmick-edit-title" />
                     </ui:VisualElement>
 
@@ -231,7 +230,7 @@
                 <!-- 種類選択リスト（カテゴリ見出し付き・オーバーレイ） -->
                 <ui:VisualElement name="gimmick-type-picker" class="gimmick-rule-editor overlay-hidden">
                     <ui:VisualElement class="gimmick-edit-header">
-                        <ui:Button name="type-picker-back" class="gimmick-edit-back" text="＜" />
+                        <ui:Button name="type-picker-back" class="gimmick-edit-back icon-back" text="" />
                         <ui:Label name="type-picker-title" class="gimmick-picker-title" text="種類を選択" />
                     </ui:VisualElement>
                     <ui:ScrollView name="type-picker-list" class="gimmick-edit-scroll" />
@@ -405,7 +404,7 @@
                 <!-- BGM 選択リスト（カテゴリ見出し付き・オーバーレイ） -->
                 <ui:VisualElement name="bgm-picker" class="editor-overlay overlay-hidden">
                     <ui:VisualElement class="gimmick-edit-header">
-                        <ui:Button name="bgm-picker-back" class="gimmick-edit-back" text="＜" />
+                        <ui:Button name="bgm-picker-back" class="gimmick-edit-back icon-back" text="" />
                         <ui:Label class="gimmick-picker-title" text="BGM を選択" />
                     </ui:VisualElement>
                     <ui:ScrollView name="bgm-picker-list" class="gimmick-edit-scroll" />

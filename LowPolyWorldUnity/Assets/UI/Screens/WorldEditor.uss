@@ -28,15 +28,32 @@
     font-size: 32px;
 }
 
+/* 戻る / 閉じる アイコン（icon_back を背景に表示） */
+.icon-back {
+    background-image: url("../../Textures/UI/Icons/icon_back.png");
+    -unity-background-scale-mode: scale-to-fit;
+    background-size: 55% 55%;
+    background-position-x: center;
+    background-position-y: center;
+}
+
+/* ワールド名は表示専用（編集は設定タブ） */
 .editor-world-name {
     flex-grow: 1;
     height: 44px;
-    background-color: rgb(30, 30, 42);
-    border-color: rgb(55, 55, 75);
-    border-radius: 8px;
     color: white;
     font-size: 22px;
+    -unity-text-align: middle-left;
     margin: 0 8px;
+}
+
+.editor-world-name--empty {
+    color: rgb(120, 120, 140);
+}
+
+/* チェックボックス（トグル）のチェック枠を角丸にする */
+.unity-toggle__checkmark {
+    border-radius: 5px;
 }
 
 .editor-btn-secondary {

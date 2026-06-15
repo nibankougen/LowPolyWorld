@@ -14,7 +14,7 @@ public class WorldEditorController : MonoBehaviour
 
     // ── ヘッダー ──────────────────────────────────────────────────────────────
     private Button _btnBack;
-    private TextField _fieldWorldName;
+    private Label _fieldWorldName; // ヘッダーは表示専用（編集は設定タブ）
     private Button _btnSave;
     private Button _btnPublish;
 
@@ -226,7 +226,7 @@ public class WorldEditorController : MonoBehaviour
     private void BindElements()
     {
         _btnBack = _root.Q<Button>("btn-back");
-        _fieldWorldName = _root.Q<TextField>("field-world-name");
+        _fieldWorldName = _root.Q<Label>("field-world-name");
         _btnSave = _root.Q<Button>("btn-save");
         _btnPublish = _root.Q<Button>("btn-publish");
 
@@ -315,8 +315,7 @@ public class WorldEditorController : MonoBehaviour
         _btnGizmoScale.clicked += () => SetGizmo(1);
         _btnGizmoRotate.clicked += () => SetGizmo(2);
 
-        // 設定タブ
-        _fieldWorldName.RegisterValueChangedCallback(e => OnWorldNameChanged(e.newValue));
+        // 設定タブ（ワールド名の編集はここのみ。ヘッダーは表示専用）
         _settingsWorldName.RegisterValueChangedCallback(e => OnWorldNameChanged(e.newValue));
 
         _btnTagAdd.clicked += OnTagAddClicked;
@@ -491,8 +490,8 @@ public class WorldEditorController : MonoBehaviour
     {
         if (_settingsLogic == null) return;
 
-        // ワールド名
-        _fieldWorldName?.SetValueWithoutNotify(_settingsLogic.WorldName);
+        // ワールド名（ヘッダーは表示専用 Label・設定タブで編集）
+        SetHeaderWorldName(_settingsLogic.WorldName);
         _settingsWorldName?.SetValueWithoutNotify(_settingsLogic.WorldName);
 
         // タグ
@@ -696,12 +695,17 @@ public class WorldEditorController : MonoBehaviour
     private void OnWorldNameChanged(string value)
     {
         _settingsLogic?.SetWorldName(value);
-        // ヘッダーと設定タブを同期
-        if (_fieldWorldName?.value != value)
-            _fieldWorldName?.SetValueWithoutNotify(value);
-        if (_settingsWorldName?.value != value)
-            _settingsWorldName?.SetValueWithoutNotify(value);
+        // ヘッダー（表示専用）を更新
+        SetHeaderWorldName(value);
         UpdatePublishButton();
+    }
+
+    // ヘッダーのワールド名表示。未入力時はプレースホルダー的な表示にする。
+    private void SetHeaderWorldName(string name)
+    {
+        if (_fieldWorldName == null) return;
+        _fieldWorldName.text = string.IsNullOrEmpty(name) ? "（名称未設定）" : name;
+        _fieldWorldName.EnableInClassList("editor-world-name--empty", string.IsNullOrEmpty(name));
     }
 
     // ── 保存 / 公開 ───────────────────────────────────────────────────────────
