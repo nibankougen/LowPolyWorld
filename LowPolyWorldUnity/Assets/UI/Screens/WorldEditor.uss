@@ -241,11 +241,30 @@
 .color-input {
     width: 120px;
     height: 36px;
-    background-color: rgb(30, 30, 45);
-    border-color: rgb(55, 55, 80);
     border-radius: 6px;
-    color: white;
     font-size: 18px;
+}
+
+/* ── 共通: 文字入力・ドロップダウンの角丸スタイル（ワールド編集画面で統一） ── */
+/* ルート要素は装飾を持たせず、実際の入力ボックス（子要素）を白い角丸に統一する。 */
+.unity-base-text-field,
+.unity-base-popup-field {
+    background-color: transparent;
+    border-width: 0;
+}
+
+.unity-base-text-field__input,
+.unity-base-popup-field__input {
+    background-color: white;
+    border-width: 1px;
+    border-color: rgb(170, 175, 190);
+    border-radius: 8px;
+    color: rgb(35, 35, 45);
+    padding: 4px 10px;
+}
+
+.unity-base-popup-field__input {
+    -unity-text-align: middle-left;
 }
 
 /* ── テストプレイ ── */
@@ -318,10 +337,6 @@
 .tag-input {
     flex-grow: 1;
     height: 42px;
-    background-color: rgb(30, 30, 45);
-    border-color: rgb(55, 55, 80);
-    border-radius: 8px;
-    color: white;
     font-size: 18px;
 }
 
@@ -937,10 +952,12 @@
 .gimmick-state-name {
     flex-grow: 1;
     margin: 0 4px;
+    font-size: 15px;
 }
 
 .gimmick-state-value {
     width: 64px;
+    font-size: 15px;
 }
 
 .gimmick-rules-header {
@@ -1140,16 +1157,16 @@
     margin-top: 4px;
 }
 
-/* 入力欄・ドロップダウンを角丸ボタン風に統一する */
-.gimmick-edit-title .unity-base-text-field__input,
-.gimmick-edit-message-field .unity-base-text-field__input,
-.gimmick-edit-type .unity-base-popup-field__input {
-    background-color: rgb(40, 40, 58);
-    border-width: 1px;
-    border-color: rgb(70, 70, 100);
-    border-radius: 8px;
-    color: rgb(210, 210, 230);
-    padding: 6px 10px;
+/* 入力欄の高さ（見た目は共通スタイルで角丸・白背景に統一） */
+.gimmick-edit-title {
+    font-size: 16px;
+}
+
+.gimmick-edit-type {
+    font-size: 15px;
+}
+
+.gimmick-edit-message-field {
     font-size: 15px;
 }
 
@@ -1163,5 +1180,4 @@
 
 .gimmick-edit-type .unity-base-popup-field__input {
     min-height: 36px;
-    -unity-text-align: middle-left;
 }
