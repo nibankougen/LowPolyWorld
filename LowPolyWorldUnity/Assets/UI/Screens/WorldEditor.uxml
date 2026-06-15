@@ -279,13 +279,14 @@
                     <!-- BGM 設定 -->
                     <ui:VisualElement class="settings-section">
                         <ui:Label class="settings-label" text="BGM" />
-                        <!-- 選択中トラック表示 -->
-                        <ui:VisualElement class="bgm-current">
-                            <ui:Label name="bgm-current-name" class="bgm-current-name" text="なし" />
-                            <ui:Label name="bgm-current-author" class="bgm-current-author" text="" />
-                        </ui:VisualElement>
-                        <!-- トラックリスト -->
-                        <ui:VisualElement name="bgm-track-list" class="bgm-track-list" />
+                        <!-- 選択中トラック表示（タップで選択リストを開く） -->
+                        <ui:Button name="btn-bgm-select" class="bgm-select-btn">
+                            <ui:VisualElement class="bgm-current" picking-mode="Ignore">
+                                <ui:Label name="bgm-current-name" class="bgm-current-name" text="なし" />
+                                <ui:Label name="bgm-current-author" class="bgm-current-author" text="" />
+                            </ui:VisualElement>
+                            <ui:Label class="bgm-select-chevron" text="›" picking-mode="Ignore" />
+                        </ui:Button>
                         <!-- 音量スライダー -->
                         <ui:VisualElement class="settings-row">
                             <ui:Label class="settings-row-label" text="音量" />
@@ -400,6 +401,15 @@
                     </ui:VisualElement>
 
                 </ui:ScrollView>
+
+                <!-- BGM 選択リスト（カテゴリ見出し付き・オーバーレイ） -->
+                <ui:VisualElement name="bgm-picker" class="editor-overlay overlay-hidden">
+                    <ui:VisualElement class="gimmick-edit-header">
+                        <ui:Button name="bgm-picker-back" class="gimmick-edit-back" text="＜" />
+                        <ui:Label class="gimmick-picker-title" text="BGM を選択" />
+                    </ui:VisualElement>
+                    <ui:ScrollView name="bgm-picker-list" class="gimmick-edit-scroll" />
+                </ui:VisualElement>
             </ui:VisualElement>
 
         </ui:VisualElement><!-- end tab-content -->

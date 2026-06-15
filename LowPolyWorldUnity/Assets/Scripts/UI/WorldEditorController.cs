@@ -84,7 +84,8 @@ public class WorldEditorController : MonoBehaviour
     // ── 設定タブ: BGM ─────────────────────────────────────────────────────────
     private Label _bgmCurrentName;
     private Label _bgmCurrentAuthor;
-    private VisualElement _bgmTrackList;
+    private Button _btnBgmSelect;
+    private BgmPickerController _bgmPicker;
     private Slider _sliderBgmVolume;
     private Label _labelBgmVolume;
 
@@ -151,7 +152,7 @@ public class WorldEditorController : MonoBehaviour
         _root = _doc.rootVisualElement.Q("editor-root");
         BindElements();
         RegisterCallbacks();
-        BuildBgmTrackList();
+        _bgmPicker = new BgmPickerController(_root);
         _terrainTab = new TerrainTabController(_root);
         _objectTab = new ObjectTabController(_root);
         _gimmickTab = new GimmickTabController(_root);
@@ -195,9 +196,10 @@ public class WorldEditorController : MonoBehaviour
         ApplySettingsToUI();
 
         // ギミックタブ（ステート定義・ルール一覧）を読み込む
-        // 開きっぱなしのルール編集画面は古いルールを指すため閉じる
+        // 開きっぱなしのルール編集画面 / BGM 選択リストは古いデータを指すため閉じる
         if (_ruleEditTab?.IsOpen == true)
             _ruleEditTab.Close();
+        _bgmPicker?.Close();
         _gimmickTab?.Logic.LoadFrom(WorldCreationManager.Instance?.CurrentDefinition ?? def);
         _gimmickTab?.Refresh();
 
@@ -255,7 +257,7 @@ public class WorldEditorController : MonoBehaviour
 
         _bgmCurrentName = _root.Q<Label>("bgm-current-name");
         _bgmCurrentAuthor = _root.Q<Label>("bgm-current-author");
-        _bgmTrackList = _root.Q("bgm-track-list");
+        _btnBgmSelect = _root.Q<Button>("btn-bgm-select");
         _sliderBgmVolume = _root.Q<Slider>("slider-bgm-volume");
         _labelBgmVolume = _root.Q<Label>("label-bgm-volume");
 
@@ -325,6 +327,9 @@ public class WorldEditorController : MonoBehaviour
             if (_labelBgmVolume != null) _labelBgmVolume.text = $"{(int)e.newValue}%";
         });
 
+        if (_btnBgmSelect != null)
+            _btnBgmSelect.clicked += () => _bgmPicker?.Open(_availableTracks, _bgmSoundId, SelectBgmTrack);
+
         _btnPlayersInc.clicked += () => ChangeMaxPlayers(+1);
         _btnPlayersDec.clicked += () => ChangeMaxPlayers(-1);
 
@@ -390,10 +395,18 @@ public class WorldEditorController : MonoBehaviour
         if (index != 2 && _ruleEditTab?.IsOpen == true)
             _ruleEditTab.Close();
 
+        // 設定タブ以外へ移動するときは BGM 選択リストを閉じる
+        if (index != 3 && _bgmPicker?.IsOpen == true)
+            _bgmPicker.Close();
+
+        // ギミック / 設定タブはワールドの 3D オブジェクトを選択する必要がないので、
+        // タブパネルを通常より大きく（ヘッダー直下まで）開いた状態を既定にする。
+        _tabContent.EnableInClassList("tab-content--tall", index == 2 || index == 3);
+
         if (!_tabContentVisible)
         {
             _tabContentVisible = true;
-            _tabContent.EnableInClassList("overlay-hidden", false);
+            _tabContent.EnableInClassList("tab-content--min", false);
             _btnMinimize.text = "▽";
         }
     }
@@ -401,7 +414,8 @@ public class WorldEditorController : MonoBehaviour
     private void ToggleTabMinimize()
     {
         _tabContentVisible = !_tabContentVisible;
-        _tabContent.EnableInClassList("overlay-hidden", !_tabContentVisible);
+        // overlay-hidden（display:none）ではなく max-height のトランジションで開閉をアニメーションさせる
+        _tabContent.EnableInClassList("tab-content--min", !_tabContentVisible);
         _btnMinimize.text = _tabContentVisible ? "▽" : "△";
     }
 
@@ -457,7 +471,6 @@ public class WorldEditorController : MonoBehaviour
         _sliderBgmVolume?.SetValueWithoutNotify(_settingsLogic.BgmVolume);
         if (_labelBgmVolume != null) _labelBgmVolume.text = $"{_settingsLogic.BgmVolume}%";
         RefreshBgmCurrentDisplay();
-        RefreshBgmTrackList();
 
         // 人数上限
         if (_labelMaxPlayers != null) _labelMaxPlayers.text = _settingsLogic.MaxPlayers.ToString();
@@ -564,62 +577,11 @@ public class WorldEditorController : MonoBehaviour
 
     // ── BGM UI ────────────────────────────────────────────────────────────────
 
-    private void BuildBgmTrackList()
-    {
-        _bgmTrackList?.Clear();
-        foreach (var track in _availableTracks)
-        {
-            var item = BuildBgmTrackItem(track);
-            _bgmTrackList?.Add(item);
-        }
-    }
-
-    private VisualElement BuildBgmTrackItem(WorldMusicTrack track)
-    {
-        var row = new VisualElement();
-        row.AddToClassList("bgm-track-item");
-        if (track.SoundId == _bgmSoundId)
-            row.AddToClassList("bgm-track-item--active");
-
-        // 種別バッジ
-        if (track.Kind != TrackKind.None)
-        {
-            var badge = new Label();
-            badge.AddToClassList("bgm-track-item__kind");
-            if (track.Kind == TrackKind.Ambient)
-            {
-                badge.text = "環境音";
-                badge.AddToClassList("bgm-kind-ambient");
-            }
-            else
-            {
-                badge.text = "BGM";
-                badge.AddToClassList("bgm-kind-bgm");
-            }
-            row.Add(badge);
-        }
-
-        var nameLabel = new Label { text = track.DisplayName };
-        nameLabel.AddToClassList("bgm-track-item__name");
-        row.Add(nameLabel);
-
-        if (!string.IsNullOrEmpty(track.AuthorName))
-        {
-            var authorLabel = new Label { text = track.AuthorName };
-            authorLabel.AddToClassList("bgm-track-item__author");
-            row.Add(authorLabel);
-        }
-
-        row.RegisterCallback<ClickEvent>(_ => SelectBgmTrack(track.SoundId));
-        return row;
-    }
-
     private void SelectBgmTrack(string soundId)
     {
         _bgmSoundId = soundId;
         _settingsLogic?.SetBgmSoundId(soundId);
         RefreshBgmCurrentDisplay();
-        RefreshBgmTrackList();
     }
 
     private void RefreshBgmCurrentDisplay()
@@ -628,10 +590,6 @@ public class WorldEditorController : MonoBehaviour
         if (_bgmCurrentName != null) _bgmCurrentName.text = track?.DisplayName ?? _bgmSoundId;
         if (_bgmCurrentAuthor != null) _bgmCurrentAuthor.text = track?.AuthorName ?? "";
     }
-
-    // DOM とデータの同期ずれを防ぐため、リスト全体を再構築する。
-    // リストは最大 ~10 件なので再構築コストは無視できる。
-    private void RefreshBgmTrackList() => BuildBgmTrackList();
 
     // ── 人数上限 ──────────────────────────────────────────────────────────────
 

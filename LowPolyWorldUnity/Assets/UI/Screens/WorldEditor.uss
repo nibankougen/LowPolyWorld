@@ -163,6 +163,18 @@
 .tab-content {
     background-color: rgba(15, 15, 22, 0.95);
     max-height: 55%;
+    overflow: hidden;
+    transition: max-height 0.22s ease-in-out;
+}
+
+/* ギミック / 設定タブ: ヘッダー直下まで大きく開いた状態を既定にする */
+.tab-content--tall {
+    max-height: 92%;
+}
+
+/* メニュー最小化（▽）: max-height を 0 にしてアニメーションで閉じる */
+.tab-content--min {
+    max-height: 0;
 }
 
 .tab-panel {
@@ -388,19 +400,29 @@
 }
 
 /* ── BGM ── */
-.bgm-current {
+/* BGM 選択ボタン（タップで選択リストオーバーレイを開く） */
+.bgm-select-btn {
     flex-direction: row;
     align-items: center;
     padding: 8px 12px;
     background-color: rgb(30, 50, 100);
+    border-width: 0;
     border-radius: 8px;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
+}
+
+.bgm-current {
+    flex-direction: row;
+    align-items: center;
+    flex-grow: 1;
+    background-color: transparent;
 }
 
 .bgm-current-name {
     flex-grow: 1;
     color: white;
     font-size: 20px;
+    -unity-text-align: middle-left;
 }
 
 .bgm-current-author {
@@ -408,49 +430,27 @@
     font-size: 16px;
 }
 
-.bgm-track-list {
-    flex-direction: column;
-    max-height: 200px;
-    overflow: hidden;
+.bgm-select-chevron {
+    color: rgb(180, 200, 255);
+    font-size: 24px;
+    margin-left: 8px;
 }
 
-.bgm-track-item {
-    flex-direction: row;
-    align-items: center;
-    height: 52px;
-    padding: 0 12px;
-    border-radius: 6px;
-}
-
-.bgm-track-item--active {
-    background-color: rgb(40, 60, 130);
-}
-
-.bgm-track-item__name {
-    flex-grow: 1;
+/* BGM 選択リスト（ピッカー）の項目内テキスト */
+.bgm-picker-name {
     color: rgb(220, 220, 240);
-    font-size: 20px;
-}
-
-.bgm-track-item__author {
-    color: rgb(140, 150, 180);
     font-size: 16px;
+    -unity-text-align: middle-left;
 }
 
-.bgm-track-item__kind {
-    font-size: 14px;
-    padding: 2px 8px;
-    border-radius: 4px;
-    margin-right: 8px;
+.gimmick-picker-item--selected .bgm-picker-name {
     color: white;
 }
 
-.bgm-kind-ambient {
-    background-color: rgb(40, 100, 80);
-}
-
-.bgm-kind-bgm {
-    background-color: rgb(80, 50, 130);
+.bgm-picker-author {
+    color: rgb(140, 150, 180);
+    font-size: 12px;
+    -unity-text-align: middle-left;
 }
 
 /* ── ステッパー（人数上限） ── */
@@ -1084,7 +1084,8 @@
 }
 
 /* ── ルール編集画面（オーバーレイ） ── */
-.gimmick-rule-editor {
+.gimmick-rule-editor,
+.editor-overlay {
     position: absolute;
     left: 0;
     top: 0;
@@ -1234,8 +1235,9 @@
 }
 
 .gimmick-picker-item {
-    height: 42px;
+    min-height: 42px;
     margin: 2px 10px;
+    justify-content: center;
     background-color: rgb(36, 36, 50);
     border-width: 1px;
     border-color: rgb(60, 60, 85);
@@ -1243,7 +1245,7 @@
     color: rgb(210, 210, 230);
     font-size: 15px;
     -unity-text-align: middle-left;
-    padding: 0 12px;
+    padding: 4px 12px;
 }
 
 .gimmick-picker-item:hover {

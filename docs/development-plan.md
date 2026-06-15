@@ -889,14 +889,14 @@
 - [x] `WorldCreationManager` 実装（スケルトン・BGM接続）
 - [x] ワールドスロット一覧画面（新規作成・既存編集・削除）— `WorldManageTab.uxml/uss` + `WorldManageTabController.cs`・ロック表示対応
 - [x] ワールド設定パネルのタグ入力 UI（最大5個・テキスト入力・チップ表示・削除）— `WorldEditor.uxml` + `WorldEditorController`
-- [x] ワールド設定パネルの環境音選択 UI（内蔵ライブラリ一覧・音量スライダー 0〜100%）— `WorldMusicLibrary` + `WorldEditorController`
+- [x] ワールド設定パネルの環境音選択 UI（内蔵ライブラリ一覧・音量スライダー 0〜100%）— `WorldMusicLibrary` + `WorldEditorController`。選択は**オーバーレイ選択リスト**（`BgmPickerController`・種別ごとに見出し=環境音/BGM/購入済み BGM・曲名+作者表示）
 - [x] ワールド定義 JSON への `worldBgm` フィールド対応（保存・読み込み）— `WorldDefinitionJson` / `WorldSettingsPanelLogic`
 - [x] ワールド設定パネルの人数上限 UI（デフォルト 6・通常ユーザー: 2〜6 / プレミアム: 2〜24）— `WorldEditorController` ステッパー
 - [x] ワールド定義 JSON への `maxPlayers` フィールド対応（保存・読み込み）— `WorldSettingsPanelLogic`
 - [x] 環境音プレイヤーへのワールド定義 JSON の反映（入場時に再生・退場時に停止）— `WorldCreationManager.ApplyBgmToPlayer()`
 - [x] ワールド選択画面のタグフィルター UI（横スクロールチップ・複数選択）— `WorldTab.uxml/uss` 更新
 - [x] ワールドエディタ UI（セクション 11.7）
-  - [x] レイアウト: ヘッダー・上部中央ギズモ切り替えボタン（移動/拡大縮小/回転）・3D ビュー・下部タブ（地形/オブジェクト/ギミック/設定）— `WorldEditor.uxml/uss` + `WorldEditorController`
+  - [x] レイアウト: ヘッダー・上部中央ギズモ切り替えボタン（移動/拡大縮小/回転）・3D ビュー・下部タブ（地形/オブジェクト/ギミック/設定）— `WorldEditor.uxml/uss` + `WorldEditorController`。ギミック/設定タブ（3D 選択不要）は下部タブパネルをヘッダー直下まで大きく開いた状態を既定化（`tab-content--tall`）。メニュー開閉（▽/△）は max-height トランジションでアニメーション
   - [ ] グリッドスナップ（移動: 0.5m 単位 / 63×31×63 グリッド / 原点中心）— ロジック `ObjectGridSnap` / `ObjectGizmoLogic`（移動・回転45°・スケール0.25m・scaleLock）実装済み。3D ビュー/ギズモ配線は未
   - [ ] プレイヤーリスポーン: 64×64×64 の範囲外に出たらスポーン位置に自動リスポーン — 判定 `ObjectGridSnap.IsInsidePlayArea` 実装済み・PlayerController 配線は未
   - [ ] テクスチャコストのリアルタイム計算と表示（右上・上限 4,096）— 集計 `ObjectPlacementStore.CalculateCost` / `TextureCostCalculator` 実装済み・UI 表示は未
