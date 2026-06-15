@@ -188,6 +188,45 @@
 
                 <!-- フラッシュメッセージ -->
                 <ui:Label name="gimmick-flash" class="object-flash overlay-hidden" text="" />
+
+                <!-- ルール編集画面（タップでタブ拡大・オーバーレイ） -->
+                <ui:VisualElement name="gimmick-rule-editor" class="gimmick-rule-editor overlay-hidden">
+                    <ui:VisualElement class="gimmick-edit-header">
+                        <ui:Button name="rule-edit-back" class="gimmick-edit-back" text="＜" />
+                        <ui:TextField name="rule-edit-title" class="gimmick-edit-title" />
+                    </ui:VisualElement>
+
+                    <ui:ScrollView class="gimmick-edit-scroll">
+                        <!-- 入力イベント（OR 結合） -->
+                        <ui:VisualElement class="gimmick-edit-section">
+                            <ui:VisualElement class="gimmick-edit-section-head">
+                                <ui:Label class="gimmick-subhead" text="入力イベント（いずれか発火 / 最大 20）" />
+                                <ui:Button name="rule-edit-add-trigger" class="gimmick-add-btn gimmick-icon-btn gimmick-icon-btn--plus" text="" />
+                            </ui:VisualElement>
+                            <ui:VisualElement name="rule-edit-trigger-list" class="gimmick-edit-list" />
+                        </ui:VisualElement>
+
+                        <!-- 条件（AND 結合） -->
+                        <ui:VisualElement class="gimmick-edit-section">
+                            <ui:VisualElement class="gimmick-edit-section-head">
+                                <ui:Label class="gimmick-subhead" text="条件（すべて満たす / 最大 20）" />
+                                <ui:Button name="rule-edit-add-condition" class="gimmick-add-btn gimmick-icon-btn gimmick-icon-btn--plus" text="" />
+                            </ui:VisualElement>
+                            <ui:VisualElement name="rule-edit-condition-list" class="gimmick-edit-list" />
+                        </ui:VisualElement>
+
+                        <!-- アクション（順番に実行） -->
+                        <ui:VisualElement class="gimmick-edit-section">
+                            <ui:VisualElement class="gimmick-edit-section-head">
+                                <ui:Label class="gimmick-subhead" text="アクション（順番に実行 / 最大 20）" />
+                                <ui:Button name="rule-edit-add-action" class="gimmick-add-btn gimmick-icon-btn gimmick-icon-btn--plus" text="" />
+                            </ui:VisualElement>
+                            <ui:VisualElement name="rule-edit-action-list" class="gimmick-edit-list" />
+                        </ui:VisualElement>
+                    </ui:ScrollView>
+
+                    <ui:Label name="rule-edit-flash" class="object-flash overlay-hidden" text="" />
+                </ui:VisualElement>
             </ui:VisualElement>
 
             <!-- ───── 設定タブ ───── -->

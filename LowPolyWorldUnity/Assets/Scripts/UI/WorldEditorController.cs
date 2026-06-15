@@ -56,9 +56,13 @@ public class WorldEditorController : MonoBehaviour
 
     // ── ギミックタブ ──────────────────────────────────────────────────────────
     private GimmickTabController _gimmickTab;
+    private RuleEditController _ruleEditTab;
 
     /// <summary>ギミックタブ UI（ステート定義・ルール一覧）。</summary>
     public GimmickTabController GimmickTab => _gimmickTab;
+
+    /// <summary>ギミックのルール編集画面 UI。</summary>
+    public RuleEditController RuleEditTab => _ruleEditTab;
 
     /// <summary>ギズモ操作モード（上部ギズモバー）。</summary>
     public enum WorldGizmoMode { Move, Scale, Rotate }
@@ -151,6 +155,11 @@ public class WorldEditorController : MonoBehaviour
         _terrainTab = new TerrainTabController(_root);
         _objectTab = new ObjectTabController(_root);
         _gimmickTab = new GimmickTabController(_root);
+        _ruleEditTab = new RuleEditController(_root);
+
+        // ルールの「編集」/ 追加でルール編集画面を開き、戻ったら一覧を更新する
+        _gimmickTab.RuleEditRequested += ruleId => _ruleEditTab.Open(_gimmickTab.Logic, ruleId);
+        _ruleEditTab.Closed += () => _gimmickTab.Refresh();
     }
 
     // ── 公開 API ─────────────────────────────────────────────────────────────
@@ -186,6 +195,9 @@ public class WorldEditorController : MonoBehaviour
         ApplySettingsToUI();
 
         // ギミックタブ（ステート定義・ルール一覧）を読み込む
+        // 開きっぱなしのルール編集画面は古いルールを指すため閉じる
+        if (_ruleEditTab?.IsOpen == true)
+            _ruleEditTab.Close();
         _gimmickTab?.Logic.LoadFrom(WorldCreationManager.Instance?.CurrentDefinition ?? def);
         _gimmickTab?.Refresh();
 
@@ -373,6 +385,10 @@ public class WorldEditorController : MonoBehaviour
         // ギズモバーはオブジェクトタブ以外では隠す（選択中の表示はシーン統合側が制御）
         if (index != 1)
             ShowGizmoBar(false);
+
+        // ギミックタブ以外へ移動するときはルール編集画面を閉じる
+        if (index != 2 && _ruleEditTab?.IsOpen == true)
+            _ruleEditTab.Close();
 
         if (!_tabContentVisible)
         {

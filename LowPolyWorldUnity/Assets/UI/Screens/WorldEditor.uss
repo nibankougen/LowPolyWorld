@@ -1035,3 +1035,110 @@
 .gimmick-icon-btn--close {
     background-image: url("../../Textures/UI/Icons/icon_close.png");
 }
+
+/* ── ルール編集画面（オーバーレイ） ── */
+.gimmick-rule-editor {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgb(22, 22, 32);
+    flex-direction: column;
+}
+
+.gimmick-edit-header {
+    flex-direction: row;
+    align-items: center;
+    height: 48px;
+    padding: 0 8px;
+    border-bottom-width: 1px;
+    border-color: rgb(40, 40, 56);
+}
+
+.gimmick-edit-back {
+    width: 40px;
+    height: 38px;
+    background-color: rgb(40, 40, 58);
+    border-width: 1px;
+    border-color: rgb(70, 70, 100);
+    border-radius: 6px;
+    color: rgb(205, 205, 225);
+    font-size: 18px;
+    padding: 0;
+}
+
+.gimmick-edit-title {
+    flex-grow: 1;
+    margin-left: 8px;
+    font-size: 16px;
+}
+
+.gimmick-edit-scroll {
+    flex-grow: 1;
+}
+
+.gimmick-edit-section {
+    padding: 6px 10px;
+    border-bottom-width: 1px;
+    border-color: rgb(40, 40, 56);
+}
+
+.gimmick-edit-section-head {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.gimmick-edit-list {
+    flex-direction: column;
+    padding: 4px 0;
+}
+
+.gimmick-edit-empty {
+    color: rgb(110, 110, 140);
+    font-size: 13px;
+    -unity-text-align: middle-center;
+    padding: 8px;
+}
+
+.gimmick-edit-row {
+    flex-direction: column;
+    margin: 3px 0;
+    padding: 6px;
+    background-color: rgb(30, 30, 42);
+    border-width: 1px;
+    border-color: rgb(55, 55, 75);
+    border-radius: 8px;
+}
+
+.gimmick-edit-row-main {
+    flex-direction: row;
+    align-items: center;
+}
+
+.gimmick-edit-type {
+    flex-grow: 1;
+    margin-right: 4px;
+}
+
+.gimmick-edit-row-btn {
+    width: 30px;
+    height: 30px;
+    margin-left: 4px;
+    background-color: rgb(40, 40, 58);
+    border-width: 1px;
+    border-color: rgb(70, 70, 100);
+    border-radius: 6px;
+    color: rgb(200, 200, 220);
+    font-size: 15px;
+    padding: 0;
+}
+
+.gimmick-edit-message {
+    margin-top: 6px;
+}
+
+.gimmick-edit-message-field {
+    margin-top: 4px;
+}

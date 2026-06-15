@@ -936,15 +936,15 @@
   - [x] ステート定義エリア（折りたたみ可）: ワールドステート(0〜9)・プレイヤーステート(0〜3)・タイマー(0〜4) の名前(1〜20文字)+初期値(0〜255)入力 — テスト済み
   - [~] ルール一覧: タイトル名変更（インライン・1〜20文字・空不可）・並び替え（▲▼アイコン。**D&D は未**）・追加/削除・合計 100 上限。ボタンは Icons の icon_plus/icon_edit/icon_up/icon_down/icon_close を使用。**グループ化 UI は未**（オブジェクトグループと同仕様予定）
   - [ ] テンプレートから追加（world-creation.md 9.12 — テンプレート一覧 / パラメータダイアログ / 空きステート・タイマー自動割り当て / 初期 6 種: チーム分け・鬼ごっこ基本・カウントダウン・周期処理・コンビネーションロック・レース計測）
-  - [~] ルール編集画面（タップでタブ拡大）— 編集ロジック `GimmickRuleEditLogic`（純粋C#・テスト済み）実装済み。単一 `GimmickRule` の入力イベント/条件/アクションの追加・削除・並び替え（各最大 20）・種別変更（正規 ID 一覧 + 既定フォールバック）・文字メッセージの言語別編集（80 文字クランプ）を担当し編集結果を `GimmickRule` 配列へ即時反映。UI（UXML/USS・WorldEditorController 配線）は未
-    - [~] 入力イベントセクション（+で追加・最大 20・OR 結合）— ロジック `AddTrigger`/`RemoveTrigger`/`MoveTrigger`/`SetTriggerType` 実装済み・UI 未
-    - [~] 条件セクション（+で追加・最大 20・AND 結合）— ロジック `AddCondition`/`RemoveCondition`/`MoveCondition`/`SetConditionType` 実装済み・UI 未
-    - [~] アクションセクション（+で追加・最大 20・順番実行）— ロジック `AddAction`/`RemoveAction`/`MoveAction`/`SetActionType` 実装済み・UI 未
+  - [~] ルール編集画面（タップでタブ拡大）— ロジック `GimmickRuleEditLogic`（純粋C#・テスト済み）+ UI `RuleEditController`（`WorldEditor.uxml/uss` の panel-gimmicks 内オーバーレイ・`WorldEditorController` 配線）。`GimmickTabController.RuleEditRequested`（編集/追加）で開き、＜戻る で `Closed`→一覧 Refresh。タブ移動/ワールド再読込時は自動クローズ。タイトル改名（インライン・空不可）。残: 種別ごとの詳細パラメータフォーム・オブジェクト指定・多言語/D&D
+    - [x] 入力イベントセクション（+で追加・最大 20・OR 結合）— 種別ドロップダウン（日本語ラベル）+ ▲▼× 並替/削除。上限到達でフラッシュ
+    - [x] 条件セクション（+で追加・最大 20・AND 結合）— 同上（0 件時「条件なし（常に成立）」表示）
+    - [x] アクションセクション（+で追加・最大 20・順番実行）— 同上
     - [ ] 値入力種別: 固定値 / ワールドステート参照 / 関わったプレイヤーのステート参照 / 全プレイヤーステート合計 / 範囲乱数（オーナー生成・共有）
     - [ ] 比較演算: 大小等 / X で割った余りが Y
     - [ ] 対象プレイヤー選択: 入力プレイヤー / 相手プレイヤー（存在するとき）/ 全員
     - [ ] オブジェクト指定: 3D ビュータップ or 利用中オブジェクト一覧タップ
-    - [~] 文字メッセージアクション: デフォルト単言語入力 / 詳細で言語別入力（各 80 文字以内・フォールバック英語優先）— ロジック `SetActionMessage`/`RemoveActionMessage`（言語別 upsert・80 文字クランプ）実装済み・UI/フォールバック表示は未
+    - [~] 文字メッセージアクション: デフォルト単言語入力 / 詳細で言語別入力（各 80 文字以内・フォールバック英語優先）— ロジック `SetActionMessage`/`RemoveActionMessage` + UI のデフォルト言語テキスト欄（multiline・80 字）実装済み。詳細（言語別入力）・閲覧者フォールバック表示は未
     - [ ] 値入力種別 UI: 固定値 / 範囲乱数 等（正規 ID 一覧 `GimmickRuleEditLogic.ValueKinds`/`CompareOps`/`PlayerTargets`/`StateOps`/`ResetTargets` をドロップダウンに利用）
 - [x] 設定タブ（ワールド設定パネル UI）— `WorldEditor.uxml/uss` + `WorldEditorController`
   - [x] テストプレイボタン（オフライン・シングルプレイヤー）・「＜」戻るボタン（TODO: 実際のシーン遷移）

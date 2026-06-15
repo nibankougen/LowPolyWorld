@@ -54,7 +54,30 @@ public class WorldEditorUiPreview : MonoBehaviour
             gimmicks = new[]
             {
                 new GimmickRule { ruleId = "r1", label = "開始時に得点リセット" },
-                new GimmickRule { ruleId = "r2", label = "ゴール接触で加点" },
+                // r2 は入力イベント / 条件 / アクションを事前投入し、ルール編集画面の
+                // 表示確認をしやすくする（「編集」ボタンで開ける）
+                new GimmickRule
+                {
+                    ruleId = "r2",
+                    label = "ゴール接触で加点",
+                    triggers = new[]
+                    {
+                        new GimmickTrigger { type = "playerTouchObject" },
+                    },
+                    conditions = new[]
+                    {
+                        new GimmickCondition { type = "worldState" },
+                    },
+                    actions = new[]
+                    {
+                        new GimmickAction { type = "setWorldState" },
+                        new GimmickAction
+                        {
+                            type = "showMessage",
+                            texts = new[] { new GimmickTextJson { lang = "", text = "ゴール！" } },
+                        },
+                    },
+                },
                 new GimmickRule { ruleId = "r3", label = "ルール3" },
             },
         };
