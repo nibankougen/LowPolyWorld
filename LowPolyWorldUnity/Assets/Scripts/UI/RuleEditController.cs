@@ -137,7 +137,7 @@ public class RuleEditController
         {
             int index = i;
             var row = BuildRow(
-                GimmickRuleEditLogic.TriggerTypes, TriggerLabels, _edit.Triggers[i].type,
+                GimmickTypeCatalog.TriggerCategories, GimmickTypeCatalog.TriggerLabel, _edit.Triggers[i].type,
                 newType => { _edit.SetTriggerType(index, newType); RefreshTriggers(); },
                 () => { _edit.MoveTrigger(index, index - 1); RefreshTriggers(); },
                 () => { _edit.MoveTrigger(index, index + 1); RefreshTriggers(); },
@@ -170,7 +170,7 @@ public class RuleEditController
         {
             int index = i;
             var row = BuildRow(
-                GimmickRuleEditLogic.ConditionTypes, ConditionLabels, _edit.Conditions[i].type,
+                GimmickTypeCatalog.ConditionCategories, GimmickTypeCatalog.ConditionLabel, _edit.Conditions[i].type,
                 newType => { _edit.SetConditionType(index, newType); RefreshConditions(); },
                 () => { _edit.MoveCondition(index, index - 1); RefreshConditions(); },
                 () => { _edit.MoveCondition(index, index + 1); RefreshConditions(); },
@@ -204,7 +204,7 @@ public class RuleEditController
             int index = i;
             var action = _edit.Actions[i];
             var row = BuildRow(
-                GimmickRuleEditLogic.ActionTypes, ActionLabels, action.type,
+                GimmickTypeCatalog.ActionCategories, GimmickTypeCatalog.ActionLabel, action.type,
                 newType => { _edit.SetActionType(index, newType); RefreshActions(); },
                 () => { _edit.MoveAction(index, index - 1); RefreshActions(); },
                 () => { _edit.MoveAction(index, index + 1); RefreshActions(); },
@@ -253,10 +253,11 @@ public class RuleEditController
 
     // ── 行ビルダー ────────────────────────────────────────────────────────────
 
-    // 種別ドロップダウン + 上 / 下 / 削除 ボタンの 1 行を生成する。
+    // カテゴリ + 種別の 2 段ドロップダウン + 上 / 下 / 削除 ボタンの 1 行を生成する。
+    // 種別が多いので、まずカテゴリ（ジャンル）で絞り込んでから種別を選ぶ。
     private VisualElement BuildRow(
-        string[] typeIds,
-        IReadOnlyDictionary<string, string> labels,
+        IReadOnlyList<GimmickTypeCatalog.Category> categories,
+        Func<string, string> labelOf,
         string currentType,
         Action<string> onTypeChanged,
         Action onMoveUp,
@@ -266,31 +267,51 @@ public class RuleEditController
         var row = new VisualElement();
         row.AddToClassList("gimmick-edit-row");
 
+        // 上段: カテゴリドロップダウン + 並び替え / 削除ボタン
         var main = new VisualElement();
         main.AddToClassList("gimmick-edit-row-main");
 
-        var choices = new List<string>(typeIds.Length);
-        foreach (var id in typeIds)
-            choices.Add(labels.TryGetValue(id, out var l) ? l : id);
+        int catIndex = GimmickTypeCatalog.CategoryIndexOf(categories, currentType);
+        var category = categories[catIndex];
 
-        int current = Array.IndexOf(typeIds, currentType);
-        if (current < 0) current = 0;
+        var catChoices = new List<string>(categories.Count);
+        foreach (var cat in categories)
+            catChoices.Add(cat.Label);
 
-        var dropdown = new DropdownField(choices, current);
-        dropdown.AddToClassList("gimmick-edit-type");
-        dropdown.RegisterValueChangedCallback(_ =>
+        var categoryDropdown = new DropdownField(catChoices, catIndex);
+        categoryDropdown.AddToClassList("gimmick-edit-category");
+        categoryDropdown.RegisterValueChangedCallback(_ =>
         {
-            int idx = dropdown.index;
-            if ((uint)idx < (uint)typeIds.Length)
-                onTypeChanged(typeIds[idx]);
+            int idx = categoryDropdown.index;
+            if ((uint)idx < (uint)categories.Count)
+                // カテゴリ変更時はそのカテゴリの先頭種別に切り替える（再構築で種別欄が更新される）
+                onTypeChanged(categories[idx].TypeIds[0]);
         });
-        main.Add(dropdown);
+        main.Add(categoryDropdown);
 
         main.Add(MakeBtn("gimmick-icon-btn--up", "上へ移動", onMoveUp));
         main.Add(MakeBtn("gimmick-icon-btn--down", "下へ移動", onMoveDown));
         main.Add(MakeBtn("gimmick-icon-btn--close", "削除", onRemove));
-
         row.Add(main);
+
+        // 下段: 選択中カテゴリ内の種別ドロップダウン
+        var typeChoices = new List<string>(category.TypeIds.Length);
+        foreach (var id in category.TypeIds)
+            typeChoices.Add(labelOf(id));
+
+        int typeIndex = Array.IndexOf(category.TypeIds, currentType);
+        if (typeIndex < 0) typeIndex = 0;
+
+        var typeDropdown = new DropdownField(typeChoices, typeIndex);
+        typeDropdown.AddToClassList("gimmick-edit-type");
+        typeDropdown.RegisterValueChangedCallback(_ =>
+        {
+            int idx = typeDropdown.index;
+            if ((uint)idx < (uint)category.TypeIds.Length)
+                onTypeChanged(category.TypeIds[idx]);
+        });
+        row.Add(typeDropdown);
+
         return row;
     }
 
@@ -322,56 +343,4 @@ public class RuleEditController
         _flashHide?.Pause();
         _flashHide = _flash.schedule.Execute(() => _flash.EnableInClassList("overlay-hidden", true)).StartingIn(1800);
     }
-
-    // ── 種別の日本語表示ラベル ────────────────────────────────────────────────
-
-    private static readonly Dictionary<string, string> TriggerLabels = new()
-    {
-        { "roomStart", "ルーム開始時" },
-        { "playerCountChanged", "人数が変化したとき" },
-        { "playerTouchObject", "オブジェクトに接触したとき" },
-        { "objectTap", "オブジェクトをタップしたとき" },
-        { "areaEnter", "エリアに入ったとき" },
-        { "areaExit", "エリアから出たとき" },
-        { "timerReached", "タイマーが到達したとき" },
-        { "actionButton", "アクションボタンを押したとき" },
-        { "playerTouchPlayer", "プレイヤー同士が接触したとき" },
-        { "respawn", "リスポーンしたとき" },
-        { "inRoomPortalUsed", "ルーム内ポータルを使ったとき" },
-    };
-
-    private static readonly Dictionary<string, string> ConditionLabels = new()
-    {
-        { "worldState", "ワールドステート比較" },
-        { "playerState", "プレイヤーステート比較" },
-        { "playerCount", "現在人数比較" },
-        { "playerNumber", "プレイヤー番号比較" },
-        { "timerCompare", "タイマー値比較" },
-        { "hasObject", "オブジェクトを持っている" },
-        { "playersOverlapping", "プレイヤーが重なっている" },
-        { "playerDistance", "プレイヤーとの距離" },
-        { "playerLineOfSight", "プレイヤーが視線上にいる" },
-    };
-
-    private static readonly Dictionary<string, string> ActionLabels = new()
-    {
-        { "setWorldState", "ワールドステートを変更" },
-        { "setPlayerState", "プレイヤーステートを変更" },
-        { "timerStart", "タイマーを開始" },
-        { "timerStop", "タイマーを停止" },
-        { "timerReset", "タイマーをリセット" },
-        { "showHideObject", "オブジェクトの表示を切替" },
-        { "changeObjectType", "オブジェクトの種類を変更" },
-        { "showMessage", "文字メッセージを表示" },
-        { "pickupObject", "オブジェクトを持つ" },
-        { "grantObject", "オブジェクトを付与" },
-        { "playSound", "効果音を鳴らす" },
-        { "switchBgm", "BGM を切り替える" },
-        { "moveObject", "オブジェクトを移動" },
-        { "teleportPlayer", "プレイヤーをワープ" },
-        { "resetState", "状態をリセット" },
-        { "playEffect", "エフェクトを再生" },
-        { "setMoveSpeed", "移動速度を変更" },
-        { "setPlayerMarker", "頭上マーカーを表示" },
-    };
 }

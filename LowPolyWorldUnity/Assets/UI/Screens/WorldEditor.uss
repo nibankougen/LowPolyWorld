@@ -1163,9 +1163,16 @@
     align-items: center;
 }
 
-.gimmick-edit-type {
+/* 上段: カテゴリ（ジャンル）ドロップダウン */
+.gimmick-edit-category {
     flex-grow: 1;
     margin-right: 4px;
+}
+
+/* 下段: 選択カテゴリ内の種別ドロップダウン（全幅） */
+.gimmick-edit-type {
+    flex-grow: 1;
+    margin-top: 6px;
 }
 
 .gimmick-edit-row-btn {
@@ -1192,6 +1199,7 @@
     font-size: 16px;
 }
 
+.gimmick-edit-category,
 .gimmick-edit-type {
     font-size: 15px;
 }
@@ -1208,6 +1216,7 @@
     min-height: 56px;
 }
 
+.gimmick-edit-category .unity-base-popup-field__input,
 .gimmick-edit-type .unity-base-popup-field__input {
     min-height: 36px;
 }
