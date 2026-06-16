@@ -1499,3 +1499,124 @@
     color: var(--lpw-text-on-accent);
     font-size: 16px;
 }
+
+/* ── 会話（ライブラリ / エディタ）── */
+/* ライブラリの会話行 */
+.conv-row {
+    flex-direction: row;
+    align-items: center;
+    min-height: 44px;
+    margin: 3px 10px;
+    padding: 0 6px;
+    background-color: var(--lpw-surface-muted);
+    border-width: 1px;
+    border-color: var(--lpw-border);
+    border-radius: 8px;
+}
+
+.conv-name {
+    flex-grow: 1;
+    color: var(--lpw-text);
+    font-size: 15px;
+    -unity-text-align: middle-left;
+    background-color: transparent;
+    border-width: 0;
+    padding: 0 4px;
+}
+
+.conv-meta {
+    color: var(--lpw-text-muted);
+    font-size: 12px;
+    margin-right: 6px;
+}
+
+.conv-small-btn {
+    width: 30px;
+    height: 30px;
+    margin-left: 4px;
+    background-color: var(--lpw-surface-sunken);
+    border-width: 1px;
+    border-color: var(--lpw-border);
+    border-radius: 6px;
+    padding: 0;
+}
+
+/* エディタのセリフ行カード */
+.conv-line-card {
+    flex-direction: column;
+    margin: 4px 10px;
+    padding: 8px;
+    background-color: var(--lpw-surface-muted);
+    border-width: 1px;
+    border-color: var(--lpw-border);
+    border-radius: 8px;
+}
+
+.conv-line-head {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.conv-line-index {
+    width: 26px;
+    color: var(--lpw-text-muted);
+    font-size: 13px;
+    -unity-text-align: middle-left;
+}
+
+.conv-line-speaker {
+    flex-grow: 1;
+    font-size: 14px;
+}
+
+.conv-line-text {
+    font-size: 15px;
+    white-space: normal;
+}
+
+.conv-line-text .unity-text-field__input {
+    min-height: 48px;
+    white-space: normal;
+}
+
+.conv-row-label {
+    color: var(--lpw-text-muted);
+    font-size: 12px;
+    margin: 6px 0 2px 0;
+}
+
+.conv-goto {
+    margin-top: 2px;
+}
+
+.conv-choice-row {
+    flex-direction: row;
+    align-items: center;
+    margin: 2px 0 2px 12px;
+}
+
+.conv-choice-text {
+    flex-grow: 1;
+    font-size: 14px;
+}
+
+.conv-add-choice-btn {
+    height: 30px;
+    margin: 4px 0 0 12px;
+    padding: 0 10px;
+    align-self: flex-start;
+    background-color: var(--lpw-surface-sunken);
+    border-width: 1px;
+    border-color: var(--lpw-border);
+    border-radius: 6px;
+    color: var(--lpw-text-secondary);
+    font-size: 13px;
+}
+
+.conv-empty {
+    color: var(--lpw-text-muted);
+    font-size: 14px;
+    -unity-text-align: middle-center;
+    padding: 12px;
+}

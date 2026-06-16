@@ -97,6 +97,27 @@ public class ConversationValidatorTests
         Assert.IsTrue(errors.Exists(e => e.Contains("会話 ID が重複")));
     }
 
+    [Test]
+    public void ValidateAll_TotalLinesOverLimit_Fails()
+    {
+        var list = new System.Collections.Generic.List<ConversationJson>();
+        // 11 会話 × 50 行 = 550 行 > 500（全体上限）
+        for (int c = 0; c < 11; c++)
+        {
+            var conv = new ConversationJson { conversationId = $"c{c}", name = $"会話{c}" };
+            var edit = new ConversationEditLogic(conv);
+            for (int i = 0; i < ConversationEditLogic.MaxLines; i++)
+            {
+                var line = edit.AddLine();
+                edit.SetLineText(line.lineId, "", "セリフ");
+            }
+            list.Add(conv);
+        }
+
+        var errors = ConversationValidator.ValidateAll(list);
+        Assert.IsTrue(errors.Exists(e => e.Contains("セリフ行合計が上限")));
+    }
+
     private static ConversationChoiceJson Choice(string text) =>
         new() { texts = new[] { new GimmickTextJson { lang = "", text = text } }, gotoLineId = "end" };
 }

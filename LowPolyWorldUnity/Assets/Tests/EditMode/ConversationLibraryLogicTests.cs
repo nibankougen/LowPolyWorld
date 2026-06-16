@@ -95,4 +95,34 @@ public class ConversationLibraryLogicTests
         lib.LoadFrom(null);
         Assert.AreEqual(0, lib.Count);
     }
+
+    [Test]
+    public void TotalLineCount_AndCanAddLine()
+    {
+        var lib = new ConversationLibraryLogic();
+        var a = lib.Add();
+        var b = lib.Add();
+        new ConversationEditLogic(a).AddLine();
+        var editB = new ConversationEditLogic(b);
+        editB.AddLine();
+        editB.AddLine();
+
+        Assert.AreEqual(3, lib.TotalLineCount, "全会話のセリフ行合計");
+        Assert.IsTrue(lib.CanAddLine);
+    }
+
+    [Test]
+    public void CanAddLine_FalseAtGlobalLimit()
+    {
+        var lib = new ConversationLibraryLogic();
+        // 1 会話 50 行 × 10 会話 = 500 行（全体上限）
+        for (int c = 0; c < ConversationLibraryLogic.MaxTotalLines / ConversationEditLogic.MaxLines; c++)
+        {
+            var edit = new ConversationEditLogic(lib.Add());
+            for (int i = 0; i < ConversationEditLogic.MaxLines; i++)
+                edit.AddLine();
+        }
+        Assert.AreEqual(ConversationLibraryLogic.MaxTotalLines, lib.TotalLineCount);
+        Assert.IsFalse(lib.CanAddLine, "全体上限に達したら行追加不可");
+    }
 }

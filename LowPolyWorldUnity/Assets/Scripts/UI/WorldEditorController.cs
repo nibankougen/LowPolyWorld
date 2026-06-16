@@ -61,6 +61,11 @@ public class WorldEditorController : MonoBehaviour
     private GimmickTabController _gimmickTab;
     private RuleEditController _ruleEditTab;
 
+    // 会話（ストーリー・セリフ・9.13）
+    private readonly ConversationLibraryLogic _conversationLibrary = new();
+    private ConversationLibraryController _convLibraryController;
+    private ConversationEditorController _convEditorController;
+
     /// <summary>ギミックタブ UI（ステート定義・ルール一覧）。</summary>
     public GimmickTabController GimmickTab => _gimmickTab;
 
@@ -164,6 +169,22 @@ public class WorldEditorController : MonoBehaviour
         // ルールの「編集」/ 追加でルール編集画面を開き、戻ったら一覧を更新する
         _gimmickTab.RuleEditRequested += ruleId => _ruleEditTab.Open(_gimmickTab.Logic, ruleId);
         _ruleEditTab.Closed += () => _gimmickTab.Refresh();
+
+        // 会話（ライブラリ ↔ エディタ）
+        _convLibraryController = new ConversationLibraryController(_root, _conversationLibrary);
+        _convEditorController = new ConversationEditorController(_root, _conversationLibrary);
+        _convLibraryController.EditRequested += id => _convEditorController.Open(_conversationLibrary.Find(id));
+        _convEditorController.Closed += () => _convLibraryController.Refresh();
+
+        var btnConversations = _root.Q<Button>("gimmick-edit-conversations");
+        if (btnConversations != null) btnConversations.clicked += () => _convLibraryController.Open();
+    }
+
+    // 会話のオーバーレイ（エディタ→ライブラリの順）を閉じる。
+    private void CloseConversationOverlays()
+    {
+        _convEditorController?.Close();
+        _convLibraryController?.Close();
     }
 
     // ── 公開 API ─────────────────────────────────────────────────────────────
@@ -204,8 +225,11 @@ public class WorldEditorController : MonoBehaviour
             _ruleEditTab.Close();
         _bgmPicker?.Close();
         _gimmickTab?.CloseOverlays();
-        _gimmickTab?.Logic.LoadFrom(WorldCreationManager.Instance?.CurrentDefinition ?? def);
+        CloseConversationOverlays();
+        var loadedDef = WorldCreationManager.Instance?.CurrentDefinition ?? def;
+        _gimmickTab?.Logic.LoadFrom(loadedDef);
         _gimmickTab?.Refresh();
+        _conversationLibrary.LoadFrom(loadedDef);
 
         UpdateCostDisplay(0, 0);
         UpdatePublishButton();
@@ -401,7 +425,10 @@ public class WorldEditorController : MonoBehaviour
         if (index != 2 && _ruleEditTab?.IsOpen == true)
             _ruleEditTab.Close();
         if (index != 2)
+        {
             _gimmickTab?.CloseOverlays();
+            CloseConversationOverlays();
+        }
 
         // 設定タブ以外へ移動するときは BGM 選択リストを閉じる
         if (index != 3 && _bgmPicker?.IsOpen == true)
@@ -749,6 +776,9 @@ public class WorldEditorController : MonoBehaviour
         mgr.CommitSettingsChanges();
         // ギミックタブの編集（ステート定義・ルール一覧）を定義へ書き戻す
         _gimmickTab?.Logic.WriteTo(mgr.CurrentDefinition);
+        // 会話定義を書き戻す（編集中の会話のタイトル確定のためエディタも閉じる）
+        _convEditorController?.Close();
+        _conversationLibrary.WriteTo(mgr.CurrentDefinition);
     }
 
     private void UpdatePublishButton()

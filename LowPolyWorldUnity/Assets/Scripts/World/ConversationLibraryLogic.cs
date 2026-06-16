@@ -13,6 +13,9 @@ public class ConversationLibraryLogic
     public const int MaxConversations = 30;
     public const int NameMaxLength = 20;
 
+    /// <summary>1 ワールドの全会話を合わせたセリフ行の合計上限（データ肥大防止・9.13）。</summary>
+    public const int MaxTotalLines = 500;
+
     private static readonly Regex DefaultNamePattern = new(@"^会話(\d+)$", RegexOptions.Compiled);
 
     private readonly List<ConversationJson> _conversations = new();
@@ -20,6 +23,21 @@ public class ConversationLibraryLogic
     public IReadOnlyList<ConversationJson> Conversations => _conversations;
     public int Count => _conversations.Count;
     public bool CanAdd => Count < MaxConversations;
+
+    /// <summary>全会話を合わせたセリフ行の合計。</summary>
+    public int TotalLineCount
+    {
+        get
+        {
+            int n = 0;
+            foreach (var c in _conversations)
+                n += c.lines?.Length ?? 0;
+            return n;
+        }
+    }
+
+    /// <summary>全体のセリフ行合計が上限に達していないか（行追加可否の判定）。</summary>
+    public bool CanAddLine => TotalLineCount < MaxTotalLines;
 
     /// <summary>名前を 1〜20 文字に整形する（前後空白除去・超過は切り詰め）。空入力は空文字。</summary>
     public static string SanitizeName(string name)

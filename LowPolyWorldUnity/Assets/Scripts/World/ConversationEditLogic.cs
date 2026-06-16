@@ -87,6 +87,10 @@ public class ConversationEditLogic
     public bool RemoveLineText(string lineId, string lang) =>
         RemoveText(FindLine(lineId)?.texts, lang, arr => FindLine(lineId).texts = arr);
 
+    /// <summary>指定言語の話者名を削除する（任意項目のため空入力時のクリアに使う）。</summary>
+    public bool RemoveLineSpeaker(string lineId, string lang) =>
+        RemoveText(FindLine(lineId)?.speakers, lang, arr => FindLine(lineId).speakers = arr);
+
     // ── 分岐 ───────────────────────────────────────────────────────────────────
 
     /// <summary>

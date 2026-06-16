@@ -26,6 +26,12 @@ public static class ConversationValidator
         if (conversations.Count > ConversationLibraryLogic.MaxConversations)
             errors.Add($"会話数が上限 {ConversationLibraryLogic.MaxConversations} を超えています（{conversations.Count}）");
 
+        int totalLines = 0;
+        foreach (var c in conversations)
+            totalLines += c?.lines?.Length ?? 0;
+        if (totalLines > ConversationLibraryLogic.MaxTotalLines)
+            errors.Add($"全会話のセリフ行合計が上限 {ConversationLibraryLogic.MaxTotalLines} を超えています（{totalLines}）");
+
         var seenIds = new HashSet<string>();
         foreach (var conv in conversations)
         {

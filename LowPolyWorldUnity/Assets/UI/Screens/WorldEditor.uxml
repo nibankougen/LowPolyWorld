@@ -164,6 +164,8 @@
 
                     <!-- テンプレートから追加（メニュー上部） -->
                     <ui:Button name="gimmick-add-template" class="gimmick-template-top-btn" text="＋ テンプレートから追加" />
+                    <!-- 会話を編集（ストーリー・セリフ） -->
+                    <ui:Button name="gimmick-edit-conversations" class="gimmick-template-top-btn" text="会話を編集（セリフ）" />
 
                     <!-- ステート定義エリア（折りたたみ可・追加 / 削除式） -->
                     <ui:VisualElement class="gimmick-section">
@@ -272,6 +274,28 @@
                         <ui:Button name="template-picker-insert" class="gimmick-template-insert-btn" text="このテンプレートを追加" />
                     </ui:VisualElement>
                     <ui:Label name="template-picker-flash" class="object-flash overlay-hidden" text="" />
+                </ui:VisualElement>
+
+                <!-- 会話ライブラリ（一覧・オーバーレイ） -->
+                <ui:VisualElement name="conv-library" class="gimmick-rule-editor overlay-hidden">
+                    <ui:VisualElement class="gimmick-edit-header">
+                        <ui:Button name="conv-library-back" class="gimmick-edit-back icon-back" text="" />
+                        <ui:Label class="gimmick-picker-title" text="会話（セリフ）" />
+                        <ui:Button name="conv-library-add" class="gimmick-add-btn gimmick-icon-btn gimmick-icon-btn--plus" text="" />
+                    </ui:VisualElement>
+                    <ui:ScrollView name="conv-library-list" class="gimmick-edit-scroll" />
+                    <ui:Label name="conv-library-flash" class="object-flash overlay-hidden" text="" />
+                </ui:VisualElement>
+
+                <!-- 会話エディタ（セリフ行・オーバーレイ） -->
+                <ui:VisualElement name="conv-editor" class="gimmick-rule-editor overlay-hidden">
+                    <ui:VisualElement class="gimmick-edit-header">
+                        <ui:Button name="conv-editor-back" class="gimmick-edit-back icon-back" text="" />
+                        <ui:TextField name="conv-editor-title" class="gimmick-edit-title" />
+                    </ui:VisualElement>
+                    <ui:ScrollView name="conv-editor-lines" class="gimmick-edit-scroll" />
+                    <ui:Button name="conv-editor-add-line" class="gimmick-template-top-btn" text="＋ セリフ行を追加" />
+                    <ui:Label name="conv-editor-flash" class="object-flash overlay-hidden" text="" />
                 </ui:VisualElement>
             </ui:VisualElement>
 
