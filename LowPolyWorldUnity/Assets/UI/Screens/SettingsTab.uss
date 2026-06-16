@@ -11,18 +11,18 @@
 
 .stub-title {
     font-size: 48px;
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--lpw-text);
     margin-bottom: 12px;
 }
 
 .stub-note {
     font-size: 24px;
-    color: rgba(255, 255, 255, 0.3);
+    color: var(--lpw-text-muted);
 }
 
 .settings-section-title {
     font-size: 28px;
-    color: rgba(255, 255, 255, 0.5);
+    color: var(--lpw-text-secondary);
     margin-bottom: 24px;
     margin-top: 8px;
     -unity-font-style: bold;
@@ -37,7 +37,7 @@
 .volume-label {
     width: 220px;
     font-size: 26px;
-    color: rgb(220, 220, 230);
+    color: var(--lpw-text-secondary);
 }
 
 .volume-slider {
@@ -50,7 +50,7 @@
     width: 40px;
     height: 40px;
     border-radius: 20px;
-    background-color: rgb(120, 200, 255);
+    background-color: var(--lpw-accent);
     border-width: 0;
     top: -14px;
 }
@@ -58,19 +58,19 @@
 .volume-slider > .unity-base-slider__tracker {
     height: 8px;
     border-radius: 4px;
-    background-color: rgba(255, 255, 255, 0.15);
+    background-color: var(--lpw-border);
 }
 
 .volume-value {
     width: 90px;
     font-size: 26px;
-    color: rgb(120, 200, 255);
+    color: var(--lpw-accent-text);
     -unity-text-align: middle-right;
 }
 
 .settings-link-btn {
-    background-color: rgb(32, 32, 40);
-    color: rgb(200, 200, 215);
+    background-color: var(--lpw-surface);
+    color: var(--lpw-text);
     font-size: 26px;
     height: 68px;
     border-radius: 12px;

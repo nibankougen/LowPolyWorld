@@ -68,6 +68,7 @@
                     <ui:Button name="terrain-mode-move"   class="terrain-mode-btn terrain-icon terrain-icon--move" tooltip="移動" />
                     <ui:Button name="terrain-btn-copy"  class="terrain-action-btn terrain-action-btn--icon terrain-icon terrain-icon--copy overlay-hidden" tooltip="コピー" />
                     <ui:Button name="terrain-btn-paste" class="terrain-action-btn overlay-hidden" text="ペースト" />
+                    <ui:Button name="terrain-btn-deselect" class="terrain-action-btn overlay-hidden" text="選択解除" />
                 </ui:VisualElement>
 
                 <!-- 範囲選択の選択方法表示（範囲選択モード時のみ） -->

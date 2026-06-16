@@ -115,18 +115,26 @@ public class TerrainEditSessionTests
     }
 
     [Test]
-    public void Move_DragMovesPerCellStep()
+    public void Move_PreviewsDuringDrag_CommitsTotalDeltaOnPointerUp()
     {
         _edit.PaintCell(10, 10, 1);
         _session.Mode = TerrainEditMode.Move;
 
         _session.OnPointerDown(20, 20);
-        Assert.IsTrue(_session.OnPointerDrag(21, 20).TerrainChanged);
-        Assert.IsTrue(_session.OnPointerDrag(22, 21).TerrainChanged);
-        _session.OnPointerUp();
+        // ドラッグ中は地形を変更しない（移動先プレビューのみ）
+        Assert.IsFalse(_session.OnPointerDrag(21, 20).TerrainChanged, "ドラッグ中は移動しない");
+        Assert.IsFalse(_session.OnPointerDrag(22, 21).TerrainChanged, "ドラッグ中は移動しない");
+        Assert.IsFalse(TerrainVoxel.IsEmpty(_store.GetVoxel(10, 5, 10)), "ドラッグ中は元位置のまま");
 
+        // ドラッグ中は Down からの合計差分をプレビューオフセットとして取得できる
+        Assert.IsTrue(_session.TryGetMovePreview(out int dx, out int dz));
+        Assert.AreEqual((2, 1), (dx, dz));
+
+        // 指を離した Up で合計 (+2, +1) を一度だけ移動して確定する
+        Assert.IsTrue(_session.OnPointerUp().TerrainChanged);
         Assert.IsTrue(TerrainVoxel.IsEmpty(_store.GetVoxel(10, 5, 10)));
         Assert.IsFalse(TerrainVoxel.IsEmpty(_store.GetVoxel(12, 5, 11)), "計 (+2, +1) 移動");
+        Assert.IsFalse(_session.TryGetMovePreview(out _, out _), "Up 後はプレビューなし");
     }
 
     [Test]

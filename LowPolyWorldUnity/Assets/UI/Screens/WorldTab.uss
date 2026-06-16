@@ -1,7 +1,7 @@
 .world-tab-root {
     flex: 1;
     flex-direction: column;
-    background-color: rgb(18, 18, 28);
+    background-color: var(--lpw-bg-page);
 }
 
 /* ── Search bar ──────────────────────────────────── */
@@ -13,9 +13,9 @@
 .search-input {
     height: 40px;
     border-radius: 20px;
-    background-color: rgb(40, 40, 60);
-    border-color: rgb(60, 60, 80);
-    color: rgb(220, 220, 240);
+    background-color: var(--lpw-surface-sunken);
+    border-color: var(--lpw-border);
+    color: var(--lpw-text);
     font-size: 14px;
 }
 
@@ -25,7 +25,7 @@
     flex-direction: row;
     align-items: center;
     padding: 4px 8px 6px;
-    background-color: rgb(22, 22, 34);
+    background-color: var(--lpw-surface);
 }
 
 .tag-filter-scroll {
@@ -42,17 +42,17 @@
     padding: 0 12px;
     margin-right: 6px;
     border-radius: 14px;
-    background-color: rgb(50, 50, 75);
+    background-color: var(--lpw-surface-sunken);
     border-width: 1px;
-    border-color: rgb(80, 80, 110);
-    color: rgb(200, 200, 230);
+    border-color: var(--lpw-border);
+    color: var(--lpw-text-secondary);
     font-size: 13px;
 }
 
 .tag-chip--active {
-    background-color: rgb(80, 100, 200);
-    border-color: rgb(100, 130, 255);
-    color: white;
+    background-color: var(--lpw-accent);
+    border-color: var(--lpw-accent);
+    color: var(--lpw-text-on-accent);
 }
 
 .btn-tag-clear {
@@ -60,7 +60,7 @@
     height: 32px;
     background-color: transparent;
     border-width: 0;
-    color: rgb(150, 150, 180);
+    color: var(--lpw-text-muted);
     font-size: 16px;
     margin-left: 4px;
 }
@@ -69,9 +69,9 @@
 
 .sub-tab-bar {
     flex-direction: row;
-    background-color: rgb(22, 22, 34);
+    background-color: var(--lpw-surface);
     border-bottom-width: 1px;
-    border-bottom-color: rgb(50, 50, 70);
+    border-bottom-color: var(--lpw-border);
 }
 
 .sub-tab {
@@ -81,13 +81,13 @@
     border-width: 0;
     border-bottom-width: 2px;
     border-bottom-color: transparent;
-    color: rgb(150, 150, 180);
+    color: var(--lpw-text-muted);
     font-size: 13px;
 }
 
 .sub-tab--active {
-    color: rgb(255, 255, 255);
-    border-bottom-color: rgb(100, 140, 255);
+    color: var(--lpw-text);
+    border-bottom-color: var(--lpw-accent);
 }
 
 /* ── World list ──────────────────────────────────── */
@@ -105,7 +105,7 @@
 
 .world-card {
     flex-direction: row;
-    background-color: rgb(30, 30, 46);
+    background-color: var(--lpw-surface);
     border-radius: 12px;
     margin-bottom: 10px;
     height: 90px;
@@ -115,7 +115,7 @@
 .world-card__thumb {
     width: 90px;
     height: 90px;
-    background-color: rgb(50, 50, 70);
+    background-color: var(--lpw-surface-sunken);
 }
 
 .world-card__info {
@@ -128,7 +128,7 @@
 .world-card__name {
     font-size: 15px;
     -unity-font-style: bold;
-    color: rgb(240, 240, 255);
+    color: var(--lpw-text);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -141,13 +141,13 @@
 
 .world-card__players {
     font-size: 12px;
-    color: rgb(160, 200, 160);
+    color: var(--lpw-success);
     margin-right: 12px;
 }
 
 .world-card__likes {
     font-size: 12px;
-    color: rgb(200, 160, 160);
+    color: var(--lpw-danger-text);
 }
 
 /* ── Load more / empty ───────────────────────────── */
@@ -159,7 +159,7 @@
 
 .load-more-label {
     font-size: 13px;
-    color: rgb(150, 150, 180);
+    color: var(--lpw-text-muted);
 }
 
 .empty-area {
@@ -170,5 +170,5 @@
 
 .empty-label {
     font-size: 15px;
-    color: rgb(120, 120, 150);
+    color: var(--lpw-text-muted);
 }

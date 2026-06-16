@@ -1,16 +1,16 @@
 .shop-tab-root {
     flex: 1;
     flex-direction: column;
-    background-color: rgb(18, 18, 28);
+    background-color: var(--lpw-bg-page);
 }
 
 /* ── Fixed header ────────────────────────────────── */
 
 .shop-header {
     flex-direction: column;
-    background-color: rgb(22, 22, 34);
+    background-color: var(--lpw-surface);
     border-bottom-width: 1px;
-    border-bottom-color: rgb(50, 50, 70);
+    border-bottom-color: var(--lpw-border);
 }
 
 .category-tab-bar {
@@ -25,15 +25,15 @@
     border-width: 0;
     border-bottom-width: 2px;
     border-bottom-color: transparent;
-    color: rgb(150, 150, 180);
+    color: var(--lpw-text-muted);
     font-size: 11px;
     padding: 0 2px;
     white-space: nowrap;
 }
 
 .category-tab--active {
-    color: rgb(255, 255, 255);
-    border-bottom-color: rgb(100, 140, 255);
+    color: var(--lpw-text);
+    border-bottom-color: var(--lpw-accent);
 }
 
 /* ── Coin balance ─────────────────────────────────── */
@@ -53,28 +53,28 @@
 .coin-balance {
     font-size: 15px;
     -unity-font-style: bold;
-    color: rgb(240, 200, 80);
+    color: var(--lpw-premium);
 }
 
 .coin-balance--negative {
-    color: rgb(255, 80, 80);
+    color: var(--lpw-danger-text);
 }
 
 /* ── Search / filter / sort bar ──────────────────── */
 
 .search-filter-bar {
     padding: 8px 12px 6px;
-    background-color: rgb(22, 22, 34);
+    background-color: var(--lpw-surface);
     border-bottom-width: 1px;
-    border-bottom-color: rgb(40, 40, 60);
+    border-bottom-color: var(--lpw-border);
 }
 
 .search-input {
     height: 36px;
     border-radius: 18px;
-    background-color: rgb(40, 40, 60);
-    border-color: rgb(60, 60, 80);
-    color: rgb(220, 220, 240);
+    background-color: var(--lpw-surface-sunken);
+    border-color: var(--lpw-border);
+    color: var(--lpw-text);
     font-size: 13px;
     margin-bottom: 6px;
 }
@@ -87,10 +87,10 @@
 .sort-btn {
     height: 28px;
     border-radius: 14px;
-    background-color: rgb(40, 40, 60);
+    background-color: var(--lpw-surface-sunken);
     border-width: 1px;
-    border-color: rgb(60, 60, 80);
-    color: rgb(150, 150, 180);
+    border-color: var(--lpw-border);
+    color: var(--lpw-text-muted);
     font-size: 12px;
     padding: 0 10px;
     margin-right: 6px;
@@ -98,9 +98,9 @@
 }
 
 .sort-btn--active {
-    background-color: rgb(60, 80, 160);
-    border-color: rgb(100, 140, 255);
-    color: rgb(255, 255, 255);
+    background-color: var(--lpw-accent);
+    border-color: var(--lpw-accent);
+    color: var(--lpw-text-on-accent);
 }
 
 .object-filter-row {
@@ -117,19 +117,19 @@
 .filter-btn {
     height: 26px;
     border-radius: 13px;
-    background-color: rgb(40, 40, 60);
+    background-color: var(--lpw-surface-sunken);
     border-width: 1px;
-    border-color: rgb(60, 60, 80);
-    color: rgb(150, 150, 180);
+    border-color: var(--lpw-border);
+    color: var(--lpw-text-muted);
     font-size: 11px;
     padding: 0 10px;
     margin-right: 6px;
 }
 
 .filter-btn--active {
-    background-color: rgb(60, 80, 160);
-    border-color: rgb(100, 140, 255);
-    color: rgb(255, 255, 255);
+    background-color: var(--lpw-accent);
+    border-color: var(--lpw-accent);
+    color: var(--lpw-text-on-accent);
 }
 
 /* ── Scrollable content ──────────────────────────── */
@@ -149,7 +149,7 @@
 
 .product-card {
     flex-direction: row;
-    background-color: rgb(30, 30, 46);
+    background-color: var(--lpw-surface);
     border-radius: 12px;
     margin-bottom: 10px;
     height: 90px;
@@ -159,7 +159,7 @@
 .product-card__thumb {
     width: 90px;
     height: 90px;
-    background-color: rgb(50, 50, 70);
+    background-color: var(--lpw-surface-sunken);
 }
 
 .product-card__info {
@@ -178,7 +178,7 @@
 .product-card__name {
     font-size: 14px;
     -unity-font-style: bold;
-    color: rgb(240, 240, 255);
+    color: var(--lpw-text);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -195,22 +195,22 @@
 }
 
 .product-card__edit-badge--ok {
-    background-color: rgba(60, 160, 100, 0.25);
+    background-color: var(--lpw-success-subtle);
     border-width: 1px;
-    border-color: rgba(60, 200, 120, 0.5);
-    color: rgb(100, 220, 160);
+    border-color: var(--lpw-success);
+    color: var(--lpw-success);
 }
 
 .product-card__edit-badge--ng {
-    background-color: rgba(100, 100, 130, 0.2);
+    background-color: var(--lpw-surface-sunken);
     border-width: 1px;
-    border-color: rgba(120, 120, 160, 0.4);
-    color: rgb(140, 140, 170);
+    border-color: var(--lpw-border);
+    color: var(--lpw-text-muted);
 }
 
 .product-card__creator {
     font-size: 11px;
-    color: rgb(140, 140, 170);
+    color: var(--lpw-text-muted);
 }
 
 .product-card__meta {
@@ -221,13 +221,13 @@
 .product-card__price {
     font-size: 13px;
     -unity-font-style: bold;
-    color: rgb(240, 200, 80);
+    color: var(--lpw-premium);
     margin-right: 12px;
 }
 
 .product-card__likes {
     font-size: 12px;
-    color: rgb(200, 160, 180);
+    color: var(--lpw-danger-text);
     margin-right: 6px;
 }
 
@@ -237,13 +237,13 @@
     border-radius: 14px;
     background-color: transparent;
     border-width: 0;
-    color: rgb(180, 120, 140);
+    color: var(--lpw-text-muted);
     font-size: 16px;
     padding: 0;
 }
 
 .product-card__like-btn--active {
-    color: rgb(240, 80, 120);
+    color: var(--lpw-danger);
 }
 
 .product-card__purchase-row {
@@ -253,22 +253,22 @@
 .product-card__purchase-btn {
     height: 32px;
     border-radius: 16px;
-    background-color: rgb(100, 140, 255);
+    background-color: var(--lpw-accent);
     border-width: 0;
-    color: rgb(255, 255, 255);
+    color: var(--lpw-text-on-accent);
     font-size: 13px;
     -unity-font-style: bold;
     width: 100%;
 }
 
 .product-card__purchase-btn--purchased {
-    background-color: rgb(50, 55, 80);
-    color: rgb(140, 160, 200);
+    background-color: var(--lpw-surface-sunken);
+    color: var(--lpw-text-muted);
 }
 
 .product-card__purchase-btn--balance-negative {
-    background-color: rgb(70, 50, 50);
-    color: rgb(160, 110, 110);
+    background-color: var(--lpw-danger-subtle);
+    color: var(--lpw-danger-text);
 }
 
 /* ── Error toast ──────────────────────────────── */
@@ -278,7 +278,7 @@
     top: 56px;
     left: 16px;
     right: 16px;
-    background-color: rgba(180, 50, 50, 0.95);
+    background-color: var(--lpw-flash-error-bg);
     border-radius: 10px;
     padding: 12px 16px;
     align-items: center;
@@ -286,7 +286,7 @@
 
 .error-toast-label {
     font-size: 13px;
-    color: rgb(255, 255, 255);
+    color: var(--lpw-text-on-status);
     white-space: normal;
     -unity-text-align: middle-center;
 }
@@ -300,7 +300,7 @@
 .premium-title {
     font-size: 16px;
     -unity-font-style: bold;
-    color: rgb(240, 240, 255);
+    color: var(--lpw-text);
     margin-bottom: 12px;
 }
 
@@ -309,7 +309,7 @@
     align-items: center;
     padding: 10px 0;
     border-bottom-width: 1px;
-    border-bottom-color: rgb(40, 40, 60);
+    border-bottom-color: var(--lpw-border);
 }
 
 .premium-feature-icon {
@@ -327,12 +327,12 @@
 .premium-feature-name {
     font-size: 14px;
     -unity-font-style: bold;
-    color: rgb(220, 220, 240);
+    color: var(--lpw-text);
 }
 
 .premium-feature-desc {
     font-size: 11px;
-    color: rgb(140, 140, 170);
+    color: var(--lpw-text-muted);
     margin-top: 2px;
 }
 
@@ -344,18 +344,18 @@
 }
 
 .plan-card {
-    background-color: rgb(30, 30, 46);
+    background-color: var(--lpw-surface);
     border-radius: 14px;
     padding: 16px;
     margin-bottom: 10px;
     border-width: 1px;
-    border-color: rgb(50, 50, 70);
+    border-color: var(--lpw-border);
     flex-direction: column;
 }
 
 .plan-card--recommended {
-    border-color: rgb(100, 140, 255);
-    background-color: rgb(30, 36, 60);
+    border-color: var(--lpw-accent);
+    background-color: var(--lpw-accent-subtle);
 }
 
 .plan-badge-row {
@@ -365,8 +365,8 @@
 
 .plan-badge {
     font-size: 11px;
-    color: rgb(255, 255, 255);
-    background-color: rgb(100, 140, 255);
+    color: var(--lpw-text-on-accent);
+    background-color: var(--lpw-accent);
     border-radius: 10px;
     padding: 2px 8px;
 }
@@ -374,56 +374,56 @@
 .plan-name {
     font-size: 15px;
     -unity-font-style: bold;
-    color: rgb(220, 220, 240);
+    color: var(--lpw-text);
     margin-bottom: 4px;
 }
 
 .plan-price {
     font-size: 22px;
     -unity-font-style: bold;
-    color: rgb(240, 240, 255);
+    color: var(--lpw-text);
     margin-bottom: 2px;
 }
 
 .plan-monthly {
     font-size: 12px;
-    color: rgb(160, 200, 160);
+    color: var(--lpw-success);
     margin-bottom: 12px;
 }
 
 .plan-buy-btn {
     height: 44px;
     border-radius: 22px;
-    background-color: rgb(100, 140, 255);
+    background-color: var(--lpw-accent);
     border-width: 0;
-    color: rgb(255, 255, 255);
+    color: var(--lpw-text-on-accent);
     font-size: 15px;
     -unity-font-style: bold;
 }
 
 .plan-buy-btn--secondary {
-    background-color: rgb(50, 55, 80);
+    background-color: var(--lpw-surface-sunken);
 }
 
 .current-plan-area {
-    background-color: rgb(30, 30, 46);
+    background-color: var(--lpw-surface);
     border-radius: 12px;
     padding: 14px;
     border-width: 1px;
-    border-color: rgb(60, 180, 120);
+    border-color: var(--lpw-success);
     flex-direction: column;
 }
 
 .current-plan-label {
     font-size: 14px;
     -unity-font-style: bold;
-    color: rgb(100, 220, 160);
+    color: var(--lpw-success);
     margin-bottom: 4px;
 }
 
 .next-renewal-label {
     font-size: 12px;
-    color: rgb(140, 160, 150);
+    color: var(--lpw-text-muted);
 }
 
 /* ── Load more / empty ───────────────────────────── */
@@ -435,7 +435,7 @@
 
 .load-more-label {
     font-size: 13px;
-    color: rgb(150, 150, 180);
+    color: var(--lpw-text-muted);
 }
 
 .empty-area {
@@ -446,7 +446,7 @@
 
 .empty-label {
     font-size: 15px;
-    color: rgb(120, 120, 150);
+    color: var(--lpw-text-muted);
 }
 
 /* ── Coin detail panel (bottom sheet) ────────────── */
@@ -457,12 +457,12 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(0, 0, 0, 0.55);
+    background-color: var(--lpw-scrim);
     justify-content: flex-end;
 }
 
 .coin-detail-panel {
-    background-color: rgb(28, 28, 42);
+    background-color: var(--lpw-surface);
     border-top-left-radius: 20px;
     border-top-right-radius: 20px;
     padding: 0 0 16px;
@@ -475,23 +475,23 @@
     align-items: center;
     padding: 16px 16px 12px;
     border-bottom-width: 1px;
-    border-bottom-color: rgb(50, 50, 70);
+    border-bottom-color: var(--lpw-border);
 }
 
 .coin-detail-title {
     flex: 1;
     font-size: 17px;
     -unity-font-style: bold;
-    color: rgb(240, 240, 255);
+    color: var(--lpw-text);
 }
 
 .coin-detail-close-btn {
     width: 32px;
     height: 32px;
     border-radius: 16px;
-    background-color: rgb(50, 50, 70);
+    background-color: var(--lpw-surface-sunken);
     border-width: 0;
-    color: rgb(200, 200, 220);
+    color: var(--lpw-text-secondary);
     font-size: 18px;
     padding: 0;
 }
@@ -511,31 +511,31 @@
 .coin-detail-balance {
     font-size: 38px;
     -unity-font-style: bold;
-    color: rgb(240, 200, 80);
+    color: var(--lpw-premium);
 }
 
 .coin-detail-balance--negative {
-    color: rgb(255, 80, 80);
+    color: var(--lpw-danger-text);
 }
 
 .coin-detail-warning {
-    background-color: rgba(200, 60, 60, 0.15);
+    background-color: var(--lpw-danger-subtle);
     border-radius: 8px;
     margin: 0 16px 8px;
     padding: 10px 12px;
     border-width: 1px;
-    border-color: rgba(200, 80, 80, 0.4);
+    border-color: var(--lpw-danger);
 }
 
 .coin-detail-warning-text {
     font-size: 12px;
-    color: rgb(220, 120, 120);
+    color: var(--lpw-danger-text);
     white-space: normal;
 }
 
 .coin-detail-section-title {
     font-size: 13px;
-    color: rgb(140, 140, 170);
+    color: var(--lpw-text-muted);
     padding: 8px 16px 4px;
 }
 
@@ -554,23 +554,23 @@
     align-items: center;
     padding: 10px 0;
     border-bottom-width: 1px;
-    border-bottom-color: rgb(40, 40, 60);
+    border-bottom-color: var(--lpw-border);
 }
 
 .coin-lot-expiry {
     flex: 1;
     font-size: 13px;
-    color: rgb(180, 180, 200);
+    color: var(--lpw-text-secondary);
 }
 
 .coin-lot-expiry--soon {
-    color: rgb(240, 160, 60);
+    color: var(--lpw-warning);
 }
 
 .coin-lot-amount {
     font-size: 14px;
     -unity-font-style: bold;
-    color: rgb(240, 200, 80);
+    color: var(--lpw-premium);
 }
 
 .coin-lot-empty {
@@ -580,15 +580,15 @@
 
 .coin-lot-empty-label {
     font-size: 13px;
-    color: rgb(120, 120, 150);
+    color: var(--lpw-text-muted);
 }
 
 .coin-buy-btn {
     height: 48px;
     border-radius: 24px;
-    background-color: rgb(100, 140, 255);
+    background-color: var(--lpw-accent);
     border-width: 0;
-    color: rgb(255, 255, 255);
+    color: var(--lpw-text-on-accent);
     font-size: 16px;
     -unity-font-style: bold;
     margin: 12px 16px 4px;
@@ -602,12 +602,12 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(0, 0, 0, 0.55);
+    background-color: var(--lpw-scrim);
     justify-content: flex-end;
 }
 
 .coin-purchase-panel {
-    background-color: rgb(28, 28, 42);
+    background-color: var(--lpw-surface);
     border-top-left-radius: 20px;
     border-top-right-radius: 20px;
     padding: 0 0 16px;
@@ -620,14 +620,14 @@
     align-items: center;
     padding: 16px 16px 12px;
     border-bottom-width: 1px;
-    border-bottom-color: rgb(50, 50, 70);
+    border-bottom-color: var(--lpw-border);
 }
 
 .coin-purchase-title {
     flex: 1;
     font-size: 17px;
     -unity-font-style: bold;
-    color: rgb(240, 240, 255);
+    color: var(--lpw-text);
 }
 
 .coin-pack-scroll {
@@ -644,19 +644,19 @@
     align-items: center;
     padding: 10px 0;
     border-bottom-width: 1px;
-    border-bottom-color: rgb(40, 40, 60);
+    border-bottom-color: var(--lpw-border);
 }
 
 .coin-pack-label {
     flex: 1;
     font-size: 14px;
     -unity-font-style: bold;
-    color: rgb(240, 200, 80);
+    color: var(--lpw-premium);
 }
 
 .coin-pack-price {
     font-size: 13px;
-    color: rgb(180, 180, 200);
+    color: var(--lpw-text-secondary);
     margin-right: 12px;
 }
 
@@ -664,15 +664,15 @@
     width: 64px;
     height: 32px;
     border-radius: 16px;
-    background-color: rgb(100, 140, 255);
+    background-color: var(--lpw-accent);
     border-width: 0;
-    color: rgb(255, 255, 255);
+    color: var(--lpw-text-on-accent);
     font-size: 13px;
     -unity-font-style: bold;
     padding: 0;
 }
 
 .coin-pack-buy-btn:disabled {
-    background-color: rgb(50, 55, 80);
-    color: rgb(100, 100, 130);
+    background-color: var(--lpw-surface-sunken);
+    color: var(--lpw-text-muted);
 }

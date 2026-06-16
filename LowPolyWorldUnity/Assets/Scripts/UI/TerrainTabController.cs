@@ -40,6 +40,7 @@ public class TerrainTabController
     public event Action<bool> HideAboveChanged;
     public event Action CopyClicked;
     public event Action PasteClicked;
+    public event Action DeselectClicked;
     public event Action<int> SubTabChanged;        // 0 = 利用中 / 1 = 保存・編集 / 2 = 所有
     public event Action<int> TerrainSelected;      // 一覧のインデックス
 
@@ -53,6 +54,7 @@ public class TerrainTabController
     private readonly Button[] _subTabButtons;
     private readonly Button _btnCopy;
     private readonly Button _btnPaste;
+    private readonly Button _btnDeselect;
     private readonly Button _btnHideAbove;
     private readonly Label _heightLabel;
     private readonly Label _selectMethodLabel;
@@ -83,8 +85,10 @@ public class TerrainTabController
 
         _btnCopy = root.Q<Button>("terrain-btn-copy");
         _btnPaste = root.Q<Button>("terrain-btn-paste");
+        _btnDeselect = root.Q<Button>("terrain-btn-deselect");
         _btnCopy.clicked += () => CopyClicked?.Invoke();
         _btnPaste.clicked += () => PasteClicked?.Invoke();
+        _btnDeselect.clicked += () => DeselectClicked?.Invoke();
 
         _viewOverlay = root.Q("terrain-view-overlay");
         _btnHideAbove = root.Q<Button>("terrain-btn-hide-above");
@@ -126,6 +130,7 @@ public class TerrainTabController
     {
         _btnCopy.EnableInClassList("overlay-hidden", !hasSelection);
         _btnPaste.EnableInClassList("overlay-hidden", !hasClipboard);
+        _btnDeselect.EnableInClassList("overlay-hidden", !hasSelection);
     }
 
     /// <summary>フラッシュメッセージを表示する（自動で消える）。</summary>

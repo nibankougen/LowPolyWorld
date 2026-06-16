@@ -12,8 +12,8 @@
 }
 
 .flash-label {
-    background-color: rgba(220, 60, 60, 0.9);
-    color: white;
+    background-color: var(--lpw-flash-error-bg);
+    color: var(--lpw-text-on-status);
     font-size: 15px;
     padding: 10px 24px;
     border-radius: 20px;
@@ -26,13 +26,13 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(0, 0, 0, 0.6);
+    background-color: var(--lpw-scrim);
     align-items: center;
     justify-content: center;
 }
 
 .dialog-panel {
-    background-color: rgb(40, 40, 40);
+    background-color: var(--lpw-surface);
     border-radius: 16px;
     padding: 28px 24px;
     width: 300px;
@@ -40,14 +40,14 @@
 }
 
 .dialog-title {
-    color: white;
+    color: var(--lpw-text);
     font-size: 18px;
     -unity-font-style: bold;
     margin-bottom: 12px;
 }
 
 .dialog-message {
-    color: rgb(200, 200, 200);
+    color: var(--lpw-text-secondary);
     font-size: 14px;
     white-space: normal;
     -unity-text-align: upper-center;
@@ -55,7 +55,7 @@
 }
 
 .dialog-sub {
-    color: rgb(150, 150, 150);
+    color: var(--lpw-text-muted);
     font-size: 12px;
     margin-bottom: 20px;
 }
@@ -63,8 +63,8 @@
 .dialog-btn-primary {
     width: 200px;
     height: 44px;
-    background-color: rgb(80, 140, 220);
-    color: white;
+    background-color: var(--lpw-accent);
+    color: var(--lpw-text-on-accent);
     font-size: 15px;
     border-radius: 8px;
     border-width: 0;
@@ -74,8 +74,8 @@
 .dialog-btn-secondary {
     width: 200px;
     height: 44px;
-    background-color: rgb(70, 70, 70);
-    color: rgb(200, 200, 200);
+    background-color: var(--lpw-surface-sunken);
+    color: var(--lpw-text-secondary);
     font-size: 15px;
     border-radius: 8px;
     border-width: 0;

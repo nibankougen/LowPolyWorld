@@ -14,9 +14,9 @@
     flex-direction: row;
     align-items: center;
     padding: 8px 12px;
-    background-color: rgba(15, 15, 20, 0.92);
+    background-color: var(--lpw-editor-bar);
     border-bottom-width: 1px;
-    border-color: rgb(44, 44, 60);
+    border-color: var(--lpw-border);
 }
 
 .editor-btn-icon {
@@ -24,11 +24,12 @@
     height: 52px;
     background-color: transparent;
     border-width: 0;
-    color: rgb(100, 170, 255);
+    color: var(--lpw-accent-text);
     font-size: 32px;
 }
 
-/* アイコン共通（白シルエット PNG を背景に表示・枠で囲わない） */
+/* アイコン共通（白シルエット PNG を背景に表示・枠で囲わない）
+   明色背景でも見えるよう暗色ティントを掛ける。 */
 .icon-back,
 .icon-plus,
 .icon-minus,
@@ -40,6 +41,7 @@
     -unity-background-scale-mode: scale-to-fit;
     background-position-x: center;
     background-position-y: center;
+    -unity-background-image-tint-color: var(--lpw-icon);
 }
 
 .icon-up {
@@ -86,14 +88,14 @@
 .editor-world-name {
     flex-grow: 1;
     height: 44px;
-    color: white;
+    color: var(--lpw-text);
     font-size: 22px;
     -unity-text-align: middle-left;
     margin: 0 8px;
 }
 
 .editor-world-name--empty {
-    color: rgb(120, 120, 140);
+    color: var(--lpw-text-muted);
 }
 
 /* チェックボックス（トグル）のチェック枠を角丸にする */
@@ -106,9 +108,9 @@
     padding: 0 16px;
     background-color: transparent;
     border-width: 1px;
-    border-color: rgb(100, 170, 255);
+    border-color: var(--lpw-accent);
     border-radius: 8px;
-    color: rgb(100, 170, 255);
+    color: var(--lpw-accent-text);
     font-size: 20px;
     margin-left: 6px;
 }
@@ -116,10 +118,10 @@
 .editor-btn-primary {
     height: 44px;
     padding: 0 16px;
-    background-color: rgb(60, 120, 220);
+    background-color: var(--lpw-accent);
     border-width: 0;
     border-radius: 8px;
-    color: white;
+    color: var(--lpw-text-on-accent);
     font-size: 20px;
     margin-left: 6px;
 }
@@ -129,25 +131,25 @@
     flex-direction: row;
     justify-content: center;
     padding: 6px;
-    background-color: rgba(15, 15, 20, 0.80);
+    background-color: var(--lpw-editor-bar);
 }
 
 .gizmo-btn {
     width: 100px;
     height: 40px;
-    background-color: rgb(40, 40, 60);
+    background-color: var(--lpw-surface-sunken);
     border-width: 1px;
-    border-color: rgb(70, 70, 100);
+    border-color: var(--lpw-border);
     border-radius: 6px;
-    color: rgb(180, 180, 210);
+    color: var(--lpw-text-secondary);
     font-size: 18px;
     margin: 0 4px;
 }
 
 .gizmo-btn--active {
-    background-color: rgb(60, 80, 170);
-    border-color: rgb(100, 130, 240);
-    color: white;
+    background-color: var(--lpw-accent);
+    border-color: var(--lpw-accent);
+    color: var(--lpw-text-on-accent);
 }
 
 /* ── 3D ビュー領域 ── */
@@ -156,12 +158,13 @@
     position: relative;
 }
 
+/* コスト表示は 3D ビューポート上に浮く HUD。他メニューに合わせて半透明白ベースに統一。 */
 .cost-display {
     position: absolute;
     top: 10px;
     right: 10px;
     align-items: flex-end;
-    background-color: rgba(0, 0, 0, 0.55);
+    background-color: var(--lpw-editor-bar);
     border-radius: 8px;
     padding: 6px 10px;
 }
@@ -169,7 +172,7 @@
 .cost-bar-track {
     width: 120px;
     height: 6px;
-    background-color: rgb(50, 50, 70);
+    background-color: var(--lpw-surface-sunken);
     border-radius: 3px;
     margin-bottom: 4px;
     overflow: hidden;
@@ -178,23 +181,23 @@
 .cost-bar-fill {
     height: 6px;
     width: 0%;
-    background-color: rgb(80, 160, 255);
+    background-color: var(--lpw-accent);
     border-radius: 3px;
     transition-duration: 0.2s;
     transition-property: width;
 }
 
 .cost-label {
-    color: rgb(200, 220, 255);
+    color: var(--lpw-text);
     font-size: 18px;
 }
 
 /* ── 下部タブバー ── */
 .bottom-tab-bar {
     flex-direction: row;
-    background-color: rgba(15, 15, 20, 0.92);
+    background-color: var(--lpw-editor-bar);
     border-top-width: 1px;
-    border-color: rgb(44, 44, 60);
+    border-color: var(--lpw-border);
 }
 
 .bottom-tab {
@@ -202,14 +205,14 @@
     height: 56px;
     background-color: transparent;
     border-width: 0;
-    color: rgb(140, 140, 160);
+    color: var(--lpw-text-muted);
     font-size: 20px;
 }
 
 .bottom-tab--active {
-    color: rgb(100, 170, 255);
+    color: var(--lpw-accent-text);
     border-top-width: 2px;
-    border-color: rgb(100, 170, 255);
+    border-color: var(--lpw-accent);
 }
 
 .bottom-tab-minimize {
@@ -223,7 +226,7 @@
 
 /* ── タブコンテンツ ── */
 .tab-content {
-    background-color: rgba(15, 15, 22, 0.95);
+    background-color: var(--lpw-editor-panel);
     height: 55%;
     overflow: hidden;
     transition: height 0.22s ease-in-out;
@@ -245,7 +248,7 @@
 }
 
 .stub-label {
-    color: rgb(90, 90, 110);
+    color: var(--lpw-text-muted);
     font-size: 20px;
     -unity-text-align: middle-center;
     padding: 30px;
@@ -259,18 +262,18 @@
 .settings-section {
     padding: 14px 16px;
     border-bottom-width: 1px;
-    border-color: rgb(40, 40, 58);
+    border-color: var(--lpw-border);
 }
 
 .settings-label {
-    color: rgb(180, 180, 200);
+    color: var(--lpw-text);
     font-size: 20px;
     -unity-font-style: bold;
     margin-bottom: 10px;
 }
 
 .settings-hint {
-    color: rgb(100, 100, 125);
+    color: var(--lpw-text-muted);
     font-size: 16px;
     margin-top: 4px;
 }
@@ -283,23 +286,23 @@
 
 .settings-row-label {
     width: 90px;
-    color: rgb(160, 160, 185);
+    color: var(--lpw-text-secondary);
     font-size: 18px;
 }
 
 .settings-row-value {
     width: 55px;
-    color: rgb(200, 200, 220);
+    color: var(--lpw-text-secondary);
     font-size: 18px;
     -unity-text-align: middle-right;
 }
 
 .settings-input {
     height: 44px;
-    background-color: rgb(30, 30, 45);
-    border-color: rgb(55, 55, 80);
+    background-color: var(--lpw-surface-sunken);
+    border-color: var(--lpw-border);
     border-radius: 8px;
-    color: white;
+    color: var(--lpw-text);
     font-size: 20px;
 }
 
@@ -320,7 +323,7 @@
 }
 
 /* ── 共通: 文字入力・ドロップダウンの角丸スタイル（ワールド編集画面で統一） ── */
-/* ルート要素は装飾を持たせず、実際の入力ボックス（子要素）を白い角丸に統一する。 */
+/* ルート要素は装飾を持たせず、実際の入力ボックス（子要素）を角丸に統一する。 */
 .unity-base-text-field,
 .unity-base-popup-field {
     background-color: transparent;
@@ -329,11 +332,11 @@
 
 .unity-base-text-field__input,
 .unity-base-popup-field__input {
-    background-color: white;
+    background-color: var(--lpw-surface);
     border-width: 1px;
-    border-color: rgb(170, 175, 190);
+    border-color: var(--lpw-border-strong);
     border-radius: 8px;
-    color: rgb(35, 35, 45);
+    color: var(--lpw-text);
     padding: 4px 10px;
 }
 
@@ -341,11 +344,11 @@
     -unity-text-align: middle-left;
 }
 
-/* ドロップダウンを開いたときのポップアップメニューも角丸・白に統一する */
+/* ドロップダウンを開いたときのポップアップメニューも角丸・統一する */
 .unity-base-dropdown__container-outer {
-    background-color: white;
+    background-color: var(--lpw-surface);
     border-width: 1px;
-    border-color: rgb(170, 175, 190);
+    border-color: var(--lpw-border-strong);
     border-radius: 8px;
     overflow: hidden;
 }
@@ -359,16 +362,16 @@
 }
 
 .unity-base-dropdown__item:hover {
-    background-color: rgb(225, 232, 245);
+    background-color: var(--lpw-accent-subtle);
 }
 
 .unity-base-dropdown__label {
-    color: rgb(35, 35, 45);
+    color: var(--lpw-text);
     font-size: 15px;
 }
 
 .unity-base-dropdown__checkmark {
-    --unity-image-tint-color: rgb(35, 35, 45);
+    --unity-image-tint-color: var(--lpw-text);
 }
 
 /* ── テストプレイ ── */
@@ -377,7 +380,7 @@
     align-items: center;
     justify-content: center;
     height: 52px;
-    background-color: rgb(40, 120, 60);
+    background-color: var(--lpw-success);
     border-width: 0;
     border-radius: 10px;
 }
@@ -386,10 +389,12 @@
     width: 24px;
     height: 24px;
     margin-right: 8px;
+    /* 緑のテストプレイボタン上は白アイコン */
+    -unity-background-image-tint-color: var(--lpw-text-on-status);
 }
 
 .btn-play-label {
-    color: white;
+    color: var(--lpw-text-on-status);
     font-size: 22px;
 }
 
@@ -397,16 +402,16 @@
 .thumbnail-preview {
     width: 120px;
     height: 213px;
-    background-color: rgb(35, 35, 50);
+    background-color: var(--lpw-surface-sunken);
     border-radius: 8px;
     align-items: center;
     justify-content: center;
     border-width: 1px;
-    border-color: rgb(60, 60, 85);
+    border-color: var(--lpw-border);
 }
 
 .thumbnail-hint {
-    color: rgb(100, 100, 130);
+    color: var(--lpw-text-muted);
     font-size: 16px;
     -unity-text-align: middle-center;
 }
@@ -424,19 +429,19 @@
     height: 34px;
     padding: 0 10px;
     margin: 3px;
-    background-color: rgb(50, 80, 160);
+    background-color: var(--lpw-accent);
     border-radius: 17px;
     border-width: 0;
 }
 
 .settings-tag-chip__label {
-    color: white;
+    color: var(--lpw-text-on-accent);
     font-size: 18px;
     margin-right: 6px;
 }
 
 .settings-tag-chip__remove {
-    color: rgb(200, 220, 255);
+    color: var(--lpw-text-on-accent);
     font-size: 16px;
     background-color: transparent;
     border-width: 0;
@@ -460,15 +465,15 @@
     height: 42px;
     padding: 0 14px;
     margin-left: 8px;
-    background-color: rgb(50, 80, 160);
+    background-color: var(--lpw-accent);
     border-width: 0;
     border-radius: 8px;
-    color: white;
+    color: var(--lpw-text-on-accent);
     font-size: 18px;
 }
 
 .tag-error {
-    color: rgb(255, 100, 100);
+    color: var(--lpw-danger-text);
     font-size: 16px;
     margin-top: 4px;
 }
@@ -479,7 +484,7 @@
     flex-direction: row;
     align-items: center;
     padding: 8px 12px;
-    background-color: rgb(30, 50, 100);
+    background-color: var(--lpw-accent-subtle);
     border-width: 0;
     border-radius: 8px;
     margin-bottom: 4px;
@@ -494,13 +499,13 @@
 
 .bgm-current-name {
     flex-grow: 1;
-    color: white;
+    color: var(--lpw-text);
     font-size: 20px;
     -unity-text-align: middle-left;
 }
 
 .bgm-current-author {
-    color: rgb(160, 190, 255);
+    color: var(--lpw-accent-text);
     font-size: 16px;
 }
 
@@ -512,17 +517,17 @@
 
 /* BGM 選択リスト（ピッカー）の項目内テキスト */
 .bgm-picker-name {
-    color: rgb(220, 220, 240);
+    color: var(--lpw-text);
     font-size: 16px;
     -unity-text-align: middle-left;
 }
 
 .gimmick-picker-item--selected .bgm-picker-name {
-    color: white;
+    color: var(--lpw-text-on-accent);
 }
 
 .bgm-picker-author {
-    color: rgb(140, 150, 180);
+    color: var(--lpw-text-muted);
     font-size: 12px;
     -unity-text-align: middle-left;
 }
@@ -537,17 +542,17 @@
 .stepper-btn {
     width: 52px;
     height: 52px;
-    background-color: rgb(40, 40, 60);
+    background-color: var(--lpw-surface-sunken);
     border-width: 1px;
-    border-color: rgb(70, 70, 100);
+    border-color: var(--lpw-border);
     border-radius: 8px;
-    color: rgb(180, 180, 255);
+    color: var(--lpw-accent-text);
     font-size: 26px;
 }
 
 .stepper-value {
     flex-grow: 1;
-    color: white;
+    color: var(--lpw-text);
     font-size: 26px;
     -unity-font-style: bold;
     -unity-text-align: middle-center;
@@ -562,11 +567,11 @@
 .radio-btn {
     flex-grow: 1;
     height: 44px;
-    background-color: rgb(35, 35, 52);
+    background-color: var(--lpw-surface-sunken);
     border-width: 1px;
-    border-color: rgb(60, 60, 85);
+    border-color: var(--lpw-border);
     border-radius: 0;
-    color: rgb(160, 160, 185);
+    color: var(--lpw-text-secondary);
     font-size: 18px;
 }
 
@@ -583,14 +588,14 @@
 }
 
 .radio-btn--active {
-    background-color: rgb(50, 80, 170);
-    border-color: rgb(80, 120, 230);
-    color: white;
+    background-color: var(--lpw-accent);
+    border-color: var(--lpw-accent);
+    color: var(--lpw-text-on-accent);
 }
 
 /* ── バージョン ── */
 .version-label {
-    color: rgb(120, 120, 150);
+    color: var(--lpw-text-muted);
     font-size: 18px;
     -unity-text-align: middle-center;
 }
@@ -598,10 +603,10 @@
 /* ── 公開ボタン ── */
 .btn-publish-full {
     height: 56px;
-    background-color: rgb(60, 120, 220);
+    background-color: var(--lpw-accent);
     border-width: 0;
     border-radius: 10px;
-    color: white;
+    color: var(--lpw-text-on-accent);
     font-size: 22px;
     margin-bottom: 8px;
 }
@@ -609,12 +614,12 @@
 .publish-errors {
     flex-direction: column;
     padding: 8px;
-    background-color: rgb(70, 20, 20);
+    background-color: var(--lpw-danger-subtle);
     border-radius: 8px;
 }
 
 .publish-error-item {
-    color: rgb(255, 150, 150);
+    color: var(--lpw-danger-text);
     font-size: 18px;
     padding: 2px 0;
 }
@@ -625,24 +630,26 @@
     top: 0; left: 0; right: 0; bottom: 0;
 }
 
+/* 上方非表示トグル・高さバーは 3D ビューポート上に浮く HUD。
+   他メニューに合わせて半透明白ベースに統一（active のみアクセント）。 */
 .terrain-hide-above {
     position: absolute;
     top: 10px;
     left: 10px;
     height: 40px;
     padding: 0 14px;
-    background-color: rgba(0, 0, 0, 0.55);
+    background-color: var(--lpw-editor-bar);
     border-width: 1px;
-    border-color: rgb(70, 70, 100);
+    border-color: var(--lpw-border);
     border-radius: 8px;
-    color: rgb(180, 180, 210);
+    color: var(--lpw-text-secondary);
     font-size: 18px;
 }
 
 .terrain-hide-above--active {
-    background-color: rgb(60, 80, 170);
-    border-color: rgb(100, 130, 240);
-    color: white;
+    background-color: var(--lpw-accent);
+    border-color: var(--lpw-accent);
+    color: var(--lpw-text-on-accent);
 }
 
 .terrain-height-bar {
@@ -651,7 +658,7 @@
     right: 10px;
     width: 56px;
     align-items: center;
-    background-color: rgba(0, 0, 0, 0.55);
+    background-color: var(--lpw-editor-bar);
     border-radius: 10px;
     padding: 6px 0;
 }
@@ -659,16 +666,16 @@
 .terrain-height-btn {
     width: 44px;
     height: 44px;
-    background-color: rgb(40, 40, 60);
+    background-color: var(--lpw-surface-sunken);
     border-width: 1px;
-    border-color: rgb(70, 70, 100);
+    border-color: var(--lpw-border);
     border-radius: 8px;
     margin: 2px 0;
     background-size: 20px 20px;
 }
 
 .terrain-height-label {
-    color: white;
+    color: var(--lpw-text);
     font-size: 22px;
     -unity-font-style: bold;
     margin: 4px 0;
@@ -679,9 +686,9 @@
     bottom: 16px;
     align-self: center;
     padding: 8px 18px;
-    background-color: rgba(70, 20, 20, 0.92);
+    background-color: var(--lpw-flash-error-bg);
     border-radius: 10px;
-    color: rgb(255, 170, 170);
+    color: var(--lpw-text-on-status);
     font-size: 20px;
 }
 
@@ -689,7 +696,7 @@
     flex-direction: row;
     flex-wrap: wrap;
     padding: 6px 8px;
-    background-color: rgba(15, 15, 20, 0.80);
+    background-color: var(--lpw-editor-bar);
 }
 
 /* 地形タブ最小化中は編集バー（ツール）以外を隠す */
@@ -703,20 +710,20 @@
     width: 46px;
     height: 44px;
     padding: 0;
-    background-color: rgb(40, 40, 60);
+    background-color: var(--lpw-surface-sunken);
     border-width: 1px;
-    border-color: rgb(70, 70, 100);
+    border-color: var(--lpw-border);
     border-radius: 6px;
-    color: rgb(180, 180, 210);
+    color: var(--lpw-text-secondary);
     font-size: 24px;
     -unity-text-align: middle-center;
     margin: 2px 3px;
 }
 
 .terrain-mode-btn--active {
-    background-color: rgb(60, 80, 170);
-    border-color: rgb(100, 130, 240);
-    color: white;
+    background-color: var(--lpw-accent);
+    border-color: var(--lpw-accent);
+    color: var(--lpw-text-on-accent);
 }
 
 /* 編集ツールのアイコン画像（Assets/Textures/UI/Icons・128×128 PNG） */
@@ -726,6 +733,13 @@
     background-position-x: center;
     background-position-y: center;
     background-repeat: no-repeat;
+    -unity-background-image-tint-color: var(--lpw-icon);
+}
+
+/* アクティブな地形ツール（アクセント背景）はアイコンを白に */
+.terrain-mode-btn--active .terrain-icon,
+.terrain-mode-btn--active.terrain-icon {
+    -unity-background-image-tint-color: var(--lpw-text-on-accent);
 }
 
 .terrain-icon--brush {
@@ -767,15 +781,15 @@
     padding: 0 14px;
     background-color: transparent;
     border-width: 1px;
-    border-color: rgb(100, 170, 255);
+    border-color: var(--lpw-accent);
     border-radius: 6px;
-    color: rgb(100, 170, 255);
+    color: var(--lpw-accent-text);
     font-size: 18px;
     margin: 2px 3px;
 }
 
 .terrain-select-method {
-    color: rgb(160, 160, 190);
+    color: var(--lpw-text-secondary);
     font-size: 16px;
     padding: 2px 12px;
 }
@@ -783,7 +797,7 @@
 .terrain-subtab-bar {
     flex-direction: row;
     border-bottom-width: 1px;
-    border-color: rgb(44, 44, 60);
+    border-color: var(--lpw-border);
 }
 
 .terrain-subtab {
@@ -791,14 +805,14 @@
     height: 42px;
     background-color: transparent;
     border-width: 0;
-    color: rgb(150, 150, 180);
+    color: var(--lpw-text-muted);
     font-size: 18px;
 }
 
 .terrain-subtab--active {
-    color: rgb(100, 170, 255);
+    color: var(--lpw-accent-text);
     border-bottom-width: 2px;
-    border-color: rgb(100, 170, 255);
+    border-color: var(--lpw-accent);
 }
 
 .terrain-list-scroll {
@@ -816,26 +830,26 @@
     align-items: center;
     margin: 4px;
     padding: 6px;
-    background-color: rgb(30, 30, 42);
+    background-color: var(--lpw-surface-muted);
     border-width: 1px;
-    border-color: rgb(55, 55, 75);
+    border-color: var(--lpw-border);
     border-radius: 8px;
 }
 
 .terrain-item--selected {
-    border-color: rgb(100, 170, 255);
-    background-color: rgb(40, 50, 80);
+    border-color: var(--lpw-accent);
+    background-color: var(--lpw-accent-subtle);
 }
 
 .terrain-item-thumb {
     width: 64px;
     height: 64px;
     border-radius: 6px;
-    background-color: rgb(80, 120, 80);
+    background-color: var(--lpw-surface-sunken);
 }
 
 .terrain-item-name {
-    color: rgb(200, 200, 220);
+    color: var(--lpw-text-secondary);
     font-size: 14px;
     margin-top: 4px;
     overflow: hidden;
@@ -847,9 +861,9 @@
     right: 2px;
     width: 22px;
     height: 22px;
-    background-color: rgb(200, 150, 30);
+    background-color: var(--lpw-warning);
     border-radius: 11px;
-    color: white;
+    color: var(--lpw-text-on-status);
     font-size: 15px;
     -unity-text-align: middle-center;
     border-width: 0;
@@ -863,18 +877,18 @@
     justify-content: space-between;
     align-items: center;
     padding: 6px 12px;
-    background-color: rgba(15, 15, 20, 0.80);
+    background-color: var(--lpw-editor-bar);
     border-bottom-width: 1px;
-    border-color: rgb(44, 44, 60);
+    border-color: var(--lpw-border);
 }
 
 .object-header-label {
-    color: rgb(160, 160, 190);
+    color: var(--lpw-text-secondary);
     font-size: 16px;
 }
 
 .object-count-label {
-    color: rgb(200, 200, 220);
+    color: var(--lpw-text-secondary);
     font-size: 18px;
 }
 
@@ -883,7 +897,7 @@
     flex-wrap: wrap;
     align-items: center;
     padding: 6px 8px;
-    background-color: rgba(20, 24, 36, 0.85);
+    background-color: var(--lpw-editor-bar);
 }
 
 .object-action-btn {
@@ -891,9 +905,9 @@
     padding: 0 14px;
     background-color: transparent;
     border-width: 1px;
-    border-color: rgb(100, 170, 255);
+    border-color: var(--lpw-accent);
     border-radius: 6px;
-    color: rgb(100, 170, 255);
+    color: var(--lpw-accent-text);
     font-size: 16px;
     margin: 2px 4px;
 }
@@ -905,7 +919,7 @@
 }
 
 .object-scale-axis {
-    color: rgb(170, 170, 200);
+    color: var(--lpw-text-secondary);
     font-size: 15px;
     margin-right: 4px;
 }
@@ -913,18 +927,18 @@
 .object-scale-btn {
     width: 30px;
     height: 30px;
-    background-color: rgb(40, 40, 60);
+    background-color: var(--lpw-surface-sunken);
     border-width: 1px;
-    border-color: rgb(70, 70, 100);
+    border-color: var(--lpw-border);
     border-radius: 6px;
-    color: white;
+    color: var(--lpw-text);
     font-size: 18px;
     padding: 0;
 }
 
 .object-scale-label {
     width: 44px;
-    color: rgb(200, 200, 220);
+    color: var(--lpw-text-secondary);
     font-size: 15px;
     -unity-text-align: middle-center;
 }
@@ -932,7 +946,7 @@
 .object-subtab-bar {
     flex-direction: row;
     border-bottom-width: 1px;
-    border-color: rgb(44, 44, 60);
+    border-color: var(--lpw-border);
 }
 
 .object-subtab {
@@ -940,14 +954,14 @@
     height: 42px;
     background-color: transparent;
     border-width: 0;
-    color: rgb(150, 150, 180);
+    color: var(--lpw-text-muted);
     font-size: 18px;
 }
 
 .object-subtab--active {
-    color: rgb(100, 170, 255);
+    color: var(--lpw-accent-text);
     border-bottom-width: 2px;
-    border-color: rgb(100, 170, 255);
+    border-color: var(--lpw-accent);
 }
 
 .object-subtab-content {
@@ -969,33 +983,33 @@
     align-items: center;
     margin: 4px;
     padding: 6px;
-    background-color: rgb(30, 30, 42);
+    background-color: var(--lpw-surface-muted);
     border-width: 1px;
-    border-color: rgb(55, 55, 75);
+    border-color: var(--lpw-border);
     border-radius: 8px;
 }
 
 .object-item--selected {
-    border-color: rgb(100, 170, 255);
-    background-color: rgb(40, 50, 80);
+    border-color: var(--lpw-accent);
+    background-color: var(--lpw-accent-subtle);
 }
 
 .object-item-thumb {
     width: 64px;
     height: 64px;
     border-radius: 6px;
-    background-color: rgb(90, 90, 120);
+    background-color: var(--lpw-surface-sunken);
 }
 
 .object-item-name {
-    color: rgb(200, 200, 220);
+    color: var(--lpw-text-secondary);
     font-size: 14px;
     margin-top: 4px;
     overflow: hidden;
 }
 
 .object-item-cost {
-    color: rgb(150, 150, 180);
+    color: var(--lpw-text-muted);
     font-size: 12px;
 }
 
@@ -1004,9 +1018,9 @@
     bottom: 16px;
     align-self: center;
     padding: 8px 18px;
-    background-color: rgba(70, 20, 20, 0.92);
+    background-color: var(--lpw-flash-error-bg);
     border-radius: 10px;
-    color: rgb(255, 170, 170);
+    color: var(--lpw-text-on-status);
     font-size: 20px;
 }
 
@@ -1019,7 +1033,7 @@
 .gimmick-section {
     padding: 6px 10px;
     border-bottom-width: 1px;
-    border-color: rgb(40, 40, 56);
+    border-color: var(--lpw-border);
 }
 
 .gimmick-collapse-header {
@@ -1028,7 +1042,7 @@
     height: 36px;
     background-color: transparent;
     border-width: 0;
-    color: rgb(190, 190, 215);
+    color: var(--lpw-text);
     font-size: 16px;
     -unity-text-align: middle-left;
     padding: 0 2px;
@@ -1045,7 +1059,7 @@
 }
 
 .gimmick-subhead {
-    color: rgb(150, 150, 180);
+    color: var(--lpw-text-muted);
     font-size: 14px;
     margin: 6px 2px 2px 2px;
 }
@@ -1062,7 +1076,7 @@
 
 .gimmick-state-index {
     width: 22px;
-    color: rgb(120, 120, 150);
+    color: var(--lpw-text-muted);
     font-size: 14px;
     -unity-text-align: middle-center;
 }
@@ -1087,11 +1101,11 @@
 .gimmick-add-btn {
     width: 34px;
     height: 34px;
-    background-color: rgb(40, 40, 60);
+    background-color: var(--lpw-surface-sunken);
     border-width: 1px;
-    border-color: rgb(100, 170, 255);
+    border-color: var(--lpw-accent);
     border-radius: 8px;
-    color: rgb(100, 170, 255);
+    color: var(--lpw-accent-text);
     font-size: 20px;
     padding: 0;
 }
@@ -1107,15 +1121,15 @@
     height: 44px;
     margin: 3px 0;
     padding: 0 6px;
-    background-color: rgb(30, 30, 42);
+    background-color: var(--lpw-surface-muted);
     border-width: 1px;
-    border-color: rgb(55, 55, 75);
+    border-color: var(--lpw-border);
     border-radius: 8px;
 }
 
 .gimmick-rule-name {
     flex-grow: 1;
-    color: rgb(205, 205, 225);
+    color: var(--lpw-text);
     font-size: 16px;
     -unity-text-align: middle-left;
     background-color: transparent;
@@ -1127,17 +1141,17 @@
     width: 32px;
     height: 32px;
     margin-left: 4px;
-    background-color: rgb(40, 40, 58);
+    background-color: var(--lpw-surface-sunken);
     border-width: 1px;
-    border-color: rgb(70, 70, 100);
+    border-color: var(--lpw-border);
     border-radius: 6px;
-    color: rgb(200, 200, 220);
+    color: var(--lpw-text-secondary);
     font-size: 16px;
     padding: 0;
 }
 
 .gimmick-rule-empty {
-    color: rgb(120, 120, 150);
+    color: var(--lpw-text-muted);
     font-size: 14px;
     -unity-text-align: middle-center;
     padding: 12px;
@@ -1149,6 +1163,7 @@
     background-size: 62% 62%;
     background-position-x: center;
     background-position-y: center;
+    -unity-background-image-tint-color: var(--lpw-icon);
 }
 
 .gimmick-icon-btn--plus {
@@ -1179,7 +1194,7 @@
     top: 0;
     right: 0;
     bottom: 0;
-    background-color: rgb(22, 22, 32);
+    background-color: var(--lpw-editor-panel);
     flex-direction: column;
 }
 
@@ -1189,7 +1204,7 @@
     height: 48px;
     padding: 0 8px;
     border-bottom-width: 1px;
-    border-color: rgb(40, 40, 56);
+    border-color: var(--lpw-border);
 }
 
 /* 戻る / 閉じるは枠で囲わずアイコンのみ（ヘッダー戻ると統一） */
@@ -1207,12 +1222,12 @@
     align-items: center;
     padding: 8px 10px;
     border-bottom-width: 1px;
-    border-color: rgb(40, 40, 56);
+    border-color: var(--lpw-border);
 }
 
 .gimmick-edit-titlelabel {
     width: 70px;
-    color: rgb(150, 150, 180);
+    color: var(--lpw-text-muted);
     font-size: 14px;
 }
 
@@ -1227,7 +1242,7 @@
 .gimmick-edit-section {
     padding: 6px 10px;
     border-bottom-width: 1px;
-    border-color: rgb(40, 40, 56);
+    border-color: var(--lpw-border);
 }
 
 .gimmick-edit-section-head {
@@ -1242,7 +1257,7 @@
 }
 
 .gimmick-edit-empty {
-    color: rgb(110, 110, 140);
+    color: var(--lpw-text-muted);
     font-size: 13px;
     -unity-text-align: middle-center;
     padding: 8px;
@@ -1252,9 +1267,9 @@
     flex-direction: column;
     margin: 3px 0;
     padding: 6px;
-    background-color: rgb(30, 30, 42);
+    background-color: var(--lpw-surface-muted);
     border-width: 1px;
-    border-color: rgb(55, 55, 75);
+    border-color: var(--lpw-border);
     border-radius: 8px;
 }
 
@@ -1263,42 +1278,42 @@
     align-items: center;
 }
 
-/* 種類セレクタボタン（タップで選択リストを開く・白い角丸で入力欄と統一） */
+/* 種類セレクタボタン（タップで選択リストを開く・角丸で入力欄と統一） */
 .gimmick-edit-typebtn {
     flex-direction: row;
     align-items: center;
     flex-grow: 1;
     margin: 0 4px 0 0;
     height: 38px;
-    background-color: white;
+    background-color: var(--lpw-surface);
     border-width: 1px;
-    border-color: rgb(170, 175, 190);
+    border-color: var(--lpw-border-strong);
     border-radius: 8px;
     padding: 0 10px;
 }
 
 .gimmick-edit-typebtn-label {
     flex-grow: 1;
-    color: rgb(35, 35, 45);
+    color: var(--lpw-text);
     font-size: 15px;
     -unity-text-align: middle-left;
 }
 
-/* 白背景上のため icon_next を暗色にティントして見えるようにする */
+/* surface 背景上のため icon_next を暗色にティントして見えるようにする */
 .gimmick-edit-typebtn-next {
     width: 18px;
     height: 18px;
     margin-left: 6px;
-    -unity-background-image-tint-color: rgb(90, 90, 110);
+    -unity-background-image-tint-color: var(--lpw-text-muted);
 }
 
 .gimmick-edit-row-btn {
     width: 32px;
     height: 32px;
     margin-left: 4px;
-    background-color: rgb(40, 40, 58);
+    background-color: var(--lpw-surface-sunken);
     border-width: 1px;
-    border-color: rgb(70, 70, 100);
+    border-color: var(--lpw-border);
     border-radius: 8px;
     padding: 0;
 }
@@ -1311,7 +1326,7 @@
     margin-top: 4px;
 }
 
-/* 入力欄の高さ（見た目は共通スタイルで角丸・白背景に統一） */
+/* 入力欄の高さ（見た目は共通スタイルで角丸・surface 背景に統一） */
 .gimmick-edit-title {
     font-size: 16px;
 }
@@ -1332,41 +1347,41 @@
 .gimmick-picker-title {
     flex-grow: 1;
     margin-left: 8px;
-    color: rgb(210, 210, 230);
+    color: var(--lpw-text);
     font-size: 16px;
     -unity-text-align: middle-left;
 }
 
 .gimmick-picker-category {
-    color: rgb(150, 150, 180);
+    color: var(--lpw-text-muted);
     font-size: 13px;
     -unity-font-style: bold;
     margin: 12px 10px 2px 10px;
     padding-bottom: 2px;
     border-bottom-width: 1px;
-    border-color: rgb(55, 55, 75);
+    border-color: var(--lpw-border);
 }
 
 .gimmick-picker-item {
     min-height: 42px;
     margin: 2px 10px;
     justify-content: center;
-    background-color: rgb(36, 36, 50);
+    background-color: var(--lpw-surface-muted);
     border-width: 1px;
-    border-color: rgb(60, 60, 85);
+    border-color: var(--lpw-border);
     border-radius: 8px;
-    color: rgb(210, 210, 230);
+    color: var(--lpw-text);
     font-size: 15px;
     -unity-text-align: middle-left;
     padding: 4px 12px;
 }
 
 .gimmick-picker-item:hover {
-    background-color: rgb(48, 50, 72);
+    background-color: var(--lpw-surface-sunken);
 }
 
 .gimmick-picker-item--selected {
-    background-color: rgb(50, 80, 160);
-    border-color: rgb(120, 160, 240);
-    color: white;
+    background-color: var(--lpw-accent);
+    border-color: var(--lpw-accent);
+    color: var(--lpw-text-on-accent);
 }

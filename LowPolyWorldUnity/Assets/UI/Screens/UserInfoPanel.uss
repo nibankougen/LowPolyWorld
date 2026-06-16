@@ -8,13 +8,13 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: var(--lpw-scrim);
     align-items: center;
     justify-content: center;
 }
 
 .uip-panel {
-    background-color: rgb(28, 28, 34);
+    background-color: var(--lpw-surface);
     border-radius: 20px;
     width: 480px;
     padding: 28px 24px 24px 24px;
@@ -28,8 +28,8 @@
     right: 12px;
     width: 52px;
     height: 52px;
-    background-color: rgb(55, 55, 65);
-    color: white;
+    background-color: var(--lpw-surface-sunken);
+    color: var(--lpw-text-secondary);
     font-size: 28px;
     border-radius: 8px;
     border-width: 0;
@@ -38,7 +38,7 @@
 .uip-avatar-icon {
     width: 120px;
     height: 120px;
-    background-color: rgb(55, 55, 65);
+    background-color: var(--lpw-surface-sunken);
     border-radius: 60px;
     align-items: center;
     justify-content: center;
@@ -47,7 +47,7 @@
 
 .uip-avatar-placeholder {
     font-size: 60px;
-    color: rgb(160, 160, 170);
+    color: var(--lpw-text-muted);
 }
 
 .uip-name-row {
@@ -57,22 +57,22 @@
 }
 
 .uip-display-name {
-    color: white;
+    color: var(--lpw-text);
     font-size: 32px;
     -unity-font-style: bold;
 }
 
 .uip-verified-badge {
     font-size: 18px;
-    color: white;
-    background-color: rgb(60, 140, 230);
+    color: var(--lpw-text-on-accent);
+    background-color: var(--lpw-accent);
     border-radius: 10px;
     padding: 2px 8px;
     margin-left: 8px;
 }
 
 .uip-at-name {
-    color: rgb(140, 140, 155);
+    color: var(--lpw-text-muted);
     font-size: 24px;
     margin-bottom: 18px;
 }
@@ -91,13 +91,13 @@
 }
 
 .uip-social-count {
-    color: white;
+    color: var(--lpw-text);
     font-size: 30px;
     -unity-font-style: bold;
 }
 
 .uip-social-label {
-    color: rgb(140, 140, 155);
+    color: var(--lpw-text-muted);
     font-size: 20px;
 }
 
@@ -116,29 +116,29 @@
 }
 
 .uip-action-btn--primary {
-    background-color: rgb(80, 140, 220);
-    color: white;
+    background-color: var(--lpw-accent);
+    color: var(--lpw-text-on-accent);
 }
 
 .uip-action-btn--secondary {
-    background-color: rgb(55, 55, 68);
-    color: rgb(200, 200, 210);
+    background-color: var(--lpw-surface-sunken);
+    color: var(--lpw-text-secondary);
 }
 
 .uip-action-btn--accent {
-    background-color: rgb(60, 180, 100);
-    color: white;
+    background-color: var(--lpw-success);
+    color: var(--lpw-text-on-status);
 }
 
 .uip-action-btn--more {
-    background-color: rgb(55, 55, 68);
-    color: rgb(200, 200, 210);
+    background-color: var(--lpw-surface-sunken);
+    color: var(--lpw-text-secondary);
     letter-spacing: 4px;
 }
 
 .uip-more-menu {
     width: 100%;
-    background-color: rgb(38, 38, 48);
+    background-color: var(--lpw-surface-muted);
     border-radius: 12px;
     overflow: hidden;
     margin-top: -4px;
@@ -150,13 +150,13 @@
     height: 64px;
     font-size: 26px;
     background-color: transparent;
-    color: rgb(220, 220, 230);
+    color: var(--lpw-text);
     border-width: 0;
     border-bottom-width: 1px;
-    border-color: rgb(50, 50, 62);
+    border-color: var(--lpw-border);
     border-radius: 0;
 }
 
 .uip-more-item--danger {
-    color: rgb(240, 80, 80);
+    color: var(--lpw-danger-text);
 }

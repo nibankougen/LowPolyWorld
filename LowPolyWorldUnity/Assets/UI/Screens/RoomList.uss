@@ -1,7 +1,7 @@
 .room-list-root {
     flex: 1;
     flex-direction: column;
-    background-color: rgb(18, 18, 28);
+    background-color: var(--lpw-bg-page);
 }
 
 /* ── Header ──────────────────────────────────────── */
@@ -10,9 +10,9 @@
     flex-direction: row;
     align-items: center;
     height: 52px;
-    background-color: rgb(22, 22, 34);
+    background-color: var(--lpw-surface);
     border-bottom-width: 1px;
-    border-bottom-color: rgb(50, 50, 70);
+    border-bottom-color: var(--lpw-border);
     padding: 0 8px;
 }
 
@@ -22,14 +22,14 @@
     background-color: transparent;
     border-width: 0;
     font-size: 24px;
-    color: rgb(200, 200, 220);
+    color: var(--lpw-text-secondary);
 }
 
 .header-title {
     flex: 1;
     font-size: 16px;
     -unity-font-style: bold;
-    color: rgb(240, 240, 255);
+    color: var(--lpw-text);
     -unity-text-align: middle-center;
 }
 
@@ -46,7 +46,7 @@
 
 .loading-label {
     font-size: 14px;
-    color: rgb(150, 150, 180);
+    color: var(--lpw-text-muted);
 }
 
 /* ── Room list ───────────────────────────────────── */
@@ -63,7 +63,7 @@
 .room-card {
     flex-direction: row;
     align-items: center;
-    background-color: rgb(30, 30, 46);
+    background-color: var(--lpw-surface);
     border-radius: 10px;
     margin-bottom: 8px;
     padding: 12px 14px;
@@ -73,14 +73,14 @@
 .room-card__lang {
     width: 36px;
     font-size: 13px;
-    color: rgb(160, 180, 220);
+    color: var(--lpw-text-secondary);
     -unity-text-align: middle-center;
 }
 
 .room-card__players {
     flex: 1;
     font-size: 14px;
-    color: rgb(200, 200, 220);
+    color: var(--lpw-text-secondary);
     margin-left: 8px;
 }
 
@@ -88,20 +88,20 @@
     height: 34px;
     width: 72px;
     border-radius: 17px;
-    background-color: rgb(100, 140, 255);
+    background-color: var(--lpw-accent);
     border-width: 0;
-    color: rgb(255, 255, 255);
+    color: var(--lpw-text-on-accent);
     font-size: 13px;
 }
 
 .room-card__join-btn--full {
-    background-color: rgb(60, 60, 80);
-    color: rgb(140, 140, 160);
+    background-color: var(--lpw-surface-sunken);
+    color: var(--lpw-text-muted);
 }
 
 .room-card__badge {
     font-size: 11px;
-    color: rgb(150, 150, 180);
+    color: var(--lpw-text-muted);
     margin-right: 6px;
 }
 
@@ -115,7 +115,7 @@
 
 .room-empty-label {
     font-size: 14px;
-    color: rgb(120, 120, 150);
+    color: var(--lpw-text-muted);
 }
 
 /* ── Create area ─────────────────────────────────── */
@@ -124,8 +124,8 @@
     flex-direction: column;
     padding: 12px 16px;
     border-top-width: 1px;
-    border-top-color: rgb(50, 50, 70);
-    background-color: rgb(22, 22, 34);
+    border-top-color: var(--lpw-border);
+    background-color: var(--lpw-surface);
 }
 
 .btn-create {
@@ -136,21 +136,21 @@
 }
 
 .btn-create--primary {
-    background-color: rgb(100, 140, 255);
+    background-color: var(--lpw-accent);
     border-width: 0;
-    color: rgb(255, 255, 255);
+    color: var(--lpw-text-on-accent);
 }
 
 .btn-create--secondary {
-    background-color: rgb(60, 80, 160);
+    background-color: var(--lpw-accent-subtle);
     border-width: 0;
-    color: rgb(220, 220, 255);
+    color: var(--lpw-accent-text);
 }
 
 .btn-create--outline {
     background-color: transparent;
     border-width: 1px;
-    border-color: rgb(100, 100, 140);
-    color: rgb(180, 180, 220);
+    border-color: var(--lpw-border-strong);
+    color: var(--lpw-text-secondary);
     margin-bottom: 0;
 }

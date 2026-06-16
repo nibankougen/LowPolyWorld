@@ -1,7 +1,7 @@
 .world-detail-root {
     flex: 1;
     flex-direction: column;
-    background-color: rgb(18, 18, 28);
+    background-color: var(--lpw-bg-page);
 }
 
 /* ── Header ──────────────────────────────────────── */
@@ -10,9 +10,9 @@
     flex-direction: row;
     align-items: center;
     height: 52px;
-    background-color: rgb(22, 22, 34);
+    background-color: var(--lpw-surface);
     border-bottom-width: 1px;
-    border-bottom-color: rgb(50, 50, 70);
+    border-bottom-color: var(--lpw-border);
     padding: 0 8px;
 }
 
@@ -22,14 +22,14 @@
     background-color: transparent;
     border-width: 0;
     font-size: 24px;
-    color: rgb(200, 200, 220);
+    color: var(--lpw-text-secondary);
 }
 
 .header-title {
     flex: 1;
     font-size: 16px;
     -unity-font-style: bold;
-    color: rgb(240, 240, 255);
+    color: var(--lpw-text);
     -unity-text-align: middle-center;
 }
 
@@ -39,11 +39,11 @@
     background-color: transparent;
     border-width: 0;
     font-size: 20px;
-    color: rgb(160, 120, 140);
+    color: var(--lpw-text-muted);
 }
 
 .btn-like--active {
-    color: rgb(240, 80, 120);
+    color: var(--lpw-danger);
 }
 
 .btn-more {
@@ -52,7 +52,7 @@
     background-color: transparent;
     border-width: 0;
     font-size: 22px;
-    color: rgb(180, 180, 200);
+    color: var(--lpw-text-secondary);
 }
 
 /* ── More menu ───────────────────────────────────── */
@@ -61,10 +61,10 @@
     position: absolute;
     right: 8px;
     top: 52px;
-    background-color: rgb(30, 30, 46);
+    background-color: var(--lpw-surface);
     border-radius: 10px;
     border-width: 1px;
-    border-color: rgb(60, 60, 90);
+    border-color: var(--lpw-border);
     min-width: 180px;
     z-index: 100;
 }
@@ -74,14 +74,14 @@
     background-color: transparent;
     border-width: 0;
     border-radius: 0;
-    color: rgb(220, 220, 240);
+    color: var(--lpw-text);
     font-size: 14px;
     -unity-text-align: middle-left;
     padding: 0 16px;
 }
 
 .more-menu__item--danger {
-    color: rgb(240, 100, 100);
+    color: var(--lpw-danger-text);
 }
 
 /* ── Report reason dropdown ──────────────────────── */
@@ -101,7 +101,7 @@
 .detail-thumb {
     width: 100%;
     height: 220px;
-    background-color: rgb(40, 40, 60);
+    background-color: var(--lpw-surface-sunken);
 }
 
 /* ── Info ────────────────────────────────────────── */
@@ -114,7 +114,7 @@
 .detail-name {
     font-size: 20px;
     -unity-font-style: bold;
-    color: rgb(240, 240, 255);
+    color: var(--lpw-text);
     white-space: normal;
     margin-bottom: 8px;
 }
@@ -126,20 +126,20 @@
 
 .detail-likes {
     font-size: 14px;
-    color: rgb(200, 160, 160);
+    color: var(--lpw-danger-text);
     margin-right: 16px;
 }
 
 .detail-players {
     font-size: 14px;
-    color: rgb(160, 200, 160);
+    color: var(--lpw-success);
 }
 
 /* ── Divider ─────────────────────────────────────── */
 
 .detail-divider {
     height: 1px;
-    background-color: rgb(50, 50, 70);
+    background-color: var(--lpw-border);
     margin: 4px 16px;
 }
 
@@ -159,22 +159,22 @@
 }
 
 .btn-join-public {
-    background-color: rgb(100, 140, 255);
+    background-color: var(--lpw-accent);
     border-width: 0;
-    color: rgb(255, 255, 255);
+    color: var(--lpw-text-on-accent);
 }
 
 .btn-action--secondary {
-    background-color: rgb(60, 80, 160);
+    background-color: var(--lpw-accent-subtle);
     border-width: 0;
-    color: rgb(220, 220, 255);
+    color: var(--lpw-accent-text);
 }
 
 .btn-action--outline {
     background-color: transparent;
     border-width: 1px;
-    border-color: rgb(100, 100, 140);
-    color: rgb(180, 180, 220);
+    border-color: var(--lpw-border-strong);
+    color: var(--lpw-text-secondary);
 }
 
 /* ── Loading overlay ─────────────────────────────── */
@@ -185,14 +185,14 @@
     top: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(0, 0, 0, 0.6);
+    background-color: var(--lpw-scrim);
     align-items: center;
     justify-content: center;
 }
 
 .loading-label {
     font-size: 16px;
-    color: rgb(200, 200, 255);
+    color: var(--lpw-text-on-status);
 }
 
 /* ── Modal ───────────────────────────────────────── */
@@ -203,13 +203,13 @@
     top: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(0, 0, 0, 0.7);
+    background-color: var(--lpw-scrim);
     align-items: center;
     justify-content: center;
 }
 
 .modal-box {
-    background-color: rgb(30, 30, 46);
+    background-color: var(--lpw-surface);
     border-radius: 16px;
     padding: 24px;
     width: 300px;
@@ -218,14 +218,14 @@
 .modal-title {
     font-size: 17px;
     -unity-font-style: bold;
-    color: rgb(240, 240, 255);
+    color: var(--lpw-text);
     margin-bottom: 12px;
     -unity-text-align: upper-center;
 }
 
 .modal-body {
     font-size: 14px;
-    color: rgb(200, 200, 220);
+    color: var(--lpw-text-secondary);
     white-space: normal;
     margin-bottom: 20px;
     -unity-text-align: upper-center;
@@ -245,13 +245,13 @@
 }
 
 .modal-btn--cancel {
-    background-color: rgb(50, 50, 70);
+    background-color: var(--lpw-surface-sunken);
     border-width: 0;
-    color: rgb(180, 180, 200);
+    color: var(--lpw-text-secondary);
 }
 
 .modal-btn--ok {
-    background-color: rgb(100, 140, 255);
+    background-color: var(--lpw-accent);
     border-width: 0;
-    color: rgb(255, 255, 255);
+    color: var(--lpw-text-on-accent);
 }

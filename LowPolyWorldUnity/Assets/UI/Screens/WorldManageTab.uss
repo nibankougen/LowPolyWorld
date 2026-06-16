@@ -4,23 +4,23 @@
 
 .world-manage-root {
     flex-grow: 1;
-    background-color: rgb(18, 18, 22);
+    background-color: var(--lpw-bg-page);
     flex-direction: column;
 }
 
 /* ── タブバー ── */
 .category-tab-bar {
     flex-direction: row;
-    background-color: rgb(24, 24, 30);
+    background-color: var(--lpw-surface);
     border-bottom-width: 1px;
-    border-color: rgb(44, 44, 54);
+    border-color: var(--lpw-border);
 }
 
 .category-tab {
     flex-grow: 1;
     height: 72px;
     background-color: transparent;
-    color: rgb(140, 140, 155);
+    color: var(--lpw-text-muted);
     font-size: 20px;
     border-width: 0;
     border-radius: 0;
@@ -28,9 +28,9 @@
 }
 
 .category-tab--active {
-    color: rgb(100, 170, 255);
+    color: var(--lpw-accent-text);
     border-bottom-width: 2px;
-    border-color: rgb(100, 170, 255);
+    border-color: var(--lpw-accent);
 }
 
 /* ── タブパネル共通 ── */
@@ -48,7 +48,7 @@
 }
 
 .slot-usage-label {
-    color: rgb(140, 140, 155);
+    color: var(--lpw-text-muted);
     font-size: 22px;
 }
 
@@ -68,7 +68,7 @@
 .world-card {
     width: 48%;
     margin: 1%;
-    background-color: rgb(30, 30, 38);
+    background-color: var(--lpw-surface);
     border-radius: 12px;
     overflow: hidden;
 }
@@ -76,7 +76,7 @@
 .world-card__thumbnail {
     width: 100%;
     height: 160px;
-    background-color: rgb(44, 44, 54);
+    background-color: var(--lpw-surface-sunken);
 }
 
 .world-card__footer {
@@ -87,7 +87,7 @@
 
 .world-card__name {
     flex-grow: 1;
-    color: white;
+    color: var(--lpw-text);
     font-size: 22px;
     -unity-text-overflow-position: end;
     overflow: hidden;
@@ -98,19 +98,19 @@
     font-size: 18px;
     padding: 2px 8px;
     border-radius: 6px;
-    color: white;
+    color: var(--lpw-text-on-status);
 }
 
 .world-card__badge--public {
-    background-color: rgb(40, 160, 80);
+    background-color: var(--lpw-success);
 }
 
 .world-card__badge--private {
-    background-color: rgb(80, 80, 95);
+    background-color: var(--lpw-text-secondary);
 }
 
 .world-card__badge--unpublished {
-    background-color: rgb(60, 60, 75);
+    background-color: var(--lpw-text-muted);
 }
 
 .world-card__locked-overlay {
@@ -119,21 +119,21 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(0, 0, 0, 0.55);
+    background-color: var(--lpw-scrim);
     align-items: center;
     justify-content: center;
 }
 
 .world-card__lock-icon {
-    color: rgb(200, 200, 200);
+    color: var(--lpw-text-on-status);
     font-size: 36px;
 }
 
 /* ── 新規作成カード ── */
 .world-card--new {
-    background-color: rgb(24, 24, 30);
+    background-color: var(--lpw-surface-muted);
     border-width: 2px;
-    border-color: rgb(60, 60, 80);
+    border-color: var(--lpw-border-strong);
     border-style: solid;
     align-items: center;
     justify-content: center;
@@ -141,13 +141,13 @@
 }
 
 .world-card__new-icon {
-    color: rgb(100, 170, 255);
+    color: var(--lpw-accent-text);
     font-size: 52px;
     margin-bottom: 8px;
 }
 
 .world-card__new-label {
-    color: rgb(100, 170, 255);
+    color: var(--lpw-accent-text);
     font-size: 22px;
 }
 
@@ -160,13 +160,13 @@
 }
 
 .empty-label {
-    color: rgb(140, 140, 155);
+    color: var(--lpw-text-muted);
     font-size: 26px;
     margin-bottom: 12px;
 }
 
 .empty-hint {
-    color: rgb(90, 90, 105);
+    color: var(--lpw-text-muted);
     font-size: 20px;
     -unity-text-align: middle-center;
 }
@@ -174,7 +174,7 @@
 /* ── スタブパネル ── */
 .stub-label {
     flex-grow: 1;
-    color: rgb(90, 90, 105);
+    color: var(--lpw-text-muted);
     font-size: 22px;
     -unity-text-align: middle-center;
     padding: 40px;

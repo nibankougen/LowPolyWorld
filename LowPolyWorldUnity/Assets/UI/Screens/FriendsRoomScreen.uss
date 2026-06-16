@@ -4,30 +4,30 @@
 
 .screen-root {
     flex-grow: 1;
-    background-color: rgb(18, 18, 22);
+    background-color: var(--lpw-bg-page);
 }
 
 .screen-header {
     flex-direction: row;
     align-items: center;
     padding: 20px 16px 12px 16px;
-    background-color: rgb(24, 24, 30);
+    background-color: var(--lpw-surface);
     border-bottom-width: 1px;
-    border-color: rgb(44, 44, 54);
+    border-color: var(--lpw-border);
 }
 
 .btn-back {
     width: 60px;
     height: 60px;
     background-color: transparent;
-    color: rgb(100, 170, 255);
+    color: var(--lpw-accent-text);
     font-size: 36px;
     border-width: 0;
 }
 
 .screen-title {
     flex-grow: 1;
-    color: white;
+    color: var(--lpw-text);
     font-size: 30px;
     -unity-font-style: bold;
     -unity-text-align: middle-center;
@@ -40,7 +40,7 @@
 }
 
 .loading-label {
-    color: rgb(130, 130, 145);
+    color: var(--lpw-text-muted);
     font-size: 26px;
 }
 
@@ -51,17 +51,17 @@
 .room-card {
     padding: 16px 20px;
     border-bottom-width: 1px;
-    border-color: rgb(36, 36, 46);
+    border-color: var(--lpw-border);
 }
 
 .room-card__world-name {
-    color: rgb(160, 160, 180);
+    color: var(--lpw-text-secondary);
     font-size: 22px;
     margin-bottom: 4px;
 }
 
 .room-card__room-type {
-    color: rgb(100, 150, 220);
+    color: var(--lpw-accent-text);
     font-size: 20px;
     margin-bottom: 8px;
 }
@@ -73,7 +73,7 @@
 }
 
 .room-card__players {
-    color: rgb(180, 220, 180);
+    color: var(--lpw-success);
     font-size: 24px;
     -unity-font-style: bold;
 }
@@ -81,8 +81,8 @@
 .room-card__join-btn {
     height: 56px;
     min-width: 120px;
-    background-color: rgb(80, 140, 220);
-    color: white;
+    background-color: var(--lpw-accent);
+    color: var(--lpw-text-on-accent);
     font-size: 24px;
     border-radius: 10px;
     border-width: 0;
@@ -90,8 +90,8 @@
 }
 
 .room-card__join-btn--full {
-    background-color: rgb(60, 60, 75);
-    color: rgb(120, 120, 135);
+    background-color: var(--lpw-surface-sunken);
+    color: var(--lpw-text-muted);
 }
 
 .empty-state {
@@ -102,7 +102,7 @@
 }
 
 .empty-label {
-    color: rgb(120, 120, 135);
+    color: var(--lpw-text-muted);
     font-size: 26px;
     white-space: normal;
     -unity-text-align: upper-center;

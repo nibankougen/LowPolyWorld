@@ -1,14 +1,14 @@
 .menu-backdrop {
     position: absolute;
     left: 0; right: 0; top: 0; bottom: 0;
-    background-color: rgba(0, 0, 0, 0.45);
+    background-color: var(--lpw-scrim);
 }
 
 .menu-panel {
     position: absolute;
     top: 0; right: 0; bottom: 0;
     width: 640px;
-    background-color: rgb(30, 30, 38);
+    background-color: var(--lpw-surface);
     flex-direction: column;
 }
 
@@ -19,12 +19,12 @@
     justify-content: space-between;
     padding: 40px 32px 24px;
     border-bottom-width: 1px;
-    border-bottom-color: rgba(255, 255, 255, 0.1);
+    border-bottom-color: var(--lpw-border);
 }
 
 .menu-title {
     font-size: 36px;
-    color: rgb(255, 255, 255);
+    color: var(--lpw-text);
     -unity-font-style: bold;
 }
 
@@ -32,14 +32,14 @@
     width: 80px;
     height: 80px;
     font-size: 36px;
-    background-color: rgba(255, 255, 255, 0.08);
-    color: rgb(200, 200, 210);
+    background-color: var(--lpw-surface-hover);
+    color: var(--lpw-text-secondary);
     border-radius: 40px;
     border-width: 0;
 }
 
 .menu-close-btn:active {
-    background-color: rgba(255, 255, 255, 0.18);
+    background-color: var(--lpw-surface-active);
     scale: 0.93;
 }
 
@@ -48,7 +48,7 @@
     flex-direction: row;
     padding: 0 16px;
     border-bottom-width: 1px;
-    border-bottom-color: rgba(255, 255, 255, 0.08);
+    border-bottom-color: var(--lpw-border);
 }
 
 .menu-tab {
@@ -56,7 +56,7 @@
     height: 80px;
     font-size: 24px;
     background-color: rgba(0, 0, 0, 0);
-    color: rgba(180, 180, 190, 0.6);
+    color: var(--lpw-text-muted);
     border-width: 0;
     border-radius: 0;
     border-bottom-width: 3px;
@@ -64,8 +64,8 @@
 }
 
 .menu-tab--active {
-    color: rgb(120, 200, 255);
-    border-bottom-color: rgb(120, 200, 255);
+    color: var(--lpw-accent-text);
+    border-bottom-color: var(--lpw-accent);
 }
 
 /* コンテンツ */
@@ -84,7 +84,7 @@
 
 .menu-stub-text {
     font-size: 28px;
-    color: rgba(255, 255, 255, 0.3);
+    color: var(--lpw-text-muted);
     -unity-text-align: middle-center;
     flex-grow: 1;
 }
@@ -92,7 +92,7 @@
 /* 設定タブ内 音量コントロール */
 .menu-section-title {
     font-size: 26px;
-    color: rgba(255, 255, 255, 0.45);
+    color: var(--lpw-text-muted);
     margin-bottom: 20px;
     -unity-font-style: bold;
 }
@@ -106,7 +106,7 @@
 .volume-label {
     width: 200px;
     font-size: 24px;
-    color: rgb(220, 220, 230);
+    color: var(--lpw-text-secondary);
 }
 
 .volume-slider {
@@ -119,7 +119,7 @@
     width: 36px;
     height: 36px;
     border-radius: 18px;
-    background-color: rgb(120, 200, 255);
+    background-color: var(--lpw-accent);
     border-width: 0;
     top: -12px;
 }
@@ -127,38 +127,38 @@
 .volume-slider > .unity-base-slider__tracker {
     height: 6px;
     border-radius: 3px;
-    background-color: rgba(255, 255, 255, 0.15);
+    background-color: var(--lpw-border);
 }
 
 .volume-value {
     width: 80px;
     font-size: 24px;
-    color: rgb(120, 200, 255);
+    color: var(--lpw-accent-text);
     -unity-text-align: middle-right;
 }
 
 /* ルームタブ */
 .room-world-name {
     font-size: 32px;
-    color: rgb(255, 255, 255);
+    color: var(--lpw-text);
     -unity-font-style: bold;
     margin-bottom: 28px;
 }
 
 .room-language-btn {
     font-size: 24px;
-    color: rgb(120, 200, 255);
+    color: var(--lpw-accent-text);
     -unity-font-style: bold;
-    background-color: rgba(120, 200, 255, 0.1);
+    background-color: var(--lpw-accent-subtle);
     border-radius: 8px;
     border-width: 1px;
-    border-color: rgba(120, 200, 255, 0.3);
+    border-color: var(--lpw-accent-border);
     padding: 4px 20px;
     height: 52px;
 }
 
 .room-language-btn:active {
-    background-color: rgba(120, 200, 255, 0.2);
+    background-color: var(--lpw-accent-subtle);
 }
 
 .room-language-btn--readonly {
@@ -169,8 +169,8 @@
 .room-reenter-btn {
     height: 80px;
     font-size: 26px;
-    color: rgb(255, 255, 255);
-    background-color: rgb(60, 150, 220);
+    color: var(--lpw-text-on-accent);
+    background-color: var(--lpw-accent);
     border-radius: 12px;
     border-width: 0;
     margin-top: 8px;
@@ -179,7 +179,7 @@
 }
 
 .room-reenter-btn:active {
-    background-color: rgb(40, 130, 200);
+    background-color: var(--lpw-accent-hover);
     scale: 0.97;
 }
 
@@ -194,14 +194,14 @@
 .room-member-card {
     flex-direction: row;
     align-items: center;
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: var(--lpw-surface-muted);
     border-radius: 12px;
     padding: 18px 24px;
     margin-bottom: 10px;
 }
 
 .room-member-card:active {
-    background-color: rgba(255, 255, 255, 0.12);
+    background-color: var(--lpw-surface-active);
 }
 
 .room-member-card--hidden {
@@ -211,7 +211,7 @@
 .room-member-name {
     flex-grow: 1;
     font-size: 26px;
-    color: rgb(230, 230, 240);
+    color: var(--lpw-text);
 }
 
 .room-member-badge {
@@ -222,13 +222,13 @@
 }
 
 .room-member-badge--owner {
-    color: rgb(255, 200, 60);
-    background-color: rgba(80, 60, 10, 0.9);
+    color: var(--lpw-premium);
+    background-color: var(--lpw-warning-subtle);
 }
 
 .room-member-badge--verified {
-    color: rgb(100, 200, 255);
-    background-color: rgba(10, 50, 80, 0.9);
+    color: var(--lpw-accent-text);
+    background-color: var(--lpw-accent-subtle);
 }
 
 .room-info-row {
@@ -240,12 +240,12 @@
 
 .room-info-label {
     font-size: 24px;
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--lpw-text-secondary);
 }
 
 .room-info-value {
     font-size: 28px;
-    color: rgb(120, 200, 255);
+    color: var(--lpw-accent-text);
     -unity-font-style: bold;
 }
 
@@ -254,7 +254,7 @@
     flex-direction: row;
     padding: 0 0 16px;
     border-bottom-width: 1px;
-    border-bottom-color: rgba(255, 255, 255, 0.08);
+    border-bottom-color: var(--lpw-border);
     margin-bottom: 16px;
 }
 
@@ -263,7 +263,7 @@
     height: 64px;
     font-size: 22px;
     background-color: rgba(0, 0, 0, 0);
-    color: rgba(180, 180, 190, 0.5);
+    color: var(--lpw-text-muted);
     border-width: 0;
     border-radius: 0;
     border-bottom-width: 2px;
@@ -271,8 +271,8 @@
 }
 
 .menu-subtab--active {
-    color: rgb(120, 200, 255);
-    border-bottom-color: rgb(120, 200, 255);
+    color: var(--lpw-accent-text);
+    border-bottom-color: var(--lpw-accent);
 }
 
 .menu-subcontent--hidden {
@@ -291,14 +291,14 @@
 .menu-avatar-card {
     flex-direction: row;
     align-items: center;
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: var(--lpw-surface-muted);
     border-radius: 12px;
     padding: 20px 24px;
     margin-bottom: 12px;
 }
 
 .menu-avatar-card:active {
-    background-color: rgba(255, 255, 255, 0.12);
+    background-color: var(--lpw-surface-active);
 }
 
 .menu-avatar-card--locked {
@@ -308,13 +308,13 @@
 .menu-avatar-card--rejected {
     opacity: 0.5;
     border-width: 1px;
-    border-color: rgba(220, 60, 60, 0.4);
+    border-color: var(--lpw-danger);
 }
 
 .menu-avatar-name {
     flex-grow: 1;
     font-size: 26px;
-    color: rgb(230, 230, 240);
+    color: var(--lpw-text);
 }
 
 .menu-avatar-lock {
@@ -329,20 +329,20 @@
 }
 
 .menu-avatar-moderation-badge--pending {
-    color: rgb(220, 180, 60);
-    background-color: rgba(80, 60, 10, 0.9);
+    color: var(--lpw-premium);
+    background-color: var(--lpw-warning-subtle);
 }
 
 .menu-avatar-moderation-badge--rejected {
-    color: rgb(240, 80, 80);
-    background-color: rgba(80, 20, 20, 0.9);
+    color: var(--lpw-danger-text);
+    background-color: var(--lpw-danger-subtle);
 }
 
 /* アバター変更確認ダイアログ */
 .menu-confirm-backdrop {
     position: absolute;
     left: 0; right: 0; top: 0; bottom: 0;
-    background-color: rgba(0, 0, 0, 0.6);
+    background-color: var(--lpw-scrim);
     align-items: center;
     justify-content: center;
 }
@@ -352,17 +352,17 @@
 }
 
 .menu-confirm-dialog {
-    background-color: rgb(40, 40, 52);
+    background-color: var(--lpw-surface);
     border-radius: 20px;
     padding: 40px;
     width: 520px;
     border-width: 1px;
-    border-color: rgba(255, 255, 255, 0.12);
+    border-color: var(--lpw-border);
 }
 
 .menu-confirm-title {
     font-size: 32px;
-    color: rgb(255, 255, 255);
+    color: var(--lpw-text);
     -unity-font-style: bold;
     -unity-text-align: middle-center;
     margin-bottom: 16px;
@@ -370,7 +370,7 @@
 
 .menu-confirm-body {
     font-size: 24px;
-    color: rgba(220, 220, 230, 0.7);
+    color: var(--lpw-text-secondary);
     -unity-text-align: middle-center;
     margin-bottom: 36px;
 }
@@ -391,22 +391,22 @@
 }
 
 .menu-confirm-btn--cancel {
-    background-color: rgba(255, 255, 255, 0.1);
-    color: rgba(200, 200, 210, 0.8);
+    background-color: var(--lpw-surface-hover);
+    color: var(--lpw-text-secondary);
 }
 
 .menu-confirm-btn--cancel:active {
-    background-color: rgba(255, 255, 255, 0.18);
+    background-color: var(--lpw-surface-active);
 }
 
 .menu-confirm-btn--ok {
-    background-color: rgb(80, 160, 230);
-    color: rgb(255, 255, 255);
+    background-color: var(--lpw-accent);
+    color: var(--lpw-text-on-accent);
     -unity-font-style: bold;
 }
 
 .menu-confirm-btn--ok:active {
-    background-color: rgb(60, 140, 210);
+    background-color: var(--lpw-accent-hover);
 }
 
 /* ワールド一覧タブ */
@@ -415,23 +415,23 @@
 }
 
 .menu-world-card {
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: var(--lpw-surface-muted);
     border-radius: 12px;
     padding: 20px 24px;
     margin-bottom: 12px;
 }
 
 .menu-world-card:active {
-    background-color: rgba(255, 255, 255, 0.12);
+    background-color: var(--lpw-surface-active);
 }
 
 .menu-world-name {
     font-size: 26px;
-    color: rgb(230, 230, 240);
+    color: var(--lpw-text);
     margin-bottom: 6px;
 }
 
 .menu-world-players {
     font-size: 22px;
-    color: rgba(180, 180, 200, 0.6);
+    color: var(--lpw-text-secondary);
 }

@@ -100,6 +100,12 @@ public class TerrainEditSceneController : MonoBehaviour
             if (_edit.Paste())
                 RebuildDirtyChunks();
         };
+        tab.DeselectClicked += () =>
+        {
+            _edit.ClearSelection();
+            RefreshSelectionState();
+            RefreshDragRectOverlay();
+        };
 
         _edit.SetHeight(tab.Height);
         _session.SelectedPalette = Mathf.Max(0, tab.SelectedTerrainIndex);
@@ -479,9 +485,32 @@ public class TerrainEditSceneController : MonoBehaviour
     private void RefreshDragRectOverlay()
     {
         if (_session.TryGetDragRect(out int x0, out int z0, out int x1, out int z1))
+        {
             _dragRectOverlay.SetRect(x0, z0, x1, z1, _edit.CurrentHeight);
+        }
+        else if (_edit.HasSelection && _session.TryGetMovePreview(out int dx, out int dz))
+        {
+            // 移動モードのドラッグ中: 選択範囲を移動先オフセットへずらしてプレビュー表示する
+            _dragRectOverlay.SetCells(ShiftSelection(dx, dz), _edit.CurrentHeight);
+        }
         else
+        {
             _dragRectOverlay.Clear();
+        }
+    }
+
+    /// <summary>選択セルを (dx, dz) ずらした配置可能範囲内のセル一覧（移動プレビュー用）。</summary>
+    private List<(int x, int z)> ShiftSelection(int dx, int dz)
+    {
+        var cells = new List<(int x, int z)>(_edit.Selection.Count);
+        foreach (var (x, z) in _edit.Selection)
+        {
+            int nx = x + dx;
+            int nz = z + dz;
+            if ((uint)nx < TerrainVoxelStore.SizeX && (uint)nz < TerrainVoxelStore.SizeZ)
+                cells.Add((nx, nz));
+        }
+        return cells;
     }
 
     /// <summary>現在の高さのグリッド境界ライン（63 × 63 セル / ローカル y = 0 平面）。</summary>

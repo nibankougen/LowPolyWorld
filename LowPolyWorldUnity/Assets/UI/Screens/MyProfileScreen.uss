@@ -4,7 +4,7 @@
 
 .myp-root {
     flex-grow: 1;
-    background-color: rgb(18, 18, 22);
+    background-color: var(--lpw-bg-page);
 }
 
 /* ── ヘッダー ── */
@@ -12,23 +12,23 @@
     flex-direction: row;
     align-items: center;
     padding: 20px 16px 12px 16px;
-    background-color: rgb(24, 24, 30);
+    background-color: var(--lpw-surface);
     border-bottom-width: 1px;
-    border-color: rgb(44, 44, 54);
+    border-color: var(--lpw-border);
 }
 
 .myp-back-btn {
     width: 60px;
     height: 60px;
     background-color: transparent;
-    color: rgb(100, 170, 255);
+    color: var(--lpw-accent-text);
     font-size: 36px;
     border-width: 0;
 }
 
 .myp-title {
     flex-grow: 1;
-    color: white;
+    color: var(--lpw-text);
     font-size: 30px;
     -unity-font-style: bold;
     -unity-text-align: middle-center;
@@ -38,16 +38,16 @@
 .myp-hero {
     align-items: center;
     padding: 32px 20px 20px 20px;
-    background-color: rgb(24, 24, 30);
+    background-color: var(--lpw-surface);
     border-bottom-width: 1px;
-    border-color: rgb(40, 40, 52);
+    border-color: var(--lpw-border);
 }
 
 .myp-avatar-icon {
     width: 120px;
     height: 120px;
     border-radius: 60px;
-    background-color: rgb(44, 44, 60);
+    background-color: var(--lpw-surface-sunken);
     align-items: center;
     justify-content: center;
     margin-bottom: 16px;
@@ -55,7 +55,7 @@
 
 .myp-avatar-placeholder {
     font-size: 52px;
-    color: rgb(130, 130, 160);
+    color: var(--lpw-text-muted);
 }
 
 .myp-name-row {
@@ -67,29 +67,29 @@
 
 .myp-display-name {
     font-size: 34px;
-    color: white;
+    color: var(--lpw-text);
     -unity-font-style: bold;
 }
 
 .myp-verified-badge {
     font-size: 26px;
-    color: rgb(80, 180, 255);
+    color: var(--lpw-accent-text);
     margin-left: 8px;
     margin-top: 4px;
 }
 
 .myp-at-name {
     font-size: 24px;
-    color: rgb(130, 130, 155);
+    color: var(--lpw-text-muted);
 }
 
 /* ── ソーシャル数値行 ── */
 .myp-stats-row {
     flex-direction: row;
     align-items: stretch;
-    background-color: rgb(24, 24, 30);
+    background-color: var(--lpw-surface);
     border-bottom-width: 1px;
-    border-color: rgb(40, 40, 52);
+    border-color: var(--lpw-border);
 }
 
 .myp-stat-btn {
@@ -105,20 +105,20 @@
 
 .myp-stat-count {
     font-size: 28px;
-    color: white;
+    color: var(--lpw-text);
     -unity-font-style: bold;
     -unity-text-align: middle-center;
 }
 
 .myp-stat-label {
     font-size: 20px;
-    color: rgb(130, 130, 155);
+    color: var(--lpw-text-muted);
     -unity-text-align: middle-center;
 }
 
 .myp-stat-divider {
     width: 1px;
-    background-color: rgb(44, 44, 58);
+    background-color: var(--lpw-border);
     margin-top: 16px;
     margin-bottom: 16px;
 }
@@ -131,7 +131,7 @@
 
 .myp-section-title {
     font-size: 22px;
-    color: rgba(255, 255, 255, 0.4);
+    color: var(--lpw-text-muted);
     -unity-font-style: bold;
     margin-top: 20px;
     margin-bottom: 10px;
@@ -139,7 +139,7 @@
 }
 
 .myp-card {
-    background-color: rgb(28, 28, 36);
+    background-color: var(--lpw-surface);
     border-radius: 14px;
     padding: 20px;
     margin-bottom: 4px;
@@ -150,15 +150,15 @@
     font-size: 26px;
     height: 60px;
     border-radius: 10px;
-    border-color: rgb(60, 60, 80);
-    background-color: rgb(38, 38, 50);
-    color: white;
+    border-color: var(--lpw-border);
+    background-color: var(--lpw-surface-sunken);
+    color: var(--lpw-text);
     padding: 0 14px;
 }
 
 .myp-name-error {
     font-size: 22px;
-    color: rgb(240, 80, 80);
+    color: var(--lpw-danger-text);
     margin-bottom: 8px;
     min-height: 26px;
 }
@@ -168,12 +168,12 @@
     font-size: 24px;
     border-radius: 12px;
     border-width: 0;
-    background-color: rgb(80, 150, 255);
-    color: white;
+    background-color: var(--lpw-accent);
+    color: var(--lpw-text-on-accent);
     -unity-font-style: bold;
 }
 
 .myp-btn-primary:disabled {
-    background-color: rgb(50, 60, 80);
-    color: rgb(120, 120, 140);
+    background-color: var(--lpw-surface-sunken);
+    color: var(--lpw-text-muted);
 }

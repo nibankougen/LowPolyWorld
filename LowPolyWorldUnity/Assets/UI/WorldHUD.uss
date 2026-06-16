@@ -15,6 +15,8 @@
     flex-direction: row;
 }
 
+/* HUD ボタンは 3D ワールドの上に浮くフローティング操作。
+   任意の 3D 背景の上で視認性を保つため、テーマ非依存で暗い半透明を維持する。 */
 .hud-icon-btn {
     width: 110px;
     height: 110px;
@@ -84,9 +86,9 @@
     right: 0;
     width: 36px;
     height: 36px;
-    background-color: rgb(220, 50, 50);
+    background-color: var(--lpw-danger);
     border-radius: 18px;
-    color: white;
+    color: var(--lpw-text-on-status);
     font-size: 20px;
     -unity-font-style: bold;
     -unity-text-align: middle-center;
@@ -105,7 +107,7 @@
 }
 
 .flash-label {
-    color: white;
+    color: var(--lpw-text-on-status);
     font-size: 28px;
     padding: 14px 32px;
     border-radius: 24px;
@@ -113,19 +115,19 @@
 }
 
 .flash-type-info {
-    background-color: rgba(40, 40, 40, 0.92);
+    background-color: var(--lpw-flash-info-bg);
 }
 
 .flash-type-success {
-    background-color: rgba(40, 160, 80, 0.92);
+    background-color: var(--lpw-flash-success-bg);
 }
 
 .flash-type-warning {
-    background-color: rgba(200, 140, 40, 0.92);
+    background-color: var(--lpw-flash-warning-bg);
 }
 
 .flash-type-error {
-    background-color: rgba(200, 50, 50, 0.92);
+    background-color: var(--lpw-flash-error-bg);
 }
 
 .overlay-hidden {

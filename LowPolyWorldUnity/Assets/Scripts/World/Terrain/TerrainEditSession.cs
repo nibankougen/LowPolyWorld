@@ -9,7 +9,8 @@ using System;
 /// - TypeChange: 触れたセルごとにサイクル変更。1 つも変更できなければ Up でフラッシュ
 /// - RangeSelect（四角形）: スライドで範囲追加・選択範囲外のタップで解除
 /// - RangeSelect（塗りつぶし）: タップ地点から同種連結を選択追加
-/// - Move: ドラッグのセル差分ごとに選択範囲（なければ現在高さ全体）を移動
+/// - Move: ドラッグ中は移動先プレビューのみ表示し、指を離した Up で合計差分を一度だけ移動する
+///   （ドラッグの経路上を都度上書き・削除して地形が壊れるのを防ぐ）
 /// </summary>
 public class TerrainEditSession
 {
@@ -73,6 +74,17 @@ public class TerrainEditSession
             && (Mode == TerrainEditMode.Shape || (Mode == TerrainEditMode.RangeSelect && !FloodSelect));
     }
 
+    /// <summary>
+    /// 移動モードのドラッグ中の「移動先プレビュー」用オフセット（Down からの合計差分）。
+    /// 実際の移動は OnPointerUp で確定する。プレビュー不要なら false。
+    /// </summary>
+    public bool TryGetMovePreview(out int dx, out int dz)
+    {
+        dx = _lastX - _startX;
+        dz = _lastZ - _startZ;
+        return _dragging && Mode == TerrainEditMode.Move && (dx != 0 || dz != 0);
+    }
+
     public EditResult OnPointerDown(int x, int z)
     {
         _dragging = true;
@@ -100,8 +112,6 @@ public class TerrainEditSession
         if (!_dragging || (x == _lastX && z == _lastZ))
             return EditResult.None;
 
-        int prevX = _lastX;
-        int prevZ = _lastZ;
         _lastX = x;
         _lastZ = z;
         _movedAcrossCells = true;
@@ -116,11 +126,9 @@ public class TerrainEditSession
                 bool changed = _edit.CycleType(x, z) == TerrainEditLogic.TypeChangeResult.Changed;
                 _anyTypeChanged |= changed;
                 return new EditResult(changed, false);
-            case TerrainEditMode.Move:
-                bool moved = _edit.Move(x - prevX, z - prevZ);
-                return new EditResult(moved, moved);
             default:
-                return EditResult.None; // Shape / RangeSelect はプレビューのみ更新
+                // Shape / RangeSelect / Move はプレビューのみ（確定は OnPointerUp）
+                return EditResult.None;
         }
     }
 
@@ -142,6 +150,15 @@ public class TerrainEditSession
 
             case TerrainEditMode.RangeSelect:
                 return FinishRangeSelect();
+
+            case TerrainEditMode.Move:
+            {
+                // 指を離したタイミングで Down からの合計差分を一度だけ移動して確定する
+                int dx = _lastX - _startX;
+                int dz = _lastZ - _startZ;
+                bool moved = (dx != 0 || dz != 0) && _edit.Move(dx, dz);
+                return new EditResult(moved, moved);
+            }
 
             default:
                 return EditResult.None;

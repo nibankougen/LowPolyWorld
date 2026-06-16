@@ -2,7 +2,7 @@
     flex: 1;
     align-items: center;
     justify-content: center;
-    background-color: rgb(18, 18, 28);
+    background-color: var(--lpw-bg-page);
 }
 
 .logo-area {
@@ -12,14 +12,14 @@
 
 .app-title {
     font-size: 36px;
-    color: rgb(255, 255, 255);
+    color: var(--lpw-text);
     -unity-font-style: bold;
     margin-bottom: 8px;
 }
 
 .app-subtitle {
     font-size: 14px;
-    color: rgb(180, 180, 200);
+    color: var(--lpw-text-secondary);
 }
 
 .loading-area {
@@ -28,7 +28,7 @@
 
 .loading-label {
     font-size: 16px;
-    color: rgb(180, 180, 200);
+    color: var(--lpw-text-secondary);
 }
 
 /* ── Login modal ─────────────────────────────────── */
@@ -43,13 +43,13 @@
     bottom: 0;
     align-items: center;
     justify-content: center;
-    background-color: rgba(0, 0, 0, 0.6);
+    background-color: var(--lpw-scrim);
 }
 
 .login-modal__inner,
 .name-setup-modal__inner,
 .update-modal__inner {
-    background-color: rgb(30, 30, 46);
+    background-color: var(--lpw-surface);
     border-radius: 16px;
     padding: 32px 24px;
     width: 320px;
@@ -60,7 +60,7 @@
 .name-setup-modal__title,
 .update-modal__title {
     font-size: 20px;
-    color: rgb(255, 255, 255);
+    color: var(--lpw-text);
     -unity-font-style: bold;
     -unity-text-align: middle-center;
     margin-bottom: 20px;
@@ -79,13 +79,13 @@
 .consent-label {
     flex: 1;
     font-size: 13px;
-    color: rgb(200, 200, 220);
+    color: var(--lpw-text-secondary);
 }
 
 .consent-link {
     background-color: transparent;
     border-width: 0;
-    color: rgb(120, 180, 255);
+    color: var(--lpw-accent-text);
     font-size: 12px;
     padding: 2px 4px;
 }
@@ -99,6 +99,7 @@
     border-width: 0;
 }
 
+/* ソーシャルサインインはブランド指定色のためトークン化しない（テーマ非依存） */
 .signin-btn--google {
     background-color: rgb(255, 255, 255);
     color: rgb(40, 40, 40);
@@ -117,7 +118,7 @@
 
 .name-setup-modal__desc {
     font-size: 13px;
-    color: rgb(160, 160, 180);
+    color: var(--lpw-text-muted);
     -unity-text-align: middle-center;
     margin-bottom: 16px;
 }
@@ -127,14 +128,14 @@
     border-radius: 8px;
     margin-bottom: 8px;
     font-size: 16px;
-    background-color: rgb(50, 50, 70);
-    border-color: rgb(80, 80, 100);
-    color: rgb(240, 240, 255);
+    background-color: var(--lpw-surface-sunken);
+    border-color: var(--lpw-border-strong);
+    color: var(--lpw-text);
 }
 
 .name-error {
     font-size: 12px;
-    color: rgb(255, 100, 100);
+    color: var(--lpw-danger-text);
     margin-bottom: 8px;
 }
 
@@ -147,8 +148,8 @@
     font-size: 16px;
     -unity-font-style: bold;
     border-width: 0;
-    background-color: rgb(100, 140, 255);
-    color: rgb(255, 255, 255);
+    background-color: var(--lpw-accent);
+    color: var(--lpw-text-on-accent);
 }
 
 .btn-secondary {
@@ -157,9 +158,9 @@
     border-radius: 8px;
     font-size: 15px;
     border-width: 1px;
-    border-color: rgb(100, 100, 120);
+    border-color: var(--lpw-border-strong);
     background-color: transparent;
-    color: rgb(200, 200, 220);
+    color: var(--lpw-text-secondary);
 }
 
 /* ── Error area ──────────────────────────────────── */
@@ -174,7 +175,7 @@
 
 .error-label {
     font-size: 14px;
-    color: rgb(255, 120, 120);
+    color: var(--lpw-danger-text);
     margin-bottom: 12px;
     -unity-text-align: middle-center;
     white-space: normal;
@@ -185,7 +186,7 @@
 
 .update-modal__desc {
     font-size: 14px;
-    color: rgb(200, 200, 220);
+    color: var(--lpw-text-secondary);
     -unity-text-align: middle-center;
     white-space: normal;
     margin-bottom: 16px;
