@@ -24,19 +24,79 @@ public class GimmickTabLogicTests
     public void SetWorldState_SanitizesAndClamps()
     {
         var logic = new GimmickTabLogic();
-        logic.SetWorldStateLabel(3, "  スコア  ");
-        logic.SetWorldStateInitial(3, 300);
-        Assert.AreEqual("スコア", logic.GetWorldStateLabel(3));
-        Assert.AreEqual(255, logic.GetWorldStateInitial(3));
+        int i = logic.AddWorldState();
+        logic.SetWorldStateLabel(i, "  スコア  ");
+        logic.SetWorldStateInitial(i, 300);
+        Assert.AreEqual("スコア", logic.GetWorldStateLabel(i));
+        Assert.AreEqual(255, logic.GetWorldStateInitial(i));
     }
 
     [Test]
-    public void DefaultState_EmptyLabelZeroValue()
+    public void NewLogic_HasNoStates()
     {
         var logic = new GimmickTabLogic();
+        Assert.AreEqual(0, logic.WorldStateCount);
+        Assert.AreEqual(0, logic.PlayerStateCount);
+        Assert.AreEqual(0, logic.TimerCount);
+        Assert.AreEqual(0, logic.WorldStateIndices.Count);
+    }
+
+    // ── ステートの追加 / 削除 ───────────────────────────────────────────────────
+
+    [Test]
+    public void AddState_AssignsLowestFreeIndex()
+    {
+        var logic = new GimmickTabLogic();
+        Assert.AreEqual(0, logic.AddWorldState("A"));
+        Assert.AreEqual(1, logic.AddWorldState("B"));
+        Assert.AreEqual(2, logic.AddWorldState("C"));
+        CollectionAssert.AreEqual(new[] { 0, 1, 2 }, logic.WorldStateIndices);
+        Assert.AreEqual(3, logic.WorldStateCount);
+    }
+
+    [Test]
+    public void RemoveState_FreesIndexForReuse_KeepsOthersStable()
+    {
+        var logic = new GimmickTabLogic();
+        logic.AddWorldState("A"); // 0
+        logic.AddWorldState("B"); // 1
+        logic.AddWorldState("C"); // 2
+
+        Assert.IsTrue(logic.RemoveWorldState(1));
+        CollectionAssert.AreEqual(new[] { 0, 2 }, logic.WorldStateIndices, "削除しても他の番号は詰めない");
+        Assert.AreEqual("C", logic.GetWorldStateLabel(2));
+
+        // 追加は空いた最小番号（1）を再利用する
+        Assert.AreEqual(1, logic.AddWorldState("D"));
+        Assert.AreEqual("D", logic.GetWorldStateLabel(1));
+    }
+
+    [Test]
+    public void RemoveState_UndefinedReturnsFalse()
+    {
+        var logic = new GimmickTabLogic();
+        Assert.IsFalse(logic.RemoveWorldState(0));
+        Assert.IsFalse(logic.RemoveTimer(2));
+    }
+
+    [Test]
+    public void AddState_FailsWhenFull()
+    {
+        var logic = new GimmickTabLogic();
+        for (int i = 0; i < GimmickTabLogic.MaxPlayerStates; i++)
+            Assert.GreaterOrEqual(logic.AddPlayerState(), 0);
+        Assert.IsFalse(logic.CanAddPlayerState);
+        Assert.AreEqual(-1, logic.AddPlayerState(), "満杯時は -1");
+        Assert.AreEqual(GimmickTabLogic.MaxPlayerStates, logic.PlayerStateCount);
+    }
+
+    [Test]
+    public void SetOnUndefinedIndex_IsIgnored()
+    {
+        var logic = new GimmickTabLogic();
+        logic.SetWorldStateLabel(0, "x"); // 未定義 → 無視
+        Assert.AreEqual(0, logic.WorldStateCount);
         Assert.AreEqual("", logic.GetWorldStateLabel(0));
-        Assert.AreEqual(0, logic.GetPlayerStateInitial(0));
-        Assert.AreEqual("", logic.GetTimerLabel(0));
     }
 
     // ── ルール一覧 ─────────────────────────────────────────────────────────────
@@ -148,19 +208,20 @@ public class GimmickTabLogicTests
     }
 
     [Test]
-    public void WriteTo_OnlyMeaningfulSlots_RoundTrips()
+    public void WriteTo_WritesAllDefinedStates_IncludingEmpty_RoundTrips()
     {
         var logic = new GimmickTabLogic();
-        logic.SetWorldStateLabel(0, "スコア");
-        logic.SetWorldStateInitial(5, 7); // ラベル無し・値のみ
-        logic.SetTimerLabel(0, "main");
+        logic.AddWorldState("スコア"); // 0
+        int w1 = logic.AddWorldState("", 7); // 1: ラベル無し・値あり
+        logic.AddWorldState(); // 2: ラベル空・値0 でも定義済みなら保持する
+        logic.AddTimer("main"); // timer 0
         logic.AddRule("R1");
 
         var def = new WorldDefinitionJson();
         logic.WriteTo(def);
 
-        // 既定（空ラベル・値0）のスロットは書き出さない
-        Assert.AreEqual(2, def.worldStates.Length);
+        // 定義済みは空ラベル・値0 でもすべて書き出す
+        Assert.AreEqual(3, def.worldStates.Length);
         Assert.AreEqual(0, def.playerStates.Length);
         Assert.AreEqual(1, def.timers.Length);
         Assert.AreEqual(1, def.gimmicks.Length);
@@ -168,8 +229,10 @@ public class GimmickTabLogicTests
         // 往復で同じ状態に戻る
         var logic2 = new GimmickTabLogic();
         logic2.LoadFrom(def);
+        Assert.AreEqual(3, logic2.WorldStateCount);
         Assert.AreEqual("スコア", logic2.GetWorldStateLabel(0));
-        Assert.AreEqual(7, logic2.GetWorldStateInitial(5));
+        Assert.AreEqual(7, logic2.GetWorldStateInitial(w1));
+        Assert.IsTrue(logic2.IsWorldStateDefined(2));
         Assert.AreEqual("main", logic2.GetTimerLabel(0));
         Assert.AreEqual("R1", logic2.Rules[0].label);
     }
@@ -178,9 +241,10 @@ public class GimmickTabLogicTests
     public void LoadFrom_Null_ResetsToDefault()
     {
         var logic = new GimmickTabLogic();
-        logic.SetWorldStateLabel(0, "x");
+        logic.AddWorldState("x");
         logic.AddRule();
         logic.LoadFrom(null);
+        Assert.AreEqual(0, logic.WorldStateCount);
         Assert.AreEqual("", logic.GetWorldStateLabel(0));
         Assert.AreEqual(0, logic.Rules.Count);
         Assert.AreEqual(0, logic.TotalCount);

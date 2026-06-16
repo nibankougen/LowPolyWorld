@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine.UIElements;
 
 /// <summary>
@@ -23,9 +24,14 @@ public class GimmickTabController
     private readonly VisualElement _worldStateList;
     private readonly VisualElement _playerStateList;
     private readonly VisualElement _timerStateList;
+    private readonly Button _addWorldStateBtn;
+    private readonly Button _addPlayerStateBtn;
+    private readonly Button _addTimerBtn;
     private readonly Button _addRuleBtn;
+    private readonly Button _addTemplateBtn;
     private readonly VisualElement _ruleList;
     private readonly Label _flash;
+    private readonly GimmickTemplatePickerController _templatePicker;
 
     private bool _statesExpanded = true;
     private IVisualElementScheduledItem _flashHide;
@@ -43,23 +49,34 @@ public class GimmickTabController
         _worldStateList = root.Q("gimmick-world-states");
         _playerStateList = root.Q("gimmick-player-states");
         _timerStateList = root.Q("gimmick-timer-states");
+        _addWorldStateBtn = root.Q<Button>("gimmick-add-world-state");
+        _addPlayerStateBtn = root.Q<Button>("gimmick-add-player-state");
+        _addTimerBtn = root.Q<Button>("gimmick-add-timer");
         _addRuleBtn = root.Q<Button>("gimmick-add-rule");
+        _addTemplateBtn = root.Q<Button>("gimmick-add-template");
         _ruleList = root.Q("gimmick-rule-list");
         _flash = root.Q<Label>("gimmick-flash");
+        _templatePicker = new GimmickTemplatePickerController(root);
 
         if (_statesToggle != null) _statesToggle.clicked += ToggleStates;
+        if (_addWorldStateBtn != null) _addWorldStateBtn.clicked += OnAddWorldState;
+        if (_addPlayerStateBtn != null) _addPlayerStateBtn.clicked += OnAddPlayerState;
+        if (_addTimerBtn != null) _addTimerBtn.clicked += OnAddTimer;
         if (_addRuleBtn != null) _addRuleBtn.clicked += OnAddRule;
+        if (_addTemplateBtn != null) _addTemplateBtn.clicked += OnOpenTemplatePicker;
 
-        BuildStateRows();
         Refresh();
     }
+
+    /// <summary>開いているテンプレート選択オーバーレイを閉じる（タブ切替・ワールド再読込時に呼ぶ）。</summary>
+    public void CloseOverlays() => _templatePicker?.Close();
 
     public GimmickTabLogic Logic => _logic;
 
     /// <summary>ロジックを外部で更新した後（LoadFrom 等）に UI を全面更新する。</summary>
     public void Refresh()
     {
-        SyncStateValues();
+        RefreshStateLists();
         RefreshRuleList();
         RefreshTotal();
     }
@@ -75,22 +92,33 @@ public class GimmickTabController
         _statesArrow?.EnableInClassList("icon-right", !_statesExpanded);
     }
 
-    private void BuildStateRows()
+    // 追加 / 削除式: 定義済みステートのみを行に展開する（追加・削除のたびに作り直す）。
+    private void RefreshStateLists()
     {
-        _worldStateList?.Clear();
-        for (int i = 0; i < GimmickTabLogic.MaxWorldStates; i++)
-            _worldStateList?.Add(BuildStateRow(i, withValue: true, isPlayer: false));
-
-        _playerStateList?.Clear();
-        for (int i = 0; i < GimmickTabLogic.MaxPlayerStates; i++)
-            _playerStateList?.Add(BuildStateRow(i, withValue: true, isPlayer: true));
-
-        _timerStateList?.Clear();
-        for (int i = 0; i < GimmickTabLogic.MaxTimers; i++)
-            _timerStateList?.Add(BuildTimerRow(i));
+        RebuildList(_worldStateList, _logic.WorldStateIndices, withValue: true, kind: StateKind.World);
+        RebuildList(_playerStateList, _logic.PlayerStateIndices, withValue: true, kind: StateKind.Player);
+        RebuildList(_timerStateList, _logic.TimerIndices, withValue: false, kind: StateKind.Timer);
     }
 
-    private VisualElement BuildStateRow(int index, bool withValue, bool isPlayer)
+    private enum StateKind { World, Player, Timer }
+
+    private void RebuildList(VisualElement list, IReadOnlyList<int> indices, bool withValue, StateKind kind)
+    {
+        if (list == null)
+            return;
+        list.Clear();
+        if (indices.Count == 0)
+        {
+            var empty = new Label("（なし）");
+            empty.AddToClassList("gimmick-state-empty");
+            list.Add(empty);
+            return;
+        }
+        foreach (int index in indices)
+            list.Add(BuildStateRow(index, withValue, kind));
+    }
+
+    private VisualElement BuildStateRow(int index, bool withValue, StateKind kind)
     {
         var row = new VisualElement();
         row.AddToClassList("gimmick-state-row");
@@ -101,10 +129,15 @@ public class GimmickTabController
 
         var name = new TextField { maxLength = GimmickTabLogic.LabelMaxLength };
         name.AddToClassList("gimmick-state-name");
+        name.SetValueWithoutNotify(LabelOf(kind, index));
         name.RegisterValueChangedCallback(e =>
         {
-            if (isPlayer) _logic.SetPlayerStateLabel(index, e.newValue);
-            else _logic.SetWorldStateLabel(index, e.newValue);
+            switch (kind)
+            {
+                case StateKind.World: _logic.SetWorldStateLabel(index, e.newValue); break;
+                case StateKind.Player: _logic.SetPlayerStateLabel(index, e.newValue); break;
+                case StateKind.Timer: _logic.SetTimerLabel(index, e.newValue); break;
+            }
         });
         row.Add(name);
 
@@ -112,10 +145,13 @@ public class GimmickTabController
         {
             var value = new IntegerField();
             value.AddToClassList("gimmick-state-value");
+            value.SetValueWithoutNotify(kind == StateKind.Player
+                ? _logic.GetPlayerStateInitial(index)
+                : _logic.GetWorldStateInitial(index));
             value.RegisterValueChangedCallback(e =>
             {
                 int clamped = GimmickTabLogic.ClampStateValue(e.newValue);
-                if (isPlayer) _logic.SetPlayerStateInitial(index, clamped);
+                if (kind == StateKind.Player) _logic.SetPlayerStateInitial(index, clamped);
                 else _logic.SetWorldStateInitial(index, clamped);
                 if (clamped != e.newValue)
                     value.SetValueWithoutNotify(clamped);
@@ -123,49 +159,56 @@ public class GimmickTabController
             row.Add(value);
         }
 
-        return row;
-    }
-
-    private VisualElement BuildTimerRow(int index)
-    {
-        var row = new VisualElement();
-        row.AddToClassList("gimmick-state-row");
-
-        var idx = new Label(index.ToString());
-        idx.AddToClassList("gimmick-state-index");
-        row.Add(idx);
-
-        var name = new TextField { maxLength = GimmickTabLogic.LabelMaxLength };
-        name.AddToClassList("gimmick-state-name");
-        name.RegisterValueChangedCallback(e => _logic.SetTimerLabel(index, e.newValue));
-        row.Add(name);
+        var del = new Button(() => RemoveState(kind, index)) { text = "", tooltip = "削除" };
+        del.AddToClassList("gimmick-state-del");
+        del.AddToClassList("gimmick-icon-btn");
+        del.AddToClassList("gimmick-icon-btn--close");
+        row.Add(del);
 
         return row;
     }
 
-    // 行のテキストフィールドはインデックス順に並ぶので順番に値を流し込む。
-    private void SyncStateValues()
+    private string LabelOf(StateKind kind, int index) => kind switch
     {
-        SyncList(_worldStateList, GimmickTabLogic.MaxWorldStates,
-            i => _logic.GetWorldStateLabel(i), i => _logic.GetWorldStateInitial(i), hasValue: true);
-        SyncList(_playerStateList, GimmickTabLogic.MaxPlayerStates,
-            i => _logic.GetPlayerStateLabel(i), i => _logic.GetPlayerStateInitial(i), hasValue: true);
-        SyncList(_timerStateList, GimmickTabLogic.MaxTimers,
-            i => _logic.GetTimerLabel(i), null, hasValue: false);
+        StateKind.World => _logic.GetWorldStateLabel(index),
+        StateKind.Player => _logic.GetPlayerStateLabel(index),
+        _ => _logic.GetTimerLabel(index),
+    };
+
+    private void OnAddWorldState()
+    {
+        if (_logic.AddWorldState() < 0)
+            ShowFlash($"ワールドステートは最大 {GimmickTabLogic.MaxWorldStates} 個までです");
+        else
+            RefreshStateLists();
     }
 
-    private static void SyncList(
-        VisualElement list, int count, Func<int, string> labelOf, Func<int, int> valueOf, bool hasValue)
+    private void OnAddPlayerState()
     {
-        if (list == null)
-            return;
-        for (int i = 0; i < count && i < list.childCount; i++)
+        if (_logic.AddPlayerState() < 0)
+            ShowFlash($"プレイヤーステートは最大 {GimmickTabLogic.MaxPlayerStates} 個までです");
+        else
+            RefreshStateLists();
+    }
+
+    private void OnAddTimer()
+    {
+        if (_logic.AddTimer() < 0)
+            ShowFlash($"タイマーは最大 {GimmickTabLogic.MaxTimers} 個までです");
+        else
+            RefreshStateLists();
+    }
+
+    private void RemoveState(StateKind kind, int index)
+    {
+        bool removed = kind switch
         {
-            var row = list[i];
-            row.Q<TextField>()?.SetValueWithoutNotify(labelOf(i));
-            if (hasValue && valueOf != null)
-                row.Q<IntegerField>()?.SetValueWithoutNotify(valueOf(i));
-        }
+            StateKind.World => _logic.RemoveWorldState(index),
+            StateKind.Player => _logic.RemovePlayerState(index),
+            _ => _logic.RemoveTimer(index),
+        };
+        if (removed)
+            RefreshStateLists();
     }
 
     // ── ルール一覧 ─────────────────────────────────────────────────────────────
@@ -181,6 +224,24 @@ public class GimmickTabController
         RefreshRuleList();
         RefreshTotal();
         RuleEditRequested?.Invoke(rule.ruleId); // 追加直後は編集画面へ（後続スライスで実装）
+    }
+
+    private void OnOpenTemplatePicker()
+    {
+        _templatePicker?.Open(OnInsertTemplate);
+    }
+
+    // テンプレート確定時: 自動割り当て + ルール挿入。失敗（容量不足）はフラッシュで通知。
+    private void OnInsertTemplate(string templateId, IReadOnlyDictionary<string, int> values)
+    {
+        var result = GimmickTemplateLogic.Insert(_logic, templateId, values);
+        if (!result.Success)
+        {
+            ShowFlash(result.Error);
+            return;
+        }
+        // ステート定義（ラベル）とルール一覧の両方が変化するため全面更新する。
+        Refresh();
     }
 
     private void RefreshRuleList()

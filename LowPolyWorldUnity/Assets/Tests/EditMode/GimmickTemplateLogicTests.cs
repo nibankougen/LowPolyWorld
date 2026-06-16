@@ -112,13 +112,13 @@ public class GimmickTemplateLogicTests
     {
         var tab = new GimmickTabLogic();
         // ワールドステート 0・1 を使用済みにする
-        tab.SetWorldStateLabel(0, "既存A");
-        tab.SetWorldStateInitial(1, 5);
+        tab.AddWorldState("既存A");
+        tab.AddWorldState("既存B");
 
         var result = GimmickTemplateLogic.Insert(tab, "tagBasic");
 
         Assert.IsTrue(result.Success);
-        // 空いている最初のスロット（2）が割り当てられる
+        // 空いている最初の番号（2）が割り当てられる
         Assert.AreEqual("鬼番号", tab.GetWorldStateLabel(2));
         Assert.AreEqual("既存A", tab.GetWorldStateLabel(0));
         Assert.AreEqual(2, result.Rules[0].actions[0].stateIndex);
@@ -142,7 +142,7 @@ public class GimmickTemplateLogicTests
     {
         var tab = new GimmickTabLogic();
         for (int i = 0; i < GimmickTabLogic.MaxWorldStates; i++)
-            tab.SetWorldStateLabel(i, "使用中");
+            tab.AddWorldState("使用中");
 
         var result = GimmickTemplateLogic.Insert(tab, "tagBasic");
 
@@ -156,7 +156,7 @@ public class GimmickTemplateLogicTests
     {
         var tab = new GimmickTabLogic();
         for (int i = 0; i < GimmickTabLogic.MaxTimers; i++)
-            tab.SetTimerLabel(i, "使用中");
+            tab.AddTimer("使用中");
 
         var result = GimmickTemplateLogic.Insert(tab, "countdown");
 
@@ -179,7 +179,7 @@ public class GimmickTemplateLogicTests
         Assert.IsFalse(result.Success);
         Assert.AreEqual("ルール数が上限（100）を超えます", result.Error);
         Assert.AreEqual(99, tab.TotalCount); // 追加されていない
-        Assert.AreEqual("", tab.GetWorldStateLabel(0)); // ステートも触られていない
+        Assert.AreEqual(0, tab.WorldStateCount); // ステートも触られていない
     }
 
     [Test]

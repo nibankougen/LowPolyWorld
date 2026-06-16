@@ -1092,6 +1092,32 @@
     font-size: 15px;
 }
 
+/* カテゴリ見出し行（見出し + ＋追加ボタン） */
+.gimmick-state-cat-head {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+}
+
+/* ステート行の削除ボタン */
+.gimmick-state-del {
+    width: 28px;
+    height: 28px;
+    margin-left: 4px;
+    background-color: var(--lpw-surface-sunken);
+    border-width: 1px;
+    border-color: var(--lpw-border);
+    border-radius: 6px;
+    padding: 0;
+}
+
+.gimmick-state-empty {
+    color: var(--lpw-text-muted);
+    font-size: 13px;
+    padding: 2px 0 2px 24px;
+}
+
 .gimmick-rules-header {
     flex-direction: row;
     justify-content: space-between;
@@ -1384,4 +1410,92 @@
     background-color: var(--lpw-accent);
     border-color: var(--lpw-accent);
     color: var(--lpw-text-on-accent);
+}
+
+/* ── テンプレートから追加 ── */
+/* メニュー上部の全幅ボタン */
+.gimmick-template-top-btn {
+    height: 40px;
+    margin: 4px 2px 8px 2px;
+    background-color: var(--lpw-surface-sunken);
+    border-width: 1px;
+    border-color: var(--lpw-accent);
+    border-radius: 8px;
+    color: var(--lpw-accent-text);
+    font-size: 15px;
+}
+
+/* テンプレート一覧の項目（名前 + 説明の 2 行） */
+.gimmick-template-item {
+    flex-direction: column;
+    min-height: 56px;
+    margin: 3px 10px;
+    justify-content: center;
+    background-color: var(--lpw-surface-muted);
+    border-width: 1px;
+    border-color: var(--lpw-border);
+    border-radius: 8px;
+    padding: 8px 12px;
+}
+
+.gimmick-template-item:hover {
+    background-color: var(--lpw-surface-sunken);
+}
+
+.gimmick-template-item-name {
+    color: var(--lpw-text);
+    font-size: 15px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-left;
+}
+
+.gimmick-template-item-desc {
+    color: var(--lpw-text-muted);
+    font-size: 12px;
+    white-space: normal;
+    -unity-text-align: upper-left;
+    margin-top: 2px;
+}
+
+/* パラメータ入力フォーム */
+.gimmick-template-params {
+    flex-grow: 1;
+    padding: 12px;
+}
+
+.gimmick-template-param-desc {
+    color: var(--lpw-text-muted);
+    font-size: 13px;
+    white-space: normal;
+    margin: 4px 0 12px 0;
+}
+
+.gimmick-template-param-fields {
+    flex-direction: column;
+}
+
+.gimmick-template-param-row {
+    flex-direction: row;
+    align-items: center;
+    margin: 4px 0;
+}
+
+.gimmick-template-param-label {
+    flex-grow: 1;
+    color: var(--lpw-text);
+    font-size: 15px;
+}
+
+.gimmick-template-param-field {
+    width: 100px;
+}
+
+.gimmick-template-insert-btn {
+    height: 44px;
+    margin-top: 16px;
+    background-color: var(--lpw-accent);
+    border-width: 0;
+    border-radius: 8px;
+    color: var(--lpw-text-on-accent);
+    font-size: 16px;
 }

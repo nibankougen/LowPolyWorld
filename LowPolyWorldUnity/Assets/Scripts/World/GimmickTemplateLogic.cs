@@ -159,14 +159,11 @@ public static class GimmickTemplateLogic
         if (template == null)
             return Fail("テンプレートが見つかりません");
 
-        // 1. 空きスロットを（変更せずに）確保できるか確認する。
-        var worldSlots = FindFreeWorldStates(tab, template.WorldStatesNeeded);
-        var playerSlots = FindFreePlayerStates(tab, template.PlayerStatesNeeded);
-        var timerSlots = FindFreeTimers(tab, template.TimersNeeded);
-
-        if (worldSlots.Count < template.WorldStatesNeeded || playerSlots.Count < template.PlayerStatesNeeded)
+        // 1. ステート / タイマーの空き数を確認する（追加せずに残数だけ見る）。
+        if (GimmickTabLogic.MaxWorldStates - tab.WorldStateCount < template.WorldStatesNeeded
+            || GimmickTabLogic.MaxPlayerStates - tab.PlayerStateCount < template.PlayerStatesNeeded)
             return Fail("ステートの空きが足りません");
-        if (timerSlots.Count < template.TimersNeeded)
+        if (GimmickTabLogic.MaxTimers - tab.TimerCount < template.TimersNeeded)
             return Fail("タイマーの空きが足りません");
 
         // 2. ルール数の上限（ルール + グループ合計 100）を確認する。
@@ -177,15 +174,8 @@ public static class GimmickTemplateLogic
         var resolved = ResolveParams(template, values);
 
         // 4. ここから変更を確定する（検証は完了済みなので原子的に適用できる）。
-        //    Build 内でステート / タイマーのラベルを自動設定し、ルール仕様を構築する。
-        var ctx = new BuildContext
-        {
-            Tab = tab,
-            WorldStates = worldSlots,
-            PlayerStates = playerSlots,
-            Timers = timerSlots,
-            Params = resolved,
-        };
+        //    Build 内でステート / タイマーを追加（ラベル自動設定）し、ルール仕様を構築する。
+        var ctx = new BuildContext { Tab = tab, Params = resolved };
         var specs = template.Build(ctx);
 
         var inserted = new List<GimmickRule>(specs.Count);
@@ -226,74 +216,22 @@ public static class GimmickTemplateLogic
         return result;
     }
 
-    // ── 空きスロット探索（GimmickTabLogic を変更せず読み取りのみ）─────────────────
-
-    // ワールドステートはラベルが空かつ初期値 0 のスロットを未使用とみなす。
-    private static List<int> FindFreeWorldStates(GimmickTabLogic tab, int n)
-    {
-        var free = new List<int>();
-        for (int i = 0; i < GimmickTabLogic.MaxWorldStates && free.Count < n; i++)
-            if (string.IsNullOrEmpty(tab.GetWorldStateLabel(i)) && tab.GetWorldStateInitial(i) == 0)
-                free.Add(i);
-        return free;
-    }
-
-    private static List<int> FindFreePlayerStates(GimmickTabLogic tab, int n)
-    {
-        var free = new List<int>();
-        for (int i = 0; i < GimmickTabLogic.MaxPlayerStates && free.Count < n; i++)
-            if (string.IsNullOrEmpty(tab.GetPlayerStateLabel(i)) && tab.GetPlayerStateInitial(i) == 0)
-                free.Add(i);
-        return free;
-    }
-
-    // タイマーはラベルが空のスロットを未使用とみなす。
-    private static List<int> FindFreeTimers(GimmickTabLogic tab, int n)
-    {
-        var free = new List<int>();
-        for (int i = 0; i < GimmickTabLogic.MaxTimers && free.Count < n; i++)
-            if (string.IsNullOrEmpty(tab.GetTimerLabel(i)))
-                free.Add(i);
-        return free;
-    }
-
     // ── テンプレート別のルール構築 ──────────────────────────────────────────────
 
     internal sealed class BuildContext
     {
         public GimmickTabLogic Tab;
-        public List<int> WorldStates;
-        public List<int> PlayerStates;
-        public List<int> Timers;
         public Dictionary<string, int> Params;
 
         public int Param(string key) => Params.TryGetValue(key, out int v) ? v : 0;
 
-        // 割り当て済みスロットにラベル（と初期値）を設定し、実スロット番号を返す。
-        public int NameWorld(int slot, string label, int initial = 0)
-        {
-            int idx = WorldStates[slot];
-            Tab.SetWorldStateLabel(idx, label);
-            if (initial != 0)
-                Tab.SetWorldStateInitial(idx, initial);
-            return idx;
-        }
+        // ステート / タイマーを追加（ラベル + 初期値を設定）して割り当てられた番号を返す。
+        // 容量は Insert の事前チェックで保証済みのため -1 は返らない。
+        public int AddWorld(string label, int initial = 0) => Tab.AddWorldState(label, initial);
 
-        public int NamePlayer(int slot, string label, int initial = 0)
-        {
-            int idx = PlayerStates[slot];
-            Tab.SetPlayerStateLabel(idx, label);
-            if (initial != 0)
-                Tab.SetPlayerStateInitial(idx, initial);
-            return idx;
-        }
+        public int AddPlayer(string label, int initial = 0) => Tab.AddPlayerState(label, initial);
 
-        public int NameTimer(int slot, string label)
-        {
-            int idx = Timers[slot];
-            Tab.SetTimerLabel(idx, label);
-            return idx;
-        }
+        public int AddTimer(string label) => Tab.AddTimer(label);
     }
 
     internal sealed class RuleSpec
@@ -307,7 +245,7 @@ public static class GimmickTemplateLogic
     // 1. チーム分け（2 チーム）
     private static List<RuleSpec> BuildTwoTeams(BuildContext ctx)
     {
-        int team = ctx.NamePlayer(0, "チーム");
+        int team = ctx.AddPlayer("チーム");
         return new List<RuleSpec>
         {
             new()
@@ -338,7 +276,7 @@ public static class GimmickTemplateLogic
     // 2. 鬼ごっこ基本
     private static List<RuleSpec> BuildTagBasic(BuildContext ctx)
     {
-        int oni = ctx.NameWorld(0, "鬼番号"); // 鬼番号
+        int oni = ctx.AddWorld("鬼番号"); // 鬼番号
         return new List<RuleSpec>
         {
             new()
@@ -372,7 +310,7 @@ public static class GimmickTemplateLogic
     // 3. カウントダウン
     private static List<RuleSpec> BuildCountdown(BuildContext ctx)
     {
-        int timer = ctx.NameTimer(0, "カウントダウン");
+        int timer = ctx.AddTimer("カウントダウン");
         int seconds = ctx.Param("seconds");
         return new List<RuleSpec>
         {
@@ -398,7 +336,7 @@ public static class GimmickTemplateLogic
     // 4. 周期処理
     private static List<RuleSpec> BuildPeriodic(BuildContext ctx)
     {
-        int timer = ctx.NameTimer(0, "周期");
+        int timer = ctx.AddTimer("周期");
         int seconds = ctx.Param("seconds");
         return new List<RuleSpec>
         {
@@ -425,7 +363,7 @@ public static class GimmickTemplateLogic
     // 5. コンビネーションロック（3 手順）
     private static List<RuleSpec> BuildComboLock(BuildContext ctx)
     {
-        int progress = ctx.NameWorld(0, "入力進捗"); // 入力進捗
+        int progress = ctx.AddWorld("入力進捗"); // 入力進捗
         return new List<RuleSpec>
         {
             new()
@@ -465,8 +403,8 @@ public static class GimmickTemplateLogic
     // 6. レース計測
     private static List<RuleSpec> BuildRaceTiming(BuildContext ctx)
     {
-        int rank = ctx.NameWorld(0, "着順"); // 着順
-        int timer = ctx.NameTimer(0, "タイム"); // タイム
+        int rank = ctx.AddWorld("着順"); // 着順
+        int timer = ctx.AddTimer("タイム"); // タイム
         return new List<RuleSpec>
         {
             new()

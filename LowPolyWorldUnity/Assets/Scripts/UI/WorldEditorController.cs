@@ -203,6 +203,7 @@ public class WorldEditorController : MonoBehaviour
         if (_ruleEditTab?.IsOpen == true)
             _ruleEditTab.Close();
         _bgmPicker?.Close();
+        _gimmickTab?.CloseOverlays();
         _gimmickTab?.Logic.LoadFrom(WorldCreationManager.Instance?.CurrentDefinition ?? def);
         _gimmickTab?.Refresh();
 
@@ -396,9 +397,11 @@ public class WorldEditorController : MonoBehaviour
         if (index != 1)
             ShowGizmoBar(false);
 
-        // ギミックタブ以外へ移動するときはルール編集画面を閉じる
+        // ギミックタブ以外へ移動するときはルール編集画面・テンプレート選択を閉じる
         if (index != 2 && _ruleEditTab?.IsOpen == true)
             _ruleEditTab.Close();
+        if (index != 2)
+            _gimmickTab?.CloseOverlays();
 
         // 設定タブ以外へ移動するときは BGM 選択リストを閉じる
         if (index != 3 && _bgmPicker?.IsOpen == true)

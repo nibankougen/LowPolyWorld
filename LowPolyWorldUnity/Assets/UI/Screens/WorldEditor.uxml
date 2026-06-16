@@ -162,18 +162,30 @@
 
                 <ui:ScrollView class="gimmick-scroll">
 
-                    <!-- ステート定義エリア（折りたたみ可） -->
+                    <!-- テンプレートから追加（メニュー上部） -->
+                    <ui:Button name="gimmick-add-template" class="gimmick-template-top-btn" text="＋ テンプレートから追加" />
+
+                    <!-- ステート定義エリア（折りたたみ可・追加 / 削除式） -->
                     <ui:VisualElement class="gimmick-section">
                         <ui:Button name="gimmick-states-toggle" class="gimmick-collapse-header" text="">
                             <ui:VisualElement name="gimmick-states-arrow" class="gimmick-collapse-arrow icon-down" picking-mode="Ignore" />
                             <ui:Label text="ステート定義" picking-mode="Ignore" />
                         </ui:Button>
                         <ui:VisualElement name="gimmick-states-body" class="gimmick-states-body">
-                            <ui:Label class="gimmick-subhead" text="ワールドステート（0〜9）" />
+                            <ui:VisualElement class="gimmick-state-cat-head">
+                                <ui:Label class="gimmick-subhead" text="ワールドステート（最大 10）" />
+                                <ui:Button name="gimmick-add-world-state" class="gimmick-add-btn gimmick-icon-btn gimmick-icon-btn--plus" text="" />
+                            </ui:VisualElement>
                             <ui:VisualElement name="gimmick-world-states" class="gimmick-state-list" />
-                            <ui:Label class="gimmick-subhead" text="プレイヤーステート（0〜3）" />
+                            <ui:VisualElement class="gimmick-state-cat-head">
+                                <ui:Label class="gimmick-subhead" text="プレイヤーステート（最大 4）" />
+                                <ui:Button name="gimmick-add-player-state" class="gimmick-add-btn gimmick-icon-btn gimmick-icon-btn--plus" text="" />
+                            </ui:VisualElement>
                             <ui:VisualElement name="gimmick-player-states" class="gimmick-state-list" />
-                            <ui:Label class="gimmick-subhead" text="タイマー（0〜4）" />
+                            <ui:VisualElement class="gimmick-state-cat-head">
+                                <ui:Label class="gimmick-subhead" text="タイマー（最大 5）" />
+                                <ui:Button name="gimmick-add-timer" class="gimmick-add-btn gimmick-icon-btn gimmick-icon-btn--plus" text="" />
+                            </ui:VisualElement>
                             <ui:VisualElement name="gimmick-timer-states" class="gimmick-state-list" />
                         </ui:VisualElement>
                     </ui:VisualElement>
@@ -244,6 +256,22 @@
                         <ui:Label name="type-picker-title" class="gimmick-picker-title" text="種類を選択" />
                     </ui:VisualElement>
                     <ui:ScrollView name="type-picker-list" class="gimmick-edit-scroll" />
+                </ui:VisualElement>
+
+                <!-- テンプレートから追加（一覧 → パラメータ入力 → 挿入・オーバーレイ） -->
+                <ui:VisualElement name="gimmick-template-picker" class="gimmick-rule-editor overlay-hidden">
+                    <ui:VisualElement class="gimmick-edit-header">
+                        <ui:Button name="template-picker-back" class="gimmick-edit-back icon-back" text="" />
+                        <ui:Label name="template-picker-title" class="gimmick-picker-title" text="テンプレートから追加" />
+                    </ui:VisualElement>
+                    <ui:ScrollView name="template-picker-list" class="gimmick-edit-scroll" />
+                    <ui:VisualElement name="template-picker-params" class="gimmick-template-params overlay-hidden">
+                        <ui:Label name="template-picker-param-title" class="gimmick-subhead" text="" />
+                        <ui:Label name="template-picker-param-desc" class="gimmick-template-param-desc" text="" />
+                        <ui:VisualElement name="template-picker-param-fields" class="gimmick-template-param-fields" />
+                        <ui:Button name="template-picker-insert" class="gimmick-template-insert-btn" text="このテンプレートを追加" />
+                    </ui:VisualElement>
+                    <ui:Label name="template-picker-flash" class="object-flash overlay-hidden" text="" />
                 </ui:VisualElement>
             </ui:VisualElement>
 
