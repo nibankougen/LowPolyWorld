@@ -163,9 +163,15 @@
                 <ui:ScrollView class="gimmick-scroll">
 
                     <!-- テンプレートから追加（メニュー上部） -->
-                    <ui:Button name="gimmick-add-template" class="gimmick-template-top-btn" text="＋ テンプレートから追加" />
+                    <ui:Button name="gimmick-add-template" class="gimmick-template-top-btn gimmick-template-top-btn--icon" text="">
+                        <ui:VisualElement class="gimmick-btn-icon icon-plus" picking-mode="Ignore" />
+                        <ui:Label class="gimmick-btn-label" text="テンプレートから追加" picking-mode="Ignore" />
+                    </ui:Button>
                     <!-- 会話を編集（ストーリー・セリフ） -->
-                    <ui:Button name="gimmick-edit-conversations" class="gimmick-template-top-btn" text="会話を編集（セリフ）" />
+                    <ui:Button name="gimmick-edit-conversations" class="gimmick-template-top-btn gimmick-template-top-btn--icon" text="">
+                        <ui:VisualElement class="gimmick-btn-icon icon-dialogue" picking-mode="Ignore" />
+                        <ui:Label class="gimmick-btn-label" text="会話を編集" picking-mode="Ignore" />
+                    </ui:Button>
 
                     <!-- ステート定義エリア（折りたたみ可・追加 / 削除式） -->
                     <ui:VisualElement class="gimmick-section">
@@ -280,7 +286,7 @@
                 <ui:VisualElement name="conv-library" class="gimmick-rule-editor overlay-hidden">
                     <ui:VisualElement class="gimmick-edit-header">
                         <ui:Button name="conv-library-back" class="gimmick-edit-back icon-back" text="" />
-                        <ui:Label class="gimmick-picker-title" text="会話（セリフ）" />
+                        <ui:Label class="gimmick-picker-title" text="会話一覧" />
                         <ui:Button name="conv-library-add" class="gimmick-add-btn gimmick-icon-btn gimmick-icon-btn--plus" text="" />
                     </ui:VisualElement>
                     <ui:ScrollView name="conv-library-list" class="gimmick-edit-scroll" />
@@ -291,6 +297,10 @@
                 <ui:VisualElement name="conv-editor" class="gimmick-rule-editor overlay-hidden">
                     <ui:VisualElement class="gimmick-edit-header">
                         <ui:Button name="conv-editor-back" class="gimmick-edit-back icon-back" text="" />
+                        <ui:Label class="gimmick-picker-title" text="会話を編集" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="gimmick-edit-titlerow">
+                        <ui:Label class="gimmick-edit-titlelabel" text="会話名" />
                         <ui:TextField name="conv-editor-title" class="gimmick-edit-title" />
                     </ui:VisualElement>
                     <ui:ScrollView name="conv-editor-lines" class="gimmick-edit-scroll" />

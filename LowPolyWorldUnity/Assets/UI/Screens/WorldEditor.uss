@@ -1425,6 +1425,33 @@
     font-size: 15px;
 }
 
+/* アイコン + ラベルを横並びにするボタン */
+.gimmick-template-top-btn--icon {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+}
+
+.gimmick-btn-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+    -unity-background-image-tint-color: var(--lpw-accent-text);
+}
+
+.gimmick-btn-label {
+    color: var(--lpw-accent-text);
+    font-size: 15px;
+}
+
+.icon-dialogue {
+    -unity-background-scale-mode: scale-to-fit;
+    background-position-x: center;
+    background-position-y: center;
+    background-image: url("../../Textures/UI/Icons/icon_dialogue.png");
+    background-size: 90% 90%;
+}
+
 /* テンプレート一覧の項目（名前 + 説明の 2 行） */
 .gimmick-template-item {
     flex-direction: column;
