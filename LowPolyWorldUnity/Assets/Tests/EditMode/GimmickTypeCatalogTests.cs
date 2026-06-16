@@ -57,9 +57,9 @@ public class GimmickTypeCatalogTests
     [Test]
     public void CategoryIndexOf_FindsContainingCategory()
     {
-        // showMessage は「演出」カテゴリ（ActionCategories の index 4）に属する
+        // showMessage は「演出・会話」カテゴリに属する
         int idx = GimmickTypeCatalog.CategoryIndexOf(GimmickTypeCatalog.ActionCategories, "showMessage");
-        Assert.AreEqual("演出", GimmickTypeCatalog.ActionCategories[idx].Label);
+        Assert.AreEqual("演出・会話", GimmickTypeCatalog.ActionCategories[idx].Label);
         CollectionAssert.Contains(GimmickTypeCatalog.ActionCategories[idx].TypeIds, "showMessage");
     }
 

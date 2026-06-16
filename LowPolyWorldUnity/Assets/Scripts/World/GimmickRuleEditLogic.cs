@@ -24,7 +24,7 @@ public class GimmickRuleEditLogic
     {
         "roomStart", "playerCountChanged", "playerTouchObject", "objectTap",
         "areaEnter", "areaExit", "timerReached", "actionButton",
-        "playerTouchPlayer", "respawn", "inRoomPortalUsed",
+        "playerTouchPlayer", "respawn", "inRoomPortalUsed", "called",
     };
 
     public static readonly string[] ConditionTypes =
@@ -39,6 +39,7 @@ public class GimmickRuleEditLogic
         "showHideObject", "changeObjectType", "showMessage", "pickupObject", "grantObject",
         "playSound", "switchBgm", "moveObject", "teleportPlayer", "resetState",
         "playEffect", "setMoveSpeed", "setPlayerMarker",
+        "startConversation", "wait", "callSubroutine",
     };
 
     public static readonly string[] CompareOps = { "eq", "ne", "gt", "lt", "gte", "lte", "mod_eq" };

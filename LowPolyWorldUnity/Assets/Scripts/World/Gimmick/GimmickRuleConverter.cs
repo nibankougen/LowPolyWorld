@@ -59,6 +59,7 @@ public static class GimmickRuleConverter
         public HashSet<string> EffectIds;         // 内蔵エフェクト ID
         public HashSet<string> SoundIds;          // 内蔵効果音 / BGM トラック ID
         public HashSet<string> MarkerIds;         // 内蔵頭上マーカー ID
+        public HashSet<string> ConversationIds;   // 会話 ID（9.13）
     }
 
     // ── 変換 ──────────────────────────────────────────────────────────────────
@@ -152,6 +153,10 @@ public static class GimmickRuleConverter
         // オブジェクト系イベント: targetId が指定されている場合のみ実在チェック（空 = 全対象）
         if (IsObjectTargetEvent(eventType) && !string.IsNullOrEmpty(json.targetId))
             RequireId(refs?.ObjectInstanceIds, json.targetId, "イベント対象オブジェクト", errors);
+
+        // サブルーチン: targetId（サブルーチン ID）が必須
+        if (eventType == GimmickEventType.Called && string.IsNullOrEmpty(json.targetId))
+            errors.Add("「呼び出された」イベントのサブルーチン ID が未指定です");
 
         return new RuntimeGimmickTrigger(eventType, json.targetId ?? "");
     }
@@ -353,6 +358,20 @@ public static class GimmickRuleConverter
                 if (json.visible)
                     RequireId(refs?.MarkerIds, json.targetId, "頭上マーカー", errors);
                 break;
+
+            case GimmickActionType.StartConversation:
+                RequireId(refs?.ConversationIds, json.targetId, "会話", errors);
+                break;
+
+            case GimmickActionType.Wait:
+                if (json.floatParam < 0f || json.floatParam > 60f)
+                    errors.Add($"待機の秒数は 0〜60 が必要です: {json.floatParam}");
+                break;
+
+            case GimmickActionType.CallSubroutine:
+                if (string.IsNullOrEmpty(json.targetId))
+                    errors.Add("「サブルーチンを呼ぶ」のサブルーチン ID が未指定です");
+                break;
         }
 
         var valueRef = ConvertValueRef(json.value, errors);
@@ -437,6 +456,7 @@ public static class GimmickRuleConverter
             "playerTouchPlayer" => GimmickEventType.PlayerTouchPlayer,
             "respawn" => GimmickEventType.Respawn,
             "inRoomPortalUsed" => GimmickEventType.InRoomPortalUsed,
+            "called" => GimmickEventType.Called,
             _ => (GimmickEventType)(-1),
         };
         return (int)type >= 0;
@@ -482,6 +502,9 @@ public static class GimmickRuleConverter
             "playEffect" => GimmickActionType.PlayEffect,
             "setMoveSpeed" => GimmickActionType.SetMoveSpeed,
             "setPlayerMarker" => GimmickActionType.SetPlayerMarker,
+            "startConversation" => GimmickActionType.StartConversation,
+            "wait" => GimmickActionType.Wait,
+            "callSubroutine" => GimmickActionType.CallSubroutine,
             _ => (GimmickActionType)(-1),
         };
         return (int)type >= 0;

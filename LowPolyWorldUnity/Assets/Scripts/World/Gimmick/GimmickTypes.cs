@@ -20,6 +20,7 @@ public enum GimmickEventType
     PlayerTouchPlayer,
     Respawn,
     InRoomPortalUsed,
+    Called, // サブルーチン呼び出し（callSubroutine アクションで発火・9.5）
 }
 
 // ── 比較演算子 ────────────────────────────────────────────────────────────────
@@ -92,6 +93,9 @@ public enum GimmickActionType
     PlayEffect,
     SetMoveSpeed,    // 移動速度変更（0〜200%・0% = 移動不可）
     SetPlayerMarker, // 頭上マーカー表示 / 非表示
+    StartConversation, // 会話を開始（targetId = 会話 ID・9.13）
+    Wait,              // 待機（floatParam = 秒数 0〜60・以降のアクションを遅延・9.7b）
+    CallSubroutine,    // サブルーチンを呼ぶ（targetId = サブルーチン ID・9.8）
 }
 
 // ── ステート変更演算 ──────────────────────────────────────────────────────────

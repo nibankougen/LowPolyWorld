@@ -40,6 +40,7 @@ public class GimmickRuleConverterTests
             EffectIds = new HashSet<string> { "fx_glow" },
             SoundIds = new HashSet<string> { "se_chime", "bgmFunNightStage" },
             MarkerIds = new HashSet<string> { "marker_oni" },
+            ConversationIds = new HashSet<string> { "conv_intro" },
         };
 
     // ── 基本変換 ──────────────────────────────────────────────────────────────
@@ -379,5 +380,54 @@ public class GimmickRuleConverterTests
         Assert.IsNotNull(effect);
         Assert.AreEqual("inst_door", effect.ObjectId);
         Assert.IsFalse(effect.Visible, "鍵を持ったプレイヤーのタップで扉が消える");
+    }
+
+    // ── 表現力拡張: 会話 / 待機 / サブルーチン ──────────────────────────────────
+
+    [Test]
+    public void Convert_StartConversation_ValidatesConversationId()
+    {
+        var ok = Rule(actions: new[]
+        {
+            new GimmickAction { type = "startConversation", targetId = "conv_intro", playerTarget = "input" },
+        });
+        Assert.AreEqual(1, GimmickRuleConverter.Convert(new[] { ok }, FullRefs()).Rules.Count);
+
+        var bad = Rule(actions: new[]
+        {
+            new GimmickAction { type = "startConversation", targetId = "conv_missing" },
+        });
+        Assert.AreEqual(1, GimmickRuleConverter.Convert(new[] { bad }, FullRefs()).InvalidRules.Count);
+    }
+
+    [Test]
+    public void Convert_Wait_ValidatesSeconds()
+    {
+        var ok = Rule(actions: new[] { new GimmickAction { type = "wait", floatParam = 2.5f } });
+        Assert.AreEqual(1, GimmickRuleConverter.Convert(new[] { ok }).Rules.Count);
+
+        var bad = Rule(actions: new[] { new GimmickAction { type = "wait", floatParam = 99f } });
+        Assert.AreEqual(1, GimmickRuleConverter.Convert(new[] { bad }).InvalidRules.Count);
+    }
+
+    [Test]
+    public void Convert_CallSubroutine_RequiresId()
+    {
+        var ok = Rule(actions: new[] { new GimmickAction { type = "callSubroutine", targetId = "sub_open" } });
+        Assert.AreEqual(1, GimmickRuleConverter.Convert(new[] { ok }).Rules.Count);
+
+        var bad = Rule(actions: new[] { new GimmickAction { type = "callSubroutine", targetId = "" } });
+        Assert.AreEqual(1, GimmickRuleConverter.Convert(new[] { bad }).InvalidRules.Count);
+    }
+
+    [Test]
+    public void Convert_CalledTrigger_RequiresSubroutineId()
+    {
+        var ok = Rule(triggers: new[] { new GimmickTrigger { type = "called", targetId = "sub_open" } });
+        Assert.AreEqual(1, GimmickRuleConverter.Convert(new[] { ok }).Rules.Count);
+        Assert.AreEqual(GimmickEventType.Called, GimmickRuleConverter.Convert(new[] { ok }).Rules[0].Triggers[0].EventType);
+
+        var bad = Rule(triggers: new[] { new GimmickTrigger { type = "called", targetId = "" } });
+        Assert.AreEqual(1, GimmickRuleConverter.Convert(new[] { bad }).InvalidRules.Count);
     }
 }

@@ -33,6 +33,7 @@ public static class GimmickTypeCatalog
         new Category("エリア", "areaEnter", "areaExit"),
         new Category("タイマー", "timerReached"),
         new Category("プレイヤー", "playerTouchPlayer"),
+        new Category("サブルーチン", "called"),
     };
 
     // ── 条件 ──────────────────────────────────────────────────────────────────
@@ -53,7 +54,8 @@ public static class GimmickTypeCatalog
         new Category("オブジェクト", "showHideObject", "changeObjectType", "moveObject"),
         new Category("インベントリ", "pickupObject", "grantObject"),
         new Category("プレイヤー", "teleportPlayer", "setMoveSpeed", "setPlayerMarker"),
-        new Category("演出", "showMessage", "playSound", "switchBgm", "playEffect"),
+        new Category("演出・会話", "showMessage", "playSound", "switchBgm", "playEffect", "startConversation"),
+        new Category("進行・制御", "wait", "callSubroutine"),
         new Category("その他", "resetState"),
     };
 
@@ -87,6 +89,7 @@ public static class GimmickTypeCatalog
         { "playerTouchPlayer", "プレイヤー同士が接触したとき" },
         { "respawn", "リスポーンしたとき" },
         { "inRoomPortalUsed", "ルーム内ポータルを使ったとき" },
+        { "called", "サブルーチンが呼ばれたとき" },
     };
 
     private static readonly Dictionary<string, string> ConditionLabels = new()
@@ -122,5 +125,8 @@ public static class GimmickTypeCatalog
         { "playEffect", "エフェクトを再生" },
         { "setMoveSpeed", "移動速度を変更" },
         { "setPlayerMarker", "頭上マーカーを表示" },
+        { "startConversation", "会話を開始" },
+        { "wait", "待機（以降を遅延）" },
+        { "callSubroutine", "サブルーチンを呼ぶ" },
     };
 }
