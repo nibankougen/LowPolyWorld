@@ -37,6 +37,7 @@ public class WorldDefinitionJson
     public WorldStateData[] worldStates = Array.Empty<WorldStateData>();
     public WorldStateData[] playerStates = Array.Empty<WorldStateData>(); // プレイヤーステート 0〜3 の名前・初期値
     public TimerData[] timers = Array.Empty<TimerData>();
+    public ConversationJson[] conversations = Array.Empty<ConversationJson>(); // 会話定義（9.13）
     public TerrainData terrain = new();
 }
 
@@ -301,6 +302,51 @@ public class TimerData
 {
     public int index;
     public string label = "";
+}
+
+// ── 会話システム（world-creation.md 9.13）─────────────────────────────────────
+
+/// <summary>分岐・選択肢付きの会話定義（9.13）。アクション startConversation の targetId が参照する。</summary>
+[Serializable]
+public class ConversationJson
+{
+    public string conversationId = "";
+    public string name = "";
+    public ConversationLineJson[] lines = Array.Empty<ConversationLineJson>();
+}
+
+/// <summary>会話の 1 セリフ行。</summary>
+[Serializable]
+public class ConversationLineJson
+{
+    public string lineId = "";
+    public GimmickTextJson[] speakers = Array.Empty<GimmickTextJson>(); // 話者名（言語別・任意・各 40 文字）
+    public GimmickTextJson[] texts = Array.Empty<GimmickTextJson>(); // 本文（言語別・各 80 文字）
+    public ConversationEffectJson onReach = new(); // 行到達時のステート変更（kind="none" = なし）
+
+    // 分岐先: "" = 次の行へ（最終行なら終了）/ "end" = 会話終了 / それ以外 = 同一会話内の lineId
+    public string gotoLineId = "";
+    public ConversationChoiceJson[] choices = Array.Empty<ConversationChoiceJson>(); // 選択肢（最大 4・空 = 選択肢なし）
+}
+
+/// <summary>セリフ行の選択肢。</summary>
+[Serializable]
+public class ConversationChoiceJson
+{
+    public GimmickTextJson[] texts = Array.Empty<GimmickTextJson>(); // 選択肢テキスト（言語別・各 40 文字）
+    public string gotoLineId = ""; // "" = 次の行へ / "end" = 終了 / それ以外 = lineId
+    public ConversationEffectJson effect = new(); // 選択時のステート変更（kind="none" = なし）
+}
+
+/// <summary>会話の行到達 / 選択時に適用するステート変更（値は固定値のみ）。</summary>
+[Serializable]
+public class ConversationEffectJson
+{
+    public string kind = "none"; // none | worldState | playerState
+    public int stateIndex = 0;
+    public string stateOp = "set"; // set | add | sub
+    public int value = 0; // 固定値（0〜255）
+    public string playerTarget = "input"; // playerState 用: input | opponent | all
 }
 
 [Serializable]
