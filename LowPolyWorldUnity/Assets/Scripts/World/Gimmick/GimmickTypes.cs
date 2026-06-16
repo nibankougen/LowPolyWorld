@@ -226,6 +226,11 @@ public class GimmickEventContext
 
     public static GimmickEventContext PortalUsed(string playerId, string portalId) =>
         new GimmickEventContext(GimmickEventType.InRoomPortalUsed, playerId, objectId: portalId);
+
+    // サブルーチン呼び出し（9.5）。サブルーチン ID は ObjectId に格納し、呼び出し元の
+    // 入力 / 相手プレイヤーを引き継ぐ。
+    public static GimmickEventContext Subroutine(string subroutineId, string inputPlayerId, string opponentPlayerId) =>
+        new GimmickEventContext(GimmickEventType.Called, inputPlayerId, opponentPlayerId, objectId: subroutineId);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -496,6 +501,19 @@ public class PlayerMarkerEffect : GimmickEffect
         PlayerId = playerId;
         MarkerId = markerId;
         Visible = visible;
+    }
+}
+
+/// <summary>会話を開始する（9.13）。対象プレイヤーのクライアントが会話 UI を再生する。</summary>
+public class StartConversationEffect : GimmickEffect
+{
+    public string PlayerId { get; }
+    public string ConversationId { get; }
+
+    public StartConversationEffect(string playerId, string conversationId)
+    {
+        PlayerId = playerId;
+        ConversationId = conversationId;
     }
 }
 
