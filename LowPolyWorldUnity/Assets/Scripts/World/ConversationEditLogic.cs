@@ -14,7 +14,6 @@ public class ConversationEditLogic
     public const int MaxLines = 50;
     public const int MaxChoices = 4;
     public const int TextMaxLength = 80;       // 本文
-    public const int SpeakerMaxLength = 40;    // 話者名
     public const int ChoiceTextMaxLength = 40; // 選択肢
 
     public const string GotoNext = "";   // 次の行へ
@@ -36,12 +35,19 @@ public class ConversationEditLogic
 
     // ── セリフ行 ───────────────────────────────────────────────────────────────
 
-    /// <summary>セリフ行を末尾に追加して返す。上限（50）到達時は null。</summary>
+    /// <summary>
+    /// セリフ行を末尾に追加して返す。上限（50）到達時は null。
+    /// 話者は直前の行の話者を既定で引き継ぐ（同じ話者が続けて話すことが多いため）。
+    /// </summary>
     public ConversationLineJson AddLine()
     {
         if (!CanAddLine)
             return null;
-        var line = new ConversationLineJson { lineId = NewId("line") };
+        var line = new ConversationLineJson
+        {
+            lineId = NewId("line"),
+            speakerId = _lines.Count > 0 ? _lines[_lines.Count - 1].speakerId ?? "" : "",
+        };
         _lines.Add(line);
         Sync();
         return line;
@@ -80,16 +86,18 @@ public class ConversationEditLogic
     public bool SetLineText(string lineId, string lang, string text) =>
         SetText(FindLine(lineId)?.texts, text, lang, TextMaxLength, arr => FindLine(lineId).texts = arr);
 
-    /// <summary>話者名を設定する（40 文字・空テキストは削除扱いで拒否）。</summary>
-    public bool SetLineSpeaker(string lineId, string lang, string text) =>
-        SetText(FindLine(lineId)?.speakers, text, lang, SpeakerMaxLength, arr => FindLine(lineId).speakers = arr);
-
     public bool RemoveLineText(string lineId, string lang) =>
         RemoveText(FindLine(lineId)?.texts, lang, arr => FindLine(lineId).texts = arr);
 
-    /// <summary>指定言語の話者名を削除する（任意項目のため空入力時のクリアに使う）。</summary>
-    public bool RemoveLineSpeaker(string lineId, string lang) =>
-        RemoveText(FindLine(lineId)?.speakers, lang, arr => FindLine(lineId).speakers = arr);
+    /// <summary>行の話者を設定する（話者定義 <see cref="SpeakerJson"/> への参照 ID・"" = 話者なし）。</summary>
+    public bool SetLineSpeakerId(string lineId, string speakerId)
+    {
+        var line = FindLine(lineId);
+        if (line == null)
+            return false;
+        line.speakerId = speakerId ?? "";
+        return true;
+    }
 
     // ── 分岐 ───────────────────────────────────────────────────────────────────
 

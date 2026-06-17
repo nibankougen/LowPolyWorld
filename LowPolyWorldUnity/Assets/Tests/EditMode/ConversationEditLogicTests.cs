@@ -48,13 +48,31 @@ public class ConversationEditLogicTests
     }
 
     [Test]
-    public void SetLineSpeaker_Clamps40()
+    public void SetLineSpeakerId_SetsReference()
     {
         var edit = NewEditor();
         var line = edit.AddLine();
-        string over = new string('x', 50);
-        Assert.IsTrue(edit.SetLineSpeaker(line.lineId, "", over));
-        Assert.AreEqual(ConversationEditLogic.SpeakerMaxLength, line.speakers[0].text.Length);
+        Assert.IsTrue(edit.SetLineSpeakerId(line.lineId, "spk_1"));
+        Assert.AreEqual("spk_1", line.speakerId);
+        Assert.IsTrue(edit.SetLineSpeakerId(line.lineId, "")); // 話者なしへ
+        Assert.AreEqual("", line.speakerId);
+        Assert.IsFalse(edit.SetLineSpeakerId("missing", "spk_1"));
+    }
+
+    [Test]
+    public void AddLine_InheritsPreviousSpeaker()
+    {
+        var edit = NewEditor();
+        var a = edit.AddLine();
+        Assert.AreEqual("", a.speakerId, "最初の行は話者なし");
+        edit.SetLineSpeakerId(a.lineId, "spk_1");
+
+        var b = edit.AddLine();
+        Assert.AreEqual("spk_1", b.speakerId, "新規行は直前の行の話者を引き継ぐ");
+
+        edit.SetLineSpeakerId(b.lineId, "spk_2");
+        var c = edit.AddLine();
+        Assert.AreEqual("spk_2", c.speakerId);
     }
 
     [Test]

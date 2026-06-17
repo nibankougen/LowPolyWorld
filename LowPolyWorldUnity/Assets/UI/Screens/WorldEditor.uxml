@@ -289,8 +289,20 @@
                         <ui:Label class="gimmick-picker-title" text="会話一覧" />
                         <ui:Button name="conv-library-add" class="gimmick-add-btn gimmick-icon-btn gimmick-icon-btn--plus" text="" />
                     </ui:VisualElement>
+                    <ui:Button name="conv-speaker-edit" class="gimmick-template-top-btn" text="話者を編集" />
                     <ui:ScrollView name="conv-library-list" class="gimmick-edit-scroll" />
                     <ui:Label name="conv-library-flash" class="object-flash overlay-hidden" text="" />
+                </ui:VisualElement>
+
+                <!-- 話者ライブラリ（ワールド単位の話者定義・オーバーレイ） -->
+                <ui:VisualElement name="speaker-library" class="gimmick-rule-editor overlay-hidden">
+                    <ui:VisualElement class="gimmick-edit-header">
+                        <ui:Button name="speaker-library-back" class="gimmick-edit-back icon-back" text="" />
+                        <ui:Label class="gimmick-picker-title" text="話者" />
+                        <ui:Button name="speaker-library-add" class="gimmick-add-btn gimmick-icon-btn gimmick-icon-btn--plus" text="" />
+                    </ui:VisualElement>
+                    <ui:ScrollView name="speaker-library-list" class="gimmick-edit-scroll" />
+                    <ui:Label name="speaker-library-flash" class="object-flash overlay-hidden" text="" />
                 </ui:VisualElement>
 
                 <!-- 会話エディタ（セリフ行・オーバーレイ） -->

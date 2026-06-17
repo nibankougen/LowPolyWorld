@@ -17,8 +17,12 @@ public static class ConversationValidator
     private static readonly string[] StateOps = { "set", "add", "sub" };
     private static readonly string[] PlayerTargets = { "input", "opponent", "all" };
 
-    /// <summary>会話一覧全体を検証する（会話数上限 + 各会話）。</summary>
-    public static List<string> ValidateAll(IReadOnlyList<ConversationJson> conversations)
+    /// <summary>
+    /// 会話一覧全体を検証する（会話数上限 + 各会話）。
+    /// speakers を渡すと話者定義の検証と、各行の <see cref="ConversationLineJson.speakerId"/> 参照の実在チェックも行う。
+    /// </summary>
+    public static List<string> ValidateAll(
+        IReadOnlyList<ConversationJson> conversations, IReadOnlyList<SpeakerJson> speakers = null)
     {
         var errors = new List<string>();
         if (conversations == null)
@@ -32,25 +36,50 @@ public static class ConversationValidator
         if (totalLines > ConversationLibraryLogic.MaxTotalLines)
             errors.Add($"全会話のセリフ行合計が上限 {ConversationLibraryLogic.MaxTotalLines} を超えています（{totalLines}）");
 
+        var speakerIds = speakers == null ? null : ValidateSpeakers(speakers, errors);
+
         var seenIds = new HashSet<string>();
         foreach (var conv in conversations)
         {
             if (conv != null && !string.IsNullOrEmpty(conv.conversationId) && !seenIds.Add(conv.conversationId))
                 errors.Add($"会話 ID が重複しています: {conv.conversationId}");
-            Validate(conv, errors);
+            Validate(conv, errors, speakerIds);
         }
         return errors;
     }
 
-    /// <summary>1 会話を検証してエラー一覧を返す。</summary>
-    public static List<string> Validate(ConversationJson conv)
+    /// <summary>1 会話を検証してエラー一覧を返す。speakers を渡すと話者参照も検証する。</summary>
+    public static List<string> Validate(ConversationJson conv, IReadOnlyList<SpeakerJson> speakers = null)
     {
         var errors = new List<string>();
-        Validate(conv, errors);
+        var speakerIds = speakers == null ? null : ValidateSpeakers(speakers, errors);
+        Validate(conv, errors, speakerIds);
         return errors;
     }
 
-    private static void Validate(ConversationJson conv, List<string> errors)
+    /// <summary>話者定義を検証して有効な話者 ID 集合を返す（数上限・ID 重複・名前長）。</summary>
+    public static HashSet<string> ValidateSpeakers(IReadOnlyList<SpeakerJson> speakers, List<string> errors)
+    {
+        var ids = new HashSet<string>();
+        if (speakers == null)
+            return ids;
+        if (speakers.Count > SpeakerLibraryLogic.MaxSpeakers)
+            errors.Add($"話者数が上限 {SpeakerLibraryLogic.MaxSpeakers} を超えています（{speakers.Count}）");
+        foreach (var s in speakers)
+        {
+            if (s == null || string.IsNullOrEmpty(s.speakerId))
+            {
+                errors.Add("話者 ID が未設定の話者があります");
+                continue;
+            }
+            if (!ids.Add(s.speakerId))
+                errors.Add($"話者 ID が重複しています: {s.speakerId}");
+            CheckLengths(s.names, SpeakerLibraryLogic.NameMaxLength, "話者名", errors);
+        }
+        return ids;
+    }
+
+    private static void Validate(ConversationJson conv, List<string> errors, HashSet<string> speakerIds)
     {
         if (conv == null)
         {
@@ -77,7 +106,8 @@ public static class ConversationValidator
             }
 
             RequireAnyText(line.texts, ConversationEditLogic.TextMaxLength, $"会話「{where}」の本文", errors);
-            CheckLengths(line.speakers, ConversationEditLogic.SpeakerMaxLength, $"会話「{where}」の話者名", errors);
+            if (speakerIds != null && !string.IsNullOrEmpty(line.speakerId) && !speakerIds.Contains(line.speakerId))
+                errors.Add($"会話「{where}」の話者 ID が存在しません: {line.speakerId}");
             ValidateEffect(line.onReach, $"会話「{where}」の行到達時", errors);
             ValidateGoto(line.gotoLineId, lineIds, $"会話「{where}」のジャンプ先", errors);
 

@@ -72,7 +72,10 @@ public class ConversationPlaybackLogic
     private bool _started;
     private bool _finished;
 
-    public ConversationPlaybackLogic(ConversationJson conversation, string viewerLang = "")
+    private readonly Dictionary<string, SpeakerJson> _speakersById;
+
+    public ConversationPlaybackLogic(
+        ConversationJson conversation, string viewerLang = "", IReadOnlyList<SpeakerJson> speakers = null)
     {
         _viewerLang = viewerLang ?? "";
         ConversationId = conversation?.conversationId ?? "";
@@ -84,6 +87,12 @@ public class ConversationPlaybackLogic
             if (l != null && !string.IsNullOrEmpty(l.lineId) && !_lineIndexById.ContainsKey(l.lineId))
                 _lineIndexById[l.lineId] = i;
         }
+
+        _speakersById = new Dictionary<string, SpeakerJson>();
+        if (speakers != null)
+            foreach (var s in speakers)
+                if (s != null && !string.IsNullOrEmpty(s.speakerId))
+                    _speakersById[s.speakerId] = s;
     }
 
     /// <summary>この再生が対象とする会話 ID（上位レイヤーの管理用）。</summary>
@@ -202,7 +211,7 @@ public class ConversationPlaybackLogic
 
     private DisplayLine Resolve(ConversationLineJson line)
     {
-        string speaker = ResolveText(line.speakers);
+        string speaker = ResolveSpeaker(line.speakerId);
         string text = ResolveText(line.texts);
         string[] choiceTexts;
         var choices = line.choices;
@@ -217,6 +226,14 @@ public class ConversationPlaybackLogic
                 choiceTexts[i] = choices[i] == null ? "" : ResolveText(choices[i].texts);
         }
         return new DisplayLine(line.lineId, speaker, text, choiceTexts);
+    }
+
+    // speakerId から話者名を閲覧者言語で解決する（未指定 / 未知 ID は ""）。
+    private string ResolveSpeaker(string speakerId)
+    {
+        if (string.IsNullOrEmpty(speakerId) || !_speakersById.TryGetValue(speakerId, out var s))
+            return "";
+        return SpeakerLibraryLogic.ResolveName(s, _viewerLang);
     }
 
     // 閲覧者言語 → 英語 → デフォルト（"") → 先頭の非空 の優先で解決（9.8 / 9.13 のフォールバック）。

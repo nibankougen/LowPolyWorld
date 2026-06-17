@@ -63,8 +63,10 @@ public class WorldEditorController : MonoBehaviour
 
     // 会話（ストーリー・セリフ・9.13）
     private readonly ConversationLibraryLogic _conversationLibrary = new();
+    private readonly SpeakerLibraryLogic _speakerLibrary = new();
     private ConversationLibraryController _convLibraryController;
     private ConversationEditorController _convEditorController;
+    private SpeakerLibraryController _speakerLibraryController;
 
     /// <summary>ギミックタブ UI（ステート定義・ルール一覧）。</summary>
     public GimmickTabController GimmickTab => _gimmickTab;
@@ -170,20 +172,26 @@ public class WorldEditorController : MonoBehaviour
         _gimmickTab.RuleEditRequested += ruleId => _ruleEditTab.Open(_gimmickTab.Logic, ruleId);
         _ruleEditTab.Closed += () => _gimmickTab.Refresh();
 
-        // 会話（ライブラリ ↔ エディタ）
+        // 会話（ライブラリ ↔ エディタ）+ 話者ライブラリ
         _convLibraryController = new ConversationLibraryController(_root, _conversationLibrary);
-        _convEditorController = new ConversationEditorController(_root, _conversationLibrary, _gimmickTab.Logic);
+        _convEditorController = new ConversationEditorController(
+            _root, _conversationLibrary, _gimmickTab.Logic, _speakerLibrary);
+        _speakerLibraryController = new SpeakerLibraryController(_root, _speakerLibrary);
         _convLibraryController.EditRequested += id => _convEditorController.Open(_conversationLibrary.Find(id));
         _convEditorController.Closed += () => _convLibraryController.Refresh();
 
         var btnConversations = _root.Q<Button>("gimmick-edit-conversations");
         if (btnConversations != null) btnConversations.clicked += () => _convLibraryController.Open();
+
+        var btnSpeakers = _root.Q<Button>("conv-speaker-edit");
+        if (btnSpeakers != null) btnSpeakers.clicked += () => _speakerLibraryController.Open();
     }
 
-    // 会話のオーバーレイ（エディタ→ライブラリの順）を閉じる。
+    // 会話のオーバーレイ（エディタ→話者→ライブラリの順）を閉じる。
     private void CloseConversationOverlays()
     {
         _convEditorController?.Close();
+        _speakerLibraryController?.Close();
         _convLibraryController?.Close();
     }
 
@@ -230,6 +238,7 @@ public class WorldEditorController : MonoBehaviour
         _gimmickTab?.Logic.LoadFrom(loadedDef);
         _gimmickTab?.Refresh();
         _conversationLibrary.LoadFrom(loadedDef);
+        _speakerLibrary.LoadFrom(loadedDef);
 
         UpdateCostDisplay(0, 0);
         UpdatePublishButton();
@@ -776,9 +785,10 @@ public class WorldEditorController : MonoBehaviour
         mgr.CommitSettingsChanges();
         // ギミックタブの編集（ステート定義・ルール一覧）を定義へ書き戻す
         _gimmickTab?.Logic.WriteTo(mgr.CurrentDefinition);
-        // 会話定義を書き戻す（編集中の会話のタイトル確定のためエディタも閉じる）
+        // 会話定義・話者定義を書き戻す（編集中の会話のタイトル確定のためエディタも閉じる）
         _convEditorController?.Close();
         _conversationLibrary.WriteTo(mgr.CurrentDefinition);
+        _speakerLibrary.WriteTo(mgr.CurrentDefinition);
     }
 
     private void UpdatePublishButton()

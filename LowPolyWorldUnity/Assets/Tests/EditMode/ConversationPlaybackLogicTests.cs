@@ -342,13 +342,40 @@ public class ConversationPlaybackLogicTests
     }
 
     [Test]
-    public void Resolve_SpeakerResolvedWhenSet()
+    public void Resolve_SpeakerResolvedFromLibrary()
     {
         var line = Line("l1", "やあ");
-        line.speakers = T("", "村人");
-        var play = new ConversationPlaybackLogic(Conv(line));
+        line.speakerId = "spk_1";
+        var speakers = new[]
+        {
+            new SpeakerJson
+            {
+                speakerId = "spk_1",
+                names = new[]
+                {
+                    new GimmickTextJson { lang = "ja", text = "村人" },
+                    new GimmickTextJson { lang = "en", text = "Villager" },
+                },
+            },
+        };
+
+        var ja = new ConversationPlaybackLogic(Conv(line), "ja", speakers);
+        ja.Start();
+        Assert.AreEqual("村人", ja.Current.Speaker);
+
+        var en = new ConversationPlaybackLogic(Conv(line), "en", speakers);
+        en.Start();
+        Assert.AreEqual("Villager", en.Current.Speaker);
+    }
+
+    [Test]
+    public void Resolve_UnknownSpeakerId_IsEmpty()
+    {
+        var line = Line("l1", "やあ");
+        line.speakerId = "missing";
+        var play = new ConversationPlaybackLogic(Conv(line)); // 話者定義を渡さない
         play.Start();
-        Assert.AreEqual("村人", play.Current.Speaker);
+        Assert.AreEqual("", play.Current.Speaker);
     }
 
     [Test]

@@ -22,17 +22,20 @@ public class ConversationEditorController
 
     private readonly ConversationLibraryLogic _library;
     private readonly GimmickTabLogic _tabLogic; // 変数選択ドロップダウン用（定義済みワールド / プレイヤー変数）
+    private readonly SpeakerLibraryLogic _speakers; // 話者選択ドロップダウン用（ワールド単位の話者定義）
     private ConversationJson _conversation;
     private ConversationEditLogic _edit;
     private IVisualElementScheduledItem _flashHide;
 
     public ConversationEditorController(
-        VisualElement root, ConversationLibraryLogic library = null, GimmickTabLogic tabLogic = null)
+        VisualElement root, ConversationLibraryLogic library = null, GimmickTabLogic tabLogic = null,
+        SpeakerLibraryLogic speakers = null)
     {
         if (root == null)
             throw new ArgumentNullException(nameof(root));
         _library = library;
         _tabLogic = tabLogic;
+        _speakers = speakers;
 
         _overlay = root.Q("conv-editor");
         _btnBack = root.Q<Button>("conv-editor-back");
@@ -147,10 +150,8 @@ public class ConversationEditorController
         }));
         card.Add(head);
 
-        // 話者（任意）・本文（言語別）
-        card.Add(MultilangBlock("話者", ConversationEditLogic.SpeakerMaxLength, false, line.speakers,
-            (lang, text) => _edit.SetLineSpeaker(lineId, lang, text),
-            lang => _edit.RemoveLineSpeaker(lineId, lang)));
+        // 話者（定義済みから選択）・本文（言語別）
+        card.Add(BuildSpeakerField(lineId, line.speakerId));
         card.Add(MultilangBlock("本文", ConversationEditLogic.TextMaxLength, true, line.texts,
             (lang, text) => _edit.SetLineText(lineId, lang, text),
             lang => _edit.RemoveLineText(lineId, lang)));
@@ -213,6 +214,38 @@ public class ConversationEditorController
         card.Add(BuildEffectEditor("選択時に変数を変更", choice.effect ??= new ConversationEffectJson()));
 
         return card;
+    }
+
+    // ── 話者（定義済みから選択）────────────────────────────────────────────────
+
+    private VisualElement BuildSpeakerField(string lineId, string currentSpeakerId)
+    {
+        var wrap = new VisualElement();
+        wrap.AddToClassList("conv-ml");
+
+        string app = DeviceLanguage.CurrentCode();
+        var labels = new System.Collections.Generic.List<string> { "（話者なし）" };
+        var ids = new System.Collections.Generic.List<string> { "" };
+        if (_speakers != null)
+            foreach (var s in _speakers.Speakers)
+            {
+                string name = SpeakerLibraryLogic.ResolveName(s, app);
+                labels.Add(string.IsNullOrEmpty(name) ? "（名称未設定）" : name);
+                ids.Add(s.speakerId);
+            }
+
+        int sel = ids.IndexOf(currentSpeakerId ?? "");
+        if (sel < 0) sel = 0; // 未知 ID（削除済み等）は「話者なし」表示
+        var dd = new DropdownField("話者", labels, sel);
+        dd.AddToClassList("conv-ml-field");
+        dd.RegisterValueChangedCallback(_ =>
+        {
+            int i = dd.index;
+            if (i >= 0 && i < ids.Count)
+                _edit.SetLineSpeakerId(lineId, ids[i]);
+        });
+        wrap.Add(dd);
+        return wrap;
     }
 
     // ── 言語別テキスト入力（既定 = アプリの設定言語・詳細でそれ以外の言語）──────

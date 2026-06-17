@@ -38,6 +38,7 @@ public class WorldDefinitionJson
     public WorldStateData[] playerStates = Array.Empty<WorldStateData>(); // プレイヤーステート 0〜3 の名前・初期値
     public TimerData[] timers = Array.Empty<TimerData>();
     public ConversationJson[] conversations = Array.Empty<ConversationJson>(); // 会話定義（9.13）
+    public SpeakerJson[] speakers = Array.Empty<SpeakerJson>(); // 話者定義（9.13・会話行から speakerId で参照）
     public TerrainData terrain = new();
 }
 
@@ -315,12 +316,23 @@ public class ConversationJson
     public ConversationLineJson[] lines = Array.Empty<ConversationLineJson>();
 }
 
+/// <summary>
+/// ワールド単位で定義する話者（9.13）。会話行（<see cref="ConversationLineJson.speakerId"/>）から参照する。
+/// 名前は言語別（各 40 文字以内・未設定言語は英語優先でフォールバック）。
+/// </summary>
+[Serializable]
+public class SpeakerJson
+{
+    public string speakerId = "";
+    public GimmickTextJson[] names = Array.Empty<GimmickTextJson>();
+}
+
 /// <summary>会話の 1 セリフ行。</summary>
 [Serializable]
 public class ConversationLineJson
 {
     public string lineId = "";
-    public GimmickTextJson[] speakers = Array.Empty<GimmickTextJson>(); // 話者名（言語別・任意・各 40 文字）
+    public string speakerId = ""; // 話者定義（SpeakerJson）への参照（"" = 話者なし / 地の文）
     public GimmickTextJson[] texts = Array.Empty<GimmickTextJson>(); // 本文（言語別・各 80 文字）
     public ConversationEffectJson onReach = new(); // 行到達時のステート変更（kind="none" = なし）
 
