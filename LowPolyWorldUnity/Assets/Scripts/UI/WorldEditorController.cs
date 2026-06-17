@@ -172,7 +172,7 @@ public class WorldEditorController : MonoBehaviour
 
         // 会話（ライブラリ ↔ エディタ）
         _convLibraryController = new ConversationLibraryController(_root, _conversationLibrary);
-        _convEditorController = new ConversationEditorController(_root, _conversationLibrary);
+        _convEditorController = new ConversationEditorController(_root, _conversationLibrary, _gimmickTab.Logic);
         _convLibraryController.EditRequested += id => _convEditorController.Open(_conversationLibrary.Find(id));
         _convEditorController.Closed += () => _convLibraryController.Refresh();
 

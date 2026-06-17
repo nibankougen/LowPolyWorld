@@ -1663,15 +1663,42 @@
     margin-top: 2px;
 }
 
+.conv-choice-card {
+    flex-direction: column;
+    margin: 2px 0 6px 12px;
+    padding: 4px 0;
+    border-left-width: 2px;
+    border-color: var(--lpw-border);
+    padding-left: 8px;
+}
+
 .conv-choice-row {
     flex-direction: row;
     align-items: center;
-    margin: 2px 0 2px 12px;
 }
 
 .conv-choice-text {
     flex-grow: 1;
     font-size: 14px;
+}
+
+/* 到達時 / 選択時の変数変更フォーム */
+.conv-effect {
+    flex-direction: column;
+    margin: 4px 0 2px 0;
+    padding: 6px;
+    background-color: var(--lpw-surface-sunken);
+    border-radius: 6px;
+}
+
+.conv-effect-field {
+    margin: 2px 0;
+}
+
+.conv-effect-field .unity-base-field__label {
+    min-width: 96px;
+    color: var(--lpw-text-muted);
+    font-size: 12px;
 }
 
 .conv-add-choice-btn {

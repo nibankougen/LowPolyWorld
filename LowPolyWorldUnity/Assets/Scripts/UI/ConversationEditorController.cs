@@ -5,8 +5,9 @@ using UnityEngine.UIElements;
 /// 1 つの会話のセリフ行・選択肢を編集するオーバーレイ UI（screens-and-modes.md 11.7.4b）。
 ///
 /// 行の追加 / 削除 / 並び替え・話者 / 本文（デフォルト言語）入力・分岐（次へ / 終了 / 別の行）・
-/// 選択肢の追加 / 削除を扱う。編集状態は <see cref="ConversationEditLogic"/> が保持する。
-/// （言語別入力の「詳細」・到達/選択時のステート変更 UI は後続。データ・ロジックは対応済み）
+/// 選択肢の追加 / 削除・到達時 / 選択時の変数変更（onReach / effect）を扱う。
+/// 編集状態は <see cref="ConversationEditLogic"/> が保持する。
+/// （言語別入力の「詳細」は後続。データ・ロジックは対応済み）
 /// </summary>
 public class ConversationEditorController
 {
@@ -21,15 +22,18 @@ public class ConversationEditorController
     private readonly Label _flash;
 
     private readonly ConversationLibraryLogic _library;
+    private readonly GimmickTabLogic _tabLogic; // 変数選択ドロップダウン用（定義済みワールド / プレイヤー変数）
     private ConversationJson _conversation;
     private ConversationEditLogic _edit;
     private IVisualElementScheduledItem _flashHide;
 
-    public ConversationEditorController(VisualElement root, ConversationLibraryLogic library = null)
+    public ConversationEditorController(
+        VisualElement root, ConversationLibraryLogic library = null, GimmickTabLogic tabLogic = null)
     {
         if (root == null)
             throw new ArgumentNullException(nameof(root));
         _library = library;
+        _tabLogic = tabLogic;
 
         _overlay = root.Q("conv-editor");
         _btnBack = root.Q<Button>("conv-editor-back");
@@ -159,6 +163,9 @@ public class ConversationEditorController
         body.RegisterValueChangedCallback(e => _edit.SetLineText(lineId, "", e.newValue));
         card.Add(body);
 
+        // 到達時の変数変更
+        card.Add(BuildEffectEditor("到達時に変数を変更", line.onReach ??= new ConversationEffectJson()));
+
         // 分岐（選択肢が無いときの「次へ / 終了 / 行」）
         bool hasChoices = (line.choices?.Length ?? 0) > 0;
         if (!hasChoices)
@@ -191,6 +198,9 @@ public class ConversationEditorController
 
     private VisualElement BuildChoiceRow(string lineId, int choiceIndex, ConversationChoiceJson choice)
     {
+        var card = new VisualElement();
+        card.AddToClassList("conv-choice-card");
+
         var row = new VisualElement();
         row.AddToClassList("conv-choice-row");
 
@@ -207,9 +217,125 @@ public class ConversationEditorController
             if (_edit.RemoveChoice(lineId, choiceIndex))
                 RefreshLines();
         }));
+        card.Add(row);
 
-        return row;
+        // 選択時の変数変更
+        card.Add(BuildEffectEditor("選択時に変数を変更", choice.effect ??= new ConversationEffectJson()));
+
+        return card;
     }
+
+    // ── 変数変更（onReach / 選択肢 effect）────────────────────────────────────
+
+    private static readonly string[] EffectKinds = { "none", "worldState", "playerState" };
+    private static readonly string[] EffectKindLabels = { "なし", "ワールド変数", "プレイヤー変数" };
+
+    private VisualElement BuildEffectEditor(string title, ConversationEffectJson eff)
+    {
+        var box = new VisualElement();
+        box.AddToClassList("conv-effect");
+        box.Add(RowLabel(title));
+
+        var sub = new VisualElement();
+        void RefreshSub()
+        {
+            sub.Clear();
+            if (eff.kind != "worldState" && eff.kind != "playerState")
+                return;
+            bool world = eff.kind == "worldState";
+            sub.Add(VariableField(world, eff.stateIndex, v => eff.stateIndex = v));
+            if (!world)
+                sub.Add(IdDropdown("対象", GimmickRuleEditLogic.PlayerTargets,
+                    GimmickParamSchema.PlayerTargetLabel, eff.playerTarget, v => eff.playerTarget = v));
+            sub.Add(IdDropdown("演算", GimmickRuleEditLogic.StateOps,
+                GimmickParamSchema.StateOpLabel, eff.stateOp, v => eff.stateOp = v));
+            var valField = new IntegerField("値（0〜255）") { value = eff.value };
+            valField.AddToClassList("conv-effect-field");
+            valField.RegisterValueChangedCallback(e => eff.value = Clamp255(e.newValue));
+            sub.Add(valField);
+        }
+
+        var kindChoices = new System.Collections.Generic.List<string>(EffectKindLabels);
+        int sel = Array.IndexOf(EffectKinds, eff.kind);
+        if (sel < 0) sel = 0;
+        var kindDd = new DropdownField(kindChoices, sel);
+        kindDd.AddToClassList("conv-effect-field");
+        kindDd.RegisterValueChangedCallback(_ =>
+        {
+            int i = kindDd.index;
+            if (i >= 0 && i < EffectKinds.Length)
+            {
+                eff.kind = EffectKinds[i];
+                RefreshSub();
+            }
+        });
+        box.Add(kindDd);
+        box.Add(sub);
+        RefreshSub();
+        return box;
+    }
+
+    // 定義済み変数のドロップダウン（未定義なら番号入力にフォールバック）。
+    private VisualElement VariableField(bool world, int current, Action<int> onChange)
+    {
+        var indices = world ? _tabLogic?.WorldStateIndices : _tabLogic?.PlayerStateIndices;
+        string label = world ? "ワールド変数" : "プレイヤー変数";
+        if (indices == null || indices.Count == 0)
+        {
+            var f = new IntegerField(label + "（番号）") { value = current };
+            f.AddToClassList("conv-effect-field");
+            f.RegisterValueChangedCallback(e => onChange(e.newValue));
+            return f;
+        }
+
+        var choices = new System.Collections.Generic.List<string>();
+        foreach (var i in indices)
+        {
+            string name = world ? _tabLogic.GetWorldStateLabel(i) : _tabLogic.GetPlayerStateLabel(i);
+            choices.Add(string.IsNullOrEmpty(name) ? $"{i}" : $"{i}: {name}");
+        }
+        int sel = IndexOfInt(indices, current);
+        if (sel < 0) sel = 0;
+        var dd = new DropdownField(label, choices, sel);
+        dd.AddToClassList("conv-effect-field");
+        dd.RegisterValueChangedCallback(_ =>
+        {
+            int i = dd.index;
+            if (i >= 0 && i < indices.Count) onChange(indices[i]);
+        });
+        return dd;
+    }
+
+    private static DropdownField IdDropdown(
+        string label, System.Collections.Generic.IReadOnlyList<string> ids,
+        Func<string, string> labelOf, string current, Action<string> onChange)
+    {
+        var choices = new System.Collections.Generic.List<string>();
+        foreach (var id in ids)
+            choices.Add(labelOf(id));
+        int idx = -1;
+        for (int i = 0; i < ids.Count; i++)
+            if (ids[i] == current) { idx = i; break; }
+        if (idx < 0) idx = 0;
+        var dd = new DropdownField(label, choices, idx);
+        dd.AddToClassList("conv-effect-field");
+        dd.RegisterValueChangedCallback(_ =>
+        {
+            int i = dd.index;
+            if (i >= 0 && i < ids.Count) onChange(ids[i]);
+        });
+        return dd;
+    }
+
+    private static int IndexOfInt(System.Collections.Generic.IReadOnlyList<int> list, int value)
+    {
+        for (int i = 0; i < list.Count; i++)
+            if (list[i] == value)
+                return i;
+        return -1;
+    }
+
+    private static int Clamp255(int v) => v < 0 ? 0 : v > 255 ? 255 : v;
 
     // 分岐先ドロップダウン: 次へ / 会話終了 / 各行。
     private DropdownField BuildGoto(string current, Action<string> onSet)
