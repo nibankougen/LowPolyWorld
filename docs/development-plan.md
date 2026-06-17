@@ -947,12 +947,12 @@
     - [~] 文字メッセージアクション: デフォルト単言語入力 / 詳細で言語別入力（各 80 文字以内・フォールバック英語優先）— ロジック `SetActionMessage`/`RemoveActionMessage` + UI のデフォルト言語テキスト欄（multiline・80 字）実装済み。詳細（言語別入力）・閲覧者フォールバック表示は未
     - [ ] 値入力種別 UI: 固定値 / 範囲乱数 等（正規 ID 一覧 `GimmickRuleEditLogic.ValueKinds`/`CompareOps`/`PlayerTargets`/`StateOps`/`ResetTargets` をドロップダウンに利用）
 - [ ] **ギミック表現力拡張（ストーリー / セリフ / シーケンス）**（world-creation.md 9.7b / 9.13・ノードベース UI は採用せず ECA + 新プリミティブで実現）
-  - [ ] 会話システム（9.13）
-    - [ ] ワールド定義 JSON モデル（`conversations[]`・行・選択肢・言語別テキスト・到達/選択時ステート変更）
-    - [ ] `ConversationEditLogic`（純粋C#: 会話/行/選択肢の追加・削除・並び替え・多言語テキスト編集・ジャンプ先解決・上限/構造バリデーション）+ EditMode テスト
-    - [ ] アクション `startConversation`（対象プレイヤー + 会話 ID）の変換・バリデーション（会話 ID 実在チェック → WorldRefs に ConversationIds 追加）
-    - [ ] 会話エディタ UI（11.7.4b・会話一覧 / 行 D&D / 選択肢 / 多言語入力）
-    - [ ] ランタイム会話再生（対象プレイヤーローカル UI・選択待ち・オーナー権威でのステート変更適用・同期）
+  - [~] 会話システム（9.13）
+    - [x] ワールド定義 JSON モデル（`conversations[]`・行・選択肢・言語別テキスト・到達/選択時ステート変更）
+    - [x] `ConversationEditLogic`（純粋C#: 会話/行/選択肢の追加・削除・並び替え・多言語テキスト編集・ジャンプ先解決・上限/構造バリデーション）+ EditMode テスト（`ConversationLibraryLogic` / `ConversationValidator` 含む）
+    - [x] アクション `startConversation`（対象プレイヤー + 会話 ID）の変換・バリデーション（会話 ID 実在チェック → WorldRefs に ConversationIds 追加）
+    - [~] 会話エディタ UI（11.7.4b・会話一覧 / 行 / 選択肢 / 多言語入力）— `ConversationLibraryController` + `ConversationEditorController` 実装済み（人間の見た目確認待ち）。残: 言語別「詳細」入力・到達/選択時ステート変更 UI・行 D&D
+    - [~] ランタイム会話再生 — 再生ステートマシン `ConversationPlaybackLogic`（純粋C#・テスト済み 28 本: 行進行 / ジャンプ先 "" `end` 行ID / 選択肢分岐 / 到達・選択時ステート変更要求の発行 / 多言語フォールバック）実装済み。残: 対象プレイヤーローカル会話 UI・オーナー Tick 駆動・ステート変更要求のオーナー権威適用 + Netcode 同期（Netcode 統合時）
   - [ ] 待機アクション（9.7b・シーケンス）
     - [ ] アクション `wait`（floatParam 0〜60 秒）の変換・バリデーション
     - [ ] エンジンのシーケンス実行（オーナーが残アクションをスケジュール・並行進行・ループカウント対象外・リセット/退室/オーナー交代で中断）+ テスト
