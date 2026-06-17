@@ -497,30 +497,45 @@ public class RuleEditController
         var wrap = new VisualElement();
         wrap.AddToClassList("gimmick-edit-message");
 
-        var field = new TextField("メッセージ")
+        // デフォルト言語（lang = ""）の本文。
+        wrap.Add(MessageLangField(actionIndex, action, "メッセージ", SupportedLanguages.Default));
+
+        // 詳細: 言語別の上書き入力（未入力の言語は英語優先でフォールバック表示される）。
+        var detail = new Foldout { text = "詳細（言語別）", value = false };
+        detail.AddToClassList("gimmick-edit-message-detail");
+        foreach (var lang in SupportedLanguages.All)
+            detail.Add(MessageLangField(actionIndex, action, lang.Label, lang.Code));
+        wrap.Add(detail);
+
+        return wrap;
+    }
+
+    // 指定言語の文字メッセージ入力欄（空にするとその言語を削除）。
+    private TextField MessageLangField(int actionIndex, GimmickAction action, string label, string lang)
+    {
+        var field = new TextField(label)
         {
             multiline = true,
             maxLength = GimmickRuleEditLogic.MaxMessageLength,
-            value = DefaultMessageText(action),
+            value = MessageText(action, lang),
         };
         field.AddToClassList("gimmick-edit-message-field");
         field.RegisterValueChangedCallback(e =>
         {
             if (string.IsNullOrEmpty(e.newValue))
-                _edit.RemoveActionMessage(actionIndex, "");
+                _edit.RemoveActionMessage(actionIndex, lang);
             else
-                _edit.SetActionMessage(actionIndex, "", e.newValue);
+                _edit.SetActionMessage(actionIndex, lang, e.newValue);
         });
-        wrap.Add(field);
-        return wrap;
+        return field;
     }
 
-    private static string DefaultMessageText(GimmickAction action)
+    private static string MessageText(GimmickAction action, string lang)
     {
         if (action.texts == null)
             return "";
         foreach (var t in action.texts)
-            if (t != null && t.lang == "")
+            if (t != null && t.lang == lang)
                 return t.text ?? "";
         return "";
     }

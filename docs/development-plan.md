@@ -944,7 +944,7 @@
     - [x] 比較演算: 大小等 / X で割った余りが Y — `CompareOpField`（mod_eq 選択時に除数 X・余り Y を追加表示）
     - [x] 対象プレイヤー選択: 入力プレイヤー / 相手プレイヤー（存在するとき）/ 全員 — `IdDropdown`（PlayerTargets）
     - [ ] オブジェクト指定: 3D ビュータップ or 利用中オブジェクト一覧タップ（現状はオブジェクト / ポータル / 効果音 / 会話 等の ID をテキスト入力で受ける）
-    - [~] 文字メッセージアクション: デフォルト単言語入力 / 詳細で言語別入力（各 80 文字以内・フォールバック英語優先）— ロジック `SetActionMessage`/`RemoveActionMessage` + UI のデフォルト言語テキスト欄（multiline・80 字）実装済み。詳細（言語別入力）・閲覧者フォールバック表示は未
+    - [x] 文字メッセージアクション: デフォルト単言語入力 / 詳細で言語別入力（各 80 文字以内・フォールバック英語優先）— ロジック `SetActionMessage`/`RemoveActionMessage` + UI のデフォルト言語テキスト欄 + 「詳細（言語別）」Foldout（`SupportedLanguages` の 10 言語）実装済み。閲覧者フォールバック表示はランタイムのメッセージ表示 UI 実装時
     - [x] 値入力種別 UI: 固定値 / 範囲乱数 等（正規 ID 一覧 `GimmickRuleEditLogic.ValueKinds`/`CompareOps`/`PlayerTargets`/`StateOps`/`ResetTargets` をドロップダウンに利用）。ステート / タイマー番号は定義済み一覧のドロップダウン（未定義時は数値入力にフォールバック）
 - [ ] **ギミック表現力拡張（ストーリー / セリフ / シーケンス）**（world-creation.md 9.7b / 9.13・ノードベース UI は採用せず ECA + 新プリミティブで実現）
   - [~] 会話システム（9.13）

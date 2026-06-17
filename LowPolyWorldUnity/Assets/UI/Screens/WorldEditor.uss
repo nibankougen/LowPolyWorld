@@ -1394,6 +1394,15 @@
     margin-top: 6px;
 }
 
+.gimmick-edit-message-detail {
+    margin-top: 4px;
+}
+
+.gimmick-edit-message-detail .unity-foldout__text {
+    color: var(--lpw-text-muted);
+    font-size: 13px;
+}
+
 .gimmick-edit-message-field {
     margin-top: 4px;
 }
