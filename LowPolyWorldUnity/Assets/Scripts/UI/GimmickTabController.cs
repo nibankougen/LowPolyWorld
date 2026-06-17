@@ -178,7 +178,7 @@ public class GimmickTabController
     private void OnAddWorldState()
     {
         if (_logic.AddWorldState() < 0)
-            ShowFlash($"ワールドステートは最大 {GimmickTabLogic.MaxWorldStates} 個までです");
+            ShowFlash($"ワールド変数は最大 {GimmickTabLogic.MaxWorldStates} 個までです");
         else
             RefreshStateLists();
     }
@@ -186,7 +186,7 @@ public class GimmickTabController
     private void OnAddPlayerState()
     {
         if (_logic.AddPlayerState() < 0)
-            ShowFlash($"プレイヤーステートは最大 {GimmickTabLogic.MaxPlayerStates} 個までです");
+            ShowFlash($"プレイヤー変数は最大 {GimmickTabLogic.MaxPlayerStates} 個までです");
         else
             RefreshStateLists();
     }

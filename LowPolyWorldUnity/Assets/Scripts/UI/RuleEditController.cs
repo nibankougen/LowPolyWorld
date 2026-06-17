@@ -256,8 +256,8 @@ public class RuleEditController
     // 条件のパラメータ欄。
     private VisualElement BuildConditionParam(P token, GimmickCondition c) => token switch
     {
-        P.CondWorldStateIndex => StateField("ワールドステート", world: true, c.stateIndex, v => c.stateIndex = v),
-        P.CondPlayerStateIndex => StateField("プレイヤーステート", world: false, c.stateIndex, v => c.stateIndex = v),
+        P.CondWorldStateIndex => StateField("ワールド変数", world: true, c.stateIndex, v => c.stateIndex = v),
+        P.CondPlayerStateIndex => StateField("プレイヤー変数", world: false, c.stateIndex, v => c.stateIndex = v),
         P.CondTimerIndex => TimerField("タイマー", c.timerIndex, v => c.timerIndex = v),
         P.CondCompareOp => CompareOpField(c),
         P.CondThreshold => ValueRefField("比較する値", c.threshold),
@@ -271,8 +271,8 @@ public class RuleEditController
     // アクションのパラメータ欄。
     private VisualElement BuildActionParam(P token, int actionIndex, GimmickAction a) => token switch
     {
-        P.ActWorldStateIndex => StateField("ワールドステート", world: true, a.stateIndex, v => a.stateIndex = v),
-        P.ActPlayerStateIndex => StateField("プレイヤーステート", world: false, a.stateIndex, v => a.stateIndex = v),
+        P.ActWorldStateIndex => StateField("ワールド変数", world: true, a.stateIndex, v => a.stateIndex = v),
+        P.ActPlayerStateIndex => StateField("プレイヤー変数", world: false, a.stateIndex, v => a.stateIndex = v),
         P.ActStateOp => IdDropdown("演算", GimmickRuleEditLogic.StateOps,
             GimmickParamSchema.StateOpLabel, a.stateOp, v => a.stateOp = v),
         P.ActValue => ValueRefField("値", a.value),
@@ -346,15 +346,15 @@ public class RuleEditController
                     sub.Add(IntField("値", v.value, x => v.value = x));
                     break;
                 case "worldState":
-                    sub.Add(StateField("ワールドステート", world: true, v.stateIndex, x => v.stateIndex = x));
+                    sub.Add(StateField("ワールド変数", world: true, v.stateIndex, x => v.stateIndex = x));
                     break;
                 case "playerState":
-                    sub.Add(StateField("プレイヤーステート", world: false, v.stateIndex, x => v.stateIndex = x));
+                    sub.Add(StateField("プレイヤー変数", world: false, v.stateIndex, x => v.stateIndex = x));
                     sub.Add(IdDropdown("対象", ValueRefPlayerTargets,
                         GimmickParamSchema.PlayerTargetLabel, v.playerTarget, x => v.playerTarget = x));
                     break;
                 case "allPlayersSum":
-                    sub.Add(StateField("プレイヤーステート", world: false, v.stateIndex, x => v.stateIndex = x));
+                    sub.Add(StateField("プレイヤー変数", world: false, v.stateIndex, x => v.stateIndex = x));
                     break;
                 case "random":
                     sub.Add(IntField("最小値", v.min, x => v.min = x));

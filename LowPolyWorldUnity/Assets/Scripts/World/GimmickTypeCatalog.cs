@@ -40,7 +40,7 @@ public static class GimmickTypeCatalog
 
     public static readonly IReadOnlyList<Category> ConditionCategories = new[]
     {
-        new Category("ステート・タイマー", "worldState", "playerState", "timerCompare"),
+        new Category("変数・タイマー", "worldState", "playerState", "timerCompare"),
         new Category("人数・番号", "playerCount", "playerNumber"),
         new Category("インベントリ", "hasObject"),
         new Category("物理判定", "playersOverlapping", "playerDistance", "playerLineOfSight"),
@@ -50,7 +50,7 @@ public static class GimmickTypeCatalog
 
     public static readonly IReadOnlyList<Category> ActionCategories = new[]
     {
-        new Category("ステート・タイマー", "setWorldState", "setPlayerState", "timerStart", "timerStop", "timerReset"),
+        new Category("変数・タイマー", "setWorldState", "setPlayerState", "timerStart", "timerStop", "timerReset"),
         new Category("オブジェクト", "showHideObject", "changeObjectType", "moveObject"),
         new Category("インベントリ", "pickupObject", "grantObject"),
         new Category("プレイヤー", "teleportPlayer", "setMoveSpeed", "setPlayerMarker"),
@@ -94,11 +94,11 @@ public static class GimmickTypeCatalog
 
     private static readonly Dictionary<string, string> ConditionLabels = new()
     {
-        { "worldState", "ワールドステート比較" },
-        { "playerState", "プレイヤーステート比較" },
-        { "playerCount", "現在人数比較" },
-        { "playerNumber", "プレイヤー番号比較" },
-        { "timerCompare", "タイマー値比較" },
+        { "worldState", "ワールド変数を比べる" },
+        { "playerState", "プレイヤー変数を比べる" },
+        { "playerCount", "現在の人数を比べる" },
+        { "playerNumber", "プレイヤー番号を比べる" },
+        { "timerCompare", "タイマーを比べる" },
         { "hasObject", "オブジェクトを持っている" },
         { "playersOverlapping", "プレイヤーが重なっている" },
         { "playerDistance", "プレイヤーとの距離" },
@@ -107,8 +107,8 @@ public static class GimmickTypeCatalog
 
     private static readonly Dictionary<string, string> ActionLabels = new()
     {
-        { "setWorldState", "ワールドステートを変更" },
-        { "setPlayerState", "プレイヤーステートを変更" },
+        { "setWorldState", "ワールド変数を変更" },
+        { "setPlayerState", "プレイヤー変数を変更" },
         { "timerStart", "タイマーを開始" },
         { "timerStop", "タイマーを停止" },
         { "timerReset", "タイマーをリセット" },

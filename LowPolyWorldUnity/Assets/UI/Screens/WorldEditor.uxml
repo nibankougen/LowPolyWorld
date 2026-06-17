@@ -173,20 +173,20 @@
                         <ui:Label class="gimmick-btn-label" text="会話を編集" picking-mode="Ignore" />
                     </ui:Button>
 
-                    <!-- ステート定義エリア（折りたたみ可・追加 / 削除式） -->
+                    <!-- 変数定義エリア（折りたたみ可・追加 / 削除式） -->
                     <ui:VisualElement class="gimmick-section">
                         <ui:Button name="gimmick-states-toggle" class="gimmick-collapse-header" text="">
                             <ui:VisualElement name="gimmick-states-arrow" class="gimmick-collapse-arrow icon-down" picking-mode="Ignore" />
-                            <ui:Label text="ステート定義" picking-mode="Ignore" />
+                            <ui:Label text="変数一覧" picking-mode="Ignore" />
                         </ui:Button>
                         <ui:VisualElement name="gimmick-states-body" class="gimmick-states-body">
                             <ui:VisualElement class="gimmick-state-cat-head">
-                                <ui:Label class="gimmick-subhead" text="ワールドステート（最大 10）" />
+                                <ui:Label class="gimmick-subhead" text="ワールド変数（最大 10）" />
                                 <ui:Button name="gimmick-add-world-state" class="gimmick-add-btn gimmick-icon-btn gimmick-icon-btn--plus" text="" />
                             </ui:VisualElement>
                             <ui:VisualElement name="gimmick-world-states" class="gimmick-state-list" />
                             <ui:VisualElement class="gimmick-state-cat-head">
-                                <ui:Label class="gimmick-subhead" text="プレイヤーステート（最大 4）" />
+                                <ui:Label class="gimmick-subhead" text="プレイヤー変数（最大 4）" />
                                 <ui:Button name="gimmick-add-player-state" class="gimmick-add-btn gimmick-icon-btn gimmick-icon-btn--plus" text="" />
                             </ui:VisualElement>
                             <ui:VisualElement name="gimmick-player-states" class="gimmick-state-list" />
