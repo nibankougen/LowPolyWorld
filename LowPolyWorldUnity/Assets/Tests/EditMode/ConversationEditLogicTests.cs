@@ -129,6 +129,25 @@ public class ConversationEditLogicTests
     }
 
     [Test]
+    public void RemoveChoiceText_RemovesPerLanguage()
+    {
+        var edit = NewEditor();
+        var a = edit.AddLine();
+        edit.AddChoice(a.lineId);
+
+        Assert.IsTrue(edit.SetChoiceText(a.lineId, 0, "ja", "はい"));
+        Assert.IsTrue(edit.SetChoiceText(a.lineId, 0, "en", "Yes"));
+        Assert.AreEqual(2, a.choices[0].texts.Length);
+
+        Assert.IsTrue(edit.RemoveChoiceText(a.lineId, 0, "ja"));
+        Assert.AreEqual(1, a.choices[0].texts.Length);
+        Assert.AreEqual("en", a.choices[0].texts[0].lang);
+
+        Assert.IsFalse(edit.RemoveChoiceText(a.lineId, 0, "ja"), "存在しない言語は false");
+        Assert.IsFalse(edit.RemoveChoiceText("missing", 0, "en"), "存在しない行は false");
+    }
+
+    [Test]
     public void SetLineOnReach_NormalizesAndClampsValue()
     {
         var edit = NewEditor();

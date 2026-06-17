@@ -1691,6 +1691,25 @@
     font-size: 14px;
 }
 
+/* 言語別テキスト入力（既定欄 + 詳細 Foldout） */
+.conv-ml {
+    flex-direction: column;
+    margin: 4px 0 2px 0;
+}
+
+.conv-ml-field {
+    margin: 2px 0;
+}
+
+.conv-ml-detail {
+    margin: 2px 0 2px 8px;
+}
+
+.conv-ml-detail .unity-foldout__text {
+    color: var(--lpw-text-muted);
+    font-size: 12px;
+}
+
 /* 到達時 / 選択時の変数変更フォーム */
 .conv-effect {
     flex-direction: column;

@@ -951,7 +951,7 @@
     - [x] ワールド定義 JSON モデル（`conversations[]`・行・選択肢・言語別テキスト・到達/選択時ステート変更）
     - [x] `ConversationEditLogic`（純粋C#: 会話/行/選択肢の追加・削除・並び替え・多言語テキスト編集・ジャンプ先解決・上限/構造バリデーション）+ EditMode テスト（`ConversationLibraryLogic` / `ConversationValidator` 含む）
     - [x] アクション `startConversation`（対象プレイヤー + 会話 ID）の変換・バリデーション（会話 ID 実在チェック → WorldRefs に ConversationIds 追加）
-    - [~] 会話エディタ UI（11.7.4b・会話一覧 / 行 / 選択肢 / 多言語入力）— `ConversationLibraryController` + `ConversationEditorController` 実装済み（人間の見た目確認待ち）。到達時 / 選択時の変数変更（onReach / effect）UI も実装（種別なし/ワールド変数/プレイヤー変数・対象・演算・値・定義済み変数ドロップダウン）。残: 言語別「詳細」入力・行 D&D
+    - [~] 会話エディタ UI（11.7.4b・会話一覧 / 行 / 選択肢 / 多言語入力）— `ConversationLibraryController` + `ConversationEditorController` 実装済み（人間の見た目確認待ち）。到達時 / 選択時の変数変更（onReach / effect）UI・話者 / 本文 / 選択肢の言語別「詳細」入力（既定 = アプリ設定言語）も実装。残: 行 / 選択肢 D&D
     - [~] ランタイム会話再生 — 再生ステートマシン `ConversationPlaybackLogic`（純粋C#・テスト済み 28 本: 行進行 / ジャンプ先 "" `end` 行ID / 選択肢分岐 / 到達・選択時ステート変更要求の発行 / 多言語フォールバック）実装済み。残: 対象プレイヤーローカル会話 UI・オーナー Tick 駆動・ステート変更要求のオーナー権威適用 + Netcode 同期（Netcode 統合時）
   - [ ] 待機アクション（9.7b・シーケンス）
     - [ ] アクション `wait`（floatParam 0〜60 秒）の変換・バリデーション

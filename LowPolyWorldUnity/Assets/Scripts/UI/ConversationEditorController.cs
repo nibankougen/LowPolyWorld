@@ -4,10 +4,9 @@ using UnityEngine.UIElements;
 /// <summary>
 /// 1 つの会話のセリフ行・選択肢を編集するオーバーレイ UI（screens-and-modes.md 11.7.4b）。
 ///
-/// 行の追加 / 削除 / 並び替え・話者 / 本文（デフォルト言語）入力・分岐（次へ / 終了 / 別の行）・
-/// 選択肢の追加 / 削除・到達時 / 選択時の変数変更（onReach / effect）を扱う。
-/// 編集状態は <see cref="ConversationEditLogic"/> が保持する。
-/// （言語別入力の「詳細」は後続。データ・ロジックは対応済み）
+/// 行の追加 / 削除 / 並び替え・話者 / 本文 / 選択肢の言語別入力（既定 = アプリの設定言語・
+/// 「詳細」でそれ以外の言語）・分岐（次へ / 終了 / 別の行）・到達時 / 選択時の変数変更
+/// （onReach / effect）を扱う。編集状態は <see cref="ConversationEditLogic"/> が保持する。
 /// </summary>
 public class ConversationEditorController
 {
@@ -127,7 +126,7 @@ public class ConversationEditorController
         var card = new VisualElement();
         card.AddToClassList("conv-line-card");
 
-        // ヘッダー: 番号・話者・操作
+        // ヘッダー: 番号・操作
         var head = new VisualElement();
         head.AddToClassList("conv-line-head");
 
@@ -135,17 +134,9 @@ public class ConversationEditorController
         idx.AddToClassList("conv-line-index");
         head.Add(idx);
 
-        var speaker = new TextField { maxLength = ConversationEditLogic.SpeakerMaxLength };
-        speaker.AddToClassList("conv-line-speaker");
-        speaker.SetValueWithoutNotify(DefaultText(line.speakers));
-        speaker.RegisterValueChangedCallback(e =>
-        {
-            if (string.IsNullOrEmpty(e.newValue))
-                _edit.RemoveLineSpeaker(lineId, ""); // 話者は空にできる（任意項目）
-            else
-                _edit.SetLineSpeaker(lineId, "", e.newValue);
-        });
-        head.Add(speaker);
+        var spacer = new VisualElement();
+        spacer.style.flexGrow = 1;
+        head.Add(spacer);
 
         head.Add(IconButton("gimmick-icon-btn--up", "上へ", () => MoveLine(lineId, -1)));
         head.Add(IconButton("gimmick-icon-btn--down", "下へ", () => MoveLine(lineId, +1)));
@@ -156,12 +147,13 @@ public class ConversationEditorController
         }));
         card.Add(head);
 
-        // 本文
-        var body = new TextField { multiline = true, maxLength = ConversationEditLogic.TextMaxLength };
-        body.AddToClassList("conv-line-text");
-        body.SetValueWithoutNotify(DefaultText(line.texts));
-        body.RegisterValueChangedCallback(e => _edit.SetLineText(lineId, "", e.newValue));
-        card.Add(body);
+        // 話者（任意）・本文（言語別）
+        card.Add(MultilangBlock("話者", ConversationEditLogic.SpeakerMaxLength, false, line.speakers,
+            (lang, text) => _edit.SetLineSpeaker(lineId, lang, text),
+            lang => _edit.RemoveLineSpeaker(lineId, lang)));
+        card.Add(MultilangBlock("本文", ConversationEditLogic.TextMaxLength, true, line.texts,
+            (lang, text) => _edit.SetLineText(lineId, lang, text),
+            lang => _edit.RemoveLineText(lineId, lang)));
 
         // 到達時の変数変更
         card.Add(BuildEffectEditor("到達時に変数を変更", line.onReach ??= new ConversationEffectJson()));
@@ -201,17 +193,15 @@ public class ConversationEditorController
         var card = new VisualElement();
         card.AddToClassList("conv-choice-card");
 
+        // 選択肢テキスト（言語別）
+        card.Add(MultilangBlock("選択肢", ConversationEditLogic.ChoiceTextMaxLength, false, choice.texts,
+            (lang, text) => _edit.SetChoiceText(lineId, choiceIndex, lang, text),
+            lang => _edit.RemoveChoiceText(lineId, choiceIndex, lang)));
+
+        // 分岐先・削除
         var row = new VisualElement();
         row.AddToClassList("conv-choice-row");
-
-        var text = new TextField { maxLength = ConversationEditLogic.ChoiceTextMaxLength };
-        text.AddToClassList("conv-choice-text");
-        text.SetValueWithoutNotify(DefaultText(choice.texts));
-        text.RegisterValueChangedCallback(e => _edit.SetChoiceText(lineId, choiceIndex, "", e.newValue));
-        row.Add(text);
-
         row.Add(BuildGoto(choice.gotoLineId, g => _edit.SetChoiceGoto(lineId, choiceIndex, g)));
-
         row.Add(IconButton("gimmick-icon-btn--close", "削除", () =>
         {
             if (_edit.RemoveChoice(lineId, choiceIndex))
@@ -223,6 +213,71 @@ public class ConversationEditorController
         card.Add(BuildEffectEditor("選択時に変数を変更", choice.effect ??= new ConversationEffectJson()));
 
         return card;
+    }
+
+    // ── 言語別テキスト入力（既定 = アプリの設定言語・詳細でそれ以外の言語）──────
+
+    private VisualElement MultilangBlock(
+        string title, int maxLen, bool multiline, GimmickTextJson[] source,
+        Func<string, string, bool> set, Func<string, bool> remove)
+    {
+        var box = new VisualElement();
+        box.AddToClassList("conv-ml");
+
+        string app = DeviceLanguage.CurrentCode();
+        string init = TextForLang(source, app);
+        if (string.IsNullOrEmpty(init))
+            init = TextForLang(source, ""); // 旧 "" 既定を初期表示で引き継ぐ
+
+        box.Add(LangField($"{title}（{SupportedLanguages.LabelOf(app)}）", maxLen, multiline, init, v =>
+        {
+            if (string.IsNullOrEmpty(v))
+            {
+                remove(app);
+            }
+            else
+            {
+                set(app, v);
+                remove(""); // 旧 "" 既定をアプリ設定言語へ移行
+            }
+        }));
+
+        var detail = new Foldout { text = "詳細（言語別）", value = false };
+        detail.AddToClassList("conv-ml-detail");
+        foreach (var lang in SupportedLanguages.All)
+        {
+            if (lang.Code == app)
+                continue;
+            string code = lang.Code;
+            detail.Add(LangField(lang.Label, maxLen, multiline, TextForLang(source, code), v =>
+            {
+                if (string.IsNullOrEmpty(v))
+                    remove(code);
+                else
+                    set(code, v);
+            }));
+        }
+        box.Add(detail);
+        return box;
+    }
+
+    private static TextField LangField(string label, int maxLen, bool multiline, string initial, Action<string> onChange)
+    {
+        var f = new TextField(label) { multiline = multiline, maxLength = maxLen };
+        f.AddToClassList("conv-ml-field");
+        f.SetValueWithoutNotify(initial);
+        f.RegisterValueChangedCallback(e => onChange(e.newValue));
+        return f;
+    }
+
+    private static string TextForLang(GimmickTextJson[] texts, string lang)
+    {
+        if (texts == null)
+            return "";
+        foreach (var t in texts)
+            if (t != null && t.lang == lang)
+                return t.text ?? "";
+        return "";
     }
 
     // ── 変数変更（onReach / 選択肢 effect）────────────────────────────────────
@@ -380,16 +435,6 @@ public class ConversationEditorController
     }
 
     // ── ヘルパー ───────────────────────────────────────────────────────────────
-
-    private static string DefaultText(GimmickTextJson[] texts)
-    {
-        if (texts == null)
-            return "";
-        foreach (var t in texts)
-            if (t != null && t.lang == "")
-                return t.text ?? "";
-        return "";
-    }
 
     private static Label RowLabel(string text)
     {

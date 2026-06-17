@@ -151,6 +151,15 @@ public class ConversationEditLogic
         return SetText(choice.texts, text, lang, ChoiceTextMaxLength, arr => choice.texts = arr);
     }
 
+    /// <summary>指定言語の選択肢テキストを削除する（言語別入力の空入力時のクリアに使う）。</summary>
+    public bool RemoveChoiceText(string lineId, int choiceIndex, string lang)
+    {
+        var choice = FindChoice(lineId, choiceIndex);
+        if (choice == null)
+            return false;
+        return RemoveText(choice.texts, lang, arr => choice.texts = arr);
+    }
+
     /// <summary>選択肢のジャンプ先を設定する（"" / "end" / 実在行 ID）。</summary>
     public bool SetChoiceGoto(string lineId, int choiceIndex, string gotoLineId)
     {
