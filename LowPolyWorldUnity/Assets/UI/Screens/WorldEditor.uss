@@ -1619,15 +1619,83 @@
 /* ── 会話（ライブラリ / エディタ）── */
 /* ライブラリの会話行 */
 .conv-row {
-    flex-direction: row;
-    align-items: center;
+    flex-direction: column;
     min-height: 44px;
     margin: 3px 10px;
-    padding: 0 6px;
+    padding: 4px 6px;
     background-color: var(--lpw-surface-muted);
     border-width: 1px;
     border-color: var(--lpw-border);
     border-radius: 8px;
+}
+
+.conv-row-top {
+    flex-direction: row;
+    align-items: center;
+}
+
+/* 会話に登場する話者のチップ行 */
+.conv-row-speakers {
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin: 2px 4px 2px 4px;
+}
+
+.conv-row-speakers-empty {
+    color: var(--lpw-text-muted);
+    font-size: 11px;
+    padding: 2px 0;
+}
+
+/* ── 話者セクション（会話一覧の上部）── */
+.conv-speaker-section {
+    margin: 4px 10px 6px 10px;
+    padding: 6px 8px;
+    background-color: var(--lpw-surface-sunken);
+    border-width: 1px;
+    border-color: var(--lpw-border);
+    border-radius: 8px;
+}
+
+.conv-speaker-section-head {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.conv-speaker-edit-btn {
+    height: 28px;
+    padding: 0 12px;
+    background-color: var(--lpw-surface-muted);
+    border-width: 1px;
+    border-color: var(--lpw-border);
+    border-radius: 14px;
+    color: var(--lpw-text-secondary);
+    font-size: 13px;
+}
+
+.conv-speaker-summary {
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin-top: 4px;
+}
+
+.conv-speaker-empty {
+    color: var(--lpw-text-muted);
+    font-size: 12px;
+    padding: 2px 0;
+}
+
+/* 話者チップ（表示のみ・角丸ピル） */
+.conv-speaker-chip {
+    margin: 2px 6px 2px 0;
+    padding: 2px 10px;
+    background-color: var(--lpw-surface);
+    border-width: 1px;
+    border-color: var(--lpw-border);
+    border-radius: 12px;
+    color: var(--lpw-text-secondary);
+    font-size: 12px;
 }
 
 .conv-name {

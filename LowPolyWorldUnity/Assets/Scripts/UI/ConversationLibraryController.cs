@@ -14,25 +14,30 @@ public class ConversationLibraryController
     public event Action<string> EditRequested;
 
     private readonly ConversationLibraryLogic _logic;
+    private readonly SpeakerLibraryLogic _speakers; // 話者一覧・各会話の登場話者表示用
 
     private readonly VisualElement _overlay;
     private readonly Button _btnBack;
     private readonly Button _btnAdd;
     private readonly VisualElement _list;
+    private readonly VisualElement _speakerSummary;
     private readonly Label _flash;
 
     private IVisualElementScheduledItem _flashHide;
 
-    public ConversationLibraryController(VisualElement root, ConversationLibraryLogic logic)
+    public ConversationLibraryController(
+        VisualElement root, ConversationLibraryLogic logic, SpeakerLibraryLogic speakers = null)
     {
         if (root == null)
             throw new ArgumentNullException(nameof(root));
         _logic = logic ?? throw new ArgumentNullException(nameof(logic));
+        _speakers = speakers;
 
         _overlay = root.Q("conv-library");
         _btnBack = root.Q<Button>("conv-library-back");
         _btnAdd = root.Q<Button>("conv-library-add");
         _list = root.Q("conv-library-list");
+        _speakerSummary = root.Q("conv-speaker-summary");
         _flash = root.Q<Label>("conv-library-flash");
 
         if (_btnBack != null) _btnBack.clicked += Close;
@@ -51,9 +56,11 @@ public class ConversationLibraryController
 
     public void Close() => _overlay?.EnableInClassList("overlay-hidden", true);
 
-    /// <summary>一覧を再構築する（エディタから戻ったとき等）。</summary>
+    /// <summary>一覧を再構築する（エディタ / 話者編集から戻ったとき等）。</summary>
     public void Refresh()
     {
+        RefreshSpeakerSummary();
+
         if (_list == null)
             return;
         _list.Clear();
@@ -70,6 +77,36 @@ public class ConversationLibraryController
             _list.Add(BuildRow(conv));
     }
 
+    // 話者一覧（ワールド単位の定義）をチップで表示する。
+    private void RefreshSpeakerSummary()
+    {
+        if (_speakerSummary == null)
+            return;
+        _speakerSummary.Clear();
+
+        if (_speakers == null || _speakers.Count == 0)
+        {
+            var empty = new Label("話者が未定義です。「話者を編集」で追加できます");
+            empty.AddToClassList("conv-speaker-empty");
+            _speakerSummary.Add(empty);
+            return;
+        }
+
+        string app = DeviceLanguage.CurrentCode();
+        foreach (var s in _speakers.Speakers)
+        {
+            string name = SpeakerLibraryLogic.ResolveName(s, app);
+            _speakerSummary.Add(SpeakerChip(string.IsNullOrEmpty(name) ? "（名称未設定）" : name));
+        }
+    }
+
+    private static Label SpeakerChip(string text)
+    {
+        var chip = new Label(text);
+        chip.AddToClassList("conv-speaker-chip");
+        return chip;
+    }
+
     private void OnAdd()
     {
         var conv = _logic.Add();
@@ -84,27 +121,59 @@ public class ConversationLibraryController
 
     private VisualElement BuildRow(ConversationJson conv)
     {
-        var row = new VisualElement();
-        row.AddToClassList("conv-row");
+        var card = new VisualElement();
+        card.AddToClassList("conv-row");
+
+        // 上段: 会話名 + 行数 + 操作ボタン
+        var top = new VisualElement();
+        top.AddToClassList("conv-row-top");
 
         var name = new Label(conv.name);
         name.AddToClassList("conv-name");
         name.RegisterCallback<ClickEvent>(_ => EditRequested?.Invoke(conv.conversationId));
-        row.Add(name);
+        top.Add(name);
 
         var meta = new Label($"{conv.lines?.Length ?? 0} 行");
         meta.AddToClassList("conv-meta");
-        row.Add(meta);
+        top.Add(meta);
 
-        row.Add(IconButton("gimmick-icon-btn--up", "上へ", () => Move(conv.conversationId, -1)));
-        row.Add(IconButton("gimmick-icon-btn--down", "下へ", () => Move(conv.conversationId, +1)));
-        row.Add(IconButton("gimmick-icon-btn--close", "削除", () =>
+        top.Add(IconButton("gimmick-icon-btn--up", "上へ", () => Move(conv.conversationId, -1)));
+        top.Add(IconButton("gimmick-icon-btn--down", "下へ", () => Move(conv.conversationId, +1)));
+        top.Add(IconButton("gimmick-icon-btn--close", "削除", () =>
         {
             if (_logic.Remove(conv.conversationId))
                 Refresh();
         }));
+        card.Add(top);
 
-        return row;
+        // 下段: この会話に登場する話者
+        card.Add(BuildConversationSpeakers(conv));
+
+        return card;
+    }
+
+    // 会話に登場する話者をチップで表示する（タップで編集に入れるよう行全体は名前タップで遷移）。
+    private VisualElement BuildConversationSpeakers(ConversationJson conv)
+    {
+        var wrap = new VisualElement();
+        wrap.AddToClassList("conv-row-speakers");
+
+        var ids = ConversationSpeakers.DistinctSpeakerIds(conv);
+        if (ids.Count == 0)
+        {
+            var none = new Label("登場話者なし");
+            none.AddToClassList("conv-row-speakers-empty");
+            wrap.Add(none);
+            return wrap;
+        }
+
+        string app = DeviceLanguage.CurrentCode();
+        foreach (var id in ids)
+        {
+            string name = _speakers != null ? SpeakerLibraryLogic.ResolveName(_speakers.Find(id), app) : "";
+            wrap.Add(SpeakerChip(string.IsNullOrEmpty(name) ? "（不明な話者）" : name));
+        }
+        return wrap;
     }
 
     private void Move(string id, int delta)

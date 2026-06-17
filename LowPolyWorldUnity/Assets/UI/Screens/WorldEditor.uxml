@@ -290,7 +290,15 @@
                         <ui:Label class="gimmick-picker-title" text="会話一覧" />
                         <ui:Button name="conv-library-add" class="gimmick-add-btn gimmick-icon-btn gimmick-icon-btn--plus" text="" />
                     </ui:VisualElement>
-                    <ui:Button name="conv-speaker-edit" class="gimmick-template-top-btn" text="話者を編集" />
+                    <!-- 話者一覧（ワールド単位の話者定義） -->
+                    <ui:VisualElement class="conv-speaker-section">
+                        <ui:VisualElement class="conv-speaker-section-head">
+                            <ui:Label class="gimmick-subhead" text="話者" />
+                            <ui:Button name="conv-speaker-edit" class="conv-speaker-edit-btn" text="話者を編集" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="conv-speaker-summary" class="conv-speaker-summary" />
+                    </ui:VisualElement>
+
                     <ui:ScrollView name="conv-library-list" class="gimmick-edit-scroll" />
                     <ui:Label name="conv-library-flash" class="object-flash overlay-hidden" text="" />
                 </ui:VisualElement>

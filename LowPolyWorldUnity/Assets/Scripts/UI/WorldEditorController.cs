@@ -173,12 +173,14 @@ public class WorldEditorController : MonoBehaviour
         _ruleEditTab.Closed += () => _gimmickTab.Refresh();
 
         // 会話（ライブラリ ↔ エディタ）+ 話者ライブラリ
-        _convLibraryController = new ConversationLibraryController(_root, _conversationLibrary);
+        _convLibraryController = new ConversationLibraryController(_root, _conversationLibrary, _speakerLibrary);
         _convEditorController = new ConversationEditorController(
             _root, _conversationLibrary, _gimmickTab.Logic, _speakerLibrary);
         _speakerLibraryController = new SpeakerLibraryController(_root, _speakerLibrary);
         _convLibraryController.EditRequested += id => _convEditorController.Open(_conversationLibrary.Find(id));
         _convEditorController.Closed += () => _convLibraryController.Refresh();
+        // 話者編集から戻ったら会話一覧の話者表示を更新する
+        _speakerLibraryController.Closed += () => _convLibraryController.Refresh();
 
         var btnConversations = _root.Q<Button>("gimmick-edit-conversations");
         if (btnConversations != null) btnConversations.clicked += () => _convLibraryController.Open();
