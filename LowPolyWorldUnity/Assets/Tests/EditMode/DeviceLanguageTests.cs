@@ -27,4 +27,15 @@ public class DeviceLanguageTests
         foreach (SystemLanguage l in System.Enum.GetValues(typeof(SystemLanguage)))
             Assert.IsTrue(SupportedLanguages.IsSupported(DeviceLanguage.CodeFor(l)), l.ToString());
     }
+
+    [Test]
+    public void Normalize_KeepsSupportedFallsBackToEnglish()
+    {
+        Assert.AreEqual("ja", DeviceLanguage.Normalize("ja"));
+        Assert.AreEqual("pt-BR", DeviceLanguage.Normalize("pt-BR"));
+        Assert.AreEqual("en", DeviceLanguage.Normalize("ru"));   // 対応外
+        Assert.AreEqual("en", DeviceLanguage.Normalize("en-US")); // 対応外コード形
+        Assert.AreEqual("en", DeviceLanguage.Normalize(""));      // 空
+        Assert.AreEqual("en", DeviceLanguage.Normalize(null));
+    }
 }

@@ -497,7 +497,7 @@ public class RuleEditController
         var wrap = new VisualElement();
         wrap.AddToClassList("gimmick-edit-message");
 
-        // 既定言語は端末のシステム言語。メッセージはこの言語コードで保存する。
+        // 既定言語はアプリの設定言語（対応外は英語）。メッセージはこの言語コードで保存する。
         string sysLang = DeviceLanguage.CurrentCode();
 
         // 旧 "" 既定テキストがあればシステム言語の初期表示として引き継ぐ（編集時にその言語へ移行）。
