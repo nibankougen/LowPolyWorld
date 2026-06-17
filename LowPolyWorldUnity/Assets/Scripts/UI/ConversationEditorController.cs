@@ -17,7 +17,6 @@ public class ConversationEditorController
     private readonly Button _btnBack;
     private readonly TextField _title;
     private readonly VisualElement _lineList;
-    private readonly Button _btnAddLine;
     private readonly Label _flash;
 
     private readonly ConversationLibraryLogic _library;
@@ -45,11 +44,9 @@ public class ConversationEditorController
         _btnBack = root.Q<Button>("conv-editor-back");
         _title = root.Q<TextField>("conv-editor-title");
         _lineList = root.Q("conv-editor-lines");
-        _btnAddLine = root.Q<Button>("conv-editor-add-line");
         _flash = root.Q<Label>("conv-editor-flash");
 
         if (_btnBack != null) _btnBack.clicked += Close;
-        if (_btnAddLine != null) _btnAddLine.clicked += OnAddLine;
         if (_title != null)
         {
             _title.maxLength = ConversationLibraryLogic.NameMaxLength;
@@ -121,11 +118,17 @@ public class ConversationEditorController
             var empty = new Label("セリフ行がありません。下のボタンで追加します");
             empty.AddToClassList("conv-empty");
             _lineList.Add(empty);
-            return;
+        }
+        else
+        {
+            for (int i = 0; i < _edit.Lines.Count; i++)
+                _lineList.Add(BuildLineCard(i, _edit.Lines[i]));
         }
 
-        for (int i = 0; i < _edit.Lines.Count; i++)
-            _lineList.Add(BuildLineCard(i, _edit.Lines[i]));
+        // 一覧の最下部に追加ボタン
+        var add = new Button(OnAddLine) { text = "＋ セリフ行を追加" };
+        add.AddToClassList("gimmick-template-top-btn");
+        _lineList.Add(add);
     }
 
     private VisualElement BuildLineCard(int index, ConversationLineJson line)

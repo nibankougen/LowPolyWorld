@@ -172,7 +172,6 @@
                     <ui:VisualElement class="gimmick-section">
                         <ui:VisualElement class="gimmick-rules-header">
                             <ui:Label class="gimmick-subhead" text="ルール" />
-                            <ui:Button name="gimmick-add-rule" class="gimmick-add-btn gimmick-icon-btn gimmick-icon-btn--plus" text="" />
                         </ui:VisualElement>
                         <ui:VisualElement name="gimmick-rule-list" class="gimmick-rule-list" />
                     </ui:VisualElement>
@@ -288,7 +287,6 @@
                     <ui:VisualElement class="gimmick-edit-header">
                         <ui:Button name="conv-library-back" class="gimmick-edit-back icon-back" text="" />
                         <ui:Label class="gimmick-picker-title" text="会話一覧" />
-                        <ui:Button name="conv-library-add" class="gimmick-add-btn gimmick-icon-btn gimmick-icon-btn--plus" text="" />
                     </ui:VisualElement>
                     <!-- 話者一覧（ワールド単位の話者定義） -->
                     <ui:VisualElement class="conv-speaker-section">
@@ -325,7 +323,6 @@
                         <ui:TextField name="conv-editor-title" class="gimmick-edit-title" />
                     </ui:VisualElement>
                     <ui:ScrollView name="conv-editor-lines" class="gimmick-edit-scroll" />
-                    <ui:Button name="conv-editor-add-line" class="gimmick-template-top-btn" text="＋ セリフ行を追加" />
                     <ui:Label name="conv-editor-flash" class="object-flash overlay-hidden" text="" />
                 </ui:VisualElement>
             </ui:VisualElement>

@@ -27,7 +27,6 @@ public class GimmickTabController
     private readonly Button _addWorldStateBtn;
     private readonly Button _addPlayerStateBtn;
     private readonly Button _addTimerBtn;
-    private readonly Button _addRuleBtn;
     private readonly Button _addTemplateBtn;
     private readonly VisualElement _ruleList;
     private readonly Label _flash;
@@ -53,7 +52,6 @@ public class GimmickTabController
         _addWorldStateBtn = root.Q<Button>("gimmick-add-world-state");
         _addPlayerStateBtn = root.Q<Button>("gimmick-add-player-state");
         _addTimerBtn = root.Q<Button>("gimmick-add-timer");
-        _addRuleBtn = root.Q<Button>("gimmick-add-rule");
         _addTemplateBtn = root.Q<Button>("gimmick-add-template");
         _ruleList = root.Q("gimmick-rule-list");
         _flash = root.Q<Label>("gimmick-flash");
@@ -63,7 +61,6 @@ public class GimmickTabController
         if (_addWorldStateBtn != null) _addWorldStateBtn.clicked += OnAddWorldState;
         if (_addPlayerStateBtn != null) _addPlayerStateBtn.clicked += OnAddPlayerState;
         if (_addTimerBtn != null) _addTimerBtn.clicked += OnAddTimer;
-        if (_addRuleBtn != null) _addRuleBtn.clicked += OnAddRule;
         if (_addTemplateBtn != null) _addTemplateBtn.clicked += OnOpenTemplatePicker;
 
         Refresh();
@@ -257,11 +254,17 @@ public class GimmickTabController
                 "ルールは「〜したとき、〜する」の形です。\n上の「テンプレートから追加」で簡単に始められます。");
             empty.AddToClassList("gimmick-rule-empty");
             _ruleList.Add(empty);
-            return;
+        }
+        else
+        {
+            foreach (var rule in _logic.Rules)
+                _ruleList.Add(BuildRuleRow(rule.ruleId, rule.label, GimmickRuleSummary.Of(rule)));
         }
 
-        foreach (var rule in _logic.Rules)
-            _ruleList.Add(BuildRuleRow(rule.ruleId, rule.label, GimmickRuleSummary.Of(rule)));
+        // 一覧の最下部に追加ボタン
+        var add = new Button(OnAddRule) { text = "＋ ルールを追加" };
+        add.AddToClassList("gimmick-template-top-btn");
+        _ruleList.Add(add);
     }
 
     private VisualElement BuildRuleRow(string ruleId, string label, string summary)

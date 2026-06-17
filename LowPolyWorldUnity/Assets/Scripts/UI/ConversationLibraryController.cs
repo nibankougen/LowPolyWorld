@@ -18,7 +18,6 @@ public class ConversationLibraryController
 
     private readonly VisualElement _overlay;
     private readonly Button _btnBack;
-    private readonly Button _btnAdd;
     private readonly VisualElement _list;
     private readonly VisualElement _speakerSummary;
     private readonly Label _flash;
@@ -35,13 +34,11 @@ public class ConversationLibraryController
 
         _overlay = root.Q("conv-library");
         _btnBack = root.Q<Button>("conv-library-back");
-        _btnAdd = root.Q<Button>("conv-library-add");
         _list = root.Q("conv-library-list");
         _speakerSummary = root.Q("conv-speaker-summary");
         _flash = root.Q<Label>("conv-library-flash");
 
         if (_btnBack != null) _btnBack.clicked += Close;
-        if (_btnAdd != null) _btnAdd.clicked += OnAdd;
     }
 
     public bool IsOpen => _overlay != null && !_overlay.ClassListContains("overlay-hidden");
@@ -67,14 +64,20 @@ public class ConversationLibraryController
 
         if (_logic.Count == 0)
         {
-            var empty = new Label("会話がありません。＋ で追加します");
+            var empty = new Label("会話がありません。下の「＋ 会話を追加」で作成します");
             empty.AddToClassList("conv-empty");
             _list.Add(empty);
-            return;
+        }
+        else
+        {
+            foreach (var conv in _logic.Conversations)
+                _list.Add(BuildRow(conv));
         }
 
-        foreach (var conv in _logic.Conversations)
-            _list.Add(BuildRow(conv));
+        // 一覧の最下部に追加ボタン
+        var add = new Button(OnAdd) { text = "＋ 会話を追加" };
+        add.AddToClassList("gimmick-template-top-btn");
+        _list.Add(add);
     }
 
     // 話者一覧（ワールド単位の定義）をチップで表示する。
@@ -137,6 +140,7 @@ public class ConversationLibraryController
         meta.AddToClassList("conv-meta");
         top.Add(meta);
 
+        top.Add(IconButton("gimmick-icon-btn--edit", "編集", () => EditRequested?.Invoke(conv.conversationId)));
         top.Add(IconButton("gimmick-icon-btn--up", "上へ", () => Move(conv.conversationId, -1)));
         top.Add(IconButton("gimmick-icon-btn--down", "下へ", () => Move(conv.conversationId, +1)));
         top.Add(IconButton("gimmick-icon-btn--close", "削除", () =>
