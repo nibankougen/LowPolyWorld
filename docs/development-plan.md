@@ -932,6 +932,7 @@
   - [ ] ワールドポータル: 別ワールドのスポーン位置へ遷移・サムネイル表示・最大 4 つ
   - [~] 公開条件チェック: 全入口ポータルに出口設定済み・スポーン/ポータルの重複なし — `WorldPublishValidator`（出口未設定 `PortalExitMissing` / 重複 `SpawnPortalOverlap`）+ `SpecialObjectOverlap` + 占有クエリ（`WorldOccupancy.cs`）実装済み。MonoBehaviour 配線（占有クエリへの地形/オブジェクト供給）は未
 - [~] **ギミックタブ UI**（セクション 11.7.4）— 縦スライス実装済み（`GimmickTabController` + `GimmickTabLogic`・`WorldEditor.uxml/uss` panel-gimmicks・WorldEditorController に配線・LoadWorld/CommitAndSave で定義と往復）。プレビュー: WorldEditorUiPreview がダミーデータ投入。**人間の見た目確認待ち**
+  - **UX 改善（初心者配慮・2026-06-18）**: ルール一覧に「きっかけ → アクション」1 行サマリー（`GimmickRuleSummary`）・並び順をルール上/変数一覧を「詳細」として既定折りたたみ・会話編集を下部の詳細枠へ・空状態にテンプレ誘導文・用語平易化（入力イベント→「きっかけ」・「発火」除去）・種類選択リストに一言説明（`GimmickTypeCatalog.*Desc`）。**未（UX 改善 #1・計画に残置）**: ルール編集のオブジェクト/ポータル/効果音等の対象を ID 手入力でなく 3D タップ / 利用中一覧から選ぶ（下記「オブジェクト指定」と同一）
   - [x] タブ固定ヘッダー: ルール・グループ合計 / 100（`GimmickTabLogic.TotalCount`）
   - [x] ステート定義エリア（折りたたみ可）: ワールドステート(0〜9)・プレイヤーステート(0〜3)・タイマー(0〜4) の名前(1〜20文字)+初期値(0〜255)入力 — テスト済み
   - [~] ルール一覧: タイトル名変更（インライン・1〜20文字・空不可）・並び替え（▲▼アイコン。**D&D は未**）・追加/削除・合計 100 上限。ボタンは Icons の icon_plus/icon_edit/icon_up/icon_down/icon_close を使用。**グループ化 UI は未**（オブジェクトグループと同仕様予定）

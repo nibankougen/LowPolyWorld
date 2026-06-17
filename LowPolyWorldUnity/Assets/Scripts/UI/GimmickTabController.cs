@@ -33,7 +33,8 @@ public class GimmickTabController
     private readonly Label _flash;
     private readonly GimmickTemplatePickerController _templatePicker;
 
-    private bool _statesExpanded = true;
+    // 変数一覧は詳細設定として既定で折りたたむ（UXML 側も overlay-hidden / icon-right で開始）。
+    private bool _statesExpanded = false;
     private IVisualElementScheduledItem _flashHide;
 
     public GimmickTabController(VisualElement root, GimmickTabLogic logic = null)
@@ -252,27 +253,35 @@ public class GimmickTabController
 
         if (_logic.Rules.Count == 0)
         {
-            var empty = new Label("ルールがありません。＋ で追加します");
+            var empty = new Label(
+                "ルールは「〜したとき、〜する」の形です。\n上の「テンプレートから追加」で簡単に始められます。");
             empty.AddToClassList("gimmick-rule-empty");
             _ruleList.Add(empty);
             return;
         }
 
         foreach (var rule in _logic.Rules)
-            _ruleList.Add(BuildRuleRow(rule.ruleId, rule.label));
+            _ruleList.Add(BuildRuleRow(rule.ruleId, rule.label, GimmickRuleSummary.Of(rule)));
     }
 
-    private VisualElement BuildRuleRow(string ruleId, string label)
+    private VisualElement BuildRuleRow(string ruleId, string label, string summary)
     {
         var row = new VisualElement();
         row.AddToClassList("gimmick-rule-row");
 
-        // 一覧では名前は表示のみ（編集はルール編集画面で行う）。
-        // タップするとルール編集画面に入る（11.7.4）。
+        // 名前 + 動作サマリー（タップでルール編集画面へ・11.7.4）。
+        var info = new VisualElement();
+        info.AddToClassList("gimmick-rule-info");
+        info.RegisterCallback<ClickEvent>(_ => RuleEditRequested?.Invoke(ruleId));
+
         var name = new Label(label);
         name.AddToClassList("gimmick-rule-name");
-        name.RegisterCallback<ClickEvent>(_ => RuleEditRequested?.Invoke(ruleId));
-        row.Add(name);
+        info.Add(name);
+
+        var summaryLabel = new Label(summary) { pickingMode = PickingMode.Ignore };
+        summaryLabel.AddToClassList("gimmick-rule-summary");
+        info.Add(summaryLabel);
+        row.Add(info);
 
         row.Add(BuildRuleButton("gimmick-icon-btn--edit", "編集", () => RuleEditRequested?.Invoke(ruleId)));
         row.Add(BuildRuleButton("gimmick-icon-btn--up", "上へ移動", () => MoveRule(ruleId, -1)));

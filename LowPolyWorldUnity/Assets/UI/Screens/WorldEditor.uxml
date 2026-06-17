@@ -162,24 +162,28 @@
 
                 <ui:ScrollView class="gimmick-scroll">
 
-                    <!-- テンプレートから追加（メニュー上部） -->
+                    <!-- テンプレートから追加（手軽に始める入口・最上部） -->
                     <ui:Button name="gimmick-add-template" class="gimmick-template-top-btn gimmick-template-top-btn--icon" text="">
                         <ui:VisualElement class="gimmick-btn-icon icon-plus" picking-mode="Ignore" />
                         <ui:Label class="gimmick-btn-label" text="テンプレートから追加" picking-mode="Ignore" />
                     </ui:Button>
-                    <!-- 会話を編集（ストーリー・セリフ） -->
-                    <ui:Button name="gimmick-edit-conversations" class="gimmick-template-top-btn gimmick-template-top-btn--icon" text="">
-                        <ui:VisualElement class="gimmick-btn-icon icon-dialogue" picking-mode="Ignore" />
-                        <ui:Label class="gimmick-btn-label" text="会話を編集" picking-mode="Ignore" />
-                    </ui:Button>
 
-                    <!-- 変数定義エリア（折りたたみ可・追加 / 削除式） -->
+                    <!-- ルール一覧（主役・上部に配置） -->
+                    <ui:VisualElement class="gimmick-section">
+                        <ui:VisualElement class="gimmick-rules-header">
+                            <ui:Label class="gimmick-subhead" text="ルール" />
+                            <ui:Button name="gimmick-add-rule" class="gimmick-add-btn gimmick-icon-btn gimmick-icon-btn--plus" text="" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="gimmick-rule-list" class="gimmick-rule-list" />
+                    </ui:VisualElement>
+
+                    <!-- 詳細設定: 変数一覧（既定で折りたたみ） -->
                     <ui:VisualElement class="gimmick-section">
                         <ui:Button name="gimmick-states-toggle" class="gimmick-collapse-header" text="">
-                            <ui:VisualElement name="gimmick-states-arrow" class="gimmick-collapse-arrow icon-down" picking-mode="Ignore" />
-                            <ui:Label text="変数一覧" picking-mode="Ignore" />
+                            <ui:VisualElement name="gimmick-states-arrow" class="gimmick-collapse-arrow icon-right" picking-mode="Ignore" />
+                            <ui:Label text="変数一覧（詳細）" picking-mode="Ignore" />
                         </ui:Button>
-                        <ui:VisualElement name="gimmick-states-body" class="gimmick-states-body">
+                        <ui:VisualElement name="gimmick-states-body" class="gimmick-states-body overlay-hidden">
                             <ui:VisualElement class="gimmick-state-cat-head">
                                 <ui:Label class="gimmick-subhead" text="ワールド変数（最大 10）" />
                                 <ui:Button name="gimmick-add-world-state" class="gimmick-add-btn gimmick-icon-btn gimmick-icon-btn--plus" text="" />
@@ -198,14 +202,11 @@
                         </ui:VisualElement>
                     </ui:VisualElement>
 
-                    <!-- ルール一覧 -->
-                    <ui:VisualElement class="gimmick-section">
-                        <ui:VisualElement class="gimmick-rules-header">
-                            <ui:Label class="gimmick-subhead" text="ルール" />
-                            <ui:Button name="gimmick-add-rule" class="gimmick-add-btn gimmick-icon-btn gimmick-icon-btn--plus" text="" />
-                        </ui:VisualElement>
-                        <ui:VisualElement name="gimmick-rule-list" class="gimmick-rule-list" />
-                    </ui:VisualElement>
+                    <!-- 詳細設定: 会話を編集（ストーリー・セリフ） -->
+                    <ui:Button name="gimmick-edit-conversations" class="gimmick-template-top-btn gimmick-template-top-btn--icon" text="">
+                        <ui:VisualElement class="gimmick-btn-icon icon-dialogue" picking-mode="Ignore" />
+                        <ui:Label class="gimmick-btn-label" text="会話を編集" picking-mode="Ignore" />
+                    </ui:Button>
 
                 </ui:ScrollView>
 
@@ -229,7 +230,7 @@
                         <!-- 入力イベント（OR 結合） -->
                         <ui:VisualElement class="gimmick-edit-section">
                             <ui:VisualElement class="gimmick-edit-section-head">
-                                <ui:Label class="gimmick-subhead" text="入力イベント（いずれか発火 / 最大 20）" />
+                                <ui:Label class="gimmick-subhead" text="きっかけ（どれかが起きたとき / 最大 20）" />
                                 <ui:Button name="rule-edit-add-trigger" class="gimmick-add-btn gimmick-icon-btn gimmick-icon-btn--plus" text="" />
                             </ui:VisualElement>
                             <ui:VisualElement name="rule-edit-trigger-list" class="gimmick-edit-list" />
@@ -238,7 +239,7 @@
                         <!-- 条件（AND 結合） -->
                         <ui:VisualElement class="gimmick-edit-section">
                             <ui:VisualElement class="gimmick-edit-section-head">
-                                <ui:Label class="gimmick-subhead" text="条件（すべて満たす / 最大 20）" />
+                                <ui:Label class="gimmick-subhead" text="条件（すべて満たすとき / 最大 20）" />
                                 <ui:Button name="rule-edit-add-condition" class="gimmick-add-btn gimmick-icon-btn gimmick-icon-btn--plus" text="" />
                             </ui:VisualElement>
                             <ui:VisualElement name="rule-edit-condition-list" class="gimmick-edit-list" />
@@ -247,7 +248,7 @@
                         <!-- アクション（順番に実行） -->
                         <ui:VisualElement class="gimmick-edit-section">
                             <ui:VisualElement class="gimmick-edit-section-head">
-                                <ui:Label class="gimmick-subhead" text="アクション（順番に実行 / 最大 20）" />
+                                <ui:Label class="gimmick-subhead" text="アクション・すること（上から順に / 最大 20）" />
                                 <ui:Button name="rule-edit-add-action" class="gimmick-add-btn gimmick-icon-btn gimmick-icon-btn--plus" text="" />
                             </ui:VisualElement>
                             <ui:VisualElement name="rule-edit-action-list" class="gimmick-edit-list" />

@@ -124,7 +124,7 @@ public class RuleEditController
     private void OnAddTrigger()
     {
         if (_edit?.AddTrigger() == null)
-            ShowFlash($"入力イベントは最大 {GimmickRuleEditLogic.MaxTriggers} 個までです");
+            ShowFlash($"きっかけは最大 {GimmickRuleEditLogic.MaxTriggers} 個までです");
         else
             RefreshTriggers();
     }
@@ -136,7 +136,7 @@ public class RuleEditController
         _triggerList.Clear();
         if (_edit.Triggers.Count == 0)
         {
-            _triggerList.Add(EmptyHint("入力イベントを追加してください"));
+            _triggerList.Add(EmptyHint("「＋」できっかけを追加してください（例: オブジェクトをタップしたとき）"));
             return;
         }
         for (int i = 0; i < _edit.Triggers.Count; i++)
@@ -144,7 +144,8 @@ public class RuleEditController
             int index = i;
             var trigger = _edit.Triggers[i];
             var row = BuildRow(
-                "入力イベントの種類", GimmickTypeCatalog.TriggerCategories, GimmickTypeCatalog.TriggerLabel, trigger.type,
+                "きっかけの種類", GimmickTypeCatalog.TriggerCategories,
+                GimmickTypeCatalog.TriggerLabel, GimmickTypeCatalog.TriggerDesc, trigger.type,
                 newType => { _edit.SetTriggerType(index, newType); RefreshTriggers(); },
                 () => { _edit.MoveTrigger(index, index - 1); RefreshTriggers(); },
                 () => { _edit.MoveTrigger(index, index + 1); RefreshTriggers(); },
@@ -179,7 +180,8 @@ public class RuleEditController
             int index = i;
             var cond = _edit.Conditions[i];
             var row = BuildRow(
-                "条件の種類", GimmickTypeCatalog.ConditionCategories, GimmickTypeCatalog.ConditionLabel, cond.type,
+                "条件の種類", GimmickTypeCatalog.ConditionCategories,
+                GimmickTypeCatalog.ConditionLabel, GimmickTypeCatalog.ConditionDesc, cond.type,
                 newType => { _edit.SetConditionType(index, newType); RefreshConditions(); },
                 () => { _edit.MoveCondition(index, index - 1); RefreshConditions(); },
                 () => { _edit.MoveCondition(index, index + 1); RefreshConditions(); },
@@ -214,7 +216,8 @@ public class RuleEditController
             int index = i;
             var action = _edit.Actions[i];
             var row = BuildRow(
-                "アクションの種類", GimmickTypeCatalog.ActionCategories, GimmickTypeCatalog.ActionLabel, action.type,
+                "アクションの種類", GimmickTypeCatalog.ActionCategories,
+                GimmickTypeCatalog.ActionLabel, GimmickTypeCatalog.ActionDesc, action.type,
                 newType => { _edit.SetActionType(index, newType); RefreshActions(); },
                 () => { _edit.MoveAction(index, index - 1); RefreshActions(); },
                 () => { _edit.MoveAction(index, index + 1); RefreshActions(); },
@@ -594,6 +597,7 @@ public class RuleEditController
         string pickerTitle,
         IReadOnlyList<GimmickTypeCatalog.Category> categories,
         Func<string, string> labelOf,
+        Func<string, string> descOf,
         string currentType,
         Action<string> onTypeChanged,
         Action onMoveUp,
@@ -608,7 +612,7 @@ public class RuleEditController
 
         // 現在の種類を表示するセレクタボタン（タップで選択リストを開く・右端に icon_next）
         var typeButton = new Button(() =>
-            _picker?.Open(pickerTitle, categories, labelOf, currentType, onTypeChanged));
+            _picker?.Open(pickerTitle, categories, labelOf, descOf, currentType, onTypeChanged));
         typeButton.AddToClassList("gimmick-edit-typebtn");
 
         var typeLabel = new Label(labelOf(currentType)) { pickingMode = PickingMode.Ignore };

@@ -1144,23 +1144,38 @@
 .gimmick-rule-row {
     flex-direction: row;
     align-items: center;
-    height: 44px;
+    min-height: 48px;
     margin: 3px 0;
-    padding: 0 6px;
+    padding: 4px 6px;
     background-color: var(--lpw-surface-muted);
     border-width: 1px;
     border-color: var(--lpw-border);
     border-radius: 8px;
 }
 
-.gimmick-rule-name {
+/* 名前 + 動作サマリーの縦並び（タップ領域） */
+.gimmick-rule-info {
     flex-grow: 1;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0 4px;
+}
+
+.gimmick-rule-name {
     color: var(--lpw-text);
     font-size: 16px;
     -unity-text-align: middle-left;
     background-color: transparent;
     border-width: 0;
-    padding: 0 4px;
+}
+
+.gimmick-rule-summary {
+    color: var(--lpw-text-muted);
+    font-size: 12px;
+    -unity-text-align: middle-left;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
 }
 
 .gimmick-rule-btn {
@@ -1464,6 +1479,25 @@
 .gimmick-picker-item--selected {
     background-color: var(--lpw-accent);
     border-color: var(--lpw-accent);
+    color: var(--lpw-text-on-accent);
+}
+
+/* 種類名 + 一言説明（縦並び） */
+.gimmick-picker-item-name {
+    color: var(--lpw-text);
+    font-size: 15px;
+    -unity-text-align: middle-left;
+}
+
+.gimmick-picker-item-desc {
+    color: var(--lpw-text-muted);
+    font-size: 12px;
+    white-space: normal;
+    -unity-text-align: middle-left;
+}
+
+.gimmick-picker-item--selected .gimmick-picker-item-name,
+.gimmick-picker-item--selected .gimmick-picker-item-desc {
     color: var(--lpw-text-on-accent);
 }
 

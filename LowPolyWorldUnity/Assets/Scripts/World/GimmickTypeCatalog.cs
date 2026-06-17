@@ -76,6 +76,11 @@ public static class GimmickTypeCatalog
     public static string ConditionLabel(string id) => ConditionLabels.TryGetValue(id, out var l) ? l : id;
     public static string ActionLabel(string id) => ActionLabels.TryGetValue(id, out var l) ? l : id;
 
+    // 一言説明（種類選択リストで表示・初心者の理解を助ける）。未登録は "".
+    public static string TriggerDesc(string id) => TriggerDescs.TryGetValue(id, out var d) ? d : "";
+    public static string ConditionDesc(string id) => ConditionDescs.TryGetValue(id, out var d) ? d : "";
+    public static string ActionDesc(string id) => ActionDescs.TryGetValue(id, out var d) ? d : "";
+
     private static readonly Dictionary<string, string> TriggerLabels = new()
     {
         { "roomStart", "ルーム開始時" },
@@ -129,5 +134,62 @@ public static class GimmickTypeCatalog
         { "startConversation", "会話を開始" },
         { "wait", "待機（以降を遅延）" },
         { "callSubroutine", "サブルーチンを呼ぶ" },
+    };
+
+    // ── 一言説明 ──────────────────────────────────────────────────────────────
+
+    private static readonly Dictionary<string, string> TriggerDescs = new()
+    {
+        { "roomStart", "ルームに入って準備ができたとき（最初に1回）" },
+        { "playerCountChanged", "誰かが入室・退室したとき" },
+        { "playerTouchObject", "プレイヤーがオブジェクトに触れたとき" },
+        { "objectTap", "プレイヤーがオブジェクトをタップしたとき" },
+        { "areaEnter", "プレイヤーがエリアに入ったとき" },
+        { "areaExit", "プレイヤーがエリアから出たとき" },
+        { "timerReached", "タイマーが指定の秒数になったとき" },
+        { "actionButton", "画面のアクションボタンを押したとき" },
+        { "playerTouchPlayer", "プレイヤー同士が触れ合ったとき" },
+        { "respawn", "スポーン地点の外に出てやり直したとき" },
+        { "inRoomPortalUsed", "ルーム内のポータルを通ったとき" },
+        { "called", "他のルールから「サブルーチンを呼ぶ」で呼ばれたとき" },
+    };
+
+    private static readonly Dictionary<string, string> ConditionDescs = new()
+    {
+        { "worldState", "全員共通のワールド変数の値を比べる" },
+        { "playerState", "プレイヤー個人の変数の値を比べる" },
+        { "playerStateRank", "プレイヤー変数が全員中で上位/下位 X 位以内か" },
+        { "playerCount", "今のルーム人数を比べる" },
+        { "playerNumber", "プレイヤーの参加順（1人目・2人目…）を比べる" },
+        { "timerCompare", "タイマーの経過秒を比べる" },
+        { "hasObject", "指定の種類のオブジェクトを持っているか" },
+        { "playersOverlapping", "他のプレイヤーと重なっているか" },
+        { "playerDistance", "他のプレイヤーが一定の距離以内にいるか" },
+        { "playerLineOfSight", "正面の一定距離に他のプレイヤーが見えるか" },
+    };
+
+    private static readonly Dictionary<string, string> ActionDescs = new()
+    {
+        { "setWorldState", "全員共通のワールド変数を増減・代入する" },
+        { "setPlayerState", "プレイヤー個人の変数を増減・代入する" },
+        { "timerStart", "タイマーを開始する" },
+        { "timerStop", "タイマーを止める" },
+        { "timerReset", "タイマーを0に戻す" },
+        { "showHideObject", "オブジェクトを表示/非表示にする" },
+        { "changeObjectType", "オブジェクトを別の種類に入れ替える" },
+        { "showMessage", "画面に文字メッセージを出す" },
+        { "pickupObject", "配置オブジェクトをプレイヤーに持たせる" },
+        { "grantObject", "指定種類のオブジェクトをプレイヤーに渡す" },
+        { "playSound", "効果音を鳴らす" },
+        { "switchBgm", "BGM を切り替える（none で停止）" },
+        { "moveObject", "オブジェクトを指定位置へ動かす" },
+        { "teleportPlayer", "プレイヤーを出口ポータルへワープさせる" },
+        { "resetState", "変数やオブジェクトを初期状態に戻す" },
+        { "playEffect", "発光などのエフェクトを再生する" },
+        { "setMoveSpeed", "プレイヤーの移動速度を変える（0で移動不可）" },
+        { "setPlayerMarker", "プレイヤーの頭上にマーカーを表示する" },
+        { "startConversation", "会話（セリフ・選択肢）を再生する" },
+        { "wait", "指定秒だけ待ってから以降を続ける" },
+        { "callSubroutine", "共通ルール（サブルーチン）を呼び出す" },
     };
 }

@@ -52,6 +52,17 @@ public class GimmickTypeCatalogTests
             Assert.AreNotEqual(id, GimmickTypeCatalog.ActionLabel(id), $"アクション {id} のラベル未定義");
     }
 
+    [Test]
+    public void AllTypes_HaveDescriptions()
+    {
+        foreach (var id in GimmickRuleEditLogic.TriggerTypes)
+            Assert.IsNotEmpty(GimmickTypeCatalog.TriggerDesc(id), $"トリガー {id} の説明未定義");
+        foreach (var id in GimmickRuleEditLogic.ConditionTypes)
+            Assert.IsNotEmpty(GimmickTypeCatalog.ConditionDesc(id), $"条件 {id} の説明未定義");
+        foreach (var id in GimmickRuleEditLogic.ActionTypes)
+            Assert.IsNotEmpty(GimmickTypeCatalog.ActionDesc(id), $"アクション {id} の説明未定義");
+    }
+
     // ── CategoryIndexOf ────────────────────────────────────────────────────────
 
     [Test]

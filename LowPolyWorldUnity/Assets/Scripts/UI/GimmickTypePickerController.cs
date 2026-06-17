@@ -39,6 +39,7 @@ public class GimmickTypePickerController
         string title,
         IReadOnlyList<GimmickTypeCatalog.Category> categories,
         Func<string, string> labelOf,
+        Func<string, string> descOf,
         string currentType,
         Action<string> onSelected)
     {
@@ -64,11 +65,25 @@ public class GimmickTypePickerController
                     onSelected?.Invoke(typeId);
                 })
                 {
-                    text = labelOf(id),
+                    text = "",
                 };
                 item.AddToClassList("gimmick-picker-item");
                 if (id == currentType)
                     item.AddToClassList("gimmick-picker-item--selected");
+
+                // ラベル + 一言説明（初心者が種類を選びやすいように）
+                var nameLabel = new Label(labelOf(id)) { pickingMode = PickingMode.Ignore };
+                nameLabel.AddToClassList("gimmick-picker-item-name");
+                item.Add(nameLabel);
+
+                string desc = descOf?.Invoke(id);
+                if (!string.IsNullOrEmpty(desc))
+                {
+                    var descLabel = new Label(desc) { pickingMode = PickingMode.Ignore };
+                    descLabel.AddToClassList("gimmick-picker-item-desc");
+                    item.Add(descLabel);
+                }
+
                 _list.Add(item);
             }
         }
