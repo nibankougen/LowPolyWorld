@@ -184,6 +184,24 @@ public class WorldPublishValidatorTests
         CollectionAssert.DoesNotContain(errors, PublishError.SpawnPortalOverlap);
     }
 
+    // ── ギミック無限ループ ────────────────────────────────────────────────────
+
+    [Test]
+    public void GimmickLoopRuleId_ReturnsGimmickLoopDetected()
+    {
+        var errors = _validator.Validate(ValidDef(), 0, 0, true, 0, gimmickLoopRuleId: "loop_rule");
+        Assert.Contains(PublishError.GimmickLoopDetected, (System.Collections.ICollection)errors);
+    }
+
+    [Test]
+    public void NoGimmickLoop_NoError()
+    {
+        var emptyId = _validator.Validate(ValidDef(), 0, 0, true, 0, gimmickLoopRuleId: "");
+        CollectionAssert.DoesNotContain(emptyId, PublishError.GimmickLoopDetected);
+        var nullId = _validator.Validate(ValidDef(), 0, 0, true, 0, gimmickLoopRuleId: null);
+        CollectionAssert.DoesNotContain(nullId, PublishError.GimmickLoopDetected);
+    }
+
     // ── 複数エラー ────────────────────────────────────────────────────────────
 
     [Test]

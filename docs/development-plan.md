@@ -1060,7 +1060,7 @@
 - [x] `GimmickEngine`: 複数入力イベント（OR）のいずれかが発火でルール起動すること
 - [x] `GimmickEngine`: イベント発火 → 条件評価（AND 結合）→ アクション実行の基本フロー
 - [x] `GimmickEngine`: 無限ループ検出（連鎖 100 回超でエラー・ループしない場合は通過）
-- [ ] `WorldPublishValidator`: ギミックループ検出テスト（内部テストプレイで検知 → 原因ルール特定）
+- [x] `WorldPublishValidator`: ギミックループ検出テスト（内部テストプレイで検知 → 原因ルール特定）— `GimmickLoopPrecheck.RunRoomStart`（RoomStart 起点シミュレーションで `IsInfiniteLoop` + 原因 `LoopRuleId` 検出）+ `WorldPublishValidator` に `gimmickLoopRuleId` 引数 + `PublishError.GimmickLoopDetected`
 - [x] `GimmickEngine`: 複数ルールが同一フレームで発火したとき定義順に実行されること
 - [x] `GimmickEngine`: 相手プレイヤー確定後にアクション対象として正しく渡されること
 - [x] `GimmickValueResolver`: 固定値 / ステート参照 / プレイヤーステート参照 / 乱数それぞれが正しい値を返すこと
