@@ -162,7 +162,7 @@ public static class GimmickTemplateLogic
         // 1. ステート / タイマーの空き数を確認する（追加せずに残数だけ見る）。
         if (GimmickTabLogic.MaxWorldStates - tab.WorldStateCount < template.WorldStatesNeeded
             || GimmickTabLogic.MaxPlayerStates - tab.PlayerStateCount < template.PlayerStatesNeeded)
-            return Fail("ステートの空きが足りません");
+            return Fail("変数の空きが足りません");
         if (GimmickTabLogic.MaxTimers - tab.TimerCount < template.TimersNeeded)
             return Fail("タイマーの空きが足りません");
 

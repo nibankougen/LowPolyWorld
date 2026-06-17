@@ -171,8 +171,8 @@ public static class GimmickParamSchema
     private static readonly Dictionary<string, string> ValueKindLabels = new()
     {
         { "fixed", "固定値" },
-        { "worldState", "ワールドステート参照" },
-        { "playerState", "プレイヤーステート参照" },
+        { "worldState", "ワールド変数を参照" },
+        { "playerState", "プレイヤー変数を参照" },
         { "allPlayersSum", "全プレイヤー合計" },
         { "random", "範囲乱数" },
     };

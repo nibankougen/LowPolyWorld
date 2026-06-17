@@ -147,7 +147,7 @@ public class GimmickTemplateLogicTests
         var result = GimmickTemplateLogic.Insert(tab, "tagBasic");
 
         Assert.IsFalse(result.Success);
-        Assert.AreEqual("ステートの空きが足りません", result.Error);
+        Assert.AreEqual("変数の空きが足りません", result.Error);
         Assert.AreEqual(0, tab.Rules.Count); // ルールは追加されない
     }
 
