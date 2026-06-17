@@ -504,9 +504,13 @@ public class ConversationEditorController
 
     private static int Clamp255(int v) => v < 0 ? 0 : v > 255 ? 255 : v;
 
-    // 分岐先ドロップダウン: 次へ / 会話終了 / 各行。
-    private DropdownField BuildGoto(string current, Action<string> onSet)
+    // 分岐先セレクタ: 次へ / 会話終了 / 各行（行参照は行 ID で保持＝並べ替えで参照は変わらない）。
+    // 右側の余白に、参照先の行の「話者 + 本文の冒頭」を薄くプレビュー表示する。
+    private VisualElement BuildGoto(string current, Action<string> onSet)
     {
+        var row = new VisualElement();
+        row.AddToClassList("conv-goto-row");
+
         var labels = new System.Collections.Generic.List<string> { "次へ", "会話終了" };
         var targets = new System.Collections.Generic.List<string> { ConversationEditLogic.GotoNext, ConversationEditLogic.GotoEnd };
         for (int i = 0; i < _edit.Lines.Count; i++)
@@ -520,13 +524,50 @@ public class ConversationEditorController
 
         var dd = new DropdownField(labels, sel);
         dd.AddToClassList("conv-goto");
+
+        var preview = new Label { pickingMode = PickingMode.Ignore };
+        preview.AddToClassList("conv-goto-preview");
+        preview.text = LinePreview(targets[sel]);
+
         dd.RegisterValueChangedCallback(_ =>
         {
             int i = dd.index;
             if (i >= 0 && i < targets.Count)
+            {
                 onSet(targets[i]);
+                preview.text = LinePreview(targets[i]);
+            }
         });
-        return dd;
+
+        row.Add(dd);
+        row.Add(preview);
+        return row;
+    }
+
+    // 行参照のプレビュー文（「話者「本文の冒頭…」」）。行参照でない（次へ / 終了 / 未存在）は空。
+    private string LinePreview(string lineId)
+    {
+        if (string.IsNullOrEmpty(lineId) || lineId == ConversationEditLogic.GotoEnd)
+            return "";
+        ConversationLineJson line = null;
+        foreach (var l in _edit.Lines)
+            if (l.lineId == lineId) { line = l; break; }
+        if (line == null)
+            return "";
+
+        string app = DeviceLanguage.CurrentCode();
+        string speaker = _speakers != null ? SpeakerLibraryLogic.ResolveName(_speakers.Find(line.speakerId), app) : "";
+        string body = TextForLang(line.texts, app);
+        if (string.IsNullOrEmpty(body))
+            body = TextForLang(line.texts, "");
+
+        const int max = 12;
+        string snippet = body.Length > max ? body.Substring(0, max) + "…" : body;
+        if (!string.IsNullOrEmpty(speaker) && !string.IsNullOrEmpty(snippet))
+            return $"{speaker}「{snippet}」";
+        if (!string.IsNullOrEmpty(speaker))
+            return speaker;
+        return snippet;
     }
 
     private void MoveLine(string lineId, int delta)

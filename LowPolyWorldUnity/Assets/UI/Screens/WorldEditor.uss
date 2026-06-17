@@ -1702,8 +1702,27 @@
     margin: 6px 0 2px 0;
 }
 
-.conv-goto {
+/* 分岐先セレクタ + 参照先プレビュー（横並び） */
+.conv-goto-row {
+    flex-direction: row;
+    align-items: center;
     margin-top: 2px;
+}
+
+.conv-goto {
+    width: 140px;
+    flex-shrink: 0;
+}
+
+/* 参照先の行内容を右側の余白に薄く表示 */
+.conv-goto-preview {
+    flex-grow: 1;
+    margin-left: 8px;
+    color: var(--lpw-text-muted);
+    font-size: 12px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
 }
 
 /* 1 つの選択肢 = 枠で囲んだカード（範囲を明確化） */

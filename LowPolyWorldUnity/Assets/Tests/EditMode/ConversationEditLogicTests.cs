@@ -147,6 +147,29 @@ public class ConversationEditLogicTests
     }
 
     [Test]
+    public void MoveLine_PreservesGotoReferences()
+    {
+        var edit = NewEditor();
+        var a = edit.AddLine();
+        var b = edit.AddLine();
+        var c = edit.AddLine();
+
+        // a → c（c への参照）、c → a（c からの参照）
+        Assert.IsTrue(edit.SetLineGoto(a.lineId, c.lineId));
+        Assert.IsTrue(edit.SetLineGoto(c.lineId, a.lineId));
+        // 選択肢の分岐先も c を指す
+        edit.AddChoice(b.lineId);
+        Assert.IsTrue(edit.SetChoiceGoto(b.lineId, 0, c.lineId));
+
+        // c を先頭へ移動しても参照（行 ID）は不変
+        Assert.IsTrue(edit.MoveLine(c.lineId, 0));
+
+        Assert.AreEqual(c.lineId, a.gotoLineId, "c への参照は並べ替えで変わらない");
+        Assert.AreEqual(a.lineId, c.gotoLineId, "c からの参照は並べ替えで変わらない");
+        Assert.AreEqual(c.lineId, b.choices[0].gotoLineId, "選択肢の参照も不変");
+    }
+
+    [Test]
     public void RemoveChoiceText_RemovesPerLanguage()
     {
         var edit = NewEditor();
