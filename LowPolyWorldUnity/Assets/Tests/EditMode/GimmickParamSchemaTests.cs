@@ -62,6 +62,13 @@ public class GimmickParamSchemaTests
     }
 
     [Test]
+    public void Condition_PlayerStateRank_Fields()
+    {
+        AssertSame(GimmickParamSchema.ForCondition("playerStateRank"),
+            P.CondPlayerStateIndex, P.CondPlayerTarget, P.CondRankOrder, P.CondRankWithin);
+    }
+
+    [Test]
     public void Condition_HasObject_Fields()
     {
         AssertSame(GimmickParamSchema.ForCondition("hasObject"),
@@ -185,5 +192,12 @@ public class GimmickParamSchemaTests
     {
         foreach (var id in GimmickRuleEditLogic.ValueKinds)
             Assert.AreNotEqual(id, GimmickParamSchema.ValueKindLabel(id), id);
+    }
+
+    [Test]
+    public void AllRankOrders_HaveLabels()
+    {
+        foreach (var id in GimmickRuleEditLogic.RankOrders)
+            Assert.AreNotEqual(id, GimmickParamSchema.RankOrderLabel(id), id);
     }
 }

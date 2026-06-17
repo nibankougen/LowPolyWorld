@@ -265,6 +265,9 @@ public class RuleEditController
             GimmickParamSchema.PlayerTargetLabel, c.playerTarget, v => c.playerTarget = v),
         P.CondInventoryType => IdField("オブジェクト種別 ID", c.objectId, v => c.objectId = v),
         P.CondDistanceGrid => FloatField("距離（グリッド・1 = 0.5m）", c.distanceGrid, v => c.distanceGrid = v),
+        P.CondRankOrder => IdDropdown("順位の方向", GimmickRuleEditLogic.RankOrders,
+            GimmickParamSchema.RankOrderLabel, c.rankOrder, v => c.rankOrder = v),
+        P.CondRankWithin => IntField("X 位以内（1 以上）", c.rankWithin, v => c.rankWithin = v),
         _ => null,
     };
 

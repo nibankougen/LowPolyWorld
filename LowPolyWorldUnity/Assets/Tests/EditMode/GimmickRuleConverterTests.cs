@@ -177,6 +177,29 @@ public class GimmickRuleConverterTests
     }
 
     [Test]
+    public void Convert_PlayerStateRank_Valid()
+    {
+        var cond = new GimmickCondition
+        {
+            type = "playerStateRank", stateIndex = 0, playerTarget = "input", rankWithin = 1, rankOrder = "top",
+        };
+        var result = GimmickRuleConverter.Convert(new[] { Rule(conditions: new[] { cond }) });
+        Assert.AreEqual(1, result.Rules.Count);
+    }
+
+    [Test]
+    public void Convert_PlayerStateRank_InvalidParams()
+    {
+        var badWithin = new GimmickCondition { type = "playerStateRank", rankWithin = 0, rankOrder = "top" };
+        Assert.AreEqual(0, GimmickRuleConverter.Convert(new[] { Rule(conditions: new[] { badWithin }) }).Rules.Count,
+            "X 位以内は 1 以上");
+
+        var badOrder = new GimmickCondition { type = "playerStateRank", rankWithin = 1, rankOrder = "middle" };
+        Assert.AreEqual(0, GimmickRuleConverter.Convert(new[] { Rule(conditions: new[] { badOrder }) }).Rules.Count,
+            "順位の方向は top / bottom のみ");
+    }
+
+    [Test]
     public void Convert_StateIndexOutOfRange_Invalid()
     {
         var worldCond = new GimmickCondition { type = "worldState", stateIndex = 10 };

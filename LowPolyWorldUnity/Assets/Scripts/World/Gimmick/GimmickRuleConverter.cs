@@ -201,6 +201,14 @@ public static class GimmickRuleConverter
                 if (!IsValidPlayerStateIndex(json.stateIndex))
                     errors.Add($"プレイヤーステート番号が範囲外です: {json.stateIndex}");
                 break;
+            case GimmickConditionType.PlayerStateRank:
+                if (!IsValidPlayerStateIndex(json.stateIndex))
+                    errors.Add($"プレイヤーステート番号が範囲外です: {json.stateIndex}");
+                if (json.rankWithin < 1)
+                    errors.Add($"順位条件の X 位以内は 1 以上が必要です: {json.rankWithin}");
+                if (json.rankOrder != "top" && json.rankOrder != "bottom")
+                    errors.Add($"順位条件の方向が不正です: \"{json.rankOrder}\"");
+                break;
             case GimmickConditionType.TimerCompare:
                 if (!IsValidTimerIndex(json.timerIndex))
                     errors.Add($"タイマー番号が範囲外です: {json.timerIndex}");
@@ -230,7 +238,9 @@ public static class GimmickRuleConverter
             playerTarget: playerTarget,
             objectId: json.objectId,
             physicsDistance: json.distanceGrid * GridToMeters,
-            timerIndex: json.timerIndex);
+            timerIndex: json.timerIndex,
+            rankWithin: json.rankWithin,
+            rankFromTop: json.rankOrder != "bottom");
     }
 
     // ── アクション ────────────────────────────────────────────────────────────
@@ -468,6 +478,7 @@ public static class GimmickRuleConverter
         {
             "worldState" => GimmickConditionType.WorldStateCompare,
             "playerState" => GimmickConditionType.PlayerStateCompare,
+            "playerStateRank" => GimmickConditionType.PlayerStateRank,
             "playerCount" => GimmickConditionType.PlayerCount,
             "playerNumber" => GimmickConditionType.PlayerNumber,
             "timerCompare" => GimmickConditionType.TimerCompare,

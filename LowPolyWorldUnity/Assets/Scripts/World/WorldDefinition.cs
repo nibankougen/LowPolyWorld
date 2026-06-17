@@ -243,6 +243,8 @@ public class GimmickCondition
     public string playerTarget = "input";         // input | opponent | all
     public string objectId = "";                  // hasObject 用（種別 ID）
     public float distanceGrid = 0f;               // playerDistance / playerLineOfSight 用（1 グリッド = 0.5m）
+    public int rankWithin = 1;                    // playerStateRank 用（X 位以内・1 以上）
+    public string rankOrder = "top";              // playerStateRank 用（top = 大きい方から / bottom = 小さい方から）
 }
 
 [Serializable]

@@ -62,6 +62,7 @@ public enum GimmickConditionType
 {
     WorldStateCompare,
     PlayerStateCompare,
+    PlayerStateRank,     // 対象プレイヤーのステートが全在室者中で上位/下位 X 位以内か（9.6・同値は同順位）
     PlayerCount,
     PlayerNumber,
     TimerCompare,        // 指定タイマーの経過秒（切り捨て整数）の比較
@@ -264,6 +265,8 @@ public class RuntimeGimmickCondition
     public PlayerTarget PlayerTarget { get; }
     public string ObjectId { get; }
     public float PhysicsDistance { get; } // 距離/視線条件用
+    public int RankWithin { get; }        // PlayerStateRank 用（X 位以内・1 以上）
+    public bool RankFromTop { get; }       // PlayerStateRank 用（true = 大きい方から / false = 小さい方から）
 
     public RuntimeGimmickCondition(
         GimmickConditionType type,
@@ -275,7 +278,9 @@ public class RuntimeGimmickCondition
         PlayerTarget playerTarget = PlayerTarget.InputPlayer,
         string objectId = "",
         float physicsDistance = 0f,
-        int timerIndex = 0)
+        int timerIndex = 0,
+        int rankWithin = 1,
+        bool rankFromTop = true)
     {
         Type = type;
         StateIndex = stateIndex;
@@ -287,6 +292,8 @@ public class RuntimeGimmickCondition
         PlayerTarget = playerTarget;
         ObjectId = objectId ?? "";
         PhysicsDistance = physicsDistance;
+        RankWithin = rankWithin;
+        RankFromTop = rankFromTop;
     }
 }
 

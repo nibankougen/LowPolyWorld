@@ -152,6 +152,54 @@ public class GimmickEngineTests
         Assert.AreEqual(0, _state.GetWorldState(1), "条件不成立: アクション実行なし");
     }
 
+    // ── 順位条件（PlayerStateRank・9.6）──────────────────────────────────────────
+
+    // ActionButton(input) で発火し、対象プレイヤーの順位が within 以内なら ws0=1。
+    private static RuntimeGimmickRule RankRule(int within, bool fromTop) =>
+        new RuntimeGimmickRule("r1", "",
+            new[] { new RuntimeGimmickTrigger(GimmickEventType.ActionButton) },
+            new[]
+            {
+                new RuntimeGimmickCondition(GimmickConditionType.PlayerStateRank,
+                    stateIndex: 0, playerTarget: PlayerTarget.InputPlayer, rankWithin: within, rankFromTop: fromTop),
+            },
+            new[] { new RuntimeGimmickAction(GimmickActionType.SetWorldState,
+                stateIndex: 0, stateOp: StateOp.Set, valueRef: ValueRef.Fixed(1)) });
+
+    [Test]
+    public void Rank_TopWithin1_FiresForLeaderOnly()
+    {
+        _state.SetPlayerState("p1", 0, 10);
+        _state.SetPlayerState("p2", 0, 5);
+
+        Build(new[] { RankRule(1, fromTop: true) }).Fire(GimmickEventContext.ActionButton("p1"));
+        Assert.AreEqual(1, _state.GetWorldState(0), "p1 は 1 位 → 発火");
+
+        _state.SetWorldState(0, 0);
+        Build(new[] { RankRule(1, fromTop: true) }).Fire(GimmickEventContext.ActionButton("p2"));
+        Assert.AreEqual(0, _state.GetWorldState(0), "p2 は 2 位 → 発火しない");
+    }
+
+    [Test]
+    public void Rank_TiesShareRank()
+    {
+        _state.SetPlayerState("p1", 0, 7);
+        _state.SetPlayerState("p2", 0, 7);
+
+        Build(new[] { RankRule(1, fromTop: true) }).Fire(GimmickEventContext.ActionButton("p2"));
+        Assert.AreEqual(1, _state.GetWorldState(0), "同値は同順位（同率 1 位なので X=1 で両方 true）");
+    }
+
+    [Test]
+    public void Rank_BottomDirection()
+    {
+        _state.SetPlayerState("p1", 0, 10);
+        _state.SetPlayerState("p2", 0, 5);
+
+        Build(new[] { RankRule(1, fromTop: false) }).Fire(GimmickEventContext.ActionButton("p2"));
+        Assert.AreEqual(1, _state.GetWorldState(0), "小さい方から 1 位は p2 → 発火");
+    }
+
     [Test]
     public void Fire_MultipleConditions_AllMustPass()
     {

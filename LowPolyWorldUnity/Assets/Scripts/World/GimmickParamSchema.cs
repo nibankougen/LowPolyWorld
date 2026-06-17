@@ -31,6 +31,8 @@ public static class GimmickParamSchema
         CondPlayerTarget,     // playerTarget
         CondInventoryType,    // objectId（オブジェクト種別 ID）
         CondDistanceGrid,     // distanceGrid（グリッド距離）
+        CondRankOrder,        // rankOrder（順位の方向: 大きい方 / 小さい方から）
+        CondRankWithin,       // rankWithin（X 位以内）
 
         // ── アクション ──
         ActWorldStateIndex,   // stateIndex（ワールドステート番号）
@@ -84,6 +86,10 @@ public static class GimmickParamSchema
         {
             Param.CondPlayerStateIndex, Param.CondPlayerTarget, Param.CondCompareOp, Param.CondThreshold,
         },
+        "playerStateRank" => new[]
+        {
+            Param.CondPlayerStateIndex, Param.CondPlayerTarget, Param.CondRankOrder, Param.CondRankWithin,
+        },
         "playerCount" => new[] { Param.CondCompareOp, Param.CondThreshold },
         "playerNumber" => new[] { Param.CondPlayerTarget, Param.CondCompareOp, Param.CondThreshold },
         "timerCompare" => new[] { Param.CondTimerIndex, Param.CondCompareOp, Param.CondThreshold },
@@ -128,11 +134,18 @@ public static class GimmickParamSchema
 
     // ── 選択肢ラベル（ドロップダウン表示用・正規 ID は GimmickRuleEditLogic と一致）──────
 
+    public static string RankOrderLabel(string id) => RankOrderLabels.TryGetValue(id, out var l) ? l : id;
     public static string CompareOpLabel(string id) => CompareOpLabels.TryGetValue(id, out var l) ? l : id;
     public static string PlayerTargetLabel(string id) => PlayerTargetLabels.TryGetValue(id, out var l) ? l : id;
     public static string StateOpLabel(string id) => StateOpLabels.TryGetValue(id, out var l) ? l : id;
     public static string ResetTargetLabel(string id) => ResetTargetLabels.TryGetValue(id, out var l) ? l : id;
     public static string ValueKindLabel(string id) => ValueKindLabels.TryGetValue(id, out var l) ? l : id;
+
+    private static readonly Dictionary<string, string> RankOrderLabels = new()
+    {
+        { "top", "大きい方から" },
+        { "bottom", "小さい方から" },
+    };
 
     private static readonly Dictionary<string, string> CompareOpLabels = new()
     {

@@ -270,6 +270,12 @@ public class GimmickEngine
                 return GimmickValueResolver.Evaluate(lhs, cond.Op, rhs, cond.ModBy, cond.ModResult);
             }
 
+            case GimmickConditionType.PlayerStateRank:
+            {
+                string playerId = ResolvePlayerId(cond.PlayerTarget, ctx);
+                return IsWithinRank(playerId, cond.StateIndex, cond.RankWithin, cond.RankFromTop);
+            }
+
             case GimmickConditionType.PlayerCount:
             {
                 int count = _allPlayerIds.Count;
@@ -490,6 +496,26 @@ public class GimmickEngine
         for (int i = 0; i < list.Count; i++)
             if (list[i] == id) return i;
         return -1;
+    }
+
+    // 対象プレイヤーの指定ステートが全在室者中で上位 / 下位 X 位以内か（9.6・同値は同順位）。
+    private bool IsWithinRank(string playerId, int stateIndex, int within, bool fromTop)
+    {
+        if (string.IsNullOrEmpty(playerId) || within < 1 || _allPlayerIds.Count == 0)
+            return false;
+        if (FindPlayerIndex(_allPlayerIds, playerId) < 0)
+            return false;
+
+        int target = _state.GetPlayerState(playerId, stateIndex);
+        // 同値は同順位（自分より「厳密に上位」の人数 + 1 が順位）。
+        int ahead = 0;
+        foreach (var id in _allPlayerIds)
+        {
+            int v = _state.GetPlayerState(id, stateIndex);
+            if (fromTop ? v > target : v < target)
+                ahead++;
+        }
+        return ahead + 1 <= within;
     }
 
     private string ResolvePlayerId(PlayerTarget target, GimmickEventContext ctx) =>

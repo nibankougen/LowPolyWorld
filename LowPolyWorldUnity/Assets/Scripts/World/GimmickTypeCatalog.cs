@@ -40,7 +40,7 @@ public static class GimmickTypeCatalog
 
     public static readonly IReadOnlyList<Category> ConditionCategories = new[]
     {
-        new Category("変数・タイマー", "worldState", "playerState", "timerCompare"),
+        new Category("変数・タイマー", "worldState", "playerState", "playerStateRank", "timerCompare"),
         new Category("人数・番号", "playerCount", "playerNumber"),
         new Category("インベントリ", "hasObject"),
         new Category("物理判定", "playersOverlapping", "playerDistance", "playerLineOfSight"),
@@ -96,6 +96,7 @@ public static class GimmickTypeCatalog
     {
         { "worldState", "ワールド変数を比べる" },
         { "playerState", "プレイヤー変数を比べる" },
+        { "playerStateRank", "プレイヤー変数の順位" },
         { "playerCount", "現在の人数を比べる" },
         { "playerNumber", "プレイヤー番号を比べる" },
         { "timerCompare", "タイマーを比べる" },

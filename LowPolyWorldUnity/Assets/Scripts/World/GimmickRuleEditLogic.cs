@@ -29,7 +29,7 @@ public class GimmickRuleEditLogic
 
     public static readonly string[] ConditionTypes =
     {
-        "worldState", "playerState", "playerCount", "playerNumber", "timerCompare",
+        "worldState", "playerState", "playerStateRank", "playerCount", "playerNumber", "timerCompare",
         "hasObject", "playersOverlapping", "playerDistance", "playerLineOfSight",
     };
 
@@ -47,6 +47,7 @@ public class GimmickRuleEditLogic
     public static readonly string[] StateOps = { "set", "add", "sub" };
     public static readonly string[] ValueKinds = { "fixed", "worldState", "playerState", "allPlayersSum", "random" };
     public static readonly string[] ResetTargets = { "input", "opponent", "allPlayers", "world", "all" };
+    public static readonly string[] RankOrders = { "top", "bottom" }; // 順位条件の方向（大きい方 / 小さい方から）
 
     private readonly GimmickRule _rule;
     private readonly List<GimmickTrigger> _triggers;
