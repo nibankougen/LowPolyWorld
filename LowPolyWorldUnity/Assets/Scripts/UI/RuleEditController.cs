@@ -497,14 +497,41 @@ public class RuleEditController
         var wrap = new VisualElement();
         wrap.AddToClassList("gimmick-edit-message");
 
-        // デフォルト言語（lang = ""）の本文。
-        wrap.Add(MessageLangField(actionIndex, action, "メッセージ", SupportedLanguages.Default));
+        // 既定言語は端末のシステム言語。メッセージはこの言語コードで保存する。
+        string sysLang = DeviceLanguage.CurrentCode();
 
-        // 詳細: 言語別の上書き入力（未入力の言語は英語優先でフォールバック表示される）。
+        // 旧 "" 既定テキストがあればシステム言語の初期表示として引き継ぐ（編集時にその言語へ移行）。
+        string init = MessageText(action, sysLang);
+        if (string.IsNullOrEmpty(init))
+            init = MessageText(action, SupportedLanguages.Default);
+
+        var primary = new TextField($"メッセージ（{SupportedLanguages.LabelOf(sysLang)}）")
+        {
+            multiline = true,
+            maxLength = GimmickRuleEditLogic.MaxMessageLength,
+            value = init,
+        };
+        primary.AddToClassList("gimmick-edit-message-field");
+        primary.RegisterValueChangedCallback(e =>
+        {
+            if (string.IsNullOrEmpty(e.newValue))
+            {
+                _edit.RemoveActionMessage(actionIndex, sysLang);
+            }
+            else
+            {
+                _edit.SetActionMessage(actionIndex, sysLang, e.newValue);
+                _edit.RemoveActionMessage(actionIndex, SupportedLanguages.Default); // 旧 "" 既定を移行
+            }
+        });
+        wrap.Add(primary);
+
+        // 詳細: システム言語以外の言語別上書き（未入力の言語は再生時に英語優先でフォールバック）。
         var detail = new Foldout { text = "詳細（言語別）", value = false };
         detail.AddToClassList("gimmick-edit-message-detail");
         foreach (var lang in SupportedLanguages.All)
-            detail.Add(MessageLangField(actionIndex, action, lang.Label, lang.Code));
+            if (lang.Code != sysLang)
+                detail.Add(MessageLangField(actionIndex, action, lang.Label, lang.Code));
         wrap.Add(detail);
 
         return wrap;
