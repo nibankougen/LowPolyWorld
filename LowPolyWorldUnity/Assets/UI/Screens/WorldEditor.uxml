@@ -176,38 +176,50 @@
                         <ui:VisualElement name="gimmick-rule-list" class="gimmick-rule-list" />
                     </ui:VisualElement>
 
-                    <!-- 詳細設定: 変数一覧（既定で折りたたみ） -->
+                    <!-- 変数（概要 + 編集） -->
                     <ui:VisualElement class="gimmick-section">
-                        <ui:Button name="gimmick-states-toggle" class="gimmick-collapse-header" text="">
-                            <ui:VisualElement name="gimmick-states-arrow" class="gimmick-collapse-arrow icon-right" picking-mode="Ignore" />
-                            <ui:Label text="変数一覧" picking-mode="Ignore" />
-                        </ui:Button>
-                        <ui:VisualElement name="gimmick-states-body" class="gimmick-states-body overlay-hidden">
-                            <ui:VisualElement class="gimmick-state-cat-head">
-                                <ui:Label class="gimmick-subhead" text="ワールド変数（最大 10）" />
-                            </ui:VisualElement>
-                            <ui:VisualElement name="gimmick-world-states" class="gimmick-state-list" />
-                            <ui:VisualElement class="gimmick-state-cat-head">
-                                <ui:Label class="gimmick-subhead" text="プレイヤー変数（最大 4）" />
-                            </ui:VisualElement>
-                            <ui:VisualElement name="gimmick-player-states" class="gimmick-state-list" />
-                            <ui:VisualElement class="gimmick-state-cat-head">
-                                <ui:Label class="gimmick-subhead" text="タイマー（最大 5）" />
-                            </ui:VisualElement>
-                            <ui:VisualElement name="gimmick-timer-states" class="gimmick-state-list" />
+                        <ui:VisualElement class="gimmick-summary-head">
+                            <ui:Label class="gimmick-subhead" text="変数" />
+                            <ui:Button name="gimmick-edit-variables" class="conv-small-btn gimmick-icon-btn gimmick-icon-btn--edit" text="" tooltip="変数を編集" />
                         </ui:VisualElement>
+                        <ui:Label name="gimmick-variables-summary" class="gimmick-summary-text" text="" />
                     </ui:VisualElement>
 
-                    <!-- 詳細設定: 会話を編集（ストーリー・セリフ） -->
-                    <ui:Button name="gimmick-edit-conversations" class="gimmick-template-top-btn gimmick-template-top-btn--icon" text="">
-                        <ui:VisualElement class="gimmick-btn-icon icon-dialogue" picking-mode="Ignore" />
-                        <ui:Label class="gimmick-btn-label" text="会話を編集" picking-mode="Ignore" />
-                    </ui:Button>
+                    <!-- 会話（概要 + 編集） -->
+                    <ui:VisualElement class="gimmick-section">
+                        <ui:VisualElement class="gimmick-summary-head">
+                            <ui:Label class="gimmick-subhead" text="会話" />
+                            <ui:Button name="gimmick-edit-conversations" class="conv-small-btn gimmick-icon-btn gimmick-icon-btn--edit" text="" tooltip="会話を編集" />
+                        </ui:VisualElement>
+                        <ui:Label name="gimmick-conv-summary" class="gimmick-summary-text" text="" />
+                    </ui:VisualElement>
 
                 </ui:ScrollView>
 
                 <!-- フラッシュメッセージ -->
                 <ui:Label name="gimmick-flash" class="object-flash overlay-hidden" text="" />
+
+                <!-- 変数編集（オーバーレイ） -->
+                <ui:VisualElement name="gimmick-variables" class="gimmick-rule-editor overlay-hidden">
+                    <ui:VisualElement class="gimmick-edit-header">
+                        <ui:Button name="gimmick-variables-back" class="gimmick-edit-back icon-back" text="" />
+                        <ui:Label class="gimmick-picker-title" text="変数" />
+                    </ui:VisualElement>
+                    <ui:ScrollView class="gimmick-edit-scroll">
+                        <ui:VisualElement class="gimmick-state-cat-head">
+                            <ui:Label class="gimmick-subhead" text="ワールド変数（最大 10）" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="gimmick-world-states" class="gimmick-state-list" />
+                        <ui:VisualElement class="gimmick-state-cat-head">
+                            <ui:Label class="gimmick-subhead" text="プレイヤー変数（最大 4）" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="gimmick-player-states" class="gimmick-state-list" />
+                        <ui:VisualElement class="gimmick-state-cat-head">
+                            <ui:Label class="gimmick-subhead" text="タイマー（最大 5）" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="gimmick-timer-states" class="gimmick-state-list" />
+                    </ui:ScrollView>
+                </ui:VisualElement>
 
                 <!-- ルール編集画面（タップでタブ拡大・オーバーレイ） -->
                 <ui:VisualElement name="gimmick-rule-editor" class="gimmick-rule-editor overlay-hidden">

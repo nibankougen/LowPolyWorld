@@ -67,6 +67,7 @@ public class WorldEditorController : MonoBehaviour
     private ConversationLibraryController _convLibraryController;
     private ConversationEditorController _convEditorController;
     private SpeakerLibraryController _speakerLibraryController;
+    private Label _convSummaryLabel;
 
     /// <summary>ギミックタブ UI（ステート定義・ルール一覧）。</summary>
     public GimmickTabController GimmickTab => _gimmickTab;
@@ -178,15 +179,27 @@ public class WorldEditorController : MonoBehaviour
             _root, _conversationLibrary, _gimmickTab.Logic, _speakerLibrary);
         _speakerLibraryController = new SpeakerLibraryController(_root, _speakerLibrary);
         _convLibraryController.EditRequested += id => _convEditorController.Open(_conversationLibrary.Find(id));
-        _convEditorController.Closed += () => _convLibraryController.Refresh();
+        _convEditorController.Closed += () => { _convLibraryController.Refresh(); RefreshConversationSummary(); };
         // 話者編集から戻ったら会話一覧の話者表示を更新する
-        _speakerLibraryController.Closed += () => _convLibraryController.Refresh();
+        _speakerLibraryController.Closed += () => { _convLibraryController.Refresh(); RefreshConversationSummary(); };
+
+        _convSummaryLabel = _root.Q<Label>("gimmick-conv-summary");
 
         var btnConversations = _root.Q<Button>("gimmick-edit-conversations");
         if (btnConversations != null) btnConversations.clicked += () => _convLibraryController.Open();
 
         var btnSpeakers = _root.Q<Button>("conv-speaker-edit");
         if (btnSpeakers != null) btnSpeakers.clicked += () => _speakerLibraryController.Open();
+    }
+
+    // ギミックタブの「会話」概要（会話数・話者数）を更新する。
+    private void RefreshConversationSummary()
+    {
+        if (_convSummaryLabel == null)
+            return;
+        int c = _conversationLibrary.Count;
+        int s = _speakerLibrary.Count;
+        _convSummaryLabel.text = (c + s) == 0 ? "未設定（タップして追加）" : $"会話 {c}・話者 {s}";
     }
 
     // 会話のオーバーレイ（エディタ→話者→ライブラリの順）を閉じる。
@@ -241,6 +254,7 @@ public class WorldEditorController : MonoBehaviour
         _gimmickTab?.Refresh();
         _conversationLibrary.LoadFrom(loadedDef);
         _speakerLibrary.LoadFrom(loadedDef);
+        RefreshConversationSummary();
 
         UpdateCostDisplay(0, 0);
         UpdatePublishButton();

@@ -18,9 +18,10 @@ public class GimmickTabController
     private readonly GimmickTabLogic _logic;
 
     private readonly Label _totalLabel;
-    private readonly Button _statesToggle;
-    private readonly VisualElement _statesArrow;
-    private readonly VisualElement _statesBody;
+    private readonly VisualElement _variablesOverlay;
+    private readonly Button _variablesBack;
+    private readonly Button _editVariablesBtn;
+    private readonly Label _variablesSummary;
     private readonly VisualElement _worldStateList;
     private readonly VisualElement _playerStateList;
     private readonly VisualElement _timerStateList;
@@ -29,8 +30,6 @@ public class GimmickTabController
     private readonly Label _flash;
     private readonly GimmickTemplatePickerController _templatePicker;
 
-    // 変数一覧は詳細設定として既定で折りたたむ（UXML 側も overlay-hidden / icon-right で開始）。
-    private bool _statesExpanded = false;
     private IVisualElementScheduledItem _flashHide;
 
     public GimmickTabController(VisualElement root, GimmickTabLogic logic = null)
@@ -40,9 +39,10 @@ public class GimmickTabController
         _logic = logic ?? new GimmickTabLogic();
 
         _totalLabel = root.Q<Label>("gimmick-total-label");
-        _statesToggle = root.Q<Button>("gimmick-states-toggle");
-        _statesArrow = root.Q("gimmick-states-arrow");
-        _statesBody = root.Q("gimmick-states-body");
+        _variablesOverlay = root.Q("gimmick-variables");
+        _variablesBack = root.Q<Button>("gimmick-variables-back");
+        _editVariablesBtn = root.Q<Button>("gimmick-edit-variables");
+        _variablesSummary = root.Q<Label>("gimmick-variables-summary");
         _worldStateList = root.Q("gimmick-world-states");
         _playerStateList = root.Q("gimmick-player-states");
         _timerStateList = root.Q("gimmick-timer-states");
@@ -51,14 +51,19 @@ public class GimmickTabController
         _flash = root.Q<Label>("gimmick-flash");
         _templatePicker = new GimmickTemplatePickerController(root);
 
-        if (_statesToggle != null) _statesToggle.clicked += ToggleStates;
+        if (_editVariablesBtn != null) _editVariablesBtn.clicked += OpenVariables;
+        if (_variablesBack != null) _variablesBack.clicked += CloseVariables;
         if (_addTemplateBtn != null) _addTemplateBtn.clicked += OnOpenTemplatePicker;
 
         Refresh();
     }
 
-    /// <summary>開いているテンプレート選択オーバーレイを閉じる（タブ切替・ワールド再読込時に呼ぶ）。</summary>
-    public void CloseOverlays() => _templatePicker?.Close();
+    /// <summary>開いているオーバーレイ（テンプレート選択・変数編集）を閉じる（タブ切替・ワールド再読込時に呼ぶ）。</summary>
+    public void CloseOverlays()
+    {
+        _templatePicker?.Close();
+        CloseVariables();
+    }
 
     public GimmickTabLogic Logic => _logic;
 
@@ -70,15 +75,21 @@ public class GimmickTabController
         RefreshTotal();
     }
 
-    // ── ステート定義 ───────────────────────────────────────────────────────────
+    // ── 変数（概要 + 編集オーバーレイ）─────────────────────────────────────────
 
-    private void ToggleStates()
+    private void OpenVariables() => _variablesOverlay?.EnableInClassList("overlay-hidden", false);
+
+    private void CloseVariables() => _variablesOverlay?.EnableInClassList("overlay-hidden", true);
+
+    // トップページの変数概要（件数）を更新する。
+    private void RefreshVariableSummary()
     {
-        _statesExpanded = !_statesExpanded;
-        _statesBody?.EnableInClassList("overlay-hidden", !_statesExpanded);
-        // 開いている時は ▼（icon_down）・閉じている時は ▶（icon_right）
-        _statesArrow?.EnableInClassList("icon-down", _statesExpanded);
-        _statesArrow?.EnableInClassList("icon-right", !_statesExpanded);
+        if (_variablesSummary == null)
+            return;
+        int w = _logic.WorldStateCount, p = _logic.PlayerStateCount, t = _logic.TimerCount;
+        _variablesSummary.text = (w + p + t) == 0
+            ? "未設定（タップして追加）"
+            : $"ワールド {w}・プレイヤー {p}・タイマー {t}";
     }
 
     // 追加 / 削除式: 定義済みステートのみを行に展開する（追加・削除のたびに作り直す）。
@@ -87,6 +98,7 @@ public class GimmickTabController
         RebuildList(_worldStateList, _logic.WorldStateIndices, true, StateKind.World, OnAddWorldState, "＋ ワールド変数を追加");
         RebuildList(_playerStateList, _logic.PlayerStateIndices, true, StateKind.Player, OnAddPlayerState, "＋ プレイヤー変数を追加");
         RebuildList(_timerStateList, _logic.TimerIndices, false, StateKind.Timer, OnAddTimer, "＋ タイマーを追加");
+        RefreshVariableSummary();
     }
 
     private enum StateKind { World, Player, Timer }

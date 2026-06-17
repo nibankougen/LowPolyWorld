@@ -1036,6 +1036,20 @@
     border-color: var(--lpw-border);
 }
 
+/* 変数 / 会話の概要セクション（見出し + 編集アイコン + 概要テキスト） */
+.gimmick-summary-head {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.gimmick-summary-text {
+    color: var(--lpw-text-muted);
+    font-size: 13px;
+    margin: 2px 2px 0 2px;
+    white-space: normal;
+}
+
 .gimmick-collapse-header {
     flex-direction: row;
     align-items: center;
