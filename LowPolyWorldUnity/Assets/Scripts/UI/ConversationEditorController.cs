@@ -27,6 +27,10 @@ public class ConversationEditorController
     private ConversationEditLogic _edit;
     private IVisualElementScheduledItem _flashHide;
 
+    // 既定では話者・本文だけ表示し、変数変更 / 分岐先などは「＋」で開いたものだけ表示する
+    // （データが入っている項目は常に表示）。ここは "開いた" UI 状態（行 ID + 項目キー）を覚える。
+    private readonly System.Collections.Generic.HashSet<string> _revealed = new();
+
     public ConversationEditorController(
         VisualElement root, ConversationLibraryLogic library = null, GimmickTabLogic tabLogic = null,
         SpeakerLibraryLogic speakers = null)
@@ -61,6 +65,7 @@ public class ConversationEditorController
             return;
         _conversation = conversation;
         _edit = new ConversationEditLogic(conversation);
+        _revealed.Clear();
         _title?.SetValueWithoutNotify(conversation.name);
         RefreshLines();
         _overlay.EnableInClassList("overlay-hidden", false);
@@ -150,41 +155,76 @@ public class ConversationEditorController
         }));
         card.Add(head);
 
-        // 話者（定義済みから選択）・本文（言語別）
+        // 話者（定義済みから選択）・本文（言語別）— 既定ではここだけ考えればよい
         card.Add(BuildSpeakerField(lineId, line.speakerId));
         card.Add(MultilangBlock("本文", ConversationEditLogic.TextMaxLength, true, line.texts,
             (lang, text) => _edit.SetLineText(lineId, lang, text),
             lang => _edit.RemoveLineText(lineId, lang)));
 
-        // 到達時の変数変更
-        card.Add(BuildEffectEditor("到達時に変数を変更", line.onReach ??= new ConversationEffectJson()));
-
-        // 分岐（選択肢が無いときの「次へ / 終了 / 行」）
+        // ── ここから下は「使うときだけ」表示する詳細項目 ──
+        var onReach = line.onReach ??= new ConversationEffectJson();
         bool hasChoices = (line.choices?.Length ?? 0) > 0;
-        if (!hasChoices)
+        bool hasGoto = !string.IsNullOrEmpty(line.gotoLineId); // "" = 次へ（既定）
+        string keyEffect = lineId + ":onReach";
+        string keyGoto = lineId + ":goto";
+
+        // 到達時の変数変更（データあり or 開いたときだけ）
+        if (onReach.kind != "none" || _revealed.Contains(keyEffect))
         {
-            card.Add(RowLabel("この後の進行"));
-            card.Add(BuildGoto(line.gotoLineId, g => _edit.SetLineGoto(lineId, g)));
+            card.Add(BuildEffectEditor("到達時に変数を変更", onReach, () =>
+            {
+                onReach.kind = "none";
+                _revealed.Remove(keyEffect);
+                RefreshLines();
+            }));
         }
 
-        // 選択肢
-        card.Add(RowLabel("選択肢"));
-        var choices = line.choices ?? Array.Empty<ConversationChoiceJson>();
-        for (int c = 0; c < choices.Length; c++)
-            card.Add(BuildChoiceRow(lineId, c, choices[c]));
+        // 分岐先（選択肢が無く、データあり or 開いたときだけ）
+        if (!hasChoices && (hasGoto || _revealed.Contains(keyGoto)))
+        {
+            var gotoBox = new VisualElement();
+            gotoBox.AddToClassList("conv-optional");
+            var gotoHead = new VisualElement();
+            gotoHead.AddToClassList("conv-optional-head");
+            gotoHead.Add(RowLabel("この後の進行"));
+            var gspacer = new VisualElement();
+            gspacer.style.flexGrow = 1;
+            gotoHead.Add(gspacer);
+            gotoHead.Add(IconButton("gimmick-icon-btn--close", "「次へ」に戻す", () =>
+            {
+                _edit.SetLineGoto(lineId, ConversationEditLogic.GotoNext);
+                _revealed.Remove(keyGoto);
+                RefreshLines();
+            }));
+            gotoBox.Add(gotoHead);
+            gotoBox.Add(BuildGoto(line.gotoLineId, g => _edit.SetLineGoto(lineId, g)));
+            card.Add(gotoBox);
+        }
 
-        var addChoice = new Button(() =>
+        // 選択肢（あるときだけ表示）
+        var choices = line.choices ?? Array.Empty<ConversationChoiceJson>();
+        if (choices.Length > 0)
+        {
+            card.Add(RowLabel("選択肢"));
+            for (int c = 0; c < choices.Length; c++)
+                card.Add(BuildChoiceRow(lineId, c, choices[c]));
+        }
+
+        // ── 「＋」で必要な項目を出すツールバー ──
+        var tools = new VisualElement();
+        tools.AddToClassList("conv-chip-row");
+        if (onReach.kind == "none" && !_revealed.Contains(keyEffect))
+            tools.Add(Chip("＋ 変数変更", () => { _revealed.Add(keyEffect); RefreshLines(); }));
+        if (!hasChoices && !hasGoto && !_revealed.Contains(keyGoto))
+            tools.Add(Chip("＋ 分岐先", () => { _revealed.Add(keyGoto); RefreshLines(); }));
+        tools.Add(Chip("＋ 選択肢", () =>
         {
             if (_edit.AddChoice(lineId) == null)
                 ShowFlash($"選択肢は 1 行に最大 {ConversationEditLogic.MaxChoices} 個までです");
             else
                 RefreshLines();
-        })
-        {
-            text = "＋ 選択肢を追加",
-        };
-        addChoice.AddToClassList("conv-add-choice-btn");
-        card.Add(addChoice);
+        }));
+        card.Add(tools);
 
         return card;
     }
@@ -210,8 +250,25 @@ public class ConversationEditorController
         }));
         card.Add(row);
 
-        // 選択時の変数変更
-        card.Add(BuildEffectEditor("選択時に変数を変更", choice.effect ??= new ConversationEffectJson()));
+        // 選択時の変数変更（データあり or 開いたときだけ・なければ「＋」で出す）
+        var eff = choice.effect ??= new ConversationEffectJson();
+        string keyEffect = lineId + ":c" + choiceIndex + ":effect";
+        if (eff.kind != "none" || _revealed.Contains(keyEffect))
+        {
+            card.Add(BuildEffectEditor("選択時に変数を変更", eff, () =>
+            {
+                eff.kind = "none";
+                _revealed.Remove(keyEffect);
+                RefreshLines();
+            }));
+        }
+        else
+        {
+            var tools = new VisualElement();
+            tools.AddToClassList("conv-chip-row");
+            tools.Add(Chip("＋ 変数変更", () => { _revealed.Add(keyEffect); RefreshLines(); }));
+            card.Add(tools);
+        }
 
         return card;
     }
@@ -318,11 +375,22 @@ public class ConversationEditorController
     private static readonly string[] EffectKinds = { "none", "worldState", "playerState" };
     private static readonly string[] EffectKindLabels = { "なし", "ワールド変数", "プレイヤー変数" };
 
-    private VisualElement BuildEffectEditor(string title, ConversationEffectJson eff)
+    private VisualElement BuildEffectEditor(string title, ConversationEffectJson eff, Action onRemove = null)
     {
         var box = new VisualElement();
         box.AddToClassList("conv-effect");
-        box.Add(RowLabel(title));
+
+        var head = new VisualElement();
+        head.AddToClassList("conv-optional-head");
+        head.Add(RowLabel(title));
+        if (onRemove != null)
+        {
+            var sp = new VisualElement();
+            sp.style.flexGrow = 1;
+            head.Add(sp);
+            head.Add(IconButton("gimmick-icon-btn--close", "やめる", onRemove));
+        }
+        box.Add(head);
 
         var sub = new VisualElement();
         void RefreshSub()
@@ -482,6 +550,14 @@ public class ConversationEditorController
         btn.AddToClassList("conv-small-btn");
         btn.AddToClassList("gimmick-icon-btn");
         btn.AddToClassList(iconClass);
+        return btn;
+    }
+
+    // 「＋ 〜」で必要な詳細項目を出すチップ。
+    private static Button Chip(string text, Action onClick)
+    {
+        var btn = new Button(onClick) { text = text };
+        btn.AddToClassList("conv-add-chip");
         return btn;
     }
 

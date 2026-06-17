@@ -1757,6 +1757,39 @@
     margin: 2px 0;
 }
 
+/* 必要なときだけ出す詳細項目（見出し + やめる✕） */
+.conv-optional {
+    margin: 4px 0 2px 0;
+}
+
+.conv-optional-head {
+    flex-direction: row;
+    align-items: center;
+}
+
+/* 「＋ 〜」チップ行 */
+.conv-chip-row {
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin: 4px 0 2px 0;
+}
+
+.conv-add-chip {
+    height: 28px;
+    margin: 2px 6px 2px 0;
+    padding: 0 12px;
+    background-color: var(--lpw-surface-sunken);
+    border-width: 1px;
+    border-color: var(--lpw-border);
+    border-radius: 14px;
+    color: var(--lpw-text-secondary);
+    font-size: 13px;
+}
+
+.conv-add-chip:hover {
+    background-color: var(--lpw-surface-muted);
+}
+
 .conv-effect-field .unity-base-field__label {
     min-width: 96px;
     color: var(--lpw-text-muted);
