@@ -121,20 +121,19 @@ public class GimmickTabController
         var row = new VisualElement();
         row.AddToClassList("gimmick-state-row");
 
-        var idx = new Label(index.ToString());
-        idx.AddToClassList("gimmick-state-index");
-        row.Add(idx);
-
+        // インデックスは UI に出さず、名前で識別する（名前は必須）。
         var name = new TextField { maxLength = GimmickTabLogic.LabelMaxLength };
         name.AddToClassList("gimmick-state-name");
         name.SetValueWithoutNotify(LabelOf(kind, index));
-        name.RegisterValueChangedCallback(e =>
+        name.RegisterValueChangedCallback(e => SetLabel(kind, index, e.newValue));
+        // 名前は必須: 空のままフォーカスを外したら既定名に戻す。
+        name.RegisterCallback<FocusOutEvent>(_ =>
         {
-            switch (kind)
+            if (string.IsNullOrEmpty(LabelOf(kind, index)))
             {
-                case StateKind.World: _logic.SetWorldStateLabel(index, e.newValue); break;
-                case StateKind.Player: _logic.SetPlayerStateLabel(index, e.newValue); break;
-                case StateKind.Timer: _logic.SetTimerLabel(index, e.newValue); break;
+                string def = DefaultStateName(kind, index);
+                SetLabel(kind, index, def);
+                name.SetValueWithoutNotify(def);
             }
         });
         row.Add(name);
@@ -173,28 +172,58 @@ public class GimmickTabController
         _ => _logic.GetTimerLabel(index),
     };
 
+    private void SetLabel(StateKind kind, int index, string label)
+    {
+        switch (kind)
+        {
+            case StateKind.World: _logic.SetWorldStateLabel(index, label); break;
+            case StateKind.Player: _logic.SetPlayerStateLabel(index, label); break;
+            case StateKind.Timer: _logic.SetTimerLabel(index, label); break;
+        }
+    }
+
+    // 追加時 / 空入力時の既定名（名前必須のため非空を保証する）。
+    private static string DefaultStateName(StateKind kind, int index) => kind switch
+    {
+        StateKind.World => $"ワールド変数{index + 1}",
+        StateKind.Player => $"プレイヤー変数{index + 1}",
+        _ => $"タイマー{index + 1}",
+    };
+
     private void OnAddWorldState()
     {
-        if (_logic.AddWorldState() < 0)
+        int i = _logic.AddWorldState();
+        if (i < 0)
+        {
             ShowFlash($"ワールド変数は最大 {GimmickTabLogic.MaxWorldStates} 個までです");
-        else
-            RefreshStateLists();
+            return;
+        }
+        _logic.SetWorldStateLabel(i, DefaultStateName(StateKind.World, i));
+        RefreshStateLists();
     }
 
     private void OnAddPlayerState()
     {
-        if (_logic.AddPlayerState() < 0)
+        int i = _logic.AddPlayerState();
+        if (i < 0)
+        {
             ShowFlash($"プレイヤー変数は最大 {GimmickTabLogic.MaxPlayerStates} 個までです");
-        else
-            RefreshStateLists();
+            return;
+        }
+        _logic.SetPlayerStateLabel(i, DefaultStateName(StateKind.Player, i));
+        RefreshStateLists();
     }
 
     private void OnAddTimer()
     {
-        if (_logic.AddTimer() < 0)
+        int i = _logic.AddTimer();
+        if (i < 0)
+        {
             ShowFlash($"タイマーは最大 {GimmickTabLogic.MaxTimers} 個までです");
-        else
-            RefreshStateLists();
+            return;
+        }
+        _logic.SetTimerLabel(i, DefaultStateName(StateKind.Timer, i));
+        RefreshStateLists();
     }
 
     private void RemoveState(StateKind kind, int index)

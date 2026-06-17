@@ -438,16 +438,17 @@ public class RuleEditController
         foreach (var i in indices)
         {
             string name = world ? _tabLogic.GetWorldStateLabel(i) : _tabLogic.GetPlayerStateLabel(i);
-            choices.Add(string.IsNullOrEmpty(name) ? $"{i}" : $"{i}: {name}");
+            choices.Add(string.IsNullOrEmpty(name) ? $"（無名 {i}）" : name);
         }
         int sel = IndexOfInt(indices, current);
         if (sel < 0) sel = 0;
         var f = new DropdownField(label, choices, sel);
         f.AddToClassList("gimmick-edit-param");
-        f.RegisterValueChangedCallback(e =>
+        // 同名があり得るため表示文字列でなくドロップダウンの index で対応付ける。
+        f.RegisterValueChangedCallback(_ =>
         {
-            int i = choices.IndexOf(e.newValue);
-            if (i >= 0) onChange(indices[i]);
+            int i = f.index;
+            if (i >= 0 && i < indices.Count) onChange(indices[i]);
         });
         return f;
     }
@@ -463,16 +464,16 @@ public class RuleEditController
         foreach (var i in indices)
         {
             string name = _tabLogic.GetTimerLabel(i);
-            choices.Add(string.IsNullOrEmpty(name) ? $"{i}" : $"{i}: {name}");
+            choices.Add(string.IsNullOrEmpty(name) ? $"（無名 {i}）" : name);
         }
         int sel = IndexOfInt(indices, current);
         if (sel < 0) sel = 0;
         var f = new DropdownField(label, choices, sel);
         f.AddToClassList("gimmick-edit-param");
-        f.RegisterValueChangedCallback(e =>
+        f.RegisterValueChangedCallback(_ =>
         {
-            int i = choices.IndexOf(e.newValue);
-            if (i >= 0) onChange(indices[i]);
+            int i = f.index;
+            if (i >= 0 && i < indices.Count) onChange(indices[i]);
         });
         return f;
     }

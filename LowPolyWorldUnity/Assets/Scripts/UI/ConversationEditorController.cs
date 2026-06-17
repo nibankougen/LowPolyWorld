@@ -475,7 +475,7 @@ public class ConversationEditorController
         foreach (var i in indices)
         {
             string name = world ? _tabLogic.GetWorldStateLabel(i) : _tabLogic.GetPlayerStateLabel(i);
-            choices.Add(string.IsNullOrEmpty(name) ? $"{i}" : $"{i}: {name}");
+            choices.Add(string.IsNullOrEmpty(name) ? $"（無名 {i}）" : name);
         }
         int sel = IndexOfInt(indices, current);
         if (sel < 0) sel = 0;
