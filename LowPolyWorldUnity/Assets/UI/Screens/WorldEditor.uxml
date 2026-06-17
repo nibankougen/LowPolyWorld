@@ -177,7 +177,7 @@
                     <ui:VisualElement class="gimmick-section">
                         <ui:Button name="gimmick-states-toggle" class="gimmick-collapse-header" text="">
                             <ui:VisualElement name="gimmick-states-arrow" class="gimmick-collapse-arrow icon-down" picking-mode="Ignore" />
-                            <ui:Label text="変数を用意する" picking-mode="Ignore" />
+                            <ui:Label text="変数一覧" picking-mode="Ignore" />
                         </ui:Button>
                         <ui:VisualElement name="gimmick-states-body" class="gimmick-states-body">
                             <ui:VisualElement class="gimmick-state-cat-head">
