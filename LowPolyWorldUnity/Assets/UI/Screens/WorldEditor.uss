@@ -1706,13 +1706,28 @@
     margin-top: 2px;
 }
 
+/* 1 つの選択肢 = 枠で囲んだカード（範囲を明確化） */
 .conv-choice-card {
     flex-direction: column;
-    margin: 2px 0 6px 12px;
-    padding: 4px 0;
-    border-left-width: 2px;
-    border-color: var(--lpw-border);
-    padding-left: 8px;
+    margin: 6px 0 6px 8px;
+    padding: 6px 8px 8px 8px;
+    background-color: var(--lpw-surface-sunken);
+    border-width: 1px;
+    border-color: var(--lpw-border-strong);
+    border-radius: 8px;
+}
+
+/* 「選択肢 N」見出し + 右上の削除✕ */
+.conv-choice-head {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 2px;
+}
+
+.conv-choice-title {
+    color: var(--lpw-text-secondary);
+    font-size: 12px;
+    -unity-font-style: bold;
 }
 
 .conv-choice-row {

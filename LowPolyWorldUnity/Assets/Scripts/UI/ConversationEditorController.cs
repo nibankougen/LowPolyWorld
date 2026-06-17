@@ -234,20 +234,31 @@ public class ConversationEditorController
         var card = new VisualElement();
         card.AddToClassList("conv-choice-card");
 
-        // 選択肢テキスト（言語別）
-        card.Add(MultilangBlock("選択肢", ConversationEditLogic.ChoiceTextMaxLength, false, choice.texts,
-            (lang, text) => _edit.SetChoiceText(lineId, choiceIndex, lang, text),
-            lang => _edit.RemoveChoiceText(lineId, choiceIndex, lang)));
-
-        // 分岐先・削除
-        var row = new VisualElement();
-        row.AddToClassList("conv-choice-row");
-        row.Add(BuildGoto(choice.gotoLineId, g => _edit.SetChoiceGoto(lineId, choiceIndex, g)));
-        row.Add(IconButton("gimmick-icon-btn--close", "削除", () =>
+        // ヘッダー: 「選択肢 N」+ 右上にこの選択肢を削除する✕
+        var head = new VisualElement();
+        head.AddToClassList("conv-choice-head");
+        var title = new Label($"選択肢 {choiceIndex + 1}");
+        title.AddToClassList("conv-choice-title");
+        head.Add(title);
+        var spacer = new VisualElement();
+        spacer.style.flexGrow = 1;
+        head.Add(spacer);
+        head.Add(IconButton("gimmick-icon-btn--close", "この選択肢を削除", () =>
         {
             if (_edit.RemoveChoice(lineId, choiceIndex))
                 RefreshLines();
         }));
+        card.Add(head);
+
+        // 選択肢テキスト（言語別）
+        card.Add(MultilangBlock("テキスト", ConversationEditLogic.ChoiceTextMaxLength, false, choice.texts,
+            (lang, text) => _edit.SetChoiceText(lineId, choiceIndex, lang, text),
+            lang => _edit.RemoveChoiceText(lineId, choiceIndex, lang)));
+
+        // 選んだあとの進行
+        var row = new VisualElement();
+        row.AddToClassList("conv-choice-row");
+        row.Add(BuildGoto(choice.gotoLineId, g => _edit.SetChoiceGoto(lineId, choiceIndex, g)));
         card.Add(row);
 
         // 選択時の変数変更（データあり or 開いたときだけ・なければ「＋」で出す）
