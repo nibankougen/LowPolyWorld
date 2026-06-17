@@ -185,17 +185,14 @@
                         <ui:VisualElement name="gimmick-states-body" class="gimmick-states-body overlay-hidden">
                             <ui:VisualElement class="gimmick-state-cat-head">
                                 <ui:Label class="gimmick-subhead" text="ワールド変数（最大 10）" />
-                                <ui:Button name="gimmick-add-world-state" class="gimmick-add-btn gimmick-icon-btn gimmick-icon-btn--plus" text="" />
                             </ui:VisualElement>
                             <ui:VisualElement name="gimmick-world-states" class="gimmick-state-list" />
                             <ui:VisualElement class="gimmick-state-cat-head">
                                 <ui:Label class="gimmick-subhead" text="プレイヤー変数（最大 4）" />
-                                <ui:Button name="gimmick-add-player-state" class="gimmick-add-btn gimmick-icon-btn gimmick-icon-btn--plus" text="" />
                             </ui:VisualElement>
                             <ui:VisualElement name="gimmick-player-states" class="gimmick-state-list" />
                             <ui:VisualElement class="gimmick-state-cat-head">
                                 <ui:Label class="gimmick-subhead" text="タイマー（最大 5）" />
-                                <ui:Button name="gimmick-add-timer" class="gimmick-add-btn gimmick-icon-btn gimmick-icon-btn--plus" text="" />
                             </ui:VisualElement>
                             <ui:VisualElement name="gimmick-timer-states" class="gimmick-state-list" />
                         </ui:VisualElement>
@@ -230,7 +227,6 @@
                         <ui:VisualElement class="gimmick-edit-section">
                             <ui:VisualElement class="gimmick-edit-section-head">
                                 <ui:Label class="gimmick-subhead" text="きっかけ（どれかが起きたとき / 最大 20）" />
-                                <ui:Button name="rule-edit-add-trigger" class="gimmick-add-btn gimmick-icon-btn gimmick-icon-btn--plus" text="" />
                             </ui:VisualElement>
                             <ui:VisualElement name="rule-edit-trigger-list" class="gimmick-edit-list" />
                         </ui:VisualElement>
@@ -239,7 +235,6 @@
                         <ui:VisualElement class="gimmick-edit-section">
                             <ui:VisualElement class="gimmick-edit-section-head">
                                 <ui:Label class="gimmick-subhead" text="条件（すべて満たすとき / 最大 20）" />
-                                <ui:Button name="rule-edit-add-condition" class="gimmick-add-btn gimmick-icon-btn gimmick-icon-btn--plus" text="" />
                             </ui:VisualElement>
                             <ui:VisualElement name="rule-edit-condition-list" class="gimmick-edit-list" />
                         </ui:VisualElement>
@@ -248,7 +243,6 @@
                         <ui:VisualElement class="gimmick-edit-section">
                             <ui:VisualElement class="gimmick-edit-section-head">
                                 <ui:Label class="gimmick-subhead" text="アクション・すること（上から順に / 最大 20）" />
-                                <ui:Button name="rule-edit-add-action" class="gimmick-add-btn gimmick-icon-btn gimmick-icon-btn--plus" text="" />
                             </ui:VisualElement>
                             <ui:VisualElement name="rule-edit-action-list" class="gimmick-edit-list" />
                         </ui:VisualElement>
@@ -306,7 +300,6 @@
                     <ui:VisualElement class="gimmick-edit-header">
                         <ui:Button name="speaker-library-back" class="gimmick-edit-back icon-back" text="" />
                         <ui:Label class="gimmick-picker-title" text="話者" />
-                        <ui:Button name="speaker-library-add" class="gimmick-add-btn gimmick-icon-btn gimmick-icon-btn--plus" text="" />
                     </ui:VisualElement>
                     <ui:ScrollView name="speaker-library-list" class="gimmick-edit-scroll" />
                     <ui:Label name="speaker-library-flash" class="object-flash overlay-hidden" text="" />

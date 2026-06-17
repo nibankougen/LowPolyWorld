@@ -24,9 +24,6 @@ public class GimmickTabController
     private readonly VisualElement _worldStateList;
     private readonly VisualElement _playerStateList;
     private readonly VisualElement _timerStateList;
-    private readonly Button _addWorldStateBtn;
-    private readonly Button _addPlayerStateBtn;
-    private readonly Button _addTimerBtn;
     private readonly Button _addTemplateBtn;
     private readonly VisualElement _ruleList;
     private readonly Label _flash;
@@ -49,18 +46,12 @@ public class GimmickTabController
         _worldStateList = root.Q("gimmick-world-states");
         _playerStateList = root.Q("gimmick-player-states");
         _timerStateList = root.Q("gimmick-timer-states");
-        _addWorldStateBtn = root.Q<Button>("gimmick-add-world-state");
-        _addPlayerStateBtn = root.Q<Button>("gimmick-add-player-state");
-        _addTimerBtn = root.Q<Button>("gimmick-add-timer");
         _addTemplateBtn = root.Q<Button>("gimmick-add-template");
         _ruleList = root.Q("gimmick-rule-list");
         _flash = root.Q<Label>("gimmick-flash");
         _templatePicker = new GimmickTemplatePickerController(root);
 
         if (_statesToggle != null) _statesToggle.clicked += ToggleStates;
-        if (_addWorldStateBtn != null) _addWorldStateBtn.clicked += OnAddWorldState;
-        if (_addPlayerStateBtn != null) _addPlayerStateBtn.clicked += OnAddPlayerState;
-        if (_addTimerBtn != null) _addTimerBtn.clicked += OnAddTimer;
         if (_addTemplateBtn != null) _addTemplateBtn.clicked += OnOpenTemplatePicker;
 
         Refresh();
@@ -93,14 +84,15 @@ public class GimmickTabController
     // 追加 / 削除式: 定義済みステートのみを行に展開する（追加・削除のたびに作り直す）。
     private void RefreshStateLists()
     {
-        RebuildList(_worldStateList, _logic.WorldStateIndices, withValue: true, kind: StateKind.World);
-        RebuildList(_playerStateList, _logic.PlayerStateIndices, withValue: true, kind: StateKind.Player);
-        RebuildList(_timerStateList, _logic.TimerIndices, withValue: false, kind: StateKind.Timer);
+        RebuildList(_worldStateList, _logic.WorldStateIndices, true, StateKind.World, OnAddWorldState, "＋ ワールド変数を追加");
+        RebuildList(_playerStateList, _logic.PlayerStateIndices, true, StateKind.Player, OnAddPlayerState, "＋ プレイヤー変数を追加");
+        RebuildList(_timerStateList, _logic.TimerIndices, false, StateKind.Timer, OnAddTimer, "＋ タイマーを追加");
     }
 
     private enum StateKind { World, Player, Timer }
 
-    private void RebuildList(VisualElement list, IReadOnlyList<int> indices, bool withValue, StateKind kind)
+    private void RebuildList(
+        VisualElement list, IReadOnlyList<int> indices, bool withValue, StateKind kind, Action onAdd, string addLabel)
     {
         if (list == null)
             return;
@@ -110,10 +102,17 @@ public class GimmickTabController
             var empty = new Label("（なし）");
             empty.AddToClassList("gimmick-state-empty");
             list.Add(empty);
-            return;
         }
-        foreach (int index in indices)
-            list.Add(BuildStateRow(index, withValue, kind));
+        else
+        {
+            foreach (int index in indices)
+                list.Add(BuildStateRow(index, withValue, kind));
+        }
+
+        // 一覧の最下部に追加ボタン
+        var add = new Button(onAdd) { text = addLabel };
+        add.AddToClassList("gimmick-template-top-btn");
+        list.Add(add);
     }
 
     private VisualElement BuildStateRow(int index, bool withValue, StateKind kind)

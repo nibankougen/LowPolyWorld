@@ -21,9 +21,6 @@ public class RuleEditController
     private readonly VisualElement _overlay;
     private readonly Button _btnBack;
     private readonly TextField _title;
-    private readonly Button _addTrigger;
-    private readonly Button _addCondition;
-    private readonly Button _addAction;
     private readonly VisualElement _triggerList;
     private readonly VisualElement _conditionList;
     private readonly VisualElement _actionList;
@@ -44,9 +41,6 @@ public class RuleEditController
         _overlay = root.Q("gimmick-rule-editor");
         _btnBack = root.Q<Button>("rule-edit-back");
         _title = root.Q<TextField>("rule-edit-title");
-        _addTrigger = root.Q<Button>("rule-edit-add-trigger");
-        _addCondition = root.Q<Button>("rule-edit-add-condition");
-        _addAction = root.Q<Button>("rule-edit-add-action");
         _triggerList = root.Q("rule-edit-trigger-list");
         _conditionList = root.Q("rule-edit-condition-list");
         _actionList = root.Q("rule-edit-action-list");
@@ -56,9 +50,6 @@ public class RuleEditController
             _title.maxLength = GimmickTabLogic.LabelMaxLength;
 
         if (_btnBack != null) _btnBack.clicked += Close;
-        if (_addTrigger != null) _addTrigger.clicked += OnAddTrigger;
-        if (_addCondition != null) _addCondition.clicked += OnAddCondition;
-        if (_addAction != null) _addAction.clicked += OnAddAction;
         _title?.RegisterCallback<FocusOutEvent>(_ => CommitTitle());
     }
 
@@ -135,10 +126,7 @@ public class RuleEditController
             return;
         _triggerList.Clear();
         if (_edit.Triggers.Count == 0)
-        {
-            _triggerList.Add(EmptyHint("「＋」できっかけを追加してください（例: オブジェクトをタップしたとき）"));
-            return;
-        }
+            _triggerList.Add(EmptyHint("きっかけ未設定（例: オブジェクトをタップしたとき）"));
         for (int i = 0; i < _edit.Triggers.Count; i++)
         {
             int index = i;
@@ -153,6 +141,7 @@ public class RuleEditController
             AddParams(row, GimmickParamSchema.ForTrigger(trigger.type), tok => BuildTriggerParam(tok, trigger));
             _triggerList.Add(row);
         }
+        _triggerList.Add(ListAddButton("＋ きっかけを追加", OnAddTrigger));
     }
 
     // ── 条件 ──────────────────────────────────────────────────────────────────
@@ -171,10 +160,7 @@ public class RuleEditController
             return;
         _conditionList.Clear();
         if (_edit.Conditions.Count == 0)
-        {
             _conditionList.Add(EmptyHint("条件なし（常に成立）"));
-            return;
-        }
         for (int i = 0; i < _edit.Conditions.Count; i++)
         {
             int index = i;
@@ -189,6 +175,7 @@ public class RuleEditController
             AddParams(row, GimmickParamSchema.ForCondition(cond.type), tok => BuildConditionParam(tok, cond));
             _conditionList.Add(row);
         }
+        _conditionList.Add(ListAddButton("＋ 条件を追加", OnAddCondition));
     }
 
     // ── アクション ────────────────────────────────────────────────────────────
@@ -207,10 +194,7 @@ public class RuleEditController
             return;
         _actionList.Clear();
         if (_edit.Actions.Count == 0)
-        {
-            _actionList.Add(EmptyHint("アクションを追加してください"));
-            return;
-        }
+            _actionList.Add(EmptyHint("アクション未設定（下のボタンで追加）"));
         for (int i = 0; i < _edit.Actions.Count; i++)
         {
             int index = i;
@@ -225,6 +209,15 @@ public class RuleEditController
             AddParams(row, GimmickParamSchema.ForAction(action.type), tok => BuildActionParam(tok, index, action));
             _actionList.Add(row);
         }
+        _actionList.Add(ListAddButton("＋ アクションを追加", OnAddAction));
+    }
+
+    // 一覧最下部の全幅追加ボタン。
+    private static Button ListAddButton(string text, Action onClick)
+    {
+        var btn = new Button(onClick) { text = text };
+        btn.AddToClassList("gimmick-template-top-btn");
+        return btn;
     }
 
     // ── パラメータフォーム ────────────────────────────────────────────────────

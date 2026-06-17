@@ -16,7 +16,6 @@ public class SpeakerLibraryController
 
     private readonly VisualElement _overlay;
     private readonly Button _btnBack;
-    private readonly Button _btnAdd;
     private readonly VisualElement _list;
     private readonly Label _flash;
 
@@ -31,12 +30,10 @@ public class SpeakerLibraryController
 
         _overlay = root.Q("speaker-library");
         _btnBack = root.Q<Button>("speaker-library-back");
-        _btnAdd = root.Q<Button>("speaker-library-add");
         _list = root.Q("speaker-library-list");
         _flash = root.Q<Label>("speaker-library-flash");
 
         if (_btnBack != null) _btnBack.clicked += Close;
-        if (_btnAdd != null) _btnAdd.clicked += OnAdd;
     }
 
     public bool IsOpen => _overlay != null && !_overlay.ClassListContains("overlay-hidden");
@@ -76,14 +73,20 @@ public class SpeakerLibraryController
 
         if (_library.Count == 0)
         {
-            var empty = new Label("話者がいません。右上の＋で追加します");
+            var empty = new Label("話者がいません。下のボタンで追加します");
             empty.AddToClassList("conv-empty");
             _list.Add(empty);
-            return;
+        }
+        else
+        {
+            foreach (var s in _library.Speakers)
+                _list.Add(BuildCard(s));
         }
 
-        foreach (var s in _library.Speakers)
-            _list.Add(BuildCard(s));
+        // 一覧の最下部に追加ボタン
+        var add = new Button(OnAdd) { text = "＋ 話者を追加" };
+        add.AddToClassList("gimmick-template-top-btn");
+        _list.Add(add);
     }
 
     private VisualElement BuildCard(SpeakerJson speaker)
