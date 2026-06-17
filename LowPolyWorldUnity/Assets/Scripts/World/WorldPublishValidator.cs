@@ -2,7 +2,8 @@ using System.Collections.Generic;
 
 /// <summary>
 /// ワールド公開前バリデーションロジック（screens-and-modes.md セクション 11.7.6）。
-/// ギミックループ検出は GimmickEngine 実装後に別途追加する。
+/// ギミック無限ループは <see cref="GimmickLoopPrecheck"/> の内部テストプレイ結果を
+/// 受け取って判定する。
 /// </summary>
 public class WorldPublishValidator
 {
@@ -19,13 +20,18 @@ public class WorldPublishValidator
     /// スポーン位置・ポータルのいずれかが地形/オブジェクト/相互と重複しているか
     /// （呼び出し側が <see cref="SpecialObjectOverlap"/> + 占有クエリで算出して渡す）。
     /// </param>
+    /// <param name="gimmickLoopRuleId">
+    /// 内部テストプレイ（<see cref="GimmickLoopPrecheck"/>）で無限ループが検出された場合の原因ルール ID。
+    /// 空 / null ならループなし。呼び出し側が原因ルールの特定表示に使う。
+    /// </param>
     public IReadOnlyList<PublishError> Validate(
         WorldDefinitionJson def,
         int textureCost,
         int objectCount,
         bool hasThumbnail,
         int publishedVersion = 0,
-        bool spawnPortalOverlap = false)
+        bool spawnPortalOverlap = false,
+        string gimmickLoopRuleId = null)
     {
         var errors = new List<PublishError>();
 
@@ -43,6 +49,9 @@ public class WorldPublishValidator
 
         if (spawnPortalOverlap)
             errors.Add(PublishError.SpawnPortalOverlap);
+
+        if (!string.IsNullOrEmpty(gimmickLoopRuleId))
+            errors.Add(PublishError.GimmickLoopDetected);
 
         if (textureCost > TextureCostCalculator.CostLimit)
             errors.Add(PublishError.TextureCostExceeded);
@@ -84,5 +93,5 @@ public enum PublishError
     TextureCostExceeded,
     ObjectCountExceeded,
     VersionNumberOverflow,
-    GimmickLoopDetected, // GimmickEngine 実装後に使用
+    GimmickLoopDetected, // 内部テストプレイ（GimmickLoopPrecheck）で無限ループを検出
 }

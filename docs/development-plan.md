@@ -936,23 +936,23 @@
   - [x] ステート定義エリア（折りたたみ可）: ワールドステート(0〜9)・プレイヤーステート(0〜3)・タイマー(0〜4) の名前(1〜20文字)+初期値(0〜255)入力 — テスト済み
   - [~] ルール一覧: タイトル名変更（インライン・1〜20文字・空不可）・並び替え（▲▼アイコン。**D&D は未**）・追加/削除・合計 100 上限。ボタンは Icons の icon_plus/icon_edit/icon_up/icon_down/icon_close を使用。**グループ化 UI は未**（オブジェクトグループと同仕様予定）
   - [ ] テンプレートから追加（world-creation.md 9.12 — テンプレート一覧 / パラメータダイアログ / 空きステート・タイマー自動割り当て / 初期 6 種: チーム分け・鬼ごっこ基本・カウントダウン・周期処理・コンビネーションロック・レース計測）
-  - [~] ルール編集画面（タップでタブ拡大）— ロジック `GimmickRuleEditLogic`（純粋C#・テスト済み）+ UI `RuleEditController`（`WorldEditor.uxml/uss` の panel-gimmicks 内オーバーレイ・`WorldEditorController` 配線）。`GimmickTabController.RuleEditRequested`（編集/追加）で開き、＜戻る で `Closed`→一覧 Refresh。タブ移動/ワールド再読込時は自動クローズ。タイトル改名（インライン・空不可）。残: 種別ごとの詳細パラメータフォーム・オブジェクト指定・多言語/D&D
+  - [~] ルール編集画面（タップでタブ拡大）— ロジック `GimmickRuleEditLogic`（純粋C#・テスト済み）+ UI `RuleEditController`（`WorldEditor.uxml/uss` の panel-gimmicks 内オーバーレイ・`WorldEditorController` 配線）。`GimmickTabController.RuleEditRequested`（編集/追加）で開き、＜戻る で `Closed`→一覧 Refresh。タブ移動/ワールド再読込時は自動クローズ。タイトル改名（インライン・空不可）。種別ごとの詳細パラメータフォームは `GimmickParamSchema`（純粋C#・テスト済み）駆動で実装。残: オブジェクト指定（3Dタップ/一覧）・メッセージ多言語入力・D&D
     - [x] 入力イベントセクション（+で追加・最大 20・OR 結合）— 種類セレクタボタン + ▲▼× 並替/削除。種類タップで選択リストオーバーレイ（`GimmickTypePickerController`・全カテゴリを1画面に縦並び・カテゴリ見出しで区切り・`GimmickTypeCatalog` でジャンル分け）。上限到達でフラッシュ
     - [x] 条件セクション（+で追加・最大 20・AND 結合）— 同上（0 件時「条件なし（常に成立）」表示）
     - [x] アクションセクション（+で追加・最大 20・順番実行）— 同上（種別が多いためジャンル分け選択リスト）
-    - [ ] 値入力種別: 固定値 / ワールドステート参照 / 関わったプレイヤーのステート参照 / 全プレイヤーステート合計 / 範囲乱数（オーナー生成・共有）
-    - [ ] 比較演算: 大小等 / X で割った余りが Y
-    - [ ] 対象プレイヤー選択: 入力プレイヤー / 相手プレイヤー（存在するとき）/ 全員
-    - [ ] オブジェクト指定: 3D ビュータップ or 利用中オブジェクト一覧タップ
+    - [x] 値入力種別: 固定値 / ワールドステート参照 / 関わったプレイヤーのステート参照 / 全プレイヤーステート合計 / 範囲乱数（オーナー生成・共有）— `ValueRefField`（種別ドロップダウン + 種別別の入れ子フォーム）
+    - [x] 比較演算: 大小等 / X で割った余りが Y — `CompareOpField`（mod_eq 選択時に除数 X・余り Y を追加表示）
+    - [x] 対象プレイヤー選択: 入力プレイヤー / 相手プレイヤー（存在するとき）/ 全員 — `IdDropdown`（PlayerTargets）
+    - [ ] オブジェクト指定: 3D ビュータップ or 利用中オブジェクト一覧タップ（現状はオブジェクト / ポータル / 効果音 / 会話 等の ID をテキスト入力で受ける）
     - [~] 文字メッセージアクション: デフォルト単言語入力 / 詳細で言語別入力（各 80 文字以内・フォールバック英語優先）— ロジック `SetActionMessage`/`RemoveActionMessage` + UI のデフォルト言語テキスト欄（multiline・80 字）実装済み。詳細（言語別入力）・閲覧者フォールバック表示は未
-    - [ ] 値入力種別 UI: 固定値 / 範囲乱数 等（正規 ID 一覧 `GimmickRuleEditLogic.ValueKinds`/`CompareOps`/`PlayerTargets`/`StateOps`/`ResetTargets` をドロップダウンに利用）
+    - [x] 値入力種別 UI: 固定値 / 範囲乱数 等（正規 ID 一覧 `GimmickRuleEditLogic.ValueKinds`/`CompareOps`/`PlayerTargets`/`StateOps`/`ResetTargets` をドロップダウンに利用）。ステート / タイマー番号は定義済み一覧のドロップダウン（未定義時は数値入力にフォールバック）
 - [ ] **ギミック表現力拡張（ストーリー / セリフ / シーケンス）**（world-creation.md 9.7b / 9.13・ノードベース UI は採用せず ECA + 新プリミティブで実現）
-  - [ ] 会話システム（9.13）
-    - [ ] ワールド定義 JSON モデル（`conversations[]`・行・選択肢・言語別テキスト・到達/選択時ステート変更）
-    - [ ] `ConversationEditLogic`（純粋C#: 会話/行/選択肢の追加・削除・並び替え・多言語テキスト編集・ジャンプ先解決・上限/構造バリデーション）+ EditMode テスト
-    - [ ] アクション `startConversation`（対象プレイヤー + 会話 ID）の変換・バリデーション（会話 ID 実在チェック → WorldRefs に ConversationIds 追加）
-    - [ ] 会話エディタ UI（11.7.4b・会話一覧 / 行 D&D / 選択肢 / 多言語入力）
-    - [ ] ランタイム会話再生（対象プレイヤーローカル UI・選択待ち・オーナー権威でのステート変更適用・同期）
+  - [~] 会話システム（9.13）
+    - [x] ワールド定義 JSON モデル（`conversations[]`・行・選択肢・言語別テキスト・到達/選択時ステート変更）
+    - [x] `ConversationEditLogic`（純粋C#: 会話/行/選択肢の追加・削除・並び替え・多言語テキスト編集・ジャンプ先解決・上限/構造バリデーション）+ EditMode テスト（`ConversationLibraryLogic` / `ConversationValidator` 含む）
+    - [x] アクション `startConversation`（対象プレイヤー + 会話 ID）の変換・バリデーション（会話 ID 実在チェック → WorldRefs に ConversationIds 追加）
+    - [~] 会話エディタ UI（11.7.4b・会話一覧 / 行 / 選択肢 / 多言語入力）— `ConversationLibraryController` + `ConversationEditorController` 実装済み（人間の見た目確認待ち）。残: 言語別「詳細」入力・到達/選択時ステート変更 UI・行 D&D
+    - [~] ランタイム会話再生 — 再生ステートマシン `ConversationPlaybackLogic`（純粋C#・テスト済み 28 本: 行進行 / ジャンプ先 "" `end` 行ID / 選択肢分岐 / 到達・選択時ステート変更要求の発行 / 多言語フォールバック）実装済み。残: 対象プレイヤーローカル会話 UI・オーナー Tick 駆動・ステート変更要求のオーナー権威適用 + Netcode 同期（Netcode 統合時）
   - [ ] 待機アクション（9.7b・シーケンス）
     - [ ] アクション `wait`（floatParam 0〜60 秒）の変換・バリデーション
     - [ ] エンジンのシーケンス実行（オーナーが残アクションをスケジュール・並行進行・ループカウント対象外・リセット/退室/オーナー交代で中断）+ テスト
@@ -1060,7 +1060,7 @@
 - [x] `GimmickEngine`: 複数入力イベント（OR）のいずれかが発火でルール起動すること
 - [x] `GimmickEngine`: イベント発火 → 条件評価（AND 結合）→ アクション実行の基本フロー
 - [x] `GimmickEngine`: 無限ループ検出（連鎖 100 回超でエラー・ループしない場合は通過）
-- [ ] `WorldPublishValidator`: ギミックループ検出テスト（内部テストプレイで検知 → 原因ルール特定）
+- [x] `WorldPublishValidator`: ギミックループ検出テスト（内部テストプレイで検知 → 原因ルール特定）— `GimmickLoopPrecheck.RunRoomStart`（RoomStart 起点シミュレーションで `IsInfiniteLoop` + 原因 `LoopRuleId` 検出）+ `WorldPublishValidator` に `gimmickLoopRuleId` 引数 + `PublishError.GimmickLoopDetected`
 - [x] `GimmickEngine`: 複数ルールが同一フレームで発火したとき定義順に実行されること
 - [x] `GimmickEngine`: 相手プレイヤー確定後にアクション対象として正しく渡されること
 - [x] `GimmickValueResolver`: 固定値 / ステート参照 / プレイヤーステート参照 / 乱数それぞれが正しい値を返すこと

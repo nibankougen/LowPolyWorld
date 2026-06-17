@@ -1344,6 +1344,52 @@
     padding: 0;
 }
 
+/* ── 種別ごとの詳細パラメータフォーム ── */
+.gimmick-edit-params {
+    flex-direction: column;
+    margin-top: 6px;
+    padding: 6px 4px 2px 4px;
+    border-top-width: 1px;
+    border-color: var(--lpw-border);
+}
+
+.gimmick-edit-param {
+    margin: 3px 0;
+}
+
+.gimmick-edit-param .unity-base-field__label {
+    min-width: 120px;
+    color: var(--lpw-text-muted);
+    font-size: 13px;
+}
+
+.gimmick-edit-param-group {
+    flex-direction: column;
+    margin: 3px 0;
+}
+
+.gimmick-edit-param-xyz {
+    flex-direction: row;
+}
+
+.gimmick-edit-param-xyz .gimmick-edit-param {
+    flex-grow: 1;
+    margin-right: 4px;
+}
+
+.gimmick-edit-param-xyz .unity-base-field__label {
+    min-width: 14px;
+}
+
+/* 値参照の入れ子フォーム */
+.gimmick-edit-valueref {
+    flex-direction: column;
+    margin: 4px 0;
+    padding: 6px;
+    background-color: var(--lpw-surface-sunken);
+    border-radius: 6px;
+}
+
 .gimmick-edit-message {
     margin-top: 6px;
 }
