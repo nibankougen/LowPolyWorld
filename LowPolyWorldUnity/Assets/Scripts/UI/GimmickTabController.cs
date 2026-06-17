@@ -112,6 +112,7 @@ public class GimmickTabController
         // 一覧の最下部に追加ボタン
         var add = new Button(onAdd) { text = addLabel };
         add.AddToClassList("gimmick-template-top-btn");
+        add.AddToClassList("gimmick-list-add--flush");
         list.Add(add);
     }
 
@@ -263,6 +264,7 @@ public class GimmickTabController
         // 一覧の最下部に追加ボタン
         var add = new Button(OnAddRule) { text = "＋ ルールを追加" };
         add.AddToClassList("gimmick-template-top-btn");
+        add.AddToClassList("gimmick-list-add--flush");
         _ruleList.Add(add);
     }
 

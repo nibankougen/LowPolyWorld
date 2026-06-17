@@ -1514,6 +1514,17 @@
     font-size: 15px;
 }
 
+/* 一覧最下部の追加ボタンを、リスト要素の幅に揃える（左右マージンを合わせる） */
+.gimmick-template-top-btn.gimmick-list-add--flush {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.gimmick-template-top-btn.gimmick-list-add--inset {
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
 /* アイコン + ラベルを横並びにするボタン */
 .gimmick-template-top-btn--icon {
     flex-direction: row;

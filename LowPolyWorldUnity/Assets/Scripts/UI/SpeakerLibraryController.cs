@@ -60,9 +60,21 @@ public class SpeakerLibraryController
             return;
         string app = DeviceLanguage.CurrentCode();
         if (_library.Add(app) == null)
+        {
             ShowFlash($"話者は最大 {SpeakerLibraryLogic.MaxSpeakers} 人までです");
-        else
-            Refresh();
+            return;
+        }
+        Refresh();
+        ScrollListToBottom(_list);
+    }
+
+    // 一覧（ScrollView）を最下部までスクロールする（要素追加直後に末尾を見せる）。
+    private static void ScrollListToBottom(VisualElement listEl)
+    {
+        if (listEl is not ScrollView sv || sv.childCount == 0)
+            return;
+        var last = sv[sv.childCount - 1];
+        sv.schedule.Execute(() => sv.ScrollTo(last)).StartingIn(0);
     }
 
     private void Refresh()
@@ -86,6 +98,7 @@ public class SpeakerLibraryController
         // 一覧の最下部に追加ボタン
         var add = new Button(OnAdd) { text = "＋ 話者を追加" };
         add.AddToClassList("gimmick-template-top-btn");
+        add.AddToClassList("gimmick-list-add--inset");
         _list.Add(add);
     }
 

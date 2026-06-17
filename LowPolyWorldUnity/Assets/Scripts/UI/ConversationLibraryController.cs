@@ -77,6 +77,7 @@ public class ConversationLibraryController
         // 一覧の最下部に追加ボタン
         var add = new Button(OnAdd) { text = "＋ 会話を追加" };
         add.AddToClassList("gimmick-template-top-btn");
+        add.AddToClassList("gimmick-list-add--inset");
         _list.Add(add);
     }
 

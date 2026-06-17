@@ -102,9 +102,21 @@ public class ConversationEditorController
             return;
         }
         if (_edit?.AddLine() == null)
+        {
             ShowFlash($"この会話のセリフ行は最大 {ConversationEditLogic.MaxLines} 行までです");
-        else
-            RefreshLines();
+            return;
+        }
+        RefreshLines();
+        ScrollListToBottom(_lineList);
+    }
+
+    // 一覧（ScrollView）を最下部までスクロールする（行追加直後に末尾を見せる）。
+    private static void ScrollListToBottom(VisualElement listEl)
+    {
+        if (listEl is not ScrollView sv || sv.childCount == 0)
+            return;
+        var last = sv[sv.childCount - 1];
+        sv.schedule.Execute(() => sv.ScrollTo(last)).StartingIn(0);
     }
 
     private void RefreshLines()
@@ -128,6 +140,7 @@ public class ConversationEditorController
         // 一覧の最下部に追加ボタン
         var add = new Button(OnAddLine) { text = "＋ セリフ行を追加" };
         add.AddToClassList("gimmick-template-top-btn");
+        add.AddToClassList("gimmick-list-add--inset");
         _lineList.Add(add);
     }
 

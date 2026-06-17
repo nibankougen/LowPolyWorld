@@ -212,11 +212,12 @@ public class RuleEditController
         _actionList.Add(ListAddButton("＋ アクションを追加", OnAddAction));
     }
 
-    // 一覧最下部の全幅追加ボタン。
+    // 一覧最下部の全幅追加ボタン（リスト要素の幅に揃える）。
     private static Button ListAddButton(string text, Action onClick)
     {
         var btn = new Button(onClick) { text = text };
         btn.AddToClassList("gimmick-template-top-btn");
+        btn.AddToClassList("gimmick-list-add--flush");
         return btn;
     }
 
