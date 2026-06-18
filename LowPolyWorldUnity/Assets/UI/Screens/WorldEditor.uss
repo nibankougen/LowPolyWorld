@@ -1094,6 +1094,13 @@
     margin: 6px 2px 2px 2px;
 }
 
+/* 変数編集オーバーレイの内容に左右パディングを付ける（見出し・行・追加ボタンを内側に寄せる）。
+   スクロールバーが内側に寄らないよう、ScrollView 本体ではなく内容コンテナにパディングを付ける。 */
+#gimmick-variables .unity-scroll-view__content-container {
+    padding-left: 12px;
+    padding-right: 12px;
+}
+
 .gimmick-state-list {
     flex-direction: column;
 }
@@ -1131,11 +1138,11 @@
     margin-top: 8px;
 }
 
-/* ステート行の削除ボタン */
+/* ステート行の削除ボタン（右端を「＋追加」ボタンと揃えるため margin-right は 0） */
 .gimmick-state-del {
     width: 28px;
     height: 28px;
-    margin-left: 4px;
+    margin: 0 0 0 4px;
     background-color: var(--lpw-surface-sunken);
     border-width: 1px;
     border-color: var(--lpw-border);

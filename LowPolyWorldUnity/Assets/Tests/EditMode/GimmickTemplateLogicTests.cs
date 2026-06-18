@@ -173,27 +173,46 @@ public class GimmickTemplateLogicTests
             tab.AddRule();
         Assert.AreEqual(99, tab.TotalCount);
 
-        // tagBasic は 3 ルール → 99 + 3 = 102 > 100
+        // tagBasic は 3 ルール + グループ 1 → 99 + 3 + 1 = 103 > 100
         var result = GimmickTemplateLogic.Insert(tab, "tagBasic");
 
         Assert.IsFalse(result.Success);
         Assert.AreEqual("ルール数が上限（100）を超えます", result.Error);
         Assert.AreEqual(99, tab.TotalCount); // 追加されていない
         Assert.AreEqual(0, tab.WorldStateCount); // ステートも触られていない
+        Assert.AreEqual(0, tab.GroupCount); // グループも作られていない
     }
 
     [Test]
     public void Insert_AtTheLimit_Succeeds()
     {
         var tab = new GimmickTabLogic();
-        for (int i = 0; i < 97; i++)
+        for (int i = 0; i < 96; i++)
             tab.AddRule();
 
-        // 97 + 3 = 100（ちょうど上限）
+        // 96 + 3 ルール + グループ 1 = 100（ちょうど上限）
         var result = GimmickTemplateLogic.Insert(tab, "tagBasic");
 
         Assert.IsTrue(result.Success);
         Assert.AreEqual(100, tab.TotalCount);
+    }
+
+    [Test]
+    public void Insert_WrapsRulesInTemplateNamedGroup()
+    {
+        var tab = new GimmickTabLogic();
+        var result = GimmickTemplateLogic.Insert(tab, "tagBasic");
+
+        Assert.IsTrue(result.Success);
+        Assert.IsNotNull(result.GroupId);
+        // グループが 1 つ作られ、テンプレート名が付く
+        Assert.AreEqual(1, tab.GroupCount);
+        Assert.AreEqual("鬼ごっこ基本", tab.Groups[0].name);
+        // 3 ルール + グループ 1 = 4
+        Assert.AreEqual(4, tab.TotalCount);
+        // 挿入された全ルールがそのグループに属する
+        foreach (var rule in result.Rules)
+            Assert.AreEqual(result.GroupId, rule.groupId);
     }
 
     // ── 生成ルールの妥当性（対象 ID 不要なテンプレートはそのまま有効）─────────────

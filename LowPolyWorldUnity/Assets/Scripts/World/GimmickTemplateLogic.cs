@@ -55,6 +55,7 @@ public static class GimmickTemplateLogic
         public bool Success;
         public string Error;                          // 成功時 null
         public IReadOnlyList<GimmickRule> Rules;      // 挿入されたルール（失敗時は空）
+        public string GroupId;                        // ルールをまとめたグループ ID（失敗時は null）
     }
 
     // ── テンプレート一覧 ────────────────────────────────────────────────────────
@@ -167,7 +168,8 @@ public static class GimmickTemplateLogic
             return Fail("タイマーの空きが足りません");
 
         // 2. ルール数の上限（ルール + グループ合計 100）を確認する。
-        if (tab.TotalCount + template.RuleCount > GimmickTabLogic.MaxRulesAndGroups)
+        //    テンプレートのルールは 1 つのグループにまとめるため、グループ 1 個分（+1）も数える。
+        if (tab.TotalCount + template.RuleCount + 1 > GimmickTabLogic.MaxRulesAndGroups)
             return Fail("ルール数が上限（100）を超えます");
 
         // 3. パラメータを解決（既定値マージ + クランプ）。
@@ -178,10 +180,13 @@ public static class GimmickTemplateLogic
         var ctx = new BuildContext { Tab = tab, Params = resolved };
         var specs = template.Build(ctx);
 
+        // テンプレートのルールはテンプレート名のグループにまとめて追加する。
+        string groupId = tab.CreateGroup("", template.Name);
+
         var inserted = new List<GimmickRule>(specs.Count);
         foreach (var spec in specs)
         {
-            var rule = tab.AddRule(spec.Label);
+            var rule = tab.AddRule(spec.Label, groupId);
             if (rule == null) // 事前チェック済みのため通常は起こらないが防御的に中断
                 break;
             rule.triggers = spec.Triggers ?? Array.Empty<GimmickTrigger>();
@@ -190,11 +195,11 @@ public static class GimmickTemplateLogic
             inserted.Add(rule);
         }
 
-        return new TemplateInsertResult { Success = true, Error = null, Rules = inserted };
+        return new TemplateInsertResult { Success = true, Error = null, Rules = inserted, GroupId = groupId };
     }
 
     private static TemplateInsertResult Fail(string reason) =>
-        new() { Success = false, Error = reason, Rules = Array.Empty<GimmickRule>() };
+        new() { Success = false, Error = reason, Rules = Array.Empty<GimmickRule>(), GroupId = null };
 
     private static Dictionary<string, int> ResolveParams(
         Template template,
