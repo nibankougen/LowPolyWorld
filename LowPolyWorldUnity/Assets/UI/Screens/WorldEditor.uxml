@@ -330,6 +330,7 @@
                         <ui:Label class="gimmick-edit-titlelabel" text="会話名" />
                         <ui:TextField name="conv-editor-title" class="gimmick-edit-title" />
                     </ui:VisualElement>
+                    <ui:Label name="conv-editor-deflang" class="conv-deflang" text="" />
                     <ui:ScrollView name="conv-editor-lines" class="gimmick-edit-scroll" />
                     <ui:Label name="conv-editor-flash" class="object-flash overlay-hidden" text="" />
                 </ui:VisualElement>

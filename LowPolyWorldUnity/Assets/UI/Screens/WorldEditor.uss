@@ -1379,6 +1379,10 @@
     background-image: url("../../Textures/UI/Icons/icon_close.png");
 }
 
+.gimmick-icon-btn--more {
+    background-image: url("../../Textures/UI/Icons/icon_more.png");
+}
+
 /* ── ルール編集画面（オーバーレイ） ── */
 .gimmick-rule-editor,
 .editor-overlay {
@@ -1890,13 +1894,28 @@
 
 /* エディタのセリフ行カード */
 .conv-line-card {
-    flex-direction: column;
+    flex-direction: row;
+    align-items: stretch;
     margin: 4px 10px;
-    padding: 8px;
+    padding: 6px 8px 8px 4px;
     background-color: var(--lpw-surface-muted);
     border-width: 1px;
     border-color: var(--lpw-border);
     border-radius: 8px;
+}
+
+/* 左側の縦長ドラッグハンドル（カード高さいっぱいを掴める） */
+.conv-line-handle {
+    width: 24px;
+    height: auto;
+    align-self: stretch;
+    margin-right: 4px;
+}
+
+/* ハンドルの右側の内容列 */
+.conv-line-content {
+    flex-direction: column;
+    flex-grow: 1;
 }
 
 .conv-line-head {
@@ -1905,11 +1924,16 @@
     margin-bottom: 4px;
 }
 
-.conv-line-index {
-    width: 26px;
-    color: var(--lpw-text-muted);
-    font-size: 13px;
-    -unity-text-align: middle-left;
+/* 話者アイコン（番号の代わり・話者ドロップダウンの左） */
+.conv-speaker-icon {
+    width: 18px;
+    height: 18px;
+    margin-right: 6px;
+    flex-shrink: 0;
+    background-image: url("../../Textures/UI/Icons/icon_speaker.png");
+    -unity-background-scale-mode: scale-to-fit;
+    background-size: 100% 100%;
+    -unity-background-image-tint-color: var(--lpw-icon);
 }
 
 .conv-line-speaker {
@@ -2022,14 +2046,19 @@
     margin: 2px 0;
 }
 
-/* 必要なときだけ出す詳細項目（見出し + やめる✕） */
+/* 必要なときだけ出す詳細項目（言語別本文 / 変数変更 / 分岐先 / 選択肢 で共通の枠） */
 .conv-optional {
+    flex-direction: column;
     margin: 4px 0 2px 0;
+    padding: 6px;
+    background-color: var(--lpw-surface-sunken);
+    border-radius: 6px;
 }
 
 .conv-optional-head {
     flex-direction: row;
     align-items: center;
+    margin-bottom: 2px;
 }
 
 /* 「＋ 〜」チップ行 */
@@ -2053,6 +2082,64 @@
 
 .conv-add-chip:hover {
     background-color: var(--lpw-surface-muted);
+}
+
+/* 本文（言語）の小さなラベル */
+.conv-col-label {
+    color: var(--lpw-text-muted);
+    font-size: 12px;
+    margin-bottom: 1px;
+}
+
+/* 会話エディタ上部のデフォルト言語表示 */
+.conv-deflang {
+    color: var(--lpw-text-muted);
+    font-size: 12px;
+    padding: 2px 10px 4px 10px;
+}
+
+/* 共通: エディタ系オーバーレイ内のフィールドは Unity 既定の左右マージンを無効化する。
+   （DropdownField / TextField / IntegerField で既定マージンが異なり、要素ごとに左右がずれるため統一する。
+   .gimmick-rule-editor クラスは会話・ルール・変数・ライブラリ各オーバーレイが共有している。） */
+.gimmick-rule-editor .unity-base-field {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+/* 本文行: 左に icon_dialogue・右は削除ボタン幅ぶん空けて話者ドロップダウンに揃える */
+.conv-body-row {
+    flex-direction: row;
+    align-items: flex-start;
+    margin-right: 34px;
+}
+
+.conv-dialogue-icon {
+    width: 18px;
+    height: 18px;
+    margin-right: 6px;
+    margin-top: 6px;
+    flex-shrink: 0;
+    background-image: url("../../Textures/UI/Icons/icon_dialogue.png");
+    -unity-background-scale-mode: scale-to-fit;
+    background-size: 100% 100%;
+    -unity-background-image-tint-color: var(--lpw-icon);
+}
+
+/* 追加メニューを開いている間の ⋯ ボタン（アクティブ表示） */
+.conv-more--active {
+    background-color: var(--lpw-accent-subtle);
+    border-color: var(--lpw-accent);
+}
+
+/* 話者ドロップダウン: ヘッダーで横に伸び、長い名前は前方だけ表示（省略記号） */
+.conv-speaker-dd {
+    flex-grow: 1;
+}
+
+.conv-speaker-dd .unity-base-popup-field__text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .conv-effect-field .unity-base-field__label {

@@ -110,46 +110,45 @@ public class SpeakerLibraryController
     private VisualElement BuildCard(SpeakerJson speaker)
     {
         string id = speaker.speakerId;
+        string app = DeviceLanguage.CurrentCode();
+
+        // カードは [縦長ドラッグハンドル | 内容列]（会話のセリフ行と同じ構成）
         var card = new VisualElement();
         card.AddToClassList("conv-line-card");
 
-        var head = new VisualElement();
-        head.AddToClassList("conv-line-head");
         if (_reorder != null)
         {
-            string name = SpeakerLibraryLogic.ResolveName(speaker, DeviceLanguage.CurrentCode());
-            head.Add(_reorder.CreateHandle(card, string.IsNullOrEmpty(name) ? "（名前なし）" : name));
+            string name = SpeakerLibraryLogic.ResolveName(speaker, app);
+            var handle = _reorder.CreateHandle(card, string.IsNullOrEmpty(name) ? "（名前なし）" : name);
+            handle.AddToClassList("conv-line-handle");
+            card.Add(handle);
         }
-        var spacer = new VisualElement();
-        spacer.style.flexGrow = 1;
-        head.Add(spacer);
+
+        var content = new VisualElement();
+        content.AddToClassList("conv-line-content");
+        card.Add(content);
+
+        // 1 行目: 名前（既定言語）+ 右上に削除✕
+        var head = new VisualElement();
+        head.AddToClassList("conv-line-head");
+        var nameField = NameField($"名前（{SupportedLanguages.LabelOf(app)}）", app, TextForLang(speaker.names, app), id);
+        nameField.style.flexGrow = 1;
+        head.Add(nameField);
         head.Add(IconButton("gimmick-icon-btn--close", "削除", () =>
         {
             if (_library.Remove(id))
                 Refresh();
         }));
-        card.Add(head);
+        content.Add(head);
 
-        // 名前（既定 = アプリの設定言語・詳細でそれ以外の言語）
-        card.Add(MultilangName(id, speaker));
-        return card;
-    }
-
-    private VisualElement MultilangName(string speakerId, SpeakerJson speaker)
-    {
-        var box = new VisualElement();
-        box.AddToClassList("conv-ml");
-
-        string app = DeviceLanguage.CurrentCode();
-        box.Add(NameField($"名前（{SupportedLanguages.LabelOf(app)}）", app, TextForLang(speaker.names, app), speakerId));
-
+        // 言語別の名前（詳細）
         var detail = new Foldout { text = "詳細（言語別）", value = false };
         detail.AddToClassList("conv-ml-detail");
         foreach (var lang in SupportedLanguages.All)
             if (lang.Code != app)
-                detail.Add(NameField(lang.Label, lang.Code, TextForLang(speaker.names, lang.Code), speakerId));
-        box.Add(detail);
-        return box;
+                detail.Add(NameField(lang.Label, lang.Code, TextForLang(speaker.names, lang.Code), id));
+        content.Add(detail);
+        return card;
     }
 
     private TextField NameField(string label, string lang, string initial, string speakerId)

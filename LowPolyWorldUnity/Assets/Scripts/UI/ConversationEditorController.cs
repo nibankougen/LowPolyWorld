@@ -18,6 +18,7 @@ public class ConversationEditorController
     private readonly TextField _title;
     private readonly VisualElement _lineList;
     private readonly Label _flash;
+    private readonly Label _defLang;
     private readonly UiListDragReorder _reorder;
 
     private readonly ConversationLibraryLogic _library;
@@ -46,6 +47,9 @@ public class ConversationEditorController
         _title = root.Q<TextField>("conv-editor-title");
         _lineList = root.Q("conv-editor-lines");
         _flash = root.Q<Label>("conv-editor-flash");
+        _defLang = root.Q<Label>("conv-editor-deflang");
+        if (_defLang != null)
+            _defLang.text = $"デフォルト言語: {SupportedLanguages.LabelOf(DeviceLanguage.CurrentCode())}";
 
         if (_lineList != null)
             _reorder = UiListDragReorder.For(_lineList, OnReorderLine);
@@ -152,42 +156,58 @@ public class ConversationEditorController
     private VisualElement BuildLineCard(int index, ConversationLineJson line)
     {
         string lineId = line.lineId;
+        string app = DeviceLanguage.CurrentCode();
+
+        // カードは [縦長ドラッグハンドル | 内容列] の横並び
         var card = new VisualElement();
         card.AddToClassList("conv-line-card");
-
-        // ヘッダー: 番号・操作
-        var head = new VisualElement();
-        head.AddToClassList("conv-line-head");
 
         if (_reorder != null)
         {
             // 本文があれば「話者「本文…」」、本文がなければ話者名のみ、どちらも無ければ「（話者なし）」。
             string ghost = LinePreview(lineId);
-            head.Add(_reorder.CreateHandle(card, string.IsNullOrEmpty(ghost) ? "（話者なし）" : ghost));
+            var handle = _reorder.CreateHandle(card, string.IsNullOrEmpty(ghost) ? "（話者なし）" : ghost);
+            handle.AddToClassList("conv-line-handle"); // 左側・縦長の掴み領域
+            card.Add(handle);
         }
 
-        var idx = new Label($"{index + 1}.");
-        idx.AddToClassList("conv-line-index");
-        head.Add(idx);
+        var content = new VisualElement();
+        content.AddToClassList("conv-line-content");
+        card.Add(content);
 
-        var spacer = new VisualElement();
-        spacer.style.flexGrow = 1;
-        head.Add(spacer);
-
+        // 1 行目: 話者（番号の代わり・アイコン + ドロップダウン）+ 削除
+        var head = new VisualElement();
+        head.AddToClassList("conv-line-head");
+        var spIcon = new VisualElement { pickingMode = PickingMode.Ignore };
+        spIcon.AddToClassList("conv-speaker-icon");
+        head.Add(spIcon);
+        head.Add(BuildSpeakerDropdown(lineId, line.speakerId));
         head.Add(IconButton("gimmick-icon-btn--close", "削除", () =>
         {
             if (_edit.RemoveLine(lineId))
                 RefreshLines();
         }));
-        card.Add(head);
+        content.Add(head);
 
-        // 話者（定義済みから選択）・本文（言語別）— 既定ではここだけ考えればよい
-        card.Add(BuildSpeakerField(lineId, line.speakerId));
-        card.Add(MultilangBlock("本文", ConversationEditLogic.TextMaxLength, true, line.texts,
-            (lang, text) => _edit.SetLineText(lineId, lang, text),
-            lang => _edit.RemoveLineText(lineId, lang)));
+        // 2 行目: 本文（既定言語）。左に icon_dialogue・話者ドロップダウンに左右を揃える。
+        var bodyRow = new VisualElement();
+        bodyRow.AddToClassList("conv-body-row");
+        var dialogueIcon = new VisualElement { pickingMode = PickingMode.Ignore };
+        dialogueIcon.AddToClassList("conv-dialogue-icon");
+        bodyRow.Add(dialogueIcon);
+        var bodyField = BuildBodyDefaultField(lineId, line.texts, app);
+        bodyField.style.flexGrow = 1;
+        bodyRow.Add(bodyField);
+        content.Add(bodyRow);
 
         // ── ここから下は「使うときだけ」表示する詳細項目 ──
+        bool hasOtherLang = HasOtherLangText(line.texts, app);
+        string keyLangBody = lineId + ":langbody";
+
+        // 言語別本文（他言語データあり or 開いたときだけ）
+        if (hasOtherLang || _revealed.Contains(keyLangBody))
+            content.Add(BuildLangDetailBody(lineId, line.texts, app, keyLangBody, hasOtherLang));
+
         var onReach = line.onReach ??= new ConversationEffectJson();
         bool hasChoices = (line.choices?.Length ?? 0) > 0;
         bool hasGoto = !string.IsNullOrEmpty(line.gotoLineId); // "" = 次へ（既定）
@@ -197,60 +217,83 @@ public class ConversationEditorController
         // 到達時の変数変更（データあり or 開いたときだけ）
         if (onReach.kind != "none" || _revealed.Contains(keyEffect))
         {
-            card.Add(BuildEffectEditor("到達時に変数を変更", onReach, () =>
+            var sec = BuildEffectEditor("変数変更", onReach, () =>
             {
                 onReach.kind = "none";
                 _revealed.Remove(keyEffect);
                 RefreshLines();
-            }));
+            });
+            content.Add(sec);
         }
 
         // 分岐先（選択肢が無く、データあり or 開いたときだけ）
         if (!hasChoices && (hasGoto || _revealed.Contains(keyGoto)))
         {
-            var gotoBox = new VisualElement();
-            gotoBox.AddToClassList("conv-optional");
-            var gotoHead = new VisualElement();
-            gotoHead.AddToClassList("conv-optional-head");
-            gotoHead.Add(RowLabel("この後の進行"));
-            var gspacer = new VisualElement();
-            gspacer.style.flexGrow = 1;
-            gotoHead.Add(gspacer);
-            gotoHead.Add(IconButton("gimmick-icon-btn--close", "「次へ」に戻す", () =>
+            var gotoBox = OptionalSection("分岐先", () =>
             {
                 _edit.SetLineGoto(lineId, ConversationEditLogic.GotoNext);
                 _revealed.Remove(keyGoto);
                 RefreshLines();
-            }));
-            gotoBox.Add(gotoHead);
+            });
             gotoBox.Add(BuildGoto(line.gotoLineId, g => _edit.SetLineGoto(lineId, g)));
-            card.Add(gotoBox);
+            content.Add(gotoBox);
         }
 
         // 選択肢（あるときだけ表示）
         var choices = line.choices ?? Array.Empty<ConversationChoiceJson>();
         if (choices.Length > 0)
         {
-            card.Add(RowLabel("選択肢"));
+            var choiceBox = OptionalSection("選択肢", null);
             for (int c = 0; c < choices.Length; c++)
-                card.Add(BuildChoiceRow(lineId, c, choices[c]));
+                choiceBox.Add(BuildChoiceRow(lineId, c, choices[c]));
+            content.Add(choiceBox);
         }
 
-        // ── 「＋」で必要な項目を出すツールバー ──
-        var tools = new VisualElement();
-        tools.AddToClassList("conv-chip-row");
-        if (onReach.kind == "none" && !_revealed.Contains(keyEffect))
-            tools.Add(Chip("＋ 変数変更", () => { _revealed.Add(keyEffect); RefreshLines(); }));
-        if (!hasChoices && !hasGoto && !_revealed.Contains(keyGoto))
-            tools.Add(Chip("＋ 分岐先", () => { _revealed.Add(keyGoto); RefreshLines(); }));
-        tools.Add(Chip("＋ 選択肢", () =>
+        // ── 追加メニュー（既定は icon_more のみ・押すと追加ボタンを表示）──
+        bool canLangBody = !hasOtherLang && !_revealed.Contains(keyLangBody);
+        bool canEffect = onReach.kind == "none" && !_revealed.Contains(keyEffect);
+        bool canGoto = !hasChoices && !hasGoto && !_revealed.Contains(keyGoto);
+        bool canChoice = choices.Length < ConversationEditLogic.MaxChoices;
+        string keyMore = lineId + ":more";
+
+        bool moreOpen = _revealed.Contains(keyMore);
+        if (canLangBody || canEffect || canGoto || canChoice || moreOpen)
         {
-            if (_edit.AddChoice(lineId) == null)
-                ShowFlash($"選択肢は 1 行に最大 {ConversationEditLogic.MaxChoices} 個までです");
-            else
+            var tools = new VisualElement();
+            tools.AddToClassList("conv-chip-row");
+
+            // ⋯（icon_more）はトグル: 押すたびに開閉。開いている間は出したままにする。
+            var moreBtn = IconButton("gimmick-icon-btn--more", moreOpen ? "閉じる" : "追加", () =>
+            {
+                if (!_revealed.Remove(keyMore))
+                    _revealed.Add(keyMore);
                 RefreshLines();
-        }));
-        card.Add(tools);
+            });
+            moreBtn.style.marginLeft = 0; // 上の話者 / 本文アイコンの左端に揃える
+            if (moreOpen)
+                moreBtn.AddToClassList("conv-more--active");
+            tools.Add(moreBtn);
+
+            // 開いている間は追加チップを表示（追加してもメニューは閉じない）。
+            if (moreOpen)
+            {
+                if (canLangBody)
+                    tools.Add(Chip("言語別本文", () => { _revealed.Add(keyLangBody); RefreshLines(); }));
+                if (canEffect)
+                    tools.Add(Chip("変数変更", () => { _revealed.Add(keyEffect); RefreshLines(); }));
+                if (canGoto)
+                    tools.Add(Chip("分岐先", () => { _revealed.Add(keyGoto); RefreshLines(); }));
+                if (canChoice)
+                    tools.Add(Chip("選択肢", () =>
+                    {
+                        if (_edit.AddChoice(lineId) == null)
+                            ShowFlash($"選択肢は 1 行に最大 {ConversationEditLogic.MaxChoices} 個までです");
+                        else
+                            RefreshLines();
+                    }));
+            }
+            content.Add(tools);
+        }
 
         return card;
     }
@@ -310,13 +353,11 @@ public class ConversationEditorController
         return card;
     }
 
-    // ── 話者（定義済みから選択）────────────────────────────────────────────────
+    // ── 話者ドロップダウン / 本文フィールド ──────────────────────────────────────
 
-    private VisualElement BuildSpeakerField(string lineId, string currentSpeakerId)
+    // 話者ドロップダウン（ラベルなし・ヘッダーで横に伸びる・長い名前は前方だけ表示＝ellipsis）。
+    private VisualElement BuildSpeakerDropdown(string lineId, string currentSpeakerId)
     {
-        var wrap = new VisualElement();
-        wrap.AddToClassList("conv-ml");
-
         string app = DeviceLanguage.CurrentCode();
         var labels = new System.Collections.Generic.List<string> { "（話者なし）" };
         var ids = new System.Collections.Generic.List<string> { "" };
@@ -330,16 +371,73 @@ public class ConversationEditorController
 
         int sel = ids.IndexOf(currentSpeakerId ?? "");
         if (sel < 0) sel = 0; // 未知 ID（削除済み等）は「話者なし」表示
-        var dd = new DropdownField("話者", labels, sel);
-        dd.AddToClassList("conv-ml-field");
+        var dd = new DropdownField(labels, sel);
+        dd.AddToClassList("conv-speaker-dd");
         dd.RegisterValueChangedCallback(_ =>
         {
             int i = dd.index;
             if (i >= 0 && i < ids.Count)
                 _edit.SetLineSpeakerId(lineId, ids[i]);
         });
-        wrap.Add(dd);
-        return wrap;
+        return dd;
+    }
+
+    // 本文（既定言語）の入力欄（ラベルなし・右カラム）。
+    private VisualElement BuildBodyDefaultField(string lineId, GimmickTextJson[] texts, string app)
+    {
+        string init = TextForLang(texts, app);
+        if (string.IsNullOrEmpty(init))
+            init = TextForLang(texts, ""); // 旧 "" 既定を初期表示で引き継ぐ
+        var f = LangField(null, ConversationEditLogic.TextMaxLength, true, init, v =>
+        {
+            if (string.IsNullOrEmpty(v))
+            {
+                _edit.RemoveLineText(lineId, app);
+            }
+            else
+            {
+                _edit.SetLineText(lineId, app, v);
+                _edit.RemoveLineText(lineId, ""); // 旧 "" 既定をアプリ設定言語へ移行
+            }
+        });
+        return f;
+    }
+
+    // 言語別本文（既定言語以外の入力欄）。データが無いときは ✕ で閉じられる。
+    private VisualElement BuildLangDetailBody(string lineId, GimmickTextJson[] texts, string app, string keyLangBody, bool hasData)
+    {
+        // データなし（開いただけ）のときは ✕ で閉じられる。
+        var box = OptionalSection("言語別本文", hasData ? (Action)null : () =>
+        {
+            _revealed.Remove(keyLangBody);
+            RefreshLines();
+        });
+
+        foreach (var lang in SupportedLanguages.All)
+        {
+            if (lang.Code == app)
+                continue;
+            string code = lang.Code;
+            box.Add(LangField(lang.Label, ConversationEditLogic.TextMaxLength, true, TextForLang(texts, code), v =>
+            {
+                if (string.IsNullOrEmpty(v))
+                    _edit.RemoveLineText(lineId, code);
+                else
+                    _edit.SetLineText(lineId, code, v);
+            }));
+        }
+        return box;
+    }
+
+    // 既定言語以外にテキストがあるか。
+    private static bool HasOtherLangText(GimmickTextJson[] texts, string app)
+    {
+        if (texts == null)
+            return false;
+        foreach (var t in texts)
+            if (t != null && !string.IsNullOrEmpty(t.text) && t.lang != app && t.lang != "")
+                return true;
+        return false;
     }
 
     // ── 言語別テキスト入力（既定 = アプリの設定言語・詳細でそれ以外の言語）──────
@@ -407,15 +505,12 @@ public class ConversationEditorController
         return "";
     }
 
-    // ── 変数変更（onReach / 選択肢 effect）────────────────────────────────────
-
-    private static readonly string[] EffectKinds = { "none", "worldState", "playerState" };
-    private static readonly string[] EffectKindLabels = { "なし", "ワールド変数", "プレイヤー変数" };
-
-    private VisualElement BuildEffectEditor(string title, ConversationEffectJson eff, Action onRemove = null)
+    // ── 統一した詳細セクション枠（言語別本文 / 変数変更 / 分岐先 / 選択肢 で共通）──────
+    // タイトル + 任意の削除✕ のヘッダーを持つ枠を返す。本文は呼び出し側が box に追加する。
+    private VisualElement OptionalSection(string title, Action onRemove)
     {
         var box = new VisualElement();
-        box.AddToClassList("conv-effect");
+        box.AddToClassList("conv-optional");
 
         var head = new VisualElement();
         head.AddToClassList("conv-optional-head");
@@ -425,9 +520,20 @@ public class ConversationEditorController
             var sp = new VisualElement();
             sp.style.flexGrow = 1;
             head.Add(sp);
-            head.Add(IconButton("gimmick-icon-btn--close", "やめる", onRemove));
+            head.Add(IconButton("gimmick-icon-btn--close", "削除", onRemove));
         }
         box.Add(head);
+        return box;
+    }
+
+    // ── 変数変更（onReach / 選択肢 effect）────────────────────────────────────
+
+    private static readonly string[] EffectKinds = { "none", "worldState", "playerState" };
+    private static readonly string[] EffectKindLabels = { "なし", "ワールド変数", "プレイヤー変数" };
+
+    private VisualElement BuildEffectEditor(string title, ConversationEffectJson eff, Action onRemove = null)
+    {
+        var box = OptionalSection(title, onRemove);
 
         var sub = new VisualElement();
         void RefreshSub()
