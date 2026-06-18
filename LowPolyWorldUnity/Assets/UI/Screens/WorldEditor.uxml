@@ -24,7 +24,10 @@
                 <ui:VisualElement class="cost-bar-track">
                     <ui:VisualElement name="cost-bar-fill" class="cost-bar-fill" />
                 </ui:VisualElement>
-                <ui:Label name="cost-label" class="cost-label" text="0 / 4096" />
+                <ui:VisualElement class="cost-label-row">
+                    <ui:VisualElement class="cost-icon" picking-mode="Ignore" />
+                    <ui:Label name="cost-label" class="cost-label" text="0 / 4096" />
+                </ui:VisualElement>
             </ui:VisualElement>
 
             <!-- 地形タブ用オーバーレイ（地形タブ選択中のみ表示） -->

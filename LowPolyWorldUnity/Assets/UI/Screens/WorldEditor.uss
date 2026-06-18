@@ -199,6 +199,24 @@
     transition-property: width;
 }
 
+/* コスト数値 + 左のテクスチャアイコン。
+   ゲージと同じ幅にして、アイコンを左端（ゲージ左端）・数値を右端に置く。 */
+.cost-label-row {
+    flex-direction: row;
+    align-items: center;
+    width: 120px;
+    justify-content: space-between;
+}
+
+.cost-icon {
+    width: 18px;
+    height: 18px;
+    background-image: url("../../Textures/UI/Icons/icon_texture.png");
+    -unity-background-scale-mode: scale-to-fit;
+    background-size: 100% 100%;
+    -unity-background-image-tint-color: var(--lpw-icon);
+}
+
 .cost-label {
     color: var(--lpw-text);
     font-size: 18px;
