@@ -31,6 +31,9 @@ public class RuleEditController
     private string _ruleId;
     private IVisualElementScheduledItem _flashHide;
     private readonly GimmickTypePickerController _picker;
+    private readonly UiListDragReorder _triggerReorder;
+    private readonly UiListDragReorder _condReorder;
+    private readonly UiListDragReorder _actionReorder;
 
     public RuleEditController(VisualElement root)
     {
@@ -45,6 +48,13 @@ public class RuleEditController
         _conditionList = root.Q("rule-edit-condition-list");
         _actionList = root.Q("rule-edit-action-list");
         _flash = root.Q<Label>("rule-edit-flash");
+
+        if (_triggerList != null)
+            _triggerReorder = UiListDragReorder.For(_triggerList, (from, to) => { _edit?.MoveTrigger(from, to); RefreshTriggers(); });
+        if (_conditionList != null)
+            _condReorder = UiListDragReorder.For(_conditionList, (from, to) => { _edit?.MoveCondition(from, to); RefreshConditions(); });
+        if (_actionList != null)
+            _actionReorder = UiListDragReorder.For(_actionList, (from, to) => { _edit?.MoveAction(from, to); RefreshActions(); });
 
         if (_title != null)
             _title.maxLength = GimmickTabLogic.LabelMaxLength;
@@ -125,6 +135,7 @@ public class RuleEditController
         if (_triggerList == null || _edit == null)
             return;
         _triggerList.Clear();
+        _triggerReorder?.Reset();
         if (_edit.Triggers.Count == 0)
             _triggerList.Add(EmptyHint("きっかけ未設定（例: オブジェクトをタップしたとき）"));
         for (int i = 0; i < _edit.Triggers.Count; i++)
@@ -135,8 +146,7 @@ public class RuleEditController
                 "きっかけの種類", GimmickTypeCatalog.TriggerCategories,
                 GimmickTypeCatalog.TriggerLabel, GimmickTypeCatalog.TriggerDesc, trigger.type,
                 newType => { _edit.SetTriggerType(index, newType); RefreshTriggers(); },
-                () => { _edit.MoveTrigger(index, index - 1); RefreshTriggers(); },
-                () => { _edit.MoveTrigger(index, index + 1); RefreshTriggers(); },
+                _triggerReorder,
                 () => { _edit.RemoveTrigger(index); RefreshTriggers(); });
             AddParams(row, GimmickParamSchema.ForTrigger(trigger.type), tok => BuildTriggerParam(tok, trigger));
             _triggerList.Add(row);
@@ -159,6 +169,7 @@ public class RuleEditController
         if (_conditionList == null || _edit == null)
             return;
         _conditionList.Clear();
+        _condReorder?.Reset();
         if (_edit.Conditions.Count == 0)
             _conditionList.Add(EmptyHint("条件なし（常に成立）"));
         for (int i = 0; i < _edit.Conditions.Count; i++)
@@ -169,8 +180,7 @@ public class RuleEditController
                 "条件の種類", GimmickTypeCatalog.ConditionCategories,
                 GimmickTypeCatalog.ConditionLabel, GimmickTypeCatalog.ConditionDesc, cond.type,
                 newType => { _edit.SetConditionType(index, newType); RefreshConditions(); },
-                () => { _edit.MoveCondition(index, index - 1); RefreshConditions(); },
-                () => { _edit.MoveCondition(index, index + 1); RefreshConditions(); },
+                _condReorder,
                 () => { _edit.RemoveCondition(index); RefreshConditions(); });
             AddParams(row, GimmickParamSchema.ForCondition(cond.type), tok => BuildConditionParam(tok, cond));
             _conditionList.Add(row);
@@ -193,6 +203,7 @@ public class RuleEditController
         if (_actionList == null || _edit == null)
             return;
         _actionList.Clear();
+        _actionReorder?.Reset();
         if (_edit.Actions.Count == 0)
             _actionList.Add(EmptyHint("アクション未設定（下のボタンで追加）"));
         for (int i = 0; i < _edit.Actions.Count; i++)
@@ -203,8 +214,7 @@ public class RuleEditController
                 "アクションの種類", GimmickTypeCatalog.ActionCategories,
                 GimmickTypeCatalog.ActionLabel, GimmickTypeCatalog.ActionDesc, action.type,
                 newType => { _edit.SetActionType(index, newType); RefreshActions(); },
-                () => { _edit.MoveAction(index, index - 1); RefreshActions(); },
-                () => { _edit.MoveAction(index, index + 1); RefreshActions(); },
+                _actionReorder,
                 () => { _edit.RemoveAction(index); RefreshActions(); });
             AddParams(row, GimmickParamSchema.ForAction(action.type), tok => BuildActionParam(tok, index, action));
             _actionList.Add(row);
@@ -586,8 +596,9 @@ public class RuleEditController
 
     // ── 行ビルダー ────────────────────────────────────────────────────────────
 
-    // 種類セレクタボタン + 上 / 下 / 削除 ボタンの 1 行を生成する。
+    // 種類セレクタボタン + ドラッグハンドル + 削除 ボタンの 1 行を生成する。
     // セレクタをタップすると、カテゴリ見出し付きの選択リスト（ピッカー）が開く。
+    // 並べ替えはハンドルのドラッグ＆ドロップ（reorder ヘルパー）で行う。
     private VisualElement BuildRow(
         string pickerTitle,
         IReadOnlyList<GimmickTypeCatalog.Category> categories,
@@ -595,8 +606,7 @@ public class RuleEditController
         Func<string, string> descOf,
         string currentType,
         Action<string> onTypeChanged,
-        Action onMoveUp,
-        Action onMoveDown,
+        UiListDragReorder reorder,
         Action onRemove)
     {
         var row = new VisualElement();
@@ -604,6 +614,9 @@ public class RuleEditController
 
         var main = new VisualElement();
         main.AddToClassList("gimmick-edit-row-main");
+
+        if (reorder != null)
+            main.Add(reorder.CreateHandle(row, labelOf(currentType)));
 
         // 現在の種類を表示するセレクタボタン（タップで選択リストを開く・右端に icon_next）
         var typeButton = new Button(() =>
@@ -621,8 +634,6 @@ public class RuleEditController
 
         main.Add(typeButton);
 
-        main.Add(MakeBtn("gimmick-icon-btn--up", "上へ移動", onMoveUp));
-        main.Add(MakeBtn("gimmick-icon-btn--down", "下へ移動", onMoveDown));
         main.Add(MakeBtn("gimmick-icon-btn--close", "削除", onRemove));
 
         row.Add(main);

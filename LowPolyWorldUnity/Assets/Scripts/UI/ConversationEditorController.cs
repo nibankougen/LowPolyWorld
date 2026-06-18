@@ -18,6 +18,7 @@ public class ConversationEditorController
     private readonly TextField _title;
     private readonly VisualElement _lineList;
     private readonly Label _flash;
+    private readonly UiListDragReorder _reorder;
 
     private readonly ConversationLibraryLogic _library;
     private readonly GimmickTabLogic _tabLogic; // 変数選択ドロップダウン用（定義済みワールド / プレイヤー変数）
@@ -45,6 +46,9 @@ public class ConversationEditorController
         _title = root.Q<TextField>("conv-editor-title");
         _lineList = root.Q("conv-editor-lines");
         _flash = root.Q<Label>("conv-editor-flash");
+
+        if (_lineList != null)
+            _reorder = UiListDragReorder.For(_lineList, OnReorderLine);
 
         if (_btnBack != null) _btnBack.clicked += Close;
         if (_title != null)
@@ -124,6 +128,7 @@ public class ConversationEditorController
         if (_lineList == null || _edit == null)
             return;
         _lineList.Clear();
+        _reorder?.Reset();
 
         if (_edit.Lines.Count == 0)
         {
@@ -154,6 +159,12 @@ public class ConversationEditorController
         var head = new VisualElement();
         head.AddToClassList("conv-line-head");
 
+        if (_reorder != null)
+        {
+            string ghost = LinePreview(lineId);
+            head.Add(_reorder.CreateHandle(card, string.IsNullOrEmpty(ghost) ? $"{index + 1}. セリフ" : ghost));
+        }
+
         var idx = new Label($"{index + 1}.");
         idx.AddToClassList("conv-line-index");
         head.Add(idx);
@@ -162,8 +173,6 @@ public class ConversationEditorController
         spacer.style.flexGrow = 1;
         head.Add(spacer);
 
-        head.Add(IconButton("gimmick-icon-btn--up", "上へ", () => MoveLine(lineId, -1)));
-        head.Add(IconButton("gimmick-icon-btn--down", "下へ", () => MoveLine(lineId, +1)));
         head.Add(IconButton("gimmick-icon-btn--close", "削除", () =>
         {
             if (_edit.RemoveLine(lineId))
@@ -586,21 +595,13 @@ public class ConversationEditorController
         return snippet;
     }
 
-    private void MoveLine(string lineId, int delta)
+    // ドラッグ＆ドロップ並べ替え（from の行を to の位置へ）。gotoLineId 等の参照は行 ID で保持される。
+    private void OnReorderLine(int from, int to)
     {
-        int idx = IndexOfLine(lineId);
-        if (idx < 0)
+        if (_edit == null || (uint)from >= (uint)_edit.Lines.Count)
             return;
-        if (_edit.MoveLine(lineId, idx + delta))
+        if (_edit.MoveLine(_edit.Lines[from].lineId, to))
             RefreshLines();
-    }
-
-    private int IndexOfLine(string lineId)
-    {
-        for (int i = 0; i < _edit.Lines.Count; i++)
-            if (_edit.Lines[i].lineId == lineId)
-                return i;
-        return -1;
     }
 
     // ── ヘルパー ───────────────────────────────────────────────────────────────

@@ -21,6 +21,7 @@ public class ConversationLibraryController
     private readonly VisualElement _list;
     private readonly VisualElement _speakerSummary;
     private readonly Label _flash;
+    private readonly UiListDragReorder _reorder;
 
     private IVisualElementScheduledItem _flashHide;
 
@@ -37,6 +38,9 @@ public class ConversationLibraryController
         _list = root.Q("conv-library-list");
         _speakerSummary = root.Q("conv-speaker-summary");
         _flash = root.Q<Label>("conv-library-flash");
+
+        if (_list != null)
+            _reorder = UiListDragReorder.For(_list, OnReorder);
 
         if (_btnBack != null) _btnBack.clicked += Close;
     }
@@ -61,6 +65,7 @@ public class ConversationLibraryController
         if (_list == null)
             return;
         _list.Clear();
+        _reorder?.Reset();
 
         if (_logic.Count == 0)
         {
@@ -128,9 +133,12 @@ public class ConversationLibraryController
         var card = new VisualElement();
         card.AddToClassList("conv-row");
 
-        // 上段: 会話名 + 行数 + 操作ボタン
+        // 上段: ハンドル + 会話名 + 行数 + 操作ボタン
         var top = new VisualElement();
         top.AddToClassList("conv-row-top");
+
+        if (_reorder != null)
+            top.Add(_reorder.CreateHandle(card, conv.name));
 
         var name = new Label(conv.name);
         name.AddToClassList("conv-name");
@@ -142,8 +150,6 @@ public class ConversationLibraryController
         top.Add(meta);
 
         top.Add(IconButton("gimmick-icon-btn--edit", "編集", () => EditRequested?.Invoke(conv.conversationId)));
-        top.Add(IconButton("gimmick-icon-btn--up", "上へ", () => Move(conv.conversationId, -1)));
-        top.Add(IconButton("gimmick-icon-btn--down", "下へ", () => Move(conv.conversationId, +1)));
         top.Add(IconButton("gimmick-icon-btn--close", "削除", () =>
         {
             if (_logic.Remove(conv.conversationId))
@@ -181,21 +187,13 @@ public class ConversationLibraryController
         return wrap;
     }
 
-    private void Move(string id, int delta)
+    // ドラッグ＆ドロップ並べ替え（from の会話を to の位置へ）。
+    private void OnReorder(int from, int to)
     {
-        int idx = IndexOf(id);
-        if (idx < 0)
+        if ((uint)from >= (uint)_logic.Conversations.Count)
             return;
-        if (_logic.Move(id, idx + delta))
+        if (_logic.Move(_logic.Conversations[from].conversationId, to))
             Refresh();
-    }
-
-    private int IndexOf(string id)
-    {
-        for (int i = 0; i < _logic.Conversations.Count; i++)
-            if (_logic.Conversations[i].conversationId == id)
-                return i;
-        return -1;
     }
 
     private Button IconButton(string iconClass, string tooltip, Action onClick)

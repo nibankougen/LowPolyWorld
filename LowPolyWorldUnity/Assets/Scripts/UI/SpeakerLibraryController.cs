@@ -20,6 +20,7 @@ public class SpeakerLibraryController
     private readonly Label _flash;
 
     private readonly SpeakerLibraryLogic _library;
+    private readonly UiListDragReorder _reorder;
     private IVisualElementScheduledItem _flashHide;
 
     public SpeakerLibraryController(VisualElement root, SpeakerLibraryLogic library)
@@ -32,6 +33,9 @@ public class SpeakerLibraryController
         _btnBack = root.Q<Button>("speaker-library-back");
         _list = root.Q("speaker-library-list");
         _flash = root.Q<Label>("speaker-library-flash");
+
+        if (_list != null)
+            _reorder = UiListDragReorder.For(_list, OnReorder);
 
         if (_btnBack != null) _btnBack.clicked += Close;
     }
@@ -83,6 +87,7 @@ public class SpeakerLibraryController
             return;
         _list.Clear();
 
+        _reorder?.Reset();
         if (_library.Count == 0)
         {
             var empty = new Label("話者がいません。下のボタンで追加します");
@@ -110,11 +115,11 @@ public class SpeakerLibraryController
 
         var head = new VisualElement();
         head.AddToClassList("conv-line-head");
+        if (_reorder != null)
+            head.Add(_reorder.CreateHandle(card, SpeakerLibraryLogic.ResolveName(speaker, DeviceLanguage.CurrentCode())));
         var spacer = new VisualElement();
         spacer.style.flexGrow = 1;
         head.Add(spacer);
-        head.Add(IconButton("gimmick-icon-btn--up", "上へ", () => Move(id, -1)));
-        head.Add(IconButton("gimmick-icon-btn--down", "下へ", () => Move(id, +1)));
         head.Add(IconButton("gimmick-icon-btn--close", "削除", () =>
         {
             if (_library.Remove(id))
@@ -159,21 +164,13 @@ public class SpeakerLibraryController
         return f;
     }
 
-    private void Move(string speakerId, int delta)
+    // ドラッグ＆ドロップ並べ替え（from の話者を to の位置へ）。
+    private void OnReorder(int from, int to)
     {
-        int idx = IndexOf(speakerId);
-        if (idx < 0)
+        if ((uint)from >= (uint)_library.Speakers.Count)
             return;
-        if (_library.Move(speakerId, idx + delta))
+        if (_library.Move(_library.Speakers[from].speakerId, to))
             Refresh();
-    }
-
-    private int IndexOf(string speakerId)
-    {
-        for (int i = 0; i < _library.Speakers.Count; i++)
-            if (_library.Speakers[i].speakerId == speakerId)
-                return i;
-        return -1;
     }
 
     private static string TextForLang(GimmickTextJson[] texts, string lang)
