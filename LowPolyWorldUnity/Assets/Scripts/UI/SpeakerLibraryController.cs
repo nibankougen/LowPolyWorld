@@ -90,7 +90,7 @@ public class SpeakerLibraryController
         _reorder?.Reset();
         if (_library.Count == 0)
         {
-            var empty = new Label("話者がいません。下のボタンで追加します");
+            var empty = new Label("話者がいません");
             empty.AddToClassList("conv-empty");
             _list.Add(empty);
         }

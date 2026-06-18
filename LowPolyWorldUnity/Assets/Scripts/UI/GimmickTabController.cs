@@ -94,7 +94,7 @@ public class GimmickTabController
             return;
         int w = _logic.WorldStateCount, p = _logic.PlayerStateCount, t = _logic.TimerCount;
         _variablesSummary.text = (w + p + t) == 0
-            ? "未設定（タップして追加）"
+            ? "なし"
             : $"ワールド {w}・プレイヤー {p}・タイマー {t}";
     }
 

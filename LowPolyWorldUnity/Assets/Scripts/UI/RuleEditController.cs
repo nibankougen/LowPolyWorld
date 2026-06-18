@@ -137,7 +137,7 @@ public class RuleEditController
         _triggerList.Clear();
         _triggerReorder?.Reset();
         if (_edit.Triggers.Count == 0)
-            _triggerList.Add(EmptyHint("きっかけ未設定（例: オブジェクトをタップしたとき）"));
+            _triggerList.Add(EmptyHint("きっかけなし"));
         for (int i = 0; i < _edit.Triggers.Count; i++)
         {
             int index = i;
@@ -205,7 +205,7 @@ public class RuleEditController
         _actionList.Clear();
         _actionReorder?.Reset();
         if (_edit.Actions.Count == 0)
-            _actionList.Add(EmptyHint("アクション未設定（下のボタンで追加）"));
+            _actionList.Add(EmptyHint("アクションなし"));
         for (int i = 0; i < _edit.Actions.Count; i++)
         {
             int index = i;
@@ -618,7 +618,7 @@ public class RuleEditController
         if (reorder != null)
         {
             string ghost = labelOf(currentType);
-            main.Add(reorder.CreateHandle(row, string.IsNullOrEmpty(ghost) ? "（種類未設定）" : ghost));
+            main.Add(reorder.CreateHandle(row, string.IsNullOrEmpty(ghost) ? "（種類なし）" : ghost));
         }
 
         // 現在の種類を表示するセレクタボタン（タップで選択リストを開く・右端に icon_next）

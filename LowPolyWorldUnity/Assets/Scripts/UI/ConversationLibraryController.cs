@@ -69,7 +69,7 @@ public class ConversationLibraryController
 
         if (_logic.Count == 0)
         {
-            var empty = new Label("会話がありません。下の「＋ 会話を追加」で作成します");
+            var empty = new Label("会話がありません");
             empty.AddToClassList("conv-empty");
             _list.Add(empty);
         }
@@ -95,7 +95,7 @@ public class ConversationLibraryController
 
         if (_speakers == null || _speakers.Count == 0)
         {
-            var empty = new Label("話者が未定義です。「話者を編集」で追加できます");
+            var empty = new Label("なし");
             empty.AddToClassList("conv-speaker-empty");
             _speakerSummary.Add(empty);
             return;
@@ -105,7 +105,7 @@ public class ConversationLibraryController
         foreach (var s in _speakers.Speakers)
         {
             string name = SpeakerLibraryLogic.ResolveName(s, app);
-            _speakerSummary.Add(SpeakerChip(string.IsNullOrEmpty(name) ? "（名称未設定）" : name));
+            _speakerSummary.Add(SpeakerChip(string.IsNullOrEmpty(name) ? "（名称なし）" : name));
         }
     }
 
@@ -138,7 +138,7 @@ public class ConversationLibraryController
         top.AddToClassList("conv-row-top");
 
         if (_reorder != null)
-            top.Add(_reorder.CreateHandle(card, string.IsNullOrEmpty(conv.name) ? "（名称未設定）" : conv.name));
+            top.Add(_reorder.CreateHandle(card, string.IsNullOrEmpty(conv.name) ? "（名称なし）" : conv.name));
 
         var name = new Label(conv.name);
         name.AddToClassList("conv-name");

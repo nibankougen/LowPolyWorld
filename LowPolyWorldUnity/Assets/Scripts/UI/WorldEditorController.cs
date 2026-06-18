@@ -199,7 +199,7 @@ public class WorldEditorController : MonoBehaviour
             return;
         int c = _conversationLibrary.Count;
         int s = _speakerLibrary.Count;
-        _convSummaryLabel.text = (c + s) == 0 ? "未設定（タップして追加）" : $"会話 {c}・話者 {s}";
+        _convSummaryLabel.text = (c + s) == 0 ? "なし" : $"会話 {c}・話者 {s}";
     }
 
     // 会話のオーバーレイ（エディタ→話者→ライブラリの順）を閉じる。
@@ -761,7 +761,7 @@ public class WorldEditorController : MonoBehaviour
     private void SetHeaderWorldName(string name)
     {
         if (_fieldWorldName == null) return;
-        _fieldWorldName.text = string.IsNullOrEmpty(name) ? "（名称未設定）" : name;
+        _fieldWorldName.text = string.IsNullOrEmpty(name) ? "（名称なし）" : name;
         _fieldWorldName.EnableInClassList("editor-world-name--empty", string.IsNullOrEmpty(name));
     }
 

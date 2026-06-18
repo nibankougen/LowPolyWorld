@@ -132,7 +132,7 @@ public class ConversationEditorController
 
         if (_edit.Lines.Count == 0)
         {
-            var empty = new Label("セリフ行がありません。下のボタンで追加します");
+            var empty = new Label("セリフ行がありません");
             empty.AddToClassList("conv-empty");
             _lineList.Add(empty);
         }
@@ -324,7 +324,7 @@ public class ConversationEditorController
             foreach (var s in _speakers.Speakers)
             {
                 string name = SpeakerLibraryLogic.ResolveName(s, app);
-                labels.Add(string.IsNullOrEmpty(name) ? "（名称未設定）" : name);
+                labels.Add(string.IsNullOrEmpty(name) ? "（名称なし）" : name);
                 ids.Add(s.speakerId);
             }
 
