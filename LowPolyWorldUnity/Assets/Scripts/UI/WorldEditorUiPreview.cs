@@ -51,6 +51,13 @@ public class WorldEditorUiPreview : MonoBehaviour
             {
                 new TimerData { index = 0, label = "メインタイマー" },
             },
+            // グループツリーの表示確認用: g1（チーム戦）の下に g2（攻撃側）をネストし、
+            // ルールをそれぞれのグループ / ルートに配置する。
+            gimmickGroups = new[]
+            {
+                new GroupJson { groupId = "g1", name = "チーム戦", parentGroupId = "" },
+                new GroupJson { groupId = "g2", name = "攻撃側", parentGroupId = "g1" },
+            },
             gimmicks = new[]
             {
                 new GimmickRule { ruleId = "r1", label = "開始時に得点リセット" },
@@ -60,6 +67,7 @@ public class WorldEditorUiPreview : MonoBehaviour
                 {
                     ruleId = "r2",
                     label = "ゴール接触で加点",
+                    groupId = "g1",
                     triggers = new[]
                     {
                         new GimmickTrigger { type = "playerTouchObject" },
@@ -78,7 +86,8 @@ public class WorldEditorUiPreview : MonoBehaviour
                         },
                     },
                 },
-                new GimmickRule { ruleId = "r3", label = "ルール3" },
+                new GimmickRule { ruleId = "r3", label = "突撃する", groupId = "g2" },
+                new GimmickRule { ruleId = "r4", label = "ルート直下のルール" },
             },
         };
         controller.GimmickTab.Logic.LoadFrom(def);

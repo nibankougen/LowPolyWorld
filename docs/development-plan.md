@@ -936,9 +936,9 @@
   - [x] タブ固定ヘッダー: ルール・グループ合計 / 100（`GimmickTabLogic.TotalCount`）
   - [x] ステート定義エリア（折りたたみ可）: ワールドステート(0〜9)・プレイヤーステート(0〜3)・タイマー(0〜4) の名前(1〜20文字)+初期値(0〜255)入力 — テスト済み
   - [~] ルール一覧: タイトル名変更（インライン・1〜20文字・空不可）・並び替え（▲▼アイコン。**D&D は未**）・追加/削除・合計 100 上限。ボタンは Icons の icon_plus/icon_edit/icon_up/icon_down/icon_close を使用
-  - [ ] **ルールのグループ化**（オブジェクトグループ 11.7.3 と同仕様予定・現状は追加経路なし）
-    - [ ] グループ編集ロジック（純粋C#）: ギミックグループの作成 / 改名（1〜20文字・連番デフォルト）/ 削除（子ルールは繰り上げ）/ ルールのグループ所属変更（出し入れ）/ 並び替え / 最大 4 段ネスト・ルール+グループ合計 100 上限・循環/深さ検証 + EditMode テスト（オブジェクトの `ObjectPlacementStore` 相当を `GimmickTabLogic` か専用ロジックに用意。現状 `GimmickTabLogic` はグループの保持・往復・合計カウントのみで編集操作は未実装）
-    - [ ] グループ UI: 作成（選択中ルールからグループ化 or「＋ グループを追加」）・▶/▼ 開閉トグル・グループ内へのルール追加経路・D&D / ▲▼ での出し入れ・ネスト表示
+  - [~] **ルールのグループ化**（オブジェクトグループ 11.7.3 と同仕様予定）— 編集ロジック + UI（D&D 含む）実装済み（人間の見た目確認待ち）。選択中ルールからのグループ化は未
+    - [x] グループ編集ロジック（純粋C#）: ギミックグループの作成 / 改名（1〜20文字・連番デフォルト）/ 削除（子ルール・子グループは親へ繰り上げ）/ ルールのグループ所属変更（出し入れ・`SetRuleGroup`）/ 親変更（`SetGroupParent`・循環/深さ検証）/ 位置指定移動（`MoveRuleBefore`/`MoveRuleToContainerEnd`/`MoveGroupBefore`/`MoveGroupToParentEnd`・D&D 用）/ 最大 4 段ネスト・ルール+グループ合計 100 上限 + EditMode テスト（`GimmickTabLogic`・計 37 本パス）。
+    - [x] グループ UI（D&D）: ▶/▼ 開閉トグル・ネスト表示（字下げ）・グループ行のインライン改名・グループ内へのルール / サブグループ追加・グループ削除。**ドラッグハンドル(☰)のポインタードラッグで並べ替え / グループ出し入れ**（行間ドロップ=並べ替え・グループ本体ドロップ=中へ・最下部=ルートへ出す。挿入線 + グループハイライトのフィードバック・タッチ対応＝CapturePointer + StopPropagation でスクロール競合回避・深さ/循環は logic 側で拒否→フラッシュ）。`GimmickTabController` の `RenderContainer`/`BuildGroupRow`/`BuildRuleRow`/`BuildDragHandle`/`ComputeRuleDrop`/`ComputeGroupDrop`/`ApplyDrop`。`WorldEditor.uss` に `.gimmick-group-row`/`.gimmick-drag-handle`/`.gimmick-drop-line`/`.gimmick-drop-into` 追加。WorldEditorUiPreview がネストグループをシード。**未: 選択中ルールからのグループ化・ドラッグ中の端での自動スクロール**
   - [ ] テンプレートから追加（world-creation.md 9.12 — テンプレート一覧 / パラメータダイアログ / 空きステート・タイマー自動割り当て / 初期 6 種: チーム分け・鬼ごっこ基本・カウントダウン・周期処理・コンビネーションロック・レース計測）
   - [~] ルール編集画面（タップでタブ拡大）— ロジック `GimmickRuleEditLogic`（純粋C#・テスト済み）+ UI `RuleEditController`（`WorldEditor.uxml/uss` の panel-gimmicks 内オーバーレイ・`WorldEditorController` 配線）。`GimmickTabController.RuleEditRequested`（編集/追加）で開き、＜戻る で `Closed`→一覧 Refresh。タブ移動/ワールド再読込時は自動クローズ。タイトル改名（インライン・空不可）。種別ごとの詳細パラメータフォームは `GimmickParamSchema`（純粋C#・テスト済み）駆動で実装。残: オブジェクト指定（3Dタップ/一覧）・メッセージ多言語入力・D&D
     - [x] 入力イベントセクション（+で追加・最大 20・OR 結合）— 種類セレクタボタン + ▲▼× 並替/削除。種類タップで選択リストオーバーレイ（`GimmickTypePickerController`・全カテゴリを1画面に縦並び・カテゴリ見出しで区切り・`GimmickTypeCatalog` でジャンル分け）。上限到達でフラッシュ

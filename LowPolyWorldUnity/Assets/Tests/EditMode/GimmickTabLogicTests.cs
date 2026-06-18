@@ -1,3 +1,4 @@
+using System.Linq;
 using NUnit.Framework;
 
 public class GimmickTabLogicTests
@@ -186,6 +187,268 @@ public class GimmickTabLogicTests
         Assert.IsFalse(logic.CanAddRule);
         Assert.IsNull(logic.AddRule(), "100 超は追加不可");
         Assert.AreEqual(100, logic.TotalCount);
+    }
+
+    // ── グループ操作 ──────────────────────────────────────────────────────────
+
+    [Test]
+    public void CreateGroup_DefaultSequentialName_AndCountsTowardTotal()
+    {
+        var logic = new GimmickTabLogic();
+        var g1 = logic.CreateGroup();
+        var g2 = logic.CreateGroup();
+        Assert.IsNotNull(g1);
+        Assert.IsNotNull(g2);
+        Assert.AreEqual("グループ1", logic.Groups[0].name);
+        Assert.AreEqual("グループ2", logic.Groups[1].name);
+        Assert.AreEqual(2, logic.TotalCount, "グループは合計に含む");
+        Assert.AreNotEqual(g1, g2);
+    }
+
+    [Test]
+    public void CreateGroup_CustomNameSanitized()
+    {
+        var logic = new GimmickTabLogic();
+        var g = logic.CreateGroup(name: "  チーム戦  ");
+        Assert.AreEqual("チーム戦", logic.Groups[0].name);
+    }
+
+    [Test]
+    public void CreateGroup_FailsWhenTotalLimitReached()
+    {
+        var logic = new GimmickTabLogic();
+        for (int i = 0; i < GimmickTabLogic.MaxRulesAndGroups; i++)
+            Assert.IsNotNull(logic.AddRule());
+        Assert.IsFalse(logic.CanCreateGroup);
+        Assert.IsNull(logic.CreateGroup(), "ルール + グループ合計 100 超は作成不可");
+    }
+
+    [Test]
+    public void CreateGroup_RejectsUnknownParent()
+    {
+        var logic = new GimmickTabLogic();
+        Assert.IsNull(logic.CreateGroup("missing"));
+    }
+
+    [Test]
+    public void CreateGroup_EnforcesMaxNestDepth()
+    {
+        var logic = new GimmickTabLogic();
+        var g1 = logic.CreateGroup();         // 深さ 1
+        var g2 = logic.CreateGroup(g1);       // 深さ 2
+        var g3 = logic.CreateGroup(g2);       // 深さ 3
+        var g4 = logic.CreateGroup(g3);       // 深さ 4
+        Assert.IsNotNull(g4);
+        Assert.AreEqual(4, logic.GroupDepth(g4));
+        Assert.IsNull(logic.CreateGroup(g4), "5 段目は不可");
+    }
+
+    [Test]
+    public void RenameGroup_RejectsEmpty()
+    {
+        var logic = new GimmickTabLogic();
+        var g = logic.CreateGroup();
+        Assert.IsFalse(logic.RenameGroup(g, "   "));
+        Assert.AreEqual("グループ1", logic.Groups[0].name, "空名は拒否され元のまま");
+        Assert.IsTrue(logic.RenameGroup(g, "新グループ"));
+        Assert.AreEqual("新グループ", logic.Groups[0].name);
+        Assert.IsFalse(logic.RenameGroup("missing", "x"));
+    }
+
+    [Test]
+    public void SetRuleGroup_MovesInAndOut()
+    {
+        var logic = new GimmickTabLogic();
+        var g = logic.CreateGroup();
+        var r = logic.AddRule();
+        Assert.AreEqual("", r.groupId, "新規ルールは既定でルート直下");
+
+        Assert.IsTrue(logic.SetRuleGroup(r.ruleId, g));
+        Assert.AreEqual(g, r.groupId);
+
+        Assert.IsTrue(logic.SetRuleGroup(r.ruleId, ""), "ルート直下へ戻す");
+        Assert.AreEqual("", r.groupId);
+
+        Assert.IsFalse(logic.SetRuleGroup(r.ruleId, "missing"), "存在しないグループへは移動不可");
+        Assert.IsFalse(logic.SetRuleGroup("missing", g));
+    }
+
+    [Test]
+    public void AddRule_IntoGroup()
+    {
+        var logic = new GimmickTabLogic();
+        var g = logic.CreateGroup();
+        var r = logic.AddRule("R", g);
+        Assert.AreEqual(g, r.groupId);
+        // 存在しないグループ ID はルート扱い
+        var r2 = logic.AddRule("R2", "missing");
+        Assert.AreEqual("", r2.groupId);
+    }
+
+    [Test]
+    public void DeleteGroup_PromotesChildRulesAndGroupsToParent()
+    {
+        var logic = new GimmickTabLogic();
+        var parent = logic.CreateGroup();        // 深さ 1
+        var child = logic.CreateGroup(parent);   // 深さ 2
+        var grandchild = logic.CreateGroup(child); // 深さ 3
+        var rule = logic.AddRule("R", child);
+
+        Assert.IsTrue(logic.DeleteGroup(child));
+        // 子ルールは親（parent）へ繰り上げ
+        Assert.AreEqual(parent, rule.groupId);
+        // 子グループ（grandchild）も親（parent）へ繰り上げ
+        Assert.AreEqual(parent, logic.Groups.FirstOrDefault(g => g.groupId ==grandchild)?.parentGroupId);
+        Assert.IsFalse(logic.DeleteGroup("missing"));
+    }
+
+    [Test]
+    public void DeleteGroup_AtRoot_PromotesChildrenToRoot()
+    {
+        var logic = new GimmickTabLogic();
+        var top = logic.CreateGroup();
+        var sub = logic.CreateGroup(top);
+        var rule = logic.AddRule("R", top);
+
+        Assert.IsTrue(logic.DeleteGroup(top));
+        Assert.AreEqual("", rule.groupId);
+        Assert.AreEqual("", logic.Groups.FirstOrDefault(g => g.groupId ==sub)?.parentGroupId);
+    }
+
+    [Test]
+    public void SetGroupParent_RejectsCycleAndSelf()
+    {
+        var logic = new GimmickTabLogic();
+        var a = logic.CreateGroup();
+        var b = logic.CreateGroup(a);
+        Assert.IsFalse(logic.SetGroupParent(a, a), "自己への移動は不可");
+        Assert.IsFalse(logic.SetGroupParent(a, b), "自身の子孫への移動は不可（循環）");
+        Assert.IsTrue(logic.SetGroupParent(b, ""), "ルートへ移動は可");
+        Assert.AreEqual("", logic.Groups.FirstOrDefault(g => g.groupId ==b)?.parentGroupId);
+    }
+
+    [Test]
+    public void SetGroupParent_RejectsWhenResultingDepthExceedsMax()
+    {
+        var logic = new GimmickTabLogic();
+        // a(1) > b(2) > c(3) のチェーンと、別ルートの d(1) > e(2)
+        var a = logic.CreateGroup();
+        var b = logic.CreateGroup(a);
+        var c = logic.CreateGroup(b);
+        var d = logic.CreateGroup();
+        var e = logic.CreateGroup(d);
+
+        // d のサブツリー高さ 2 を c(深さ 3) の下へ → 3 + 2 = 5 > 4 で不可
+        Assert.IsFalse(logic.SetGroupParent(d, c));
+        // b のサブツリー（b,c 高さ 2）を e(深さ 2) の下へ → 2 + 2 = 4 で可
+        Assert.IsTrue(logic.SetGroupParent(b, e));
+        Assert.AreEqual(4, logic.GroupDepth(c));
+    }
+
+    // ── D&D 用の位置指定移動 ───────────────────────────────────────────────────
+
+    [Test]
+    public void MoveRuleBefore_MovesDown_AndReparents()
+    {
+        var logic = new GimmickTabLogic();
+        var g = logic.CreateGroup();
+        var a = logic.AddRule("A");
+        var b = logic.AddRule("B");
+        var c = logic.AddRule("C");
+
+        // A を C の直前へ（下方向）→ 順序 B, A, C・A はルート維持
+        Assert.IsTrue(logic.MoveRuleBefore(a.ruleId, c.ruleId));
+        CollectionAssert.AreEqual(
+            new[] { b.ruleId, a.ruleId, c.ruleId },
+            new[] { logic.Rules[0].ruleId, logic.Rules[1].ruleId, logic.Rules[2].ruleId });
+
+        // グループ内のルール（D を作って）→ A を D の直前に置くと A も同グループになる
+        logic.SetRuleGroup(b.ruleId, g);
+        Assert.IsTrue(logic.MoveRuleBefore(a.ruleId, b.ruleId));
+        Assert.AreEqual(g, a.groupId, "anchor のコンテナへ吸い込まれる");
+    }
+
+    [Test]
+    public void MoveRuleBefore_MovesUp()
+    {
+        var logic = new GimmickTabLogic();
+        var a = logic.AddRule("A");
+        var b = logic.AddRule("B");
+        var c = logic.AddRule("C");
+        // C を A の直前へ（上方向）→ C, A, B
+        Assert.IsTrue(logic.MoveRuleBefore(c.ruleId, a.ruleId));
+        CollectionAssert.AreEqual(
+            new[] { c.ruleId, a.ruleId, b.ruleId },
+            new[] { logic.Rules[0].ruleId, logic.Rules[1].ruleId, logic.Rules[2].ruleId });
+    }
+
+    [Test]
+    public void MoveRuleToContainerEnd_IntoGroup_AndBackToRoot()
+    {
+        var logic = new GimmickTabLogic();
+        var g = logic.CreateGroup();
+        var a = logic.AddRule("A");
+        logic.AddRule("B", g); // グループ内に既存兄弟
+
+        Assert.IsTrue(logic.MoveRuleToContainerEnd(a.ruleId, g));
+        Assert.AreEqual(g, a.groupId);
+        // グループ末尾 → 配列上 B の直後（= 最後）
+        Assert.AreEqual(a.ruleId, logic.Rules[logic.Rules.Count - 1].ruleId);
+
+        Assert.IsTrue(logic.MoveRuleToContainerEnd(a.ruleId, ""), "ルートへ戻す");
+        Assert.AreEqual("", a.groupId);
+        Assert.IsFalse(logic.MoveRuleToContainerEnd(a.ruleId, "missing"));
+    }
+
+    [Test]
+    public void MoveGroupBefore_ReordersSiblings()
+    {
+        var logic = new GimmickTabLogic();
+        var g1 = logic.CreateGroup(name: "1");
+        var g2 = logic.CreateGroup(name: "2");
+        var g3 = logic.CreateGroup(name: "3");
+        // g3 を g1 の直前へ → 表示順（_groups 順）3,1,2
+        Assert.IsTrue(logic.MoveGroupBefore(g3, g1));
+        CollectionAssert.AreEqual(
+            new[] { g3, g1, g2 },
+            new[] { logic.Groups[0].groupId, logic.Groups[1].groupId, logic.Groups[2].groupId });
+        // sortOrder も振り直される
+        Assert.AreEqual(0, logic.Groups[0].sortOrder);
+        Assert.AreEqual(1, logic.Groups[1].sortOrder);
+        Assert.AreEqual(2, logic.Groups[2].sortOrder);
+    }
+
+    [Test]
+    public void MoveGroupToParentEnd_Reparents_RejectsCycle()
+    {
+        var logic = new GimmickTabLogic();
+        var a = logic.CreateGroup();
+        var b = logic.CreateGroup();
+        // b を a の中へ
+        Assert.IsTrue(logic.MoveGroupToParentEnd(b, a));
+        Assert.AreEqual(a, logic.Groups.FirstOrDefault(g => g.groupId == b)?.parentGroupId);
+        // a を自身の子孫 b の中へ → 循環で不可
+        Assert.IsFalse(logic.MoveGroupToParentEnd(a, b));
+    }
+
+    [Test]
+    public void Groups_RoundTripThroughWorldDefinition()
+    {
+        var logic = new GimmickTabLogic();
+        var parent = logic.CreateGroup(name: "親");
+        var child = logic.CreateGroup(parent, "子");
+        var rule = logic.AddRule("R", child);
+
+        var def = new WorldDefinitionJson();
+        logic.WriteTo(def);
+        Assert.AreEqual(2, def.gimmickGroups.Length);
+        Assert.AreEqual(1, def.gimmicks.Length);
+
+        var logic2 = new GimmickTabLogic();
+        logic2.LoadFrom(def);
+        Assert.AreEqual(2, logic2.GroupCount);
+        Assert.AreEqual(child, logic2.Rules[0].groupId);
+        Assert.AreEqual(2, logic2.GroupDepth(child));
     }
 
     // ── ワールド定義との往復 ───────────────────────────────────────────────────

@@ -20,8 +20,10 @@ public class GimmickTabLogic
     public const int LabelMaxLength = 20;
     public const int StateValueMax = 255;
     public const int MaxRulesAndGroups = 100;
+    public const int MaxNestDepth = 4;
 
     private static readonly Regex DefaultRuleNamePattern = new(@"^ルール(\d+)$", RegexOptions.Compiled);
+    private static readonly Regex DefaultGroupNamePattern = new(@"^グループ(\d+)$", RegexOptions.Compiled);
 
     // ステート定義は「追加 / 削除」式（最小 0・最大は上記定数）。
     // インデックスは識別子としてルールから参照されるため安定させる（削除しても他の番号は詰めない・
@@ -177,6 +179,9 @@ public class GimmickTabLogic
     public IReadOnlyList<GimmickRule> Rules => _rules;
     public IReadOnlyList<GroupJson> Groups => _groups;
 
+    public int RuleCount => _rules.Count;
+    public int GroupCount => _groups.Count;
+
     /// <summary>ルール + グループの合計数（最大 100 判定用）。</summary>
     public int TotalCount => _rules.Count + _groups.Count;
 
@@ -184,9 +189,10 @@ public class GimmickTabLogic
 
     /// <summary>
     /// 新規ルールを末尾に追加して返す。空き（100 未満）が無ければ null。
-    /// label 省略時は「ルールN」を自動採番する。
+    /// label 省略時は「ルールN」を自動採番する。groupId 指定時はそのグループに所属させる
+    /// （存在しないグループ ID はルート扱い）。
     /// </summary>
-    public GimmickRule AddRule(string label = null)
+    public GimmickRule AddRule(string label = null, string groupId = "")
     {
         if (!CanAddRule)
             return null;
@@ -195,7 +201,7 @@ public class GimmickTabLogic
         {
             ruleId = NewRuleId(),
             label = string.IsNullOrWhiteSpace(label) ? NextDefaultName() : SanitizeLabel(label),
-            groupId = "",
+            groupId = GroupExists(groupId) ? groupId : "",
         };
         _rules.Add(rule);
         return rule;
@@ -267,6 +273,279 @@ public class GimmickTabLogic
                 max = n;
         }
         return $"ルール{max + 1}";
+    }
+
+    // ── グループ操作 ──────────────────────────────────────────────────────────
+    // ルールのグループ化（screens-and-modes.md 11.7.4・オブジェクトの ObjectPlacementStore 相当）。
+    // グループはルール・グループ合計 100（MaxRulesAndGroups）に含まれ、最大 4 段ネスト。
+    // 実行順はルール配列順が正であり、グループは編集ツリー復元用メタデータにすぎない。
+
+    /// <summary>グループを作成できるか（ルール + グループ合計が 100 未満）。</summary>
+    public bool CanCreateGroup => TotalCount < MaxRulesAndGroups;
+
+    /// <summary>
+    /// グループを作成し groupId を返す。合計 100 未満かつ親の深さが 4 段未満
+    /// （新グループ深さ ≤ 4）のときのみ成功（失敗時 null）。
+    /// name が空のときは「グループN」を自動採番する。
+    /// </summary>
+    public string CreateGroup(string parentGroupId = "", string name = null)
+    {
+        if (!CanCreateGroup)
+            return null;
+        if (!string.IsNullOrEmpty(parentGroupId) && !GroupExists(parentGroupId))
+            return null;
+        if (GroupDepth(parentGroupId) + 1 > MaxNestDepth)
+            return null;
+
+        var group = new GroupJson
+        {
+            groupId = NewGroupId(),
+            name = NormalizeGroupName(name),
+            parentGroupId = parentGroupId ?? "",
+            sortOrder = CountChildGroups(parentGroupId),
+        };
+        _groups.Add(group);
+        return group.groupId;
+    }
+
+    /// <summary>グループ名を変更する（1〜20 文字・空不可）。</summary>
+    public bool RenameGroup(string groupId, string name)
+    {
+        var group = FindGroup(groupId);
+        if (group == null)
+            return false;
+        var sanitized = SanitizeLabel(name);
+        if (string.IsNullOrEmpty(sanitized))
+            return false;
+        group.name = sanitized;
+        return true;
+    }
+
+    /// <summary>
+    /// グループを削除する。直下の子ルール・子グループは、削除するグループの親へ繰り上げる
+    /// （ツリーを 1 段詰める）。
+    /// </summary>
+    public bool DeleteGroup(string groupId)
+    {
+        var group = FindGroup(groupId);
+        if (group == null)
+            return false;
+
+        string newParent = group.parentGroupId;
+        foreach (var rule in _rules)
+            if (rule.groupId == groupId)
+                rule.groupId = newParent;
+        foreach (var g in _groups)
+            if (g.parentGroupId == groupId)
+                g.parentGroupId = newParent;
+
+        _groups.Remove(group);
+        return true;
+    }
+
+    /// <summary>ルールの所属グループを設定する（"" = ルート直下）。グループが存在しなければ false。</summary>
+    public bool SetRuleGroup(string ruleId, string groupId)
+    {
+        var rule = FindRule(ruleId);
+        if (rule == null)
+            return false;
+        if (!string.IsNullOrEmpty(groupId) && !GroupExists(groupId))
+            return false;
+        rule.groupId = groupId ?? "";
+        return true;
+    }
+
+    /// <summary>
+    /// ルールを anchorRuleId の直前へ移動し、同じコンテナ（グループ / ルート）に所属させる。
+    /// D&D の「行間に落とす（並べ替え）」用。実行順 = 配列順。
+    /// </summary>
+    public bool MoveRuleBefore(string ruleId, string anchorRuleId)
+    {
+        if (ruleId == anchorRuleId)
+            return true;
+        int from = IndexOfRule(ruleId);
+        var anchor = FindRule(anchorRuleId);
+        if (from < 0 || anchor == null)
+            return false;
+        var rule = _rules[from];
+        rule.groupId = anchor.groupId ?? "";
+        _rules.RemoveAt(from);
+        int to = IndexOfRule(anchorRuleId); // 取り除いた後に取り直す（方向に依存しない）
+        _rules.Insert(to, rule);
+        return true;
+    }
+
+    /// <summary>
+    /// ルールを container（"" = ルート）内の末尾へ移動する。
+    /// D&D の「グループ本体に落とす（中へ入れる）」用。存在しないグループは false。
+    /// </summary>
+    public bool MoveRuleToContainerEnd(string ruleId, string containerId)
+    {
+        int from = IndexOfRule(ruleId);
+        if (from < 0)
+            return false;
+        containerId ??= "";
+        if (containerId.Length > 0 && !GroupExists(containerId))
+            return false;
+        var rule = _rules[from];
+        rule.groupId = containerId;
+        _rules.RemoveAt(from);
+        // container 内の最後の兄弟の直後（兄弟が無ければ配列末尾）。
+        int insertAt = _rules.Count;
+        for (int i = _rules.Count - 1; i >= 0; i--)
+            if ((_rules[i].groupId ?? "") == containerId)
+            {
+                insertAt = i + 1;
+                break;
+            }
+        _rules.Insert(insertAt, rule);
+        return true;
+    }
+
+    /// <summary>
+    /// グループの親を変更する。自己・自身の子孫への移動は不可（循環防止）。
+    /// 移動後のサブツリーの最深部が 4 段を超える場合も不可。
+    /// </summary>
+    public bool SetGroupParent(string groupId, string newParentId)
+    {
+        var group = FindGroup(groupId);
+        if (group == null)
+            return false;
+        if (!string.IsNullOrEmpty(newParentId) && !GroupExists(newParentId))
+            return false;
+        if (groupId == newParentId || IsDescendantOf(newParentId, groupId))
+            return false;
+        if (GroupDepth(newParentId) + SubtreeHeight(groupId) > MaxNestDepth)
+            return false;
+
+        group.parentGroupId = newParentId ?? "";
+        return true;
+    }
+
+    /// <summary>
+    /// グループを anchorGroupId の直前（同じ親・同階層）へ並べ替える。
+    /// 親が違う場合は anchor の親へ付け替える（循環 / 深さは <see cref="SetGroupParent"/> で検証）。
+    /// D&D の「グループ行間に落とす」用。表示順 = _groups リスト順。
+    /// </summary>
+    public bool MoveGroupBefore(string groupId, string anchorGroupId)
+    {
+        if (groupId == anchorGroupId)
+            return false;
+        var group = FindGroup(groupId);
+        var anchor = FindGroup(anchorGroupId);
+        if (group == null || anchor == null)
+            return false;
+        if (!SetGroupParent(groupId, anchor.parentGroupId)) // 同親なら何もしないが検証は通す
+            return false;
+
+        _groups.Remove(group);
+        int to = _groups.IndexOf(anchor);
+        _groups.Insert(to, group);
+        ResequenceSiblingSortOrders(group.parentGroupId);
+        return true;
+    }
+
+    /// <summary>
+    /// グループを parentId（"" = ルート）の末尾へ移動する。
+    /// D&D の「別グループ本体 / ルート余白に落とす」用。
+    /// </summary>
+    public bool MoveGroupToParentEnd(string groupId, string parentId)
+    {
+        var group = FindGroup(groupId);
+        if (group == null)
+            return false;
+        if (!SetGroupParent(groupId, parentId))
+            return false;
+
+        _groups.Remove(group);
+        _groups.Add(group); // 表示は親フィルタ後の _groups 順 → 末尾追加で同親内の最後になる
+        ResequenceSiblingSortOrders(group.parentGroupId);
+        return true;
+    }
+
+    // 指定親の子グループの sortOrder を _groups リスト順に振り直す（JSON メタデータの整合用）。
+    private void ResequenceSiblingSortOrders(string parentId)
+    {
+        int order = 0;
+        foreach (var g in _groups)
+            if (g.parentGroupId == (parentId ?? ""))
+                g.sortOrder = order++;
+    }
+
+    /// <summary>グループの深さ（ルート直下 = 1）。"" / 不明は 0。</summary>
+    public int GroupDepth(string groupId)
+    {
+        int depth = 0;
+        string current = groupId;
+        while (!string.IsNullOrEmpty(current))
+        {
+            var g = FindGroup(current);
+            if (g == null)
+                break;
+            depth++;
+            current = g.parentGroupId;
+            if (depth > MaxRulesAndGroups)
+                break; // 万一の循環ガード
+        }
+        return depth;
+    }
+
+    /// <summary>サブツリーの高さ（自身のみ = 1）。</summary>
+    public int SubtreeHeight(string groupId)
+    {
+        int max = 0;
+        foreach (var g in _groups)
+            if (g.parentGroupId == groupId)
+                max = Math.Max(max, SubtreeHeight(g.groupId));
+        return max + 1;
+    }
+
+    private GroupJson FindGroup(string groupId) =>
+        string.IsNullOrEmpty(groupId) ? null : _groups.Find(g => g.groupId == groupId);
+
+    private bool GroupExists(string groupId) => FindGroup(groupId) != null;
+
+    private int CountChildGroups(string parentGroupId)
+    {
+        int count = 0;
+        foreach (var g in _groups)
+            if (g.parentGroupId == (parentGroupId ?? ""))
+                count++;
+        return count;
+    }
+
+    /// <summary>candidate が ancestor の子孫（自身を含む）か。</summary>
+    private bool IsDescendantOf(string candidate, string ancestor)
+    {
+        string current = candidate;
+        while (!string.IsNullOrEmpty(current))
+        {
+            if (current == ancestor)
+                return true;
+            var g = FindGroup(current);
+            if (g == null)
+                return false;
+            current = g.parentGroupId;
+        }
+        return false;
+    }
+
+    private static string NewGroupId() => "grp_" + Guid.NewGuid().ToString("N").Substring(0, 8);
+
+    /// <summary>name が空なら「グループN」を採番（既存の最大連番 + 1）。20 文字超は切り詰める。</summary>
+    private string NormalizeGroupName(string name)
+    {
+        if (!string.IsNullOrEmpty(name))
+            return SanitizeLabel(name);
+
+        int max = 0;
+        foreach (var g in _groups)
+        {
+            var m = DefaultGroupNamePattern.Match(g.name ?? "");
+            if (m.Success && int.TryParse(m.Groups[1].Value, out int n) && n > max)
+                max = n;
+        }
+        return $"グループ{max + 1}";
     }
 
     // ── ワールド定義との往復 ───────────────────────────────────────────────────

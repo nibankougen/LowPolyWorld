@@ -32,16 +32,28 @@
    明色背景でも見えるよう暗色ティントを掛ける。 */
 .icon-back,
 .icon-plus,
+.icon-group-plus,
 .icon-minus,
 .icon-next,
 .icon-play,
 .icon-up,
 .icon-down,
+.icon-left,
 .icon-right {
     -unity-background-scale-mode: scale-to-fit;
     background-position-x: center;
     background-position-y: center;
     -unity-background-image-tint-color: var(--lpw-icon);
+}
+
+.icon-group-plus {
+    background-image: url("../../Textures/UI/Icons/icon_group_plus.png");
+    background-size: 72% 72%;
+}
+
+.icon-left {
+    background-image: url("../../Textures/UI/Icons/icon_left.png");
+    background-size: 70% 70%;
 }
 
 .icon-up {
@@ -1017,11 +1029,15 @@
     position: absolute;
     bottom: 16px;
     align-self: center;
+    max-width: 90%;
     padding: 8px 18px;
     background-color: var(--lpw-flash-error-bg);
     border-radius: 10px;
     color: var(--lpw-text-on-status);
     font-size: 20px;
+    /* 長文は画面外へはみ出さず折り返す（中央寄せ） */
+    white-space: normal;
+    -unity-text-align: middle-center;
 }
 
 /* ───── ギミックタブ ───── */
@@ -1211,6 +1227,102 @@
     font-size: 14px;
     -unity-text-align: middle-center;
     padding: 12px;
+}
+
+/* ── グループ（ルールのグループ化・ネスト表示） ── */
+.gimmick-group-row {
+    flex-direction: row;
+    align-items: center;
+    min-height: 44px;
+    margin: 3px 0;
+    padding: 4px 6px;
+    background-color: var(--lpw-surface-sunken);
+    border-width: 1px;
+    border-color: var(--lpw-accent);
+    border-radius: 8px;
+}
+
+/* 開閉トグル(▶/▼) は枠なしアイコンのみ */
+.gimmick-group-toggle {
+    width: 28px;
+    height: 28px;
+    margin-right: 2px;
+    background-color: transparent;
+    border-width: 0;
+    padding: 0;
+}
+
+.gimmick-group-name {
+    flex-grow: 1;
+    margin: 0 4px;
+    font-size: 15px;
+}
+
+/* グループ追加ボタンは控えめに（ルール追加と区別） */
+.gimmick-group-add {
+    -unity-background-image-tint-color: var(--lpw-text-muted);
+    opacity: 0.85;
+}
+
+/* ドラッグハンドル。ここを掴んで並べ替え / グループ出し入れ。
+   非正方形要素なので background-size は正方形 px 指定でアスペクト比 1:1 を保つ。 */
+.gimmick-drag-handle {
+    width: 26px;
+    height: 32px;
+    margin-right: 2px;
+    flex-shrink: 0;
+    background-image: url("../../Textures/UI/Icons/icon_sort_handle.png");
+    -unity-background-scale-mode: scale-to-fit;
+    background-size: 18px 18px;
+    background-position-x: center;
+    background-position-y: center;
+    -unity-background-image-tint-color: var(--lpw-icon-faint);
+}
+
+/* 「このグループの中に入れる」ドロップ先ハイライト */
+.gimmick-drop-into {
+    background-color: var(--lpw-accent-subtle);
+    border-color: var(--lpw-accent);
+}
+
+/* 挿入位置を示す横線（_ruleList 内に絶対配置・スクロールに追従） */
+.gimmick-drop-line {
+    position: absolute;
+    height: 3px;
+    right: 6px;
+    background-color: var(--lpw-accent);
+    border-radius: 2px;
+}
+
+/* ドラッグ中の元の行（薄く表示して「掴んでいる」ことを示す） */
+.gimmick-row-dragging {
+    opacity: 0.35;
+}
+
+/* ポインターに追従する半透明ゴースト（見た目だけ・操作は受けない） */
+.gimmick-drag-ghost {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    height: 34px;
+    flex-direction: row;
+    align-items: center;
+    padding: 0 10px;
+    background-color: var(--lpw-surface);
+    border-width: 1px;
+    border-color: var(--lpw-accent);
+    border-radius: 8px;
+    opacity: 0.92;
+}
+
+.gimmick-drag-ghost-label {
+    flex-grow: 1;
+    color: var(--lpw-text);
+    font-size: 15px;
+    -unity-text-align: middle-left;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
 }
 
 /* アイコンボタン（白シルエット PNG・mipmap 無効・内側に収める） */
