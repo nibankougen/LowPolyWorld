@@ -138,7 +138,7 @@ public class ConversationLibraryController
         top.AddToClassList("conv-row-top");
 
         if (_reorder != null)
-            top.Add(_reorder.CreateHandle(card, conv.name));
+            top.Add(_reorder.CreateHandle(card, string.IsNullOrEmpty(conv.name) ? "（名称未設定）" : conv.name));
 
         var name = new Label(conv.name);
         name.AddToClassList("conv-name");

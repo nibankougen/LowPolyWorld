@@ -161,8 +161,9 @@ public class ConversationEditorController
 
         if (_reorder != null)
         {
+            // 本文があれば「話者「本文…」」、本文がなければ話者名のみ、どちらも無ければ「（話者なし）」。
             string ghost = LinePreview(lineId);
-            head.Add(_reorder.CreateHandle(card, string.IsNullOrEmpty(ghost) ? $"{index + 1}. セリフ" : ghost));
+            head.Add(_reorder.CreateHandle(card, string.IsNullOrEmpty(ghost) ? "（話者なし）" : ghost));
         }
 
         var idx = new Label($"{index + 1}.");

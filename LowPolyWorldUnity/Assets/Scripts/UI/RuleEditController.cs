@@ -616,7 +616,10 @@ public class RuleEditController
         main.AddToClassList("gimmick-edit-row-main");
 
         if (reorder != null)
-            main.Add(reorder.CreateHandle(row, labelOf(currentType)));
+        {
+            string ghost = labelOf(currentType);
+            main.Add(reorder.CreateHandle(row, string.IsNullOrEmpty(ghost) ? "（種類未設定）" : ghost));
+        }
 
         // 現在の種類を表示するセレクタボタン（タップで選択リストを開く・右端に icon_next）
         var typeButton = new Button(() =>

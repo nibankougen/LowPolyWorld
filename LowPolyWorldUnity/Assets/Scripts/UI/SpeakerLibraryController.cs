@@ -116,7 +116,10 @@ public class SpeakerLibraryController
         var head = new VisualElement();
         head.AddToClassList("conv-line-head");
         if (_reorder != null)
-            head.Add(_reorder.CreateHandle(card, SpeakerLibraryLogic.ResolveName(speaker, DeviceLanguage.CurrentCode())));
+        {
+            string name = SpeakerLibraryLogic.ResolveName(speaker, DeviceLanguage.CurrentCode());
+            head.Add(_reorder.CreateHandle(card, string.IsNullOrEmpty(name) ? "（名前なし）" : name));
+        }
         var spacer = new VisualElement();
         spacer.style.flexGrow = 1;
         head.Add(spacer);
