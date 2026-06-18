@@ -28,6 +28,7 @@ public class GimmickTabController
     private readonly VisualElement _timerStateList;
     private readonly Button _addTemplateBtn;
     private readonly VisualElement _ruleList;
+    private readonly ScrollView _scroll;
     private readonly Label _flash;
     private readonly GimmickTemplatePickerController _templatePicker;
 
@@ -52,6 +53,7 @@ public class GimmickTabController
         _timerStateList = root.Q("gimmick-timer-states");
         _addTemplateBtn = root.Q<Button>("gimmick-add-template");
         _ruleList = root.Q("gimmick-rule-list");
+        _scroll = root.Q<ScrollView>(className: "gimmick-scroll");
         _flash = root.Q<Label>("gimmick-flash");
         _templatePicker = new GimmickTemplatePickerController(root);
 
@@ -327,6 +329,8 @@ public class GimmickTabController
     private VisualElement _highlightedGroup; // 「中に入れる」ハイライト中のグループ行
     private VisualElement _draggedRow;     // ドラッグ中の元の行（薄く表示）
     private VisualElement _dragGhost;      // ポインターに追従する半透明ゴースト
+    private float _lastPointerY;           // 直近のポインター Y（自動スクロール tick 用）
+    private IVisualElementScheduledItem _autoScroll; // 端でのオートスクロール tick
 
     private void RefreshRuleList()
     {
@@ -566,6 +570,7 @@ public class GimmickTabController
     {
         if (_dragId == null || e.pointerId != _dragPointerId)
             return;
+        _lastPointerY = e.position.y;
         if (!_dragging)
         {
             if (Mathf.Abs(e.position.y - _dragStartY) < DragThreshold)
@@ -573,6 +578,7 @@ public class GimmickTabController
             _dragging = true;
             EnsureDropLine();
             BeginDragVisual();
+            StartAutoScroll();
         }
         UpdateDrop(e.position.y);
         UpdateGhostPosition(e.position.y);
@@ -596,6 +602,7 @@ public class GimmickTabController
         _dragging = false;
         _dragHandle = null;
         _dragSubtree = null;
+        StopAutoScroll();
         ClearGroupHighlight();
         EndDragVisual();
 
@@ -893,6 +900,58 @@ public class GimmickTabController
             if (r.ruleId == id)
                 return r.label;
         return "";
+    }
+
+    // ── 端でのオートスクロール ──────────────────────────────────────────────────
+    // ドラッグ中はポインターが動かなくても継続的にスクロールしたいので、tick で駆動する。
+
+    private const float AutoScrollMargin = 52f;   // ビューポート端からこの px 以内で発動
+    private const float AutoScrollMaxSpeed = 16f;  // 1 tick あたりの最大スクロール量(px)
+
+    private void StartAutoScroll()
+    {
+        if (_scroll == null || _autoScroll != null)
+            return;
+        _autoScroll = _ruleList.schedule.Execute(AutoScrollTick).Every(16);
+    }
+
+    private void StopAutoScroll()
+    {
+        _autoScroll?.Pause();
+        _autoScroll = null;
+    }
+
+    private void AutoScrollTick()
+    {
+        if (!_dragging || _scroll == null)
+            return;
+
+        var vp = _scroll.contentViewport.worldBound;
+        float dy = 0f;
+        if (_lastPointerY < vp.yMin + AutoScrollMargin)
+        {
+            // 上端に近いほど速く上へ
+            float t = Mathf.Clamp01((vp.yMin + AutoScrollMargin - _lastPointerY) / AutoScrollMargin);
+            dy = -AutoScrollMaxSpeed * t;
+        }
+        else if (_lastPointerY > vp.yMax - AutoScrollMargin)
+        {
+            float t = Mathf.Clamp01((_lastPointerY - (vp.yMax - AutoScrollMargin)) / AutoScrollMargin);
+            dy = AutoScrollMaxSpeed * t;
+        }
+        if (Mathf.Approximately(dy, 0f))
+            return;
+
+        float lo = _scroll.verticalScroller.lowValue;
+        float hi = _scroll.verticalScroller.highValue;
+        float newY = Mathf.Clamp(_scroll.scrollOffset.y + dy, lo, hi);
+        if (Mathf.Approximately(newY, _scroll.scrollOffset.y))
+            return; // これ以上スクロールできない（端）
+
+        _scroll.scrollOffset = new Vector2(_scroll.scrollOffset.x, newY);
+        // スクロール後の座標でドロップ先・ゴーストを更新する。
+        UpdateDrop(_lastPointerY);
+        UpdateGhostPosition(_lastPointerY);
     }
 
     private void RefreshTotal()
