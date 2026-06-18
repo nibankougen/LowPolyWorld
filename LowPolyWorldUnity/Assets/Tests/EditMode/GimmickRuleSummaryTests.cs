@@ -40,7 +40,7 @@ public class GimmickRuleSummaryTests
     [Test]
     public void Of_EmptyParts()
     {
-        Assert.AreEqual("（きっかけ未設定） → （アクション未設定）", GimmickRuleSummary.Of(Rule(null, null, null)));
+        Assert.AreEqual("（きっかけなし） → （アクションなし）", GimmickRuleSummary.Of(Rule(null, null, null)));
         Assert.AreEqual("", GimmickRuleSummary.Of(null));
     }
 }

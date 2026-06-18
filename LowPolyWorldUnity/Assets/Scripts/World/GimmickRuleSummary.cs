@@ -16,11 +16,11 @@ public static class GimmickRuleSummary
         int condCount = rule.conditions?.Length ?? 0;
 
         string trigPart = trigCount == 0
-            ? "（きっかけ未設定）"
+            ? "（きっかけなし）"
             : GimmickTypeCatalog.TriggerLabel(TypeOf(rule.triggers, 0)) + (trigCount > 1 ? " ほか" : "");
 
         string actPart = actCount == 0
-            ? "（アクション未設定）"
+            ? "（アクションなし）"
             : GimmickTypeCatalog.ActionLabel(ActionTypeOf(rule.actions, 0)) + (actCount > 1 ? " ほか" : "");
 
         string condPart = condCount > 0 ? "（条件あり）" : "";
