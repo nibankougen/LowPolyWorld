@@ -104,4 +104,65 @@ public class SpeakerLibraryLogicTests
         Assert.AreEqual("", lib.DisplayName("nope", "ja"));
         Assert.AreEqual("", lib.DisplayName("", "ja"));
     }
+
+    [Test]
+    public void Add_AssignsUnusedColorsFromTop()
+    {
+        var lib = new SpeakerLibraryLogic();
+        var a = lib.Add();
+        var b = lib.Add();
+        var c = lib.Add();
+        Assert.AreEqual(0, a.colorIndex);
+        Assert.AreEqual(1, b.colorIndex);
+        Assert.AreEqual(2, c.colorIndex);
+    }
+
+    [Test]
+    public void Add_ReusesGapWhenColorFreed()
+    {
+        var lib = new SpeakerLibraryLogic();
+        var a = lib.Add(); // 0
+        var b = lib.Add(); // 1
+        lib.Add();          // 2
+        Assert.IsTrue(lib.SetColorIndex(b.speakerId, 5)); // 1 が空く
+        var d = lib.Add();
+        Assert.AreEqual(1, d.colorIndex, "空いた最小の色を再利用する");
+    }
+
+    [Test]
+    public void Add_WrapsWhenAllColorsUsed()
+    {
+        var lib = new SpeakerLibraryLogic();
+        for (int i = 0; i < SpeakerPalette.Count; i++)
+            lib.Add(); // 0..Count-1 を使い切る
+        var extra = lib.Add();
+        Assert.IsTrue(SpeakerPalette.IsValidIndex(extra.colorIndex), "全色使用後も有効な添字を割り当てる");
+        Assert.AreEqual(0, extra.colorIndex, "巡回して先頭色に戻る");
+    }
+
+    [Test]
+    public void SetColorIndex_RejectsOutOfRange()
+    {
+        var lib = new SpeakerLibraryLogic();
+        var s = lib.Add();
+        Assert.IsTrue(lib.SetColorIndex(s.speakerId, SpeakerPalette.Count - 1));
+        Assert.AreEqual(SpeakerPalette.Count - 1, s.colorIndex);
+        Assert.IsFalse(lib.SetColorIndex(s.speakerId, -1));
+        Assert.IsFalse(lib.SetColorIndex(s.speakerId, SpeakerPalette.Count));
+        Assert.IsFalse(lib.SetColorIndex("missing", 0));
+    }
+
+    [Test]
+    public void LoadFrom_WriteTo_RoundtripsColor()
+    {
+        var lib = new SpeakerLibraryLogic();
+        var s = lib.Add("ja", "村人");
+        lib.SetColorIndex(s.speakerId, 3);
+        var def = new WorldDefinitionJson();
+        lib.WriteTo(def);
+
+        var lib2 = new SpeakerLibraryLogic();
+        lib2.LoadFrom(def);
+        Assert.AreEqual(3, lib2.Speakers[0].colorIndex);
+    }
 }

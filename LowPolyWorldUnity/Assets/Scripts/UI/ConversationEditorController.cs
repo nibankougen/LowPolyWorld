@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 /// <summary>
@@ -13,6 +14,9 @@ public class ConversationEditorController
     /// <summary>＜戻るで閉じたとき（一覧側で名前・行数を更新する）。</summary>
     public event Action Closed;
 
+    // 左スワイプで現れる削除ボタン領域の幅(px)。
+    private const float SwipeRevealWidth = 64f;
+
     private readonly VisualElement _overlay;
     private readonly Button _btnBack;
     private readonly TextField _title;
@@ -24,6 +28,7 @@ public class ConversationEditorController
     private readonly ConversationLibraryLogic _library;
     private readonly GimmickTabLogic _tabLogic; // 変数選択ドロップダウン用（定義済みワールド / プレイヤー変数）
     private readonly SpeakerLibraryLogic _speakers; // 話者選択ドロップダウン用（ワールド単位の話者定義）
+    private readonly UiPopupMenu _popup; // セリフ行の「追加」「削除」のはみ出しメニュー
     private ConversationJson _conversation;
     private ConversationEditLogic _edit;
     private IVisualElementScheduledItem _flashHide;
@@ -54,6 +59,11 @@ public class ConversationEditorController
         if (_lineList != null)
             _reorder = UiListDragReorder.For(_lineList, OnReorderLine);
 
+        _popup = new UiPopupMenu(_overlay);
+
+        // 開いているスワイプ行の外側をタップ／スクロールしたら閉じる（他の部分をいじると閉じる）。
+        _overlay?.RegisterCallback<PointerDownEvent>(OnOverlayPointerDown, TrickleDown.TrickleDown);
+
         if (_btnBack != null) _btnBack.clicked += Close;
         if (_title != null)
         {
@@ -63,6 +73,14 @@ public class ConversationEditorController
     }
 
     public bool IsOpen => _overlay != null && !_overlay.ClassListContains("overlay-hidden");
+
+    // 開いているスワイプ行の外側をタップしたら閉じる（その行の内側＝削除ボタン等は閉じない）。
+    private void OnOverlayPointerDown(PointerDownEvent e)
+    {
+        var cur = UiSwipeReveal.Current;
+        if (cur != null && e.target is VisualElement ve && !cur.ContainsTarget(ve))
+            UiSwipeReveal.CloseCurrent();
+    }
 
     public void Open(ConversationJson conversation)
     {
@@ -80,6 +98,8 @@ public class ConversationEditorController
     {
         if (_overlay == null)
             return;
+        _popup?.Close();
+        UiSwipeReveal.CloseCurrent();
         CommitTitle();
         _overlay.EnableInClassList("overlay-hidden", true);
         Closed?.Invoke();
@@ -127,10 +147,20 @@ public class ConversationEditorController
         sv.schedule.Execute(() => sv.ScrollTo(last)).StartingIn(0);
     }
 
+    private void AddChoiceForLine(string lineId)
+    {
+        if (_edit?.AddChoice(lineId) == null)
+            ShowFlash($"選択肢は 1 行に最大 {ConversationEditLogic.MaxChoices} 個までです");
+        else
+            RefreshLines();
+    }
+
     private void RefreshLines()
     {
         if (_lineList == null || _edit == null)
             return;
+        _popup?.Close();
+        UiSwipeReveal.CloseCurrent();
         _lineList.Clear();
         _reorder?.Reset();
 
@@ -158,43 +188,54 @@ public class ConversationEditorController
         string lineId = line.lineId;
         string app = DeviceLanguage.CurrentCode();
 
-        // カードは [縦長ドラッグハンドル | 内容列] の横並び
+        // 行 = [背後の丸い削除ボタン] の上に [前景カード] を重ねたラッパー。
+        // 前景を左にスワイプすると背後の赤い削除ボタンが現れる（UiSwipeReveal）。
+        var rowWrap = new VisualElement();
+        rowWrap.AddToClassList("conv-line-row");
+
+        var swipeDelete = new VisualElement();
+        swipeDelete.AddToClassList("conv-swipe-delete");
+        var swipeBtn = new Button(() =>
+        {
+            UiSwipeReveal.CloseCurrent();
+            if (_edit.RemoveLine(lineId))
+                RefreshLines();
+        }) { text = "", tooltip = "セリフ行を削除" };
+        swipeBtn.AddToClassList("conv-swipe-delete-btn");
+        swipeDelete.Add(swipeBtn);
+        rowWrap.Add(swipeDelete);
+
+        // カードは [縦長ドラッグハンドル | 内容列] の横並び（前景・不透明）
         var card = new VisualElement();
         card.AddToClassList("conv-line-card");
+        rowWrap.Add(card);
 
         if (_reorder != null)
         {
             // 本文があれば「話者「本文…」」、本文がなければ話者名のみ、どちらも無ければ「（話者なし）」。
+            // 並べ替えの行はラッパー（リスト直下の子）を登録する。
             string ghost = LinePreview(lineId);
-            var handle = _reorder.CreateHandle(card, string.IsNullOrEmpty(ghost) ? "（話者なし）" : ghost);
+            var handle = _reorder.CreateHandle(rowWrap, string.IsNullOrEmpty(ghost) ? "（話者なし）" : ghost);
             handle.AddToClassList("conv-line-handle"); // 左側・縦長の掴み領域
             card.Add(handle);
         }
+
+        // 前景カードを左スワイプで開ける（背後の削除ボタンが出る）。
+        _ = new UiSwipeReveal(card, SwipeRevealWidth);
 
         var content = new VisualElement();
         content.AddToClassList("conv-line-content");
         card.Add(content);
 
-        // 1 行目: 話者（番号の代わり・アイコン + ドロップダウン）+ 削除
+        // 1 行目: 話者選択（カスタムドロップダウン・選択肢に icon_speaker を含む）。削除は下部の「⋯」メニューへ。
         var head = new VisualElement();
         head.AddToClassList("conv-line-head");
-        var spIcon = new VisualElement { pickingMode = PickingMode.Ignore };
-        spIcon.AddToClassList("conv-speaker-icon");
-        head.Add(spIcon);
-        head.Add(BuildSpeakerDropdown(lineId, line.speakerId));
-        head.Add(IconButton("gimmick-icon-btn--close", "削除", () =>
-        {
-            if (_edit.RemoveLine(lineId))
-                RefreshLines();
-        }));
+        head.Add(BuildSpeakerSelect(lineId, line.speakerId));
         content.Add(head);
 
-        // 2 行目: 本文（既定言語）。左に icon_dialogue・話者ドロップダウンに左右を揃える。
+        // 2 行目: 本文（既定言語）。話者選択と同じ幅にする。
         var bodyRow = new VisualElement();
         bodyRow.AddToClassList("conv-body-row");
-        var dialogueIcon = new VisualElement { pickingMode = PickingMode.Ignore };
-        dialogueIcon.AddToClassList("conv-dialogue-icon");
-        bodyRow.Add(dialogueIcon);
         var bodyField = BuildBodyDefaultField(lineId, line.texts, app);
         bodyField.style.flexGrow = 1;
         bodyRow.Add(bodyField);
@@ -241,61 +282,71 @@ public class ConversationEditorController
 
         // 選択肢（あるときだけ表示）
         var choices = line.choices ?? Array.Empty<ConversationChoiceJson>();
+        bool canChoice = choices.Length < ConversationEditLogic.MaxChoices;
         if (choices.Length > 0)
         {
             var choiceBox = OptionalSection("選択肢", null);
             for (int c = 0; c < choices.Length; c++)
                 choiceBox.Add(BuildChoiceRow(lineId, c, choices[c]));
+            // 選択肢が 1 つ以上あって追加可能なら、最後の選択肢の下に「＋ 選択肢を追加」ボタンを置く。
+            if (canChoice)
+            {
+                var addChoiceRow = new VisualElement();
+                addChoiceRow.AddToClassList("conv-chip-row");
+                addChoiceRow.Add(Chip("＋ 選択肢を追加", () => AddChoiceForLine(lineId)));
+                choiceBox.Add(addChoiceRow);
+            }
             content.Add(choiceBox);
         }
 
-        // ── 追加メニュー（既定は icon_more のみ・押すと追加ボタンを表示）──
+        // ── 下部ツール行: 左に「＋」（追加メニュー）・右に「⋯」（このセリフ行の操作）──
         bool canLangBody = !hasOtherLang && !_revealed.Contains(keyLangBody);
         bool canEffect = onReach.kind == "none" && !_revealed.Contains(keyEffect);
         bool canGoto = !hasChoices && !hasGoto && !_revealed.Contains(keyGoto);
-        bool canChoice = choices.Length < ConversationEditLogic.MaxChoices;
-        string keyMore = lineId + ":more";
+        // 選択肢が 0 個のときだけ「＋」メニューから最初の選択肢を作れる
+        // （1 個以上あるときは選択肢一覧の下の「＋ 選択肢を追加」ボタンで追加する）。
+        bool canAddFirstChoice = choices.Length == 0;
 
-        bool moreOpen = _revealed.Contains(keyMore);
-        if (canLangBody || canEffect || canGoto || canChoice || moreOpen)
+        var tools = new VisualElement();
+        tools.AddToClassList("conv-line-tools");
+
+        // ＋（icon_plus・枠なし小）: 追加できる詳細項目を縦のはみ出しメニューで出す。
+        var addItems = new System.Collections.Generic.List<UiPopupMenu.Item>();
+        if (canLangBody)
+            addItems.Add(new UiPopupMenu.Item("言語別本文", () => { _revealed.Add(keyLangBody); RefreshLines(); }));
+        if (canEffect)
+            addItems.Add(new UiPopupMenu.Item("変数変更", () => { _revealed.Add(keyEffect); RefreshLines(); }));
+        if (canGoto)
+            addItems.Add(new UiPopupMenu.Item("分岐先", () => { _revealed.Add(keyGoto); RefreshLines(); }));
+        if (canAddFirstChoice)
+            addItems.Add(new UiPopupMenu.Item("選択肢", () => AddChoiceForLine(lineId)));
+
+        if (addItems.Count > 0)
         {
-            var tools = new VisualElement();
-            tools.AddToClassList("conv-chip-row");
-
-            // ⋯（icon_more）はトグル: 押すたびに開閉。開いている間は出したままにする。
-            var moreBtn = IconButton("gimmick-icon-btn--more", moreOpen ? "閉じる" : "追加", () =>
-            {
-                if (!_revealed.Remove(keyMore))
-                    _revealed.Add(keyMore);
-                RefreshLines();
-            });
-            moreBtn.style.marginLeft = 0; // 上の話者 / 本文アイコンの左端に揃える
-            if (moreOpen)
-                moreBtn.AddToClassList("conv-more--active");
-            tools.Add(moreBtn);
-
-            // 開いている間は追加チップを表示（追加してもメニューは閉じない）。
-            if (moreOpen)
-            {
-                if (canLangBody)
-                    tools.Add(Chip("言語別本文", () => { _revealed.Add(keyLangBody); RefreshLines(); }));
-                if (canEffect)
-                    tools.Add(Chip("変数変更", () => { _revealed.Add(keyEffect); RefreshLines(); }));
-                if (canGoto)
-                    tools.Add(Chip("分岐先", () => { _revealed.Add(keyGoto); RefreshLines(); }));
-                if (canChoice)
-                    tools.Add(Chip("選択肢", () =>
-                    {
-                        if (_edit.AddChoice(lineId) == null)
-                            ShowFlash($"選択肢は 1 行に最大 {ConversationEditLogic.MaxChoices} 個までです");
-                        else
-                            RefreshLines();
-                    }));
-            }
-            content.Add(tools);
+            var addBtn = ToolButton("conv-line-tool-btn--plus", "追加");
+            addBtn.clicked += () => _popup.Open(addBtn, addItems, _lineList as ScrollView);
+            tools.Add(addBtn);
         }
 
-        return card;
+        var spacer = new VisualElement { pickingMode = PickingMode.Ignore };
+        spacer.style.flexGrow = 1;
+        tools.Add(spacer);
+
+        // ⋯（icon_more・枠なし小）: 右側。「セリフ行を削除」だけを縦のはみ出しメニューで出す。
+        var moreBtn = ToolButton("conv-line-tool-btn--more", "このセリフ行の操作");
+        moreBtn.clicked += () => _popup.Open(moreBtn, new[]
+        {
+            new UiPopupMenu.Item("セリフ行を削除", () =>
+            {
+                if (_edit.RemoveLine(lineId))
+                    RefreshLines();
+            }, "ui-popup-item-icon--trash", "ui-popup-item--danger"),
+        }, _lineList as ScrollView);
+        tools.Add(moreBtn);
+
+        content.Add(tools);
+
+        return rowWrap;
     }
 
     private VisualElement BuildChoiceRow(string lineId, int choiceIndex, ConversationChoiceJson choice)
@@ -353,33 +404,41 @@ public class ConversationEditorController
         return card;
     }
 
-    // ── 話者ドロップダウン / 本文フィールド ──────────────────────────────────────
+    // ── 話者選択（カスタムドロップダウン）/ 本文フィールド ──────────────────────────
 
-    // 話者ドロップダウン（ラベルなし・ヘッダーで横に伸びる・長い名前は前方だけ表示＝ellipsis）。
-    private VisualElement BuildSpeakerDropdown(string lineId, string currentSpeakerId)
+    // 話者選択。選択肢は icon_speaker（話者色でティント）+ 名前。タップ/ドラッグ離しで選べる。
+    private VisualElement BuildSpeakerSelect(string lineId, string currentSpeakerId)
     {
         string app = DeviceLanguage.CurrentCode();
-        var labels = new System.Collections.Generic.List<string> { "（話者なし）" };
+        var options = new System.Collections.Generic.List<UiSelectField.Option>
+        {
+            new("（話者なし）", "ui-select-icon--speaker"),
+        };
         var ids = new System.Collections.Generic.List<string> { "" };
         if (_speakers != null)
             foreach (var s in _speakers.Speakers)
             {
                 string name = SpeakerLibraryLogic.ResolveName(s, app);
-                labels.Add(string.IsNullOrEmpty(name) ? "（名称なし）" : name);
+                Color? tint = SpeakerPalette.IsValidIndex(s.colorIndex)
+                    ? SpeakerPalette.ColorOf(s.colorIndex)
+                    : (Color?)null;
+                options.Add(new UiSelectField.Option(
+                    string.IsNullOrEmpty(name) ? "（名称なし）" : name, "ui-select-icon--speaker", tint));
                 ids.Add(s.speakerId);
             }
 
         int sel = ids.IndexOf(currentSpeakerId ?? "");
         if (sel < 0) sel = 0; // 未知 ID（削除済み等）は「話者なし」表示
-        var dd = new DropdownField(labels, sel);
-        dd.AddToClassList("conv-speaker-dd");
-        dd.RegisterValueChangedCallback(_ =>
+
+        var field = new UiSelectField();
+        field.AddToClassList("conv-speaker-select");
+        field.SetOptions(options, sel);
+        field.SelectionChanged += i =>
         {
-            int i = dd.index;
             if (i >= 0 && i < ids.Count)
                 _edit.SetLineSpeakerId(lineId, ids[i]);
-        });
-        return dd;
+        };
+        return field;
     }
 
     // 本文（既定言語）の入力欄（ラベルなし・右カラム）。
@@ -725,6 +784,15 @@ public class ConversationEditorController
         var btn = new Button(onClick) { text = "", tooltip = tooltip };
         btn.AddToClassList("conv-small-btn");
         btn.AddToClassList("gimmick-icon-btn");
+        btn.AddToClassList(iconClass);
+        return btn;
+    }
+
+    // 下部ツール行の枠なし小アイコンボタン（＋ / ⋯）。
+    private static Button ToolButton(string iconClass, string tooltip)
+    {
+        var btn = new Button { text = "", tooltip = tooltip };
+        btn.AddToClassList("conv-line-tool-btn");
         btn.AddToClassList(iconClass);
         return btn;
     }

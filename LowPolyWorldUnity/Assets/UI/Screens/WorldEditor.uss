@@ -1855,6 +1855,8 @@
 
 /* 話者チップ（表示のみ・角丸ピル） */
 .conv-speaker-chip {
+    flex-direction: row;
+    align-items: center;
     margin: 2px 6px 2px 0;
     padding: 2px 10px;
     background-color: var(--lpw-surface);
@@ -1863,6 +1865,15 @@
     border-radius: 12px;
     color: var(--lpw-text-secondary);
     font-size: 12px;
+}
+
+/* チップ左の話者色ドット */
+.conv-speaker-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 5px;
+    margin-right: 6px;
+    flex-shrink: 0;
 }
 
 .conv-name {
@@ -1892,11 +1903,47 @@
     padding: 0;
 }
 
-/* エディタのセリフ行カード */
+/* セリフ行ラッパー（背後の削除ボタン + 前景カードを重ねる・左スワイプで開く） */
+.conv-line-row {
+    margin: 4px 10px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* 背後の削除ボタン領域（カードの裏・右寄せ）。前景を左にスワイプすると現れる。 */
+.conv-swipe-delete {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 12px;
+}
+
+/* 丸い赤い削除ボタン（icon_trash・白） */
+.conv-swipe-delete-btn {
+    width: 44px;
+    height: 44px;
+    margin: 0;
+    padding: 0;
+    border-width: 0;
+    border-radius: 22px;
+    background-color: var(--lpw-danger);
+    background-image: url("../../Textures/UI/Icons/icon_trash.png");
+    -unity-background-scale-mode: scale-to-fit;
+    background-size: 50% 50%;
+    background-position-x: center;
+    background-position-y: center;
+    -unity-background-image-tint-color: var(--lpw-text-on-status);
+}
+
+/* エディタのセリフ行カード（前景・不透明でラッパー幅いっぱい） */
 .conv-line-card {
     flex-direction: row;
     align-items: stretch;
-    margin: 4px 10px;
     padding: 6px 8px 8px 4px;
     background-color: var(--lpw-surface-muted);
     border-width: 1px;
@@ -1924,6 +1971,11 @@
     margin-bottom: 4px;
 }
 
+/* 話者選択は本文入力と同じ幅にする（ヘッダー幅いっぱい） */
+.conv-speaker-select {
+    flex-grow: 1;
+}
+
 /* 話者アイコン（番号の代わり・話者ドロップダウンの左） */
 .conv-speaker-icon {
     width: 18px;
@@ -1939,6 +1991,42 @@
 .conv-line-speaker {
     flex-grow: 1;
     font-size: 14px;
+}
+
+/* 話者編集: 現在色のアイコン（icon_speaker を話者色でティント・枠なし） */
+.speaker-color-swatch {
+    width: 20px;
+    height: 20px;
+    margin: 0 8px 0 2px;
+    padding: 0;
+    flex-shrink: 0;
+    background-image: url("../../Textures/UI/Icons/icon_speaker.png");
+    -unity-background-scale-mode: scale-to-fit;
+    background-size: 100% 100%;
+    background-position-x: center;
+    background-position-y: center;
+    -unity-background-image-tint-color: var(--lpw-icon);
+}
+
+/* 話者編集: プリセット色のグリッド */
+.speaker-color-palette {
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin: 4px 0 2px 0;
+}
+
+.speaker-color-option {
+    width: 30px;
+    height: 30px;
+    margin: 4px;
+    padding: 0;
+    border-width: 2px;
+    border-color: rgba(0, 0, 0, 0);
+    border-radius: 15px;
+}
+
+.speaker-color-option--selected {
+    border-color: var(--lpw-text);
 }
 
 .conv-line-text {
@@ -2106,11 +2194,10 @@
     margin-right: 0;
 }
 
-/* 本文行: 左に icon_dialogue・右は削除ボタン幅ぶん空けて話者ドロップダウンに揃える */
+/* 本文行: 左に icon_dialogue・話者ドロップダウンに揃える */
 .conv-body-row {
     flex-direction: row;
     align-items: flex-start;
-    margin-right: 34px;
 }
 
 .conv-dialogue-icon {
@@ -2125,10 +2212,199 @@
     -unity-background-image-tint-color: var(--lpw-icon);
 }
 
-/* 追加メニューを開いている間の ⋯ ボタン（アクティブ表示） */
-.conv-more--active {
+/* セリフ行 下部ツール行（左＝＋ / 右＝⋯） */
+.conv-line-tools {
+    flex-direction: row;
+    align-items: center;
+    margin-top: 4px;
+}
+
+/* 枠なしの小さいアイコンボタン（＋ / ⋯） */
+.conv-line-tool-btn {
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    margin: 0;
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    -unity-background-scale-mode: scale-to-fit;
+    background-size: 72% 72%;
+    background-position-x: center;
+    background-position-y: center;
+    -unity-background-image-tint-color: var(--lpw-icon);
+}
+
+.conv-line-tool-btn:hover {
+    background-color: var(--lpw-surface-hover);
+    border-radius: 6px;
+}
+
+.conv-line-tool-btn--plus {
+    background-image: url("../../Textures/UI/Icons/icon_plus.png");
+}
+
+.conv-line-tool-btn--more {
+    background-image: url("../../Textures/UI/Icons/icon_more.png");
+}
+
+/* ── はみ出しポップアップメニュー（UiPopupMenu）── */
+/* 外側タップで閉じる透明スクリム（メニューの背後・全面） */
+.ui-popup-scrim {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+/* 縦並びの四角いメニュー本体（絶対配置・left/top はコードで設定） */
+.ui-popup-menu {
+    position: absolute;
+    min-width: 140px;
+    flex-direction: column;
+    padding: 4px;
+    background-color: var(--lpw-surface);
+    border-width: 1px;
+    border-color: var(--lpw-border-strong);
+    border-radius: 8px;
+}
+
+.ui-popup-item {
+    flex-direction: row;
+    align-items: center;
+    height: 38px;
+    padding: 0 10px;
+    margin: 0;
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    border-radius: 6px;
+}
+
+.ui-popup-item:hover {
+    background-color: var(--lpw-surface-hover);
+}
+
+.ui-popup-item-icon {
+    width: 18px;
+    height: 18px;
+    margin-right: 8px;
+    flex-shrink: 0;
+    -unity-background-scale-mode: scale-to-fit;
+    background-size: 100% 100%;
+    -unity-background-image-tint-color: var(--lpw-icon);
+}
+
+.ui-popup-item-icon--trash {
+    background-image: url("../../Textures/UI/Icons/icon_trash.png");
+}
+
+.ui-popup-item-label {
+    flex-grow: 1;
+    font-size: 14px;
+    color: var(--lpw-text);
+    -unity-text-align: middle-left;
+}
+
+/* 危険操作（削除など）の項目: 赤いアイコン + 赤い文字（--lpw-danger 系を再利用） */
+.ui-popup-item--danger .ui-popup-item-label {
+    color: var(--lpw-danger-text);
+}
+
+.ui-popup-item--danger .ui-popup-item-icon {
+    -unity-background-image-tint-color: var(--lpw-danger);
+}
+
+/* ── カスタムドロップダウン（UiSelectField）── */
+.ui-select {
+    flex-direction: row;
+    align-items: center;
+    height: 34px;
+    padding: 0 8px;
+    background-color: var(--lpw-surface-sunken);
+    border-width: 1px;
+    border-color: var(--lpw-border);
+    border-radius: 6px;
+}
+
+/* 閉じた状態のフィールド + メニュー項目で共有するアイコン */
+.ui-select-icon {
+    width: 18px;
+    height: 18px;
+    margin-right: 8px;
+    flex-shrink: 0;
+    -unity-background-scale-mode: scale-to-fit;
+    background-size: 100% 100%;
+    -unity-background-image-tint-color: var(--lpw-icon);
+}
+
+/* 話者選択用のアイコン（icon_speaker） */
+.ui-select-icon--speaker {
+    background-image: url("../../Textures/UI/Icons/icon_speaker.png");
+}
+
+.ui-select-label {
+    flex-grow: 1;
+    font-size: 14px;
+    color: var(--lpw-text);
+    -unity-text-align: middle-left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ui-select-chevron {
+    width: 14px;
+    height: 14px;
+    margin-left: 6px;
+    flex-shrink: 0;
+    background-image: url("../../Textures/UI/Icons/icon_down.png");
+    -unity-background-scale-mode: scale-to-fit;
+    background-size: 100% 100%;
+    -unity-background-image-tint-color: var(--lpw-icon-faint);
+}
+
+/* 下に生えるメニュー（panel root に浮かせる絶対配置・left/top/width はコードで設定）。
+   全選択肢を 1 つの角丸の四角で覆う（内側に余白なし・項目の角は overflow で丸くクリップ）。 */
+.ui-select-menu {
+    position: absolute;
+    background-color: var(--lpw-surface);
+    border-width: 1px;
+    border-color: var(--lpw-border-strong);
+    border-radius: 8px;
+    padding: 0;
+    overflow: hidden;
+}
+
+.ui-select-option {
+    flex-direction: row;
+    align-items: center;
+    height: 40px;
+    padding: 0 10px;
+    margin: 0;
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    border-radius: 0;
+}
+
+.ui-select-option:hover {
+    background-color: var(--lpw-surface-hover);
+}
+
+/* ドラッグ中に指の下にある項目のハイライト */
+.ui-select-option--hot {
     background-color: var(--lpw-accent-subtle);
-    border-color: var(--lpw-accent);
+}
+
+/* 現在選択中の項目 */
+.ui-select-option--selected {
+    background-color: var(--lpw-surface-sunken);
+}
+
+.ui-select-option-label {
+    flex-grow: 1;
+    font-size: 14px;
+    color: var(--lpw-text);
+    -unity-text-align: middle-left;
 }
 
 /* 話者ドロップダウン: ヘッダーで横に伸び、長い名前は前方だけ表示（省略記号） */

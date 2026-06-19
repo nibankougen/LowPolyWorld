@@ -128,9 +128,10 @@ public class SpeakerLibraryController
         content.AddToClassList("conv-line-content");
         card.Add(content);
 
-        // 1 行目: 名前（既定言語）+ 右上に削除✕
+        // 1 行目: 色スウォッチ + 名前（既定言語）+ 右上に削除✕
         var head = new VisualElement();
         head.AddToClassList("conv-line-head");
+        head.Add(BuildColorSwatch(speaker));
         var nameField = NameField($"名前（{SupportedLanguages.LabelOf(app)}）", app, TextForLang(speaker.names, app), id);
         nameField.style.flexGrow = 1;
         head.Add(nameField);
@@ -141,6 +142,9 @@ public class SpeakerLibraryController
         }));
         content.Add(head);
 
+        // 色パレット（常に表示）
+        content.Add(BuildColorPalette(speaker));
+
         // 言語別の名前（詳細）
         var detail = new Foldout { text = "詳細（言語別）", value = false };
         detail.AddToClassList("conv-ml-detail");
@@ -149,6 +153,39 @@ public class SpeakerLibraryController
                 detail.Add(NameField(lang.Label, lang.Code, TextForLang(speaker.names, lang.Code), id));
         content.Add(detail);
         return card;
+    }
+
+    // 話者の現在色を表すアイコン（icon_speaker を話者色でティント・枠なし）。
+    private VisualElement BuildColorSwatch(SpeakerJson speaker)
+    {
+        var icon = new VisualElement { pickingMode = PickingMode.Ignore };
+        icon.AddToClassList("speaker-color-swatch");
+        if (SpeakerPalette.IsValidIndex(speaker.colorIndex))
+            icon.style.unityBackgroundImageTintColor = SpeakerPalette.ColorOf(speaker.colorIndex);
+        return icon;
+    }
+
+    // プリセット色のグリッド（常に表示）。選んだ色を話者に設定する。
+    private VisualElement BuildColorPalette(SpeakerJson speaker)
+    {
+        string id = speaker.speakerId;
+        var grid = new VisualElement();
+        grid.AddToClassList("speaker-color-palette");
+        for (int i = 0; i < SpeakerPalette.Count; i++)
+        {
+            int index = i;
+            var opt = new Button(() =>
+            {
+                _library.SetColorIndex(id, index);
+                Refresh();
+            }) { text = "", tooltip = $"色 {index + 1}" };
+            opt.AddToClassList("speaker-color-option");
+            opt.style.backgroundColor = SpeakerPalette.ColorOf(index);
+            if (speaker.colorIndex == index)
+                opt.AddToClassList("speaker-color-option--selected");
+            grid.Add(opt);
+        }
+        return grid;
     }
 
     private TextField NameField(string label, string lang, string initial, string speakerId)

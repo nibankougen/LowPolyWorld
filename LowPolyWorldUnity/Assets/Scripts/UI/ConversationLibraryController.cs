@@ -105,14 +105,24 @@ public class ConversationLibraryController
         foreach (var s in _speakers.Speakers)
         {
             string name = SpeakerLibraryLogic.ResolveName(s, app);
-            _speakerSummary.Add(SpeakerChip(string.IsNullOrEmpty(name) ? "（名称なし）" : name));
+            _speakerSummary.Add(SpeakerChip(string.IsNullOrEmpty(name) ? "（名称なし）" : name, s.colorIndex));
         }
     }
 
-    private static Label SpeakerChip(string text)
+    // 左に話者色のドットを付けたチップ（colorIndex 無効時はドットなし）。
+    private static VisualElement SpeakerChip(string text, int colorIndex = -1)
     {
-        var chip = new Label(text);
+        var chip = new VisualElement();
         chip.AddToClassList("conv-speaker-chip");
+        if (SpeakerPalette.IsValidIndex(colorIndex))
+        {
+            var dot = new VisualElement { pickingMode = PickingMode.Ignore };
+            dot.AddToClassList("conv-speaker-dot");
+            dot.style.backgroundColor = SpeakerPalette.ColorOf(colorIndex);
+            chip.Add(dot);
+        }
+        var label = new Label(text) { pickingMode = PickingMode.Ignore };
+        chip.Add(label);
         return chip;
     }
 
@@ -181,8 +191,9 @@ public class ConversationLibraryController
         string app = DeviceLanguage.CurrentCode();
         foreach (var id in ids)
         {
-            string name = _speakers != null ? SpeakerLibraryLogic.ResolveName(_speakers.Find(id), app) : "";
-            wrap.Add(SpeakerChip(string.IsNullOrEmpty(name) ? "（不明な話者）" : name));
+            var sp = _speakers?.Find(id);
+            string name = SpeakerLibraryLogic.ResolveName(sp, app);
+            wrap.Add(SpeakerChip(string.IsNullOrEmpty(name) ? "（不明な話者）" : name, sp?.colorIndex ?? -1));
         }
         return wrap;
     }

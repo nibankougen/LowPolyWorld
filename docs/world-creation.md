@@ -660,6 +660,7 @@ UI 仕様: `docs/screens-and-modes.md` セクション 12 参照
 - 会話のセリフ行は名前を直接持たず、定義済みの話者を**選択（参照）**する。話者を 1 か所で直せば全会話に反映される
 - 編集 UI では会話一覧の「話者を編集」から話者を定義し、セリフ行ではドロップダウンで選ぶ
 - セリフ行追加時は**直前の行の話者を既定でセット**する（同じ話者が続けて話すことが多いため）
+- **話者の色分け**: 各話者に編集判別用のプリセット色を 1 つ持たせる（`colorIndex`）。話者編集画面で選択し、会話エディタではその話者を選んだ行の話者アイコン（icon_speaker）がその色になる。新規話者にはまだ使われていないプリセット色を先頭から自動割り当てする（保存対象）
 
 **会話の構成:**
 
@@ -937,6 +938,9 @@ UI 仕様: `docs/screens-and-modes.md` セクション 12 参照
   "timers": [
     { "index": 0, "label": "string" }
   ],
+  "speakers": [
+    { "speakerId": "spk_xxxxxxxx", "names": [ { "lang": "", "text": "string" } ], "colorIndex": 0 }
+  ],
   "conversations": [
     {
       "conversationId": "uuid",
@@ -944,7 +948,7 @@ UI 仕様: `docs/screens-and-modes.md` セクション 12 参照
       "lines": [
         {
           "lineId": "uuid",
-          "speakers": [ { "lang": "", "text": "string" } ],
+          "speakerId": "spk_xxxxxxxx",
           "texts": [ { "lang": "", "text": "string" } ],
           "onReach": { "kind": "none | worldState | playerState", "stateIndex": 0, "stateOp": "set", "value": 0, "playerTarget": "input" },
           "gotoLineId": "",
@@ -979,8 +983,9 @@ UI 仕様: `docs/screens-and-modes.md` セクション 12 参照
 - `objectGroups` / `gimmickGroups`: オブジェクトタブ / ギミックタブのグループツリー（編集 UI 復元用メタデータ。最大 4 段ネスト）
 - `numberObjects`: 数字オブジェクトの設定（セクション 3.9）。`instanceId` で配置オブジェクトに紐づく
 - `playerStates`: プレイヤーステート 0〜3 の名前ラベルと初期値（セクション 9.1）
+- `speakers`: ワールド単位の話者定義（セクション 9.13）。`names` = 言語別名前・`colorIndex` = 編集判別用プリセット色の添字（新規話者に未使用色を自動割り当て）。会話行は `lines[].speakerId` で参照する
 - `conversations`: 会話定義（セクション 9.13）。アクション「会話を開始」の `targetId` が `conversationId` を参照する
-  - `lines[].speakers` / `texts` / `choices[].texts`: 言語別テキスト（`lang` 空 = デフォルト言語・フォールバックは英語優先）
+  - `lines[].speakerId`: 話者参照（空 = 話者なし / 地の文）。`texts` / `choices[].texts`: 言語別テキスト（`lang` 空 = デフォルト言語・フォールバックは英語優先）
   - `lines[].gotoLineId` / `choices[].gotoLineId`: 空文字列 = 「次の行へ（選択肢の場合は会話終了）」、`"end"` = 会話終了、それ以外 = 同一会話内の行 ID
   - `onReach` / `choices[].effect`: ステート変更（`kind: "none"` = 変更なし。値は固定値のみ）
 - ギミックアクションの新 `type`: `startConversation`（`targetId` = 会話 ID）・`wait`（`floatParam` = 秒数 0〜60）・`callSubroutine`（`targetId` = サブルーチン ID）。入力イベントの新 `type`: `called`（`targetId` = サブルーチン ID）

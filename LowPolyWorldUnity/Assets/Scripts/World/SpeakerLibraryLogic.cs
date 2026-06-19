@@ -30,16 +30,45 @@ public class SpeakerLibraryLogic
         return trimmed.Length > NameMaxLength ? trimmed.Substring(0, NameMaxLength) : trimmed;
     }
 
-    /// <summary>話者を 1 つ追加して返す。上限到達時は null。name 省略時は「話者N」を lang で自動採番。</summary>
+    /// <summary>
+    /// 話者を 1 つ追加して返す。上限到達時は null。name 省略時は「話者N」を lang で自動採番。
+    /// 色はまだ使われていないプリセット色を先頭から自動割り当てする。
+    /// </summary>
     public SpeakerJson Add(string lang = "", string name = null)
     {
         if (!CanAdd)
             return null;
-        var speaker = new SpeakerJson { speakerId = NewId() };
+        var speaker = new SpeakerJson { speakerId = NewId(), colorIndex = NextUnusedColorIndex() };
         var label = string.IsNullOrWhiteSpace(name) ? NextDefaultName() : SanitizeName(name);
         speaker.names = new[] { new GimmickTextJson { lang = lang ?? "", text = label } };
         _speakers.Add(speaker);
         return speaker;
+    }
+
+    /// <summary>話者の色（プリセット添字）を設定する。範囲外は無視。</summary>
+    public bool SetColorIndex(string speakerId, int colorIndex)
+    {
+        var speaker = Find(speakerId);
+        if (speaker == null || !SpeakerPalette.IsValidIndex(colorIndex))
+            return false;
+        speaker.colorIndex = colorIndex;
+        return true;
+    }
+
+    /// <summary>
+    /// まだどの話者にも使われていないプリセット色の添字を先頭から探す。
+    /// 全色使用済みなら話者数をパレット数で割った余り（巡回）を返す。
+    /// </summary>
+    public int NextUnusedColorIndex()
+    {
+        var used = new HashSet<int>();
+        foreach (var s in _speakers)
+            if (s != null)
+                used.Add(s.colorIndex);
+        for (int i = 0; i < SpeakerPalette.Count; i++)
+            if (!used.Contains(i))
+                return i;
+        return SpeakerPalette.Count == 0 ? -1 : _speakers.Count % SpeakerPalette.Count;
     }
 
     public bool Remove(string speakerId)

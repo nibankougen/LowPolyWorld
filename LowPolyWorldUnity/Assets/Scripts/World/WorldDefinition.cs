@@ -327,6 +327,9 @@ public class SpeakerJson
 {
     public string speakerId = "";
     public GimmickTextJson[] names = Array.Empty<GimmickTextJson>();
+
+    // 編集画面での色分け用プリセット色の添字（SpeakerPalette.Colors）。-1 = 未割り当て（既定色）。
+    public int colorIndex = -1;
 }
 
 /// <summary>会話の 1 セリフ行。</summary>
