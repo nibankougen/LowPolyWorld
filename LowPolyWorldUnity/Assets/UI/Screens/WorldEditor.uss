@@ -1150,16 +1150,8 @@
     border-radius: 8px;
 }
 
-/* 1 変数 = 1 枚の囲ったカード（変数名・最初の値を縦に並べる・ルール/会話/セリフと同じ色） */
-.gimmick-var-card {
-    flex-direction: column;
-    padding: 6px 8px 8px 8px;
-    background-color: var(--lpw-surface-muted);
-    border-width: 1px;
-    border-color: var(--lpw-border);
-    border-radius: 8px;
-}
-
+/* 変数カード = 1 変数 1 枚（ルール/会話/セリフと同じ conv-line-card を使用）。
+   変数名・最初の値はラベル付きで縦に並べる。 */
 .gimmick-var-field {
     margin: 0 0 2px 0;
 }
@@ -1357,6 +1349,11 @@
 /* ドラッグ中の元の行（薄く表示して「掴んでいる」ことを示す） */
 .gimmick-row-dragging {
     opacity: 0.35;
+}
+
+/* ドラッグ中は前景が半透明になるので、背後のスワイプ削除ボタンが透けないよう隠す */
+.gimmick-row-dragging .conv-swipe-delete {
+    display: none;
 }
 
 /* ポインターに追従する半透明ゴースト（見た目だけ・操作は受けない） */

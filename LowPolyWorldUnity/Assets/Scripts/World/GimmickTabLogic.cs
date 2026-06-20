@@ -26,17 +26,24 @@ public class GimmickTabLogic
     private static readonly Regex DefaultGroupNamePattern = new(@"^グループ(\d+)$", RegexOptions.Compiled);
 
     // ステート定義は「追加 / 削除」式（最小 0・最大は上記定数）。
-    // インデックスは識別子としてルールから参照されるため安定させる（削除しても他の番号は詰めない・
-    // 追加は最小の空き番号を再利用する）。「定義済み」は _xDefined で明示管理する
+    // インデックスは識別子としてルール・会話から参照されるため安定させる（削除しても他の番号は
+    // 詰めない・追加は最小の空き番号を再利用する）。「定義済み」は _xDefined で明示管理する
     // （ラベル空・初期値 0 でも定義済みなら保持する）。JSON の配列に存在する = 定義済み。
+    //
+    // 表示順は番号（index）とは独立に _xOrder（定義済み index を表示順に並べたリスト）で管理する。
+    // これにより並べ替えてもインデックスは変わらず、ルール・会話の参照（stateIndex）が壊れない。
+    // JSON 配列の並びが表示順を表す（各要素は自身の index を持つ）。
     private readonly bool[] _worldDefined = new bool[MaxWorldStates];
     private readonly string[] _worldLabels = new string[MaxWorldStates];
     private readonly int[] _worldInitials = new int[MaxWorldStates];
+    private readonly List<int> _worldOrder = new();
     private readonly bool[] _playerDefined = new bool[MaxPlayerStates];
     private readonly string[] _playerLabels = new string[MaxPlayerStates];
     private readonly int[] _playerInitials = new int[MaxPlayerStates];
+    private readonly List<int> _playerOrder = new();
     private readonly bool[] _timerDefined = new bool[MaxTimers];
     private readonly string[] _timerLabels = new string[MaxTimers];
+    private readonly List<int> _timerOrder = new();
 
     private readonly List<GimmickRule> _rules = new();
     private readonly List<GroupJson> _groups = new();
@@ -60,14 +67,14 @@ public class GimmickTabLogic
     /// <summary>初期値を 0〜255 にクランプする。</summary>
     public static int ClampStateValue(int value) => value < 0 ? 0 : value > StateValueMax ? StateValueMax : value;
 
-    // 定義済みステートの番号一覧（昇順）。UI はこれを行に展開する。
-    public IReadOnlyList<int> WorldStateIndices => DefinedIndices(_worldDefined);
-    public IReadOnlyList<int> PlayerStateIndices => DefinedIndices(_playerDefined);
-    public IReadOnlyList<int> TimerIndices => DefinedIndices(_timerDefined);
+    // 定義済みステートの番号一覧（表示順）。UI はこれを行に展開する。
+    public IReadOnlyList<int> WorldStateIndices => new List<int>(_worldOrder);
+    public IReadOnlyList<int> PlayerStateIndices => new List<int>(_playerOrder);
+    public IReadOnlyList<int> TimerIndices => new List<int>(_timerOrder);
 
-    public int WorldStateCount => CountDefined(_worldDefined);
-    public int PlayerStateCount => CountDefined(_playerDefined);
-    public int TimerCount => CountDefined(_timerDefined);
+    public int WorldStateCount => _worldOrder.Count;
+    public int PlayerStateCount => _playerOrder.Count;
+    public int TimerCount => _timerOrder.Count;
 
     public bool CanAddWorldState => WorldStateCount < MaxWorldStates;
     public bool CanAddPlayerState => PlayerStateCount < MaxPlayerStates;
@@ -77,21 +84,31 @@ public class GimmickTabLogic
     public bool IsPlayerStateDefined(int index) => InRange(index, MaxPlayerStates) && _playerDefined[index];
     public bool IsTimerDefined(int index) => InRange(index, MaxTimers) && _timerDefined[index];
 
-    /// <summary>ワールドステートを 1 つ追加し、割り当てた番号を返す（最小の空き番号を再利用）。満杯時は -1。</summary>
+    /// <summary>ワールドステートを 1 つ追加し、割り当てた番号を返す（最小の空き番号を再利用・表示は末尾）。満杯時は -1。</summary>
     public int AddWorldState(string label = "", int initial = 0) =>
-        AddState(_worldDefined, _worldLabels, _worldInitials, label, initial);
+        AddState(_worldDefined, _worldLabels, _worldInitials, _worldOrder, label, initial);
 
     public int AddPlayerState(string label = "", int initial = 0) =>
-        AddState(_playerDefined, _playerLabels, _playerInitials, label, initial);
+        AddState(_playerDefined, _playerLabels, _playerInitials, _playerOrder, label, initial);
 
-    public int AddTimer(string label = "") => AddState(_timerDefined, _timerLabels, null, label, 0);
+    public int AddTimer(string label = "") => AddState(_timerDefined, _timerLabels, null, _timerOrder, label, 0);
 
-    /// <summary>指定番号のステートを削除する。未定義なら false。</summary>
-    public bool RemoveWorldState(int index) => RemoveState(_worldDefined, _worldLabels, _worldInitials, index);
+    /// <summary>指定番号のステートを削除する。未定義なら false。番号は詰めない（参照は安定）。</summary>
+    public bool RemoveWorldState(int index) => RemoveState(_worldDefined, _worldLabels, _worldInitials, _worldOrder, index);
 
-    public bool RemovePlayerState(int index) => RemoveState(_playerDefined, _playerLabels, _playerInitials, index);
+    public bool RemovePlayerState(int index) => RemoveState(_playerDefined, _playerLabels, _playerInitials, _playerOrder, index);
 
-    public bool RemoveTimer(int index) => RemoveState(_timerDefined, _timerLabels, null, index);
+    public bool RemoveTimer(int index) => RemoveState(_timerDefined, _timerLabels, null, _timerOrder, index);
+
+    /// <summary>
+    /// ステートを表示順で newPos の位置へ移動する（番号 = 参照 ID は変えないので、ルール・会話の
+    /// 参照は壊れない）。範囲外はクランプ。未定義番号は false。
+    /// </summary>
+    public bool MoveWorldState(int index, int newPos) => MoveState(_worldOrder, index, newPos);
+
+    public bool MovePlayerState(int index, int newPos) => MoveState(_playerOrder, index, newPos);
+
+    public bool MoveTimer(int index, int newPos) => MoveState(_timerOrder, index, newPos);
 
     public string GetWorldStateLabel(int index) => _worldLabels[index] ?? "";
     public int GetWorldStateInitial(int index) => _worldInitials[index];
@@ -127,24 +144,8 @@ public class GimmickTabLogic
 
     private static bool InRange(int index, int max) => (uint)index < (uint)max;
 
-    private static int CountDefined(bool[] defined)
-    {
-        int count = 0;
-        foreach (var b in defined)
-            if (b) count++;
-        return count;
-    }
-
-    private static List<int> DefinedIndices(bool[] defined)
-    {
-        var list = new List<int>();
-        for (int i = 0; i < defined.Length; i++)
-            if (defined[i]) list.Add(i);
-        return list;
-    }
-
-    // 最小の空き番号に追加して番号を返す（initials が null = タイマー）。満杯なら -1。
-    private static int AddState(bool[] defined, string[] labels, int[] initials, string label, int initial)
+    // 最小の空き番号に追加して番号を返す（表示順リスト末尾に追加・initials が null = タイマー）。満杯なら -1。
+    private static int AddState(bool[] defined, string[] labels, int[] initials, List<int> order, string label, int initial)
     {
         for (int i = 0; i < defined.Length; i++)
             if (!defined[i])
@@ -152,18 +153,34 @@ public class GimmickTabLogic
                 defined[i] = true;
                 labels[i] = SanitizeLabel(label);
                 if (initials != null) initials[i] = ClampStateValue(initial);
+                order.Add(i);
                 return i;
             }
         return -1;
     }
 
-    private static bool RemoveState(bool[] defined, string[] labels, int[] initials, int index)
+    private static bool RemoveState(bool[] defined, string[] labels, int[] initials, List<int> order, int index)
     {
         if (!InRange(index, defined.Length) || !defined[index])
             return false;
         defined[index] = false;
         labels[index] = "";
         if (initials != null) initials[index] = 0;
+        order.Remove(index);
+        return true;
+    }
+
+    // 表示順リスト内で index を newPos へ移動する（番号は不変）。
+    private static bool MoveState(List<int> order, int index, int newPos)
+    {
+        int cur = order.IndexOf(index);
+        if (cur < 0)
+            return false;
+        newPos = newPos < 0 ? 0 : newPos >= order.Count ? order.Count - 1 : newPos;
+        if (newPos == cur)
+            return true;
+        order.RemoveAt(cur);
+        order.Insert(newPos, index);
         return true;
     }
 
@@ -172,6 +189,9 @@ public class GimmickTabLogic
         for (int i = 0; i < MaxWorldStates; i++) { _worldDefined[i] = false; _worldLabels[i] = ""; _worldInitials[i] = 0; }
         for (int i = 0; i < MaxPlayerStates; i++) { _playerDefined[i] = false; _playerLabels[i] = ""; _playerInitials[i] = 0; }
         for (int i = 0; i < MaxTimers; i++) { _timerDefined[i] = false; _timerLabels[i] = ""; }
+        _worldOrder.Clear();
+        _playerOrder.Clear();
+        _timerOrder.Clear();
     }
 
     // ── ルール一覧 ─────────────────────────────────────────────────────────────
@@ -558,14 +578,15 @@ public class GimmickTabLogic
         if (def == null)
             return;
 
-        LoadStateArray(def.worldStates, _worldDefined, _worldLabels, _worldInitials);
-        LoadStateArray(def.playerStates, _playerDefined, _playerLabels, _playerInitials);
+        LoadStateArray(def.worldStates, _worldDefined, _worldLabels, _worldInitials, _worldOrder);
+        LoadStateArray(def.playerStates, _playerDefined, _playerLabels, _playerInitials, _playerOrder);
         if (def.timers != null)
             foreach (var t in def.timers)
-                if (t != null && (uint)t.index < MaxTimers)
+                if (t != null && (uint)t.index < MaxTimers && !_timerDefined[t.index])
                 {
                     _timerDefined[t.index] = true;
                     _timerLabels[t.index] = SanitizeLabel(t.label);
+                    _timerOrder.Add(t.index); // 配列の並び = 表示順
                 }
 
         if (def.gimmicks != null)
@@ -578,42 +599,41 @@ public class GimmickTabLogic
     {
         if (def == null)
             return;
-        def.worldStates = BuildStateArray(_worldDefined, _worldLabels, _worldInitials);
-        def.playerStates = BuildStateArray(_playerDefined, _playerLabels, _playerInitials);
-        def.timers = BuildTimerArray(_timerDefined, _timerLabels);
+        def.worldStates = BuildStateArray(_worldOrder, _worldLabels, _worldInitials);
+        def.playerStates = BuildStateArray(_playerOrder, _playerLabels, _playerInitials);
+        def.timers = BuildTimerArray(_timerOrder, _timerLabels);
         def.gimmicks = _rules.ToArray();
         def.gimmickGroups = _groups.ToArray();
     }
 
-    private static void LoadStateArray(WorldStateData[] src, bool[] defined, string[] labels, int[] initials)
+    private static void LoadStateArray(WorldStateData[] src, bool[] defined, string[] labels, int[] initials, List<int> order)
     {
         if (src == null)
             return;
         foreach (var s in src)
-            if (s != null && (uint)s.index < labels.Length)
+            if (s != null && (uint)s.index < labels.Length && !defined[s.index])
             {
                 defined[s.index] = true;
                 labels[s.index] = SanitizeLabel(s.label);
                 initials[s.index] = ClampStateValue(s.initialValue);
+                order.Add(s.index); // 配列の並び = 表示順
             }
     }
 
-    // 定義済みのステートをすべて書き出す（ラベル空・初期値 0 でも定義済みなら保持する）。
-    private static WorldStateData[] BuildStateArray(bool[] defined, string[] labels, int[] initials)
+    // 定義済みのステートを表示順で書き出す（ラベル空・初期値 0 でも定義済みなら保持する）。
+    private static WorldStateData[] BuildStateArray(List<int> order, string[] labels, int[] initials)
     {
         var list = new List<WorldStateData>();
-        for (int i = 0; i < labels.Length; i++)
-            if (defined[i])
-                list.Add(new WorldStateData { index = i, label = labels[i] ?? "", initialValue = initials[i] });
+        foreach (int i in order)
+            list.Add(new WorldStateData { index = i, label = labels[i] ?? "", initialValue = initials[i] });
         return list.ToArray();
     }
 
-    private static TimerData[] BuildTimerArray(bool[] defined, string[] labels)
+    private static TimerData[] BuildTimerArray(List<int> order, string[] labels)
     {
         var list = new List<TimerData>();
-        for (int i = 0; i < labels.Length; i++)
-            if (defined[i])
-                list.Add(new TimerData { index = i, label = labels[i] ?? "" });
+        foreach (int i in order)
+            list.Add(new TimerData { index = i, label = labels[i] ?? "" });
         return list.ToArray();
     }
 }

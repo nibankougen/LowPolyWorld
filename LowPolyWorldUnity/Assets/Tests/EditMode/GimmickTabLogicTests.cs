@@ -81,6 +81,68 @@ public class GimmickTabLogicTests
     }
 
     [Test]
+    public void MoveState_ReordersDisplayButKeepsIndicesStable()
+    {
+        var logic = new GimmickTabLogic();
+        logic.AddWorldState("A"); // 0
+        logic.AddWorldState("B"); // 1
+        logic.AddWorldState("C"); // 2
+
+        // 表示順だけ変わる: 0 を末尾へ
+        Assert.IsTrue(logic.MoveWorldState(0, 2));
+        CollectionAssert.AreEqual(new[] { 1, 2, 0 }, logic.WorldStateIndices, "表示順は変わる");
+        // 番号→ラベルの対応（参照 ID）は不変
+        Assert.AreEqual("A", logic.GetWorldStateLabel(0));
+        Assert.AreEqual("B", logic.GetWorldStateLabel(1));
+        Assert.AreEqual("C", logic.GetWorldStateLabel(2));
+    }
+
+    [Test]
+    public void MoveState_ClampsAndRejectsUndefined()
+    {
+        var logic = new GimmickTabLogic();
+        logic.AddWorldState("A"); // 0
+        logic.AddWorldState("B"); // 1
+        Assert.IsTrue(logic.MoveWorldState(0, 99)); // クランプで末尾
+        CollectionAssert.AreEqual(new[] { 1, 0 }, logic.WorldStateIndices);
+        Assert.IsFalse(logic.MoveWorldState(5, 0), "未定義番号は false");
+    }
+
+    [Test]
+    public void MoveState_DoesNotChangeRuleReferences()
+    {
+        var logic = new GimmickTabLogic();
+        logic.AddWorldState("A"); // 0
+        logic.AddWorldState("B"); // 1
+        // ルールがワールド変数 1 を参照
+        var rule = logic.AddRule("r");
+        rule.actions = new[] { new GimmickAction { type = "setWorldState", stateIndex = 1 } };
+
+        Assert.IsTrue(logic.MoveWorldState(1, 0)); // 表示順を入れ替え
+        Assert.AreEqual(1, rule.actions[0].stateIndex, "並べ替えても参照番号は不変");
+    }
+
+    [Test]
+    public void Move_RoundtripsDisplayOrderThroughJson()
+    {
+        var logic = new GimmickTabLogic();
+        logic.AddWorldState("A"); // 0
+        logic.AddWorldState("B"); // 1
+        logic.AddWorldState("C"); // 2
+        logic.MoveWorldState(2, 0); // 表示順 [2,0,1]
+
+        var def = new WorldDefinitionJson();
+        logic.WriteTo(def);
+        CollectionAssert.AreEqual(new[] { 2, 0, 1 }, System.Array.ConvertAll(def.worldStates, s => s.index),
+            "JSON 配列の並び = 表示順");
+
+        var logic2 = new GimmickTabLogic();
+        logic2.LoadFrom(def);
+        CollectionAssert.AreEqual(new[] { 2, 0, 1 }, logic2.WorldStateIndices, "読み込みで表示順を復元");
+        Assert.AreEqual("C", logic2.GetWorldStateLabel(2));
+    }
+
+    [Test]
     public void AddState_FailsWhenFull()
     {
         var logic = new GimmickTabLogic();

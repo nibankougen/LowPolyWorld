@@ -982,6 +982,7 @@ UI 仕様: `docs/screens-and-modes.md` セクション 12 参照
 - `objects[].size`: インスタンスごとのサイズ上書き（W / D / H、0.25m 単位の整数）。**`(0,0,0)` はオブジェクトタイプの規定サイズを使用するセンチネル**
 - `objectGroups` / `gimmickGroups`: オブジェクトタブ / ギミックタブのグループツリー（編集 UI 復元用メタデータ。最大 4 段ネスト）
 - `numberObjects`: 数字オブジェクトの設定（セクション 3.9）。`instanceId` で配置オブジェクトに紐づく
+- `worldStates` / `playerStates` / `timers`: ステート定義。各要素の `index` がルール・会話から参照される**安定 ID**（削除しても他は詰めない・追加は空き番号を再利用）。**配列の並び順 = 編集 UI 上の表示順**で、エディタで並べ替えても `index` は変わらないため参照は壊れない
 - `playerStates`: プレイヤーステート 0〜3 の名前ラベルと初期値（セクション 9.1）
 - `speakers`: ワールド単位の話者定義（セクション 9.13）。`names` = 言語別名前・`colorIndex` = 編集判別用プリセット色の添字（新規話者に未使用色を自動割り当て）。会話行は `lines[].speakerId` で参照する
 - `conversations`: 会話定義（セクション 9.13）。アクション「会話を開始」の `targetId` が `conversationId` を参照する

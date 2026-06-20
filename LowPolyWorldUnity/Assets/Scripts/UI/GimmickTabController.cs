@@ -28,6 +28,9 @@ public class GimmickTabController
     private readonly Label _variablesSummary;
     private readonly ScrollView _variablesScroll; // 変数オーバーレイのスクロール（ポップアップ/スワイプ閉じ用）
     private readonly UiPopupMenu _popup; // 変数行の ⋯（削除）メニュー
+    private readonly UiListDragReorder _worldReorder;
+    private readonly UiListDragReorder _playerReorder;
+    private readonly UiListDragReorder _timerReorder;
     private readonly VisualElement _worldStateList;
     private readonly VisualElement _playerStateList;
     private readonly VisualElement _timerStateList;
@@ -63,6 +66,14 @@ public class GimmickTabController
         _scroll = root.Q<ScrollView>(className: "gimmick-scroll");
         _flash = root.Q<Label>("gimmick-flash");
         _templatePicker = new GimmickTemplatePickerController(root);
+
+        // 変数の各リストにハンドル D&D 並べ替えを付ける（番号 = 参照 ID は不変・表示順だけ変える）。
+        if (_worldStateList != null)
+            _worldReorder = UiListDragReorder.For(_worldStateList, (f, t) => OnReorderState(StateKind.World, f, t));
+        if (_playerStateList != null)
+            _playerReorder = UiListDragReorder.For(_playerStateList, (f, t) => OnReorderState(StateKind.Player, f, t));
+        if (_timerStateList != null)
+            _timerReorder = UiListDragReorder.For(_timerStateList, (f, t) => OnReorderState(StateKind.Timer, f, t));
 
         // 変数エリア全体タップで編集オーバーレイを開く（編集ボタンは廃止）。
         _varsArea?.RegisterCallback<ClickEvent>(_ => OpenVariables());
@@ -127,20 +138,44 @@ public class GimmickTabController
     {
         _popup?.Close();
         UiSwipeReveal.CloseCurrent();
-        RebuildList(_worldStateList, _logic.WorldStateIndices, true, StateKind.World, OnAddWorldState, "＋ ワールド変数を追加");
-        RebuildList(_playerStateList, _logic.PlayerStateIndices, true, StateKind.Player, OnAddPlayerState, "＋ プレイヤー変数を追加");
-        RebuildList(_timerStateList, _logic.TimerIndices, false, StateKind.Timer, OnAddTimer, "＋ タイマーを追加");
+        RebuildList(_worldStateList, _worldReorder, _logic.WorldStateIndices, true, StateKind.World, OnAddWorldState, "＋ ワールド変数を追加");
+        RebuildList(_playerStateList, _playerReorder, _logic.PlayerStateIndices, true, StateKind.Player, OnAddPlayerState, "＋ プレイヤー変数を追加");
+        RebuildList(_timerStateList, _timerReorder, _logic.TimerIndices, false, StateKind.Timer, OnAddTimer, "＋ タイマーを追加");
         RefreshVariableSummary();
     }
 
     private enum StateKind { World, Player, Timer }
 
+    // ハンドル D&D で変数の表示順を変える（番号 = 参照 ID は不変なのでルール・会話の参照は壊れない）。
+    private void OnReorderState(StateKind kind, int from, int to)
+    {
+        var indices = kind switch
+        {
+            StateKind.World => _logic.WorldStateIndices,
+            StateKind.Player => _logic.PlayerStateIndices,
+            _ => _logic.TimerIndices,
+        };
+        if ((uint)from >= (uint)indices.Count)
+            return;
+        int index = indices[from];
+        bool ok = kind switch
+        {
+            StateKind.World => _logic.MoveWorldState(index, to),
+            StateKind.Player => _logic.MovePlayerState(index, to),
+            _ => _logic.MoveTimer(index, to),
+        };
+        if (ok)
+            RefreshStateLists();
+    }
+
     private void RebuildList(
-        VisualElement list, IReadOnlyList<int> indices, bool withValue, StateKind kind, Action onAdd, string addLabel)
+        VisualElement list, UiListDragReorder reorder, IReadOnlyList<int> indices, bool withValue, StateKind kind,
+        Action onAdd, string addLabel)
     {
         if (list == null)
             return;
         list.Clear();
+        reorder?.Reset();
         if (indices.Count == 0)
         {
             var empty = new Label("（なし）");
@@ -150,7 +185,7 @@ public class GimmickTabController
         else
         {
             foreach (int index in indices)
-                list.Add(BuildStateRow(index, withValue, kind));
+                list.Add(BuildStateRow(index, withValue, kind, reorder));
         }
 
         // 一覧の最下部に追加ボタン
@@ -160,9 +195,9 @@ public class GimmickTabController
         list.Add(add);
     }
 
-    private VisualElement BuildStateRow(int index, bool withValue, StateKind kind)
+    private VisualElement BuildStateRow(int index, bool withValue, StateKind kind, UiListDragReorder reorder)
     {
-        // 行 = 背後の丸い削除ボタン + 前景（左スワイプで削除ボタンが出る・セリフ行と同じ）。
+        // 行 = 背後の丸い削除ボタン + 前景カード（左スワイプで削除ボタンが出る・セリフ行と同じ）。
         var rowWrap = new VisualElement();
         rowWrap.AddToClassList("gimmick-state-rowwrap");
 
@@ -177,16 +212,28 @@ public class GimmickTabController
         swipeDelete.Add(swipeBtn);
         rowWrap.Add(swipeDelete);
 
-        // 前景は 1 変数 = 1 枚の囲ったカード（変数名・最初の値を縦に並べる）。
+        // 前景カード（ルール/会話/セリフと同じ conv-line-card）。左にハンドル、右に内容列。
         var card = new VisualElement();
-        card.AddToClassList("gimmick-var-card");
+        card.AddToClassList("conv-line-card");
         rowWrap.Add(card);
+
+        // 左の縦長ドラッグハンドル（並べ替え）。並べ替えの行はラッパーを登録する。
+        if (reorder != null)
+        {
+            var handle = reorder.CreateHandle(rowWrap, LabelOf(kind, index));
+            handle.AddToClassList("conv-line-handle");
+            card.Add(handle);
+        }
 
         // 前景を左スワイプで開ける（背後の削除ボタンが出る）。
         _ = new UiSwipeReveal(card, SwipeRevealWidth);
 
+        var content = new VisualElement();
+        content.AddToClassList("conv-line-content");
+        card.Add(content);
+
         // 「変数名 / タイマー名」ラベル
-        card.Add(UiLangText.RowLabel(kind == StateKind.Timer ? "タイマー名" : "変数名"));
+        content.Add(UiLangText.RowLabel(kind == StateKind.Timer ? "タイマー名" : "変数名"));
 
         // インデックスは UI に出さず、名前で識別する（名前は必須）。
         var name = new TextField { maxLength = GimmickTabLogic.LabelMaxLength };
@@ -203,11 +250,11 @@ public class GimmickTabController
                 name.SetValueWithoutNotify(def);
             }
         });
-        card.Add(name);
+        content.Add(name);
 
         if (withValue)
         {
-            card.Add(UiLangText.RowLabel("最初の値"));
+            content.Add(UiLangText.RowLabel("最初の値"));
             var value = new IntegerField();
             value.AddToClassList("gimmick-var-field");
             value.SetValueWithoutNotify(kind == StateKind.Player
@@ -221,7 +268,7 @@ public class GimmickTabController
                 if (clamped != e.newValue)
                     value.SetValueWithoutNotify(clamped);
             });
-            card.Add(value);
+            content.Add(value);
         }
 
         // 下部ツール行: 右下に ⋯（削除）メニュー（icon_close は廃止）。
@@ -236,7 +283,7 @@ public class GimmickTabController
             new UiPopupMenu.Item("削除", () => RemoveState(kind, index), "ui-popup-item-icon--trash", "ui-popup-item--danger"),
         }, _variablesScroll);
         tools.Add(more);
-        card.Add(tools);
+        content.Add(tools);
 
         return rowWrap;
     }
