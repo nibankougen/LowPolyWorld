@@ -284,6 +284,11 @@
     background-color: var(--lpw-editor-panel-solid);
 }
 
+/* 概要セクション（変数 / 会話 / 話者）はエリア全体タップで編集へ */
+.gimmick-section--tappable:hover {
+    background-color: var(--lpw-surface-hover);
+}
+
 .stub-label {
     color: var(--lpw-text-muted);
     font-size: 20px;
@@ -1119,6 +1124,14 @@
     margin: 6px 2px 2px 2px;
 }
 
+/* 次のページへ遷移する概要セクションの見出し（話者 / 変数 / 会話）。通常の要素タイトルと同じく目立たせる */
+.gimmick-section-title {
+    color: var(--lpw-text);
+    font-size: 15px;
+    -unity-font-style: bold;
+    margin: 6px 2px 2px 2px;
+}
+
 /* 変数編集オーバーレイの内容に左右パディングを付ける（見出し・行・追加ボタンを内側に寄せる）。
    スクロールバーが内側に寄らないよう、ScrollView 本体ではなく内容コンテナにパディングを付ける。 */
 #gimmick-variables .unity-scroll-view__content-container {
@@ -1130,10 +1143,25 @@
     flex-direction: column;
 }
 
-.gimmick-state-row {
-    flex-direction: row;
-    align-items: center;
-    margin: 2px 0;
+/* 変数カードのラッパー（背後の削除ボタン + 前景カード・左スワイプで削除ボタンが出る） */
+.gimmick-state-rowwrap {
+    margin: 4px 0;
+    overflow: hidden;
+    border-radius: 8px;
+}
+
+/* 1 変数 = 1 枚の囲ったカード（変数名・最初の値を縦に並べる・ルール/会話/セリフと同じ色） */
+.gimmick-var-card {
+    flex-direction: column;
+    padding: 6px 8px 8px 8px;
+    background-color: var(--lpw-surface-muted);
+    border-width: 1px;
+    border-color: var(--lpw-border);
+    border-radius: 8px;
+}
+
+.gimmick-var-field {
+    margin: 0 0 2px 0;
 }
 
 .gimmick-state-index {
@@ -1864,6 +1892,11 @@
     border-radius: 12px;
     color: var(--lpw-text-secondary);
     font-size: 12px;
+}
+
+/* 会話一覧の「会話」小見出し（リスト直上・カードの左右に揃える） */
+.conv-list-subhead {
+    margin: 8px 10px 2px 10px;
 }
 
 /* チップ左の話者色ドット */

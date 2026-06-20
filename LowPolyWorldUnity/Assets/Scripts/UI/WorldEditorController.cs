@@ -187,8 +187,9 @@ public class WorldEditorController : MonoBehaviour
 
         _convSummaryLabel = _root.Q<Label>("gimmick-conv-summary");
 
-        var btnConversations = _root.Q<Button>("gimmick-edit-conversations");
-        if (btnConversations != null) btnConversations.clicked += () => _convLibraryController.Open();
+        // 「会話」エリア全体タップで会話一覧を開く（編集ボタンは廃止）。
+        var convArea = _root.Q("gimmick-conv-area");
+        convArea?.RegisterCallback<ClickEvent>(_ => _convLibraryController.Open());
     }
 
     // ギミックタブの「会話」概要（会話数・話者数）を更新する。

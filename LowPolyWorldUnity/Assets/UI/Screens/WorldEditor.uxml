@@ -179,20 +179,20 @@
                         <ui:VisualElement name="gimmick-rule-list" class="gimmick-rule-list" />
                     </ui:VisualElement>
 
-                    <!-- 変数（概要 + 編集） -->
-                    <ui:VisualElement class="gimmick-section">
+                    <!-- 変数（概要・エリアタップで編集） -->
+                    <ui:VisualElement name="gimmick-vars-area" class="gimmick-section gimmick-section--tappable">
                         <ui:VisualElement class="gimmick-summary-head">
-                            <ui:Label class="gimmick-subhead" text="変数" />
-                            <ui:Button name="gimmick-edit-variables" class="conv-small-btn gimmick-icon-btn gimmick-icon-btn--edit" text="" tooltip="変数を編集" />
+                            <ui:Label class="gimmick-section-title" text="変数" />
+                            <ui:VisualElement class="conv-next-chevron" picking-mode="Ignore" />
                         </ui:VisualElement>
                         <ui:Label name="gimmick-variables-summary" class="gimmick-summary-text" text="" />
                     </ui:VisualElement>
 
-                    <!-- 会話（概要 + 編集） -->
-                    <ui:VisualElement class="gimmick-section">
+                    <!-- 会話（概要・エリアタップで編集） -->
+                    <ui:VisualElement name="gimmick-conv-area" class="gimmick-section gimmick-section--tappable">
                         <ui:VisualElement class="gimmick-summary-head">
-                            <ui:Label class="gimmick-subhead" text="会話" />
-                            <ui:Button name="gimmick-edit-conversations" class="conv-small-btn gimmick-icon-btn gimmick-icon-btn--edit" text="" tooltip="会話を編集" />
+                            <ui:Label class="gimmick-section-title" text="会話" />
+                            <ui:VisualElement class="conv-next-chevron" picking-mode="Ignore" />
                         </ui:VisualElement>
                         <ui:Label name="gimmick-conv-summary" class="gimmick-summary-text" text="" />
                     </ui:VisualElement>
@@ -300,12 +300,13 @@
                     <!-- 話者一覧（ワールド単位の話者定義） -->
                     <ui:VisualElement name="conv-speaker-area" class="gimmick-section conv-speaker-area--tappable">
                         <ui:VisualElement class="gimmick-summary-head">
-                            <ui:Label class="gimmick-subhead" text="話者" />
+                            <ui:Label class="gimmick-section-title" text="話者" />
                             <ui:VisualElement class="conv-next-chevron" picking-mode="Ignore" />
                         </ui:VisualElement>
                         <ui:VisualElement name="conv-speaker-summary" class="conv-speaker-summary" picking-mode="Ignore" />
                     </ui:VisualElement>
 
+                    <ui:Label class="gimmick-subhead conv-list-subhead" text="会話" />
                     <ui:ScrollView name="conv-library-list" class="gimmick-edit-scroll" />
                     <ui:Label name="conv-library-flash" class="object-flash overlay-hidden" text="" />
                 </ui:VisualElement>

@@ -18,11 +18,16 @@ public class GimmickTabController
 
     private readonly GimmickTabLogic _logic;
 
+    // 左スワイプで現れる削除ボタン領域の幅(px)。
+    private const float SwipeRevealWidth = 64f;
+
     private readonly Label _totalLabel;
     private readonly VisualElement _variablesOverlay;
     private readonly Button _variablesBack;
-    private readonly Button _editVariablesBtn;
+    private readonly VisualElement _varsArea; // トップの「変数」概要（タップで編集へ）
     private readonly Label _variablesSummary;
+    private readonly ScrollView _variablesScroll; // 変数オーバーレイのスクロール（ポップアップ/スワイプ閉じ用）
+    private readonly UiPopupMenu _popup; // 変数行の ⋯（削除）メニュー
     private readonly VisualElement _worldStateList;
     private readonly VisualElement _playerStateList;
     private readonly VisualElement _timerStateList;
@@ -46,8 +51,10 @@ public class GimmickTabController
         _totalLabel = root.Q<Label>("gimmick-total-label");
         _variablesOverlay = root.Q("gimmick-variables");
         _variablesBack = root.Q<Button>("gimmick-variables-back");
-        _editVariablesBtn = root.Q<Button>("gimmick-edit-variables");
+        _varsArea = root.Q("gimmick-vars-area");
         _variablesSummary = root.Q<Label>("gimmick-variables-summary");
+        _variablesScroll = _variablesOverlay?.Q<ScrollView>(className: "gimmick-edit-scroll");
+        _popup = new UiPopupMenu(_variablesOverlay);
         _worldStateList = root.Q("gimmick-world-states");
         _playerStateList = root.Q("gimmick-player-states");
         _timerStateList = root.Q("gimmick-timer-states");
@@ -57,9 +64,13 @@ public class GimmickTabController
         _flash = root.Q<Label>("gimmick-flash");
         _templatePicker = new GimmickTemplatePickerController(root);
 
-        if (_editVariablesBtn != null) _editVariablesBtn.clicked += OpenVariables;
+        // 変数エリア全体タップで編集オーバーレイを開く（編集ボタンは廃止）。
+        _varsArea?.RegisterCallback<ClickEvent>(_ => OpenVariables());
         if (_variablesBack != null) _variablesBack.clicked += CloseVariables;
         if (_addTemplateBtn != null) _addTemplateBtn.clicked += OnOpenTemplatePicker;
+
+        // 開いているスワイプ行の外側をタップしたら閉じる（変数オーバーレイ内）。
+        _variablesOverlay?.RegisterCallback<PointerDownEvent>(OnVariablesPointerDown, TrickleDown.TrickleDown);
 
         Refresh();
     }
@@ -85,7 +96,20 @@ public class GimmickTabController
 
     private void OpenVariables() => _variablesOverlay?.EnableInClassList("overlay-hidden", false);
 
-    private void CloseVariables() => _variablesOverlay?.EnableInClassList("overlay-hidden", true);
+    private void CloseVariables()
+    {
+        _popup?.Close();
+        UiSwipeReveal.CloseCurrent();
+        _variablesOverlay?.EnableInClassList("overlay-hidden", true);
+    }
+
+    // 開いているスワイプ行の外側をタップしたら閉じる（その行の内側＝削除ボタン等は閉じない）。
+    private void OnVariablesPointerDown(PointerDownEvent e)
+    {
+        var cur = UiSwipeReveal.Current;
+        if (cur != null && e.target is VisualElement ve && !cur.ContainsTarget(ve))
+            UiSwipeReveal.CloseCurrent();
+    }
 
     // トップページの変数概要（件数）を更新する。
     private void RefreshVariableSummary()
@@ -101,6 +125,8 @@ public class GimmickTabController
     // 追加 / 削除式: 定義済みステートのみを行に展開する（追加・削除のたびに作り直す）。
     private void RefreshStateLists()
     {
+        _popup?.Close();
+        UiSwipeReveal.CloseCurrent();
         RebuildList(_worldStateList, _logic.WorldStateIndices, true, StateKind.World, OnAddWorldState, "＋ ワールド変数を追加");
         RebuildList(_playerStateList, _logic.PlayerStateIndices, true, StateKind.Player, OnAddPlayerState, "＋ プレイヤー変数を追加");
         RebuildList(_timerStateList, _logic.TimerIndices, false, StateKind.Timer, OnAddTimer, "＋ タイマーを追加");
@@ -136,12 +162,35 @@ public class GimmickTabController
 
     private VisualElement BuildStateRow(int index, bool withValue, StateKind kind)
     {
-        var row = new VisualElement();
-        row.AddToClassList("gimmick-state-row");
+        // 行 = 背後の丸い削除ボタン + 前景（左スワイプで削除ボタンが出る・セリフ行と同じ）。
+        var rowWrap = new VisualElement();
+        rowWrap.AddToClassList("gimmick-state-rowwrap");
+
+        var swipeDelete = new VisualElement();
+        swipeDelete.AddToClassList("conv-swipe-delete");
+        var swipeBtn = new Button(() =>
+        {
+            UiSwipeReveal.CloseCurrent();
+            RemoveState(kind, index);
+        }) { text = "", tooltip = "削除" };
+        swipeBtn.AddToClassList("conv-swipe-delete-btn");
+        swipeDelete.Add(swipeBtn);
+        rowWrap.Add(swipeDelete);
+
+        // 前景は 1 変数 = 1 枚の囲ったカード（変数名・最初の値を縦に並べる）。
+        var card = new VisualElement();
+        card.AddToClassList("gimmick-var-card");
+        rowWrap.Add(card);
+
+        // 前景を左スワイプで開ける（背後の削除ボタンが出る）。
+        _ = new UiSwipeReveal(card, SwipeRevealWidth);
+
+        // 「変数名 / タイマー名」ラベル
+        card.Add(UiLangText.RowLabel(kind == StateKind.Timer ? "タイマー名" : "変数名"));
 
         // インデックスは UI に出さず、名前で識別する（名前は必須）。
         var name = new TextField { maxLength = GimmickTabLogic.LabelMaxLength };
-        name.AddToClassList("gimmick-state-name");
+        name.AddToClassList("gimmick-var-field");
         name.SetValueWithoutNotify(LabelOf(kind, index));
         name.RegisterValueChangedCallback(e => SetLabel(kind, index, e.newValue));
         // 名前は必須: 空のままフォーカスを外したら既定名に戻す。
@@ -154,12 +203,13 @@ public class GimmickTabController
                 name.SetValueWithoutNotify(def);
             }
         });
-        row.Add(name);
+        card.Add(name);
 
         if (withValue)
         {
+            card.Add(UiLangText.RowLabel("最初の値"));
             var value = new IntegerField();
-            value.AddToClassList("gimmick-state-value");
+            value.AddToClassList("gimmick-var-field");
             value.SetValueWithoutNotify(kind == StateKind.Player
                 ? _logic.GetPlayerStateInitial(index)
                 : _logic.GetWorldStateInitial(index));
@@ -171,16 +221,24 @@ public class GimmickTabController
                 if (clamped != e.newValue)
                     value.SetValueWithoutNotify(clamped);
             });
-            row.Add(value);
+            card.Add(value);
         }
 
-        var del = new Button(() => RemoveState(kind, index)) { text = "", tooltip = "削除" };
-        del.AddToClassList("gimmick-state-del");
-        del.AddToClassList("gimmick-icon-btn");
-        del.AddToClassList("gimmick-icon-btn--close");
-        row.Add(del);
+        // 下部ツール行: 右下に ⋯（削除）メニュー（icon_close は廃止）。
+        var tools = new VisualElement();
+        tools.AddToClassList("conv-line-tools");
+        var spacer = new VisualElement { pickingMode = PickingMode.Ignore };
+        spacer.style.flexGrow = 1;
+        tools.Add(spacer);
+        var more = UiLangText.ToolButton("conv-line-tool-btn--more", "操作");
+        more.clicked += () => _popup.Open(more, new[]
+        {
+            new UiPopupMenu.Item("削除", () => RemoveState(kind, index), "ui-popup-item-icon--trash", "ui-popup-item--danger"),
+        }, _variablesScroll);
+        tools.Add(more);
+        card.Add(tools);
 
-        return row;
+        return rowWrap;
     }
 
     private string LabelOf(StateKind kind, int index) => kind switch
