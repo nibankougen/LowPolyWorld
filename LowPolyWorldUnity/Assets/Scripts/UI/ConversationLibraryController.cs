@@ -209,21 +209,33 @@ public class ConversationLibraryController
         content.AddToClassList("conv-line-content");
         card.Add(content);
 
-        // ヘッダー: 情報（名前 + 行数・タップで編集）+ 右に「⋯」（この会話の操作）
+        // ヘッダー: 名前 + 行数 + 右上に「›」（タップで編集ページへ遷移できることを示す）。
+        // ハンドル/⋯ ボタン以外をタップで編集に入る。
         var header = new VisualElement();
         header.AddToClassList("conv-row-top");
-
-        var info = new VisualElement();
-        info.AddToClassList("conv-row-info");
         var name = new Label(conv.name);
         name.AddToClassList("conv-name");
-        info.Add(name);
+        header.Add(name);
         var meta = new Label($"{conv.lines?.Length ?? 0} 行");
         meta.AddToClassList("conv-meta");
-        info.Add(meta);
-        info.RegisterCallback<ClickEvent>(_ => EditRequested?.Invoke(id)); // ハンドル/ボタン以外をタップで編集
-        header.Add(info);
+        header.Add(meta);
+        var chevron = new VisualElement { pickingMode = PickingMode.Ignore };
+        chevron.AddToClassList("conv-next-chevron");
+        header.Add(chevron);
+        header.RegisterCallback<ClickEvent>(_ => EditRequested?.Invoke(id));
+        content.Add(header);
 
+        // この会話に登場する話者（タップで編集）
+        var speakers = BuildConversationSpeakers(conv);
+        speakers.RegisterCallback<ClickEvent>(_ => EditRequested?.Invoke(id));
+        content.Add(speakers);
+
+        // 下部ツール行: 右下に「⋯」（この会話の操作＝削除）
+        var tools = new VisualElement();
+        tools.AddToClassList("conv-line-tools");
+        var spacer = new VisualElement { pickingMode = PickingMode.Ignore };
+        spacer.style.flexGrow = 1;
+        tools.Add(spacer);
         var moreBtn = UiLangText.ToolButton("conv-line-tool-btn--more", "この会話の操作");
         moreBtn.clicked += () => _popup.Open(moreBtn, new[]
         {
@@ -233,13 +245,8 @@ public class ConversationLibraryController
                     Refresh();
             }, "ui-popup-item-icon--trash", "ui-popup-item--danger"),
         }, _list as ScrollView);
-        header.Add(moreBtn);
-        content.Add(header);
-
-        // 下段: この会話に登場する話者（タップで編集）
-        var speakers = BuildConversationSpeakers(conv);
-        speakers.RegisterCallback<ClickEvent>(_ => EditRequested?.Invoke(id));
-        content.Add(speakers);
+        tools.Add(moreBtn);
+        content.Add(tools);
 
         return rowWrap;
     }

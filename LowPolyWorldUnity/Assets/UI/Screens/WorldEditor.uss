@@ -1801,13 +1801,6 @@
     align-items: center;
 }
 
-/* 会話行の情報領域（名前＋行数・タップで編集に入る・⋯ 以外の幅いっぱい） */
-.conv-row-info {
-    flex-direction: row;
-    align-items: center;
-    flex-grow: 1;
-}
-
 /* 会話に登場する話者のチップ行 */
 .conv-row-speakers {
     flex-direction: row;
@@ -1842,10 +1835,12 @@
     background-color: var(--lpw-surface-muted);
 }
 
-/* タップで編集に入れることを示す右端の「›」 */
-.conv-speaker-chevron {
+/* タップで別ページへ遷移できることを示す右端の「›」（icon_next・共通） */
+.conv-next-chevron {
     width: 14px;
     height: 14px;
+    margin-left: 6px;
+    flex-shrink: 0;
     background-image: url("../../Textures/UI/Icons/icon_next.png");
     -unity-background-scale-mode: scale-to-fit;
     background-size: 100% 100%;
