@@ -277,6 +277,13 @@
     flex-direction: column;
 }
 
+/* ギミック / 設定タブは情報量が多くごちゃつくので背景を不透明にする
+   （地形 / オブジェクトタブは 3D を見ながら編集するため半透明のまま）。 */
+#panel-gimmicks,
+#panel-settings {
+    background-color: var(--lpw-editor-panel-solid);
+}
+
 .stub-label {
     color: var(--lpw-text-muted);
     font-size: 20px;
@@ -1384,6 +1391,7 @@
 }
 
 /* ── ルール編集画面（オーバーレイ） ── */
+/* ギミック / 設定タブから派生するオーバーレイは不透明（3D を透かさず、ごちゃつきを防ぐ）。 */
 .gimmick-rule-editor,
 .editor-overlay {
     position: absolute;
@@ -1391,7 +1399,7 @@
     top: 0;
     right: 0;
     bottom: 0;
-    background-color: var(--lpw-editor-panel);
+    background-color: var(--lpw-editor-panel-solid);
     flex-direction: column;
 }
 
