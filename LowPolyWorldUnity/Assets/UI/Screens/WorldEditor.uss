@@ -1801,6 +1801,13 @@
     align-items: center;
 }
 
+/* 会話行の情報領域（名前＋行数・タップで編集に入る・⋯ 以外の幅いっぱい） */
+.conv-row-info {
+    flex-direction: row;
+    align-items: center;
+    flex-grow: 1;
+}
+
 /* 会話に登場する話者のチップ行 */
 .conv-row-speakers {
     flex-direction: row;
@@ -1828,6 +1835,21 @@
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
+}
+
+/* 話者エリアはタップで話者編集へ */
+.conv-speaker-section--tappable:hover {
+    background-color: var(--lpw-surface-muted);
+}
+
+/* タップで編集に入れることを示す右端の「›」 */
+.conv-speaker-chevron {
+    width: 14px;
+    height: 14px;
+    background-image: url("../../Textures/UI/Icons/icon_next.png");
+    -unity-background-scale-mode: scale-to-fit;
+    background-size: 100% 100%;
+    -unity-background-image-tint-color: var(--lpw-icon-faint);
 }
 
 .conv-speaker-edit-btn {
@@ -2077,6 +2099,11 @@
     border-width: 1px;
     border-color: var(--lpw-border-strong);
     border-radius: 8px;
+}
+
+/* 「＋ 選択肢を追加」ボタン: 選択肢カードと同じ幅・位置（「セリフ行を追加」と同じ見た目） */
+.conv-choice-add {
+    margin: 6px 0 6px 8px;
 }
 
 /* 「選択肢 N」見出し + 右上の削除✕ */

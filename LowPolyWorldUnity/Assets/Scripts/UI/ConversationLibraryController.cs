@@ -13,6 +13,12 @@ public class ConversationLibraryController
     /// <summary>会話を編集したいとき（conversationId）。</summary>
     public event Action<string> EditRequested;
 
+    /// <summary>話者エリアをタップして話者編集を開きたいとき。</summary>
+    public event Action EditSpeakersRequested;
+
+    // 左スワイプで現れる削除ボタン領域の幅(px)。
+    private const float SwipeRevealWidth = 64f;
+
     private readonly ConversationLibraryLogic _logic;
     private readonly SpeakerLibraryLogic _speakers; // 話者一覧・各会話の登場話者表示用
 
@@ -22,6 +28,7 @@ public class ConversationLibraryController
     private readonly VisualElement _speakerSummary;
     private readonly Label _flash;
     private readonly UiListDragReorder _reorder;
+    private readonly UiPopupMenu _popup; // ⋯（会話を削除）のはみ出しメニュー
 
     private IVisualElementScheduledItem _flashHide;
 
@@ -39,10 +46,27 @@ public class ConversationLibraryController
         _speakerSummary = root.Q("conv-speaker-summary");
         _flash = root.Q<Label>("conv-library-flash");
 
+        // 話者エリア全体をタップで話者編集へ（編集ボタンは廃止）。
+        var speakerArea = root.Q("conv-speaker-area");
+        speakerArea?.RegisterCallback<ClickEvent>(_ => EditSpeakersRequested?.Invoke());
+
         if (_list != null)
             _reorder = UiListDragReorder.For(_list, OnReorder);
 
+        _popup = new UiPopupMenu(_overlay);
+
+        // 開いているスワイプ行の外側をタップしたら閉じる（他の部分をいじると閉じる）。
+        _overlay?.RegisterCallback<PointerDownEvent>(OnOverlayPointerDown, TrickleDown.TrickleDown);
+
         if (_btnBack != null) _btnBack.clicked += Close;
+    }
+
+    // 開いているスワイプ行の外側をタップしたら閉じる（その行の内側＝削除ボタン等は閉じない）。
+    private void OnOverlayPointerDown(PointerDownEvent e)
+    {
+        var cur = UiSwipeReveal.Current;
+        if (cur != null && e.target is VisualElement ve && !cur.ContainsTarget(ve))
+            UiSwipeReveal.CloseCurrent();
     }
 
     public bool IsOpen => _overlay != null && !_overlay.ClassListContains("overlay-hidden");
@@ -55,7 +79,12 @@ public class ConversationLibraryController
         _overlay.EnableInClassList("overlay-hidden", false);
     }
 
-    public void Close() => _overlay?.EnableInClassList("overlay-hidden", true);
+    public void Close()
+    {
+        _popup?.Close();
+        UiSwipeReveal.CloseCurrent();
+        _overlay?.EnableInClassList("overlay-hidden", true);
+    }
 
     /// <summary>一覧を再構築する（エディタ / 話者編集から戻ったとき等）。</summary>
     public void Refresh()
@@ -64,6 +93,8 @@ public class ConversationLibraryController
 
         if (_list == null)
             return;
+        _popup?.Close();
+        UiSwipeReveal.CloseCurrent();
         _list.Clear();
         _reorder?.Reset();
 
@@ -95,7 +126,7 @@ public class ConversationLibraryController
 
         if (_speakers == null || _speakers.Count == 0)
         {
-            var empty = new Label("なし");
+            var empty = new Label("タップして編集");
             empty.AddToClassList("conv-speaker-empty");
             _speakerSummary.Add(empty);
             return;
@@ -140,37 +171,77 @@ public class ConversationLibraryController
 
     private VisualElement BuildRow(ConversationJson conv)
     {
-        var card = new VisualElement();
-        card.AddToClassList("conv-row");
+        string id = conv.conversationId;
 
-        // 上段: ハンドル + 会話名 + 行数 + 操作ボタン
-        var top = new VisualElement();
-        top.AddToClassList("conv-row-top");
+        // 行 = 背後の丸い削除ボタン + 前景カード（左スワイプで削除ボタンが出る・セリフ行と同じ）。
+        var rowWrap = new VisualElement();
+        rowWrap.AddToClassList("conv-line-row");
+
+        var swipeDelete = new VisualElement();
+        swipeDelete.AddToClassList("conv-swipe-delete");
+        var swipeBtn = new Button(() =>
+        {
+            UiSwipeReveal.CloseCurrent();
+            if (_logic.Remove(id))
+                Refresh();
+        }) { text = "", tooltip = "会話を削除" };
+        swipeBtn.AddToClassList("conv-swipe-delete-btn");
+        swipeDelete.Add(swipeBtn);
+        rowWrap.Add(swipeDelete);
+
+        // カードは [縦長ドラッグハンドル | 内容列]（前景・不透明）
+        var card = new VisualElement();
+        card.AddToClassList("conv-line-card");
+        rowWrap.Add(card);
 
         if (_reorder != null)
-            top.Add(_reorder.CreateHandle(card, string.IsNullOrEmpty(conv.name) ? "（名称なし）" : conv.name));
+        {
+            // 並べ替えの行はラッパー（リスト直下の子）を登録する。
+            var handle = _reorder.CreateHandle(rowWrap, string.IsNullOrEmpty(conv.name) ? "（名称なし）" : conv.name);
+            handle.AddToClassList("conv-line-handle");
+            card.Add(handle);
+        }
 
+        // 前景カードを左スワイプで開ける（背後の削除ボタンが出る）。
+        _ = new UiSwipeReveal(card, SwipeRevealWidth);
+
+        var content = new VisualElement();
+        content.AddToClassList("conv-line-content");
+        card.Add(content);
+
+        // ヘッダー: 情報（名前 + 行数・タップで編集）+ 右に「⋯」（この会話の操作）
+        var header = new VisualElement();
+        header.AddToClassList("conv-row-top");
+
+        var info = new VisualElement();
+        info.AddToClassList("conv-row-info");
         var name = new Label(conv.name);
         name.AddToClassList("conv-name");
-        name.RegisterCallback<ClickEvent>(_ => EditRequested?.Invoke(conv.conversationId));
-        top.Add(name);
-
+        info.Add(name);
         var meta = new Label($"{conv.lines?.Length ?? 0} 行");
         meta.AddToClassList("conv-meta");
-        top.Add(meta);
+        info.Add(meta);
+        info.RegisterCallback<ClickEvent>(_ => EditRequested?.Invoke(id)); // ハンドル/ボタン以外をタップで編集
+        header.Add(info);
 
-        top.Add(IconButton("gimmick-icon-btn--edit", "編集", () => EditRequested?.Invoke(conv.conversationId)));
-        top.Add(IconButton("gimmick-icon-btn--close", "削除", () =>
+        var moreBtn = UiLangText.ToolButton("conv-line-tool-btn--more", "この会話の操作");
+        moreBtn.clicked += () => _popup.Open(moreBtn, new[]
         {
-            if (_logic.Remove(conv.conversationId))
-                Refresh();
-        }));
-        card.Add(top);
+            new UiPopupMenu.Item("会話を削除", () =>
+            {
+                if (_logic.Remove(id))
+                    Refresh();
+            }, "ui-popup-item-icon--trash", "ui-popup-item--danger"),
+        }, _list as ScrollView);
+        header.Add(moreBtn);
+        content.Add(header);
 
-        // 下段: この会話に登場する話者
-        card.Add(BuildConversationSpeakers(conv));
+        // 下段: この会話に登場する話者（タップで編集）
+        var speakers = BuildConversationSpeakers(conv);
+        speakers.RegisterCallback<ClickEvent>(_ => EditRequested?.Invoke(id));
+        content.Add(speakers);
 
-        return card;
+        return rowWrap;
     }
 
     // 会話に登場する話者をチップで表示する（タップで編集に入れるよう行全体は名前タップで遷移）。
@@ -205,15 +276,6 @@ public class ConversationLibraryController
             return;
         if (_logic.Move(_logic.Conversations[from].conversationId, to))
             Refresh();
-    }
-
-    private Button IconButton(string iconClass, string tooltip, Action onClick)
-    {
-        var btn = new Button(onClick) { text = "", tooltip = tooltip };
-        btn.AddToClassList("conv-small-btn");
-        btn.AddToClassList("gimmick-icon-btn");
-        btn.AddToClassList(iconClass);
-        return btn;
     }
 
     private void ShowFlash(string message)

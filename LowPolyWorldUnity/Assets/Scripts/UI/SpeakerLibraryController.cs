@@ -14,6 +14,9 @@ public class SpeakerLibraryController
     /// <summary>＜戻るで閉じたとき。</summary>
     public event Action Closed;
 
+    // 左スワイプで現れる削除ボタン領域の幅(px)。
+    private const float SwipeRevealWidth = 64f;
+
     private readonly VisualElement _overlay;
     private readonly Button _btnBack;
     private readonly VisualElement _list;
@@ -21,7 +24,11 @@ public class SpeakerLibraryController
 
     private readonly SpeakerLibraryLogic _library;
     private readonly UiListDragReorder _reorder;
+    private readonly UiPopupMenu _popup; // ＋（言語別名前を追加）/ ⋯（削除）のはみ出しメニュー
     private IVisualElementScheduledItem _flashHide;
+
+    // 言語別名前を開いている話者 ID（"開いた" UI 状態を覚える・データがあるものは常に表示）。
+    private readonly System.Collections.Generic.HashSet<string> _revealed = new();
 
     public SpeakerLibraryController(VisualElement root, SpeakerLibraryLogic library)
     {
@@ -37,7 +44,20 @@ public class SpeakerLibraryController
         if (_list != null)
             _reorder = UiListDragReorder.For(_list, OnReorder);
 
+        _popup = new UiPopupMenu(_overlay);
+
+        // 開いているスワイプ行の外側をタップしたら閉じる（他の部分をいじると閉じる）。
+        _overlay?.RegisterCallback<PointerDownEvent>(OnOverlayPointerDown, TrickleDown.TrickleDown);
+
         if (_btnBack != null) _btnBack.clicked += Close;
+    }
+
+    // 開いているスワイプ行の外側をタップしたら閉じる（その行の内側＝削除ボタン等は閉じない）。
+    private void OnOverlayPointerDown(PointerDownEvent e)
+    {
+        var cur = UiSwipeReveal.Current;
+        if (cur != null && e.target is VisualElement ve && !cur.ContainsTarget(ve))
+            UiSwipeReveal.CloseCurrent();
     }
 
     public bool IsOpen => _overlay != null && !_overlay.ClassListContains("overlay-hidden");
@@ -46,6 +66,7 @@ public class SpeakerLibraryController
     {
         if (_overlay == null)
             return;
+        _revealed.Clear();
         Refresh();
         _overlay.EnableInClassList("overlay-hidden", false);
     }
@@ -54,6 +75,8 @@ public class SpeakerLibraryController
     {
         if (_overlay == null)
             return;
+        _popup?.Close();
+        UiSwipeReveal.CloseCurrent();
         _overlay.EnableInClassList("overlay-hidden", true);
         Closed?.Invoke();
     }
@@ -85,6 +108,8 @@ public class SpeakerLibraryController
     {
         if (_list == null || _library == null)
             return;
+        _popup?.Close();
+        UiSwipeReveal.CloseCurrent();
         _list.Clear();
 
         _reorder?.Reset();
@@ -112,47 +137,105 @@ public class SpeakerLibraryController
         string id = speaker.speakerId;
         string app = DeviceLanguage.CurrentCode();
 
-        // カードは [縦長ドラッグハンドル | 内容列]（会話のセリフ行と同じ構成）
+        // 行 = 背後の丸い削除ボタン + 前景カード（左スワイプで削除ボタンが出る・セリフ行と同じ）。
+        var rowWrap = new VisualElement();
+        rowWrap.AddToClassList("conv-line-row");
+
+        var swipeDelete = new VisualElement();
+        swipeDelete.AddToClassList("conv-swipe-delete");
+        var swipeBtn = new Button(() =>
+        {
+            UiSwipeReveal.CloseCurrent();
+            if (_library.Remove(id))
+                Refresh();
+        }) { text = "", tooltip = "話者を削除" };
+        swipeBtn.AddToClassList("conv-swipe-delete-btn");
+        swipeDelete.Add(swipeBtn);
+        rowWrap.Add(swipeDelete);
+
+        // カードは [縦長ドラッグハンドル | 内容列]（会話のセリフ行と同じ構成・前景）
         var card = new VisualElement();
         card.AddToClassList("conv-line-card");
+        rowWrap.Add(card);
 
         if (_reorder != null)
         {
+            // 並べ替えの行はラッパー（リスト直下の子）を登録する。
             string name = SpeakerLibraryLogic.ResolveName(speaker, app);
-            var handle = _reorder.CreateHandle(card, string.IsNullOrEmpty(name) ? "（名前なし）" : name);
+            var handle = _reorder.CreateHandle(rowWrap, string.IsNullOrEmpty(name) ? "（名前なし）" : name);
             handle.AddToClassList("conv-line-handle");
             card.Add(handle);
         }
+
+        // 前景カードを左スワイプで開ける（背後の削除ボタンが出る）。
+        _ = new UiSwipeReveal(card, SwipeRevealWidth);
 
         var content = new VisualElement();
         content.AddToClassList("conv-line-content");
         card.Add(content);
 
-        // 1 行目: 色スウォッチ + 名前（既定言語）+ 右上に削除✕
+        Action<string, string> setName = (lang, text) => _library.SetName(id, lang, text);
+        Action<string> removeName = lang => _library.RemoveName(id, lang);
+
+        // 1 行目: 色スウォッチ + 名前（既定言語）。削除は下部の「⋯」メニューへ（会話と同じ）。
         var head = new VisualElement();
         head.AddToClassList("conv-line-head");
         head.Add(BuildColorSwatch(speaker));
-        var nameField = NameField($"名前（{SupportedLanguages.LabelOf(app)}）", app, TextForLang(speaker.names, app), id);
+        var nameField = UiLangText.DefaultField(
+            speaker.names, app, SpeakerLibraryLogic.NameMaxLength, false, setName, removeName);
         nameField.style.flexGrow = 1;
         head.Add(nameField);
-        head.Add(IconButton("gimmick-icon-btn--close", "削除", () =>
-        {
-            if (_library.Remove(id))
-                Refresh();
-        }));
         content.Add(head);
 
         // 色パレット（常に表示）
         content.Add(BuildColorPalette(speaker));
 
-        // 言語別の名前（詳細）
-        var detail = new Foldout { text = "詳細（言語別）", value = false };
-        detail.AddToClassList("conv-ml-detail");
-        foreach (var lang in SupportedLanguages.All)
-            if (lang.Code != app)
-                detail.Add(NameField(lang.Label, lang.Code, TextForLang(speaker.names, lang.Code), id));
-        content.Add(detail);
-        return card;
+        // 言語別の名前（他言語データあり or 開いたときだけ・⋯ メニューで閉じられる）
+        bool hasOtherLang = UiLangText.HasOtherLang(speaker.names, app);
+        string keyLang = id + ":langname";
+        if (hasOtherLang || _revealed.Contains(keyLang))
+        {
+            var box = UiLangText.OptionalSection("言語別名前", hasOtherLang ? (Action)null : () =>
+            {
+                _revealed.Remove(keyLang);
+                Refresh();
+            }, _popup, _list as ScrollView);
+            UiLangText.FillLangFields(box, speaker.names, app, SpeakerLibraryLogic.NameMaxLength, false, setName, removeName);
+            content.Add(box);
+        }
+
+        // ── 下部ツール行: 左に「＋」（言語別名前を追加）・右に「⋯」（この話者の操作）──
+        bool canLang = !hasOtherLang && !_revealed.Contains(keyLang);
+        var tools = new VisualElement();
+        tools.AddToClassList("conv-line-tools");
+
+        if (canLang)
+        {
+            var addBtn = UiLangText.ToolButton("conv-line-tool-btn--plus", "追加");
+            addBtn.clicked += () => _popup.Open(addBtn, new[]
+            {
+                new UiPopupMenu.Item("言語別名前", () => { _revealed.Add(keyLang); Refresh(); }),
+            }, _list as ScrollView);
+            tools.Add(addBtn);
+        }
+
+        var spacer = new VisualElement { pickingMode = PickingMode.Ignore };
+        spacer.style.flexGrow = 1;
+        tools.Add(spacer);
+
+        var moreBtn = UiLangText.ToolButton("conv-line-tool-btn--more", "この話者の操作");
+        moreBtn.clicked += () => _popup.Open(moreBtn, new[]
+        {
+            new UiPopupMenu.Item("話者を削除", () =>
+            {
+                if (_library.Remove(id))
+                    Refresh();
+            }, "ui-popup-item-icon--trash", "ui-popup-item--danger"),
+        }, _list as ScrollView);
+        tools.Add(moreBtn);
+
+        content.Add(tools);
+        return rowWrap;
     }
 
     // 話者の現在色を表すアイコン（icon_speaker を話者色でティント・枠なし）。
@@ -188,21 +271,6 @@ public class SpeakerLibraryController
         return grid;
     }
 
-    private TextField NameField(string label, string lang, string initial, string speakerId)
-    {
-        var f = new TextField(label) { maxLength = SpeakerLibraryLogic.NameMaxLength };
-        f.AddToClassList("conv-ml-field");
-        f.SetValueWithoutNotify(initial);
-        f.RegisterValueChangedCallback(e =>
-        {
-            if (string.IsNullOrEmpty(e.newValue))
-                _library.RemoveName(speakerId, lang);
-            else
-                _library.SetName(speakerId, lang, e.newValue);
-        });
-        return f;
-    }
-
     // ドラッグ＆ドロップ並べ替え（from の話者を to の位置へ）。
     private void OnReorder(int from, int to)
     {
@@ -210,25 +278,6 @@ public class SpeakerLibraryController
             return;
         if (_library.Move(_library.Speakers[from].speakerId, to))
             Refresh();
-    }
-
-    private static string TextForLang(GimmickTextJson[] texts, string lang)
-    {
-        if (texts == null)
-            return "";
-        foreach (var t in texts)
-            if (t != null && t.lang == lang)
-                return t.text ?? "";
-        return "";
-    }
-
-    private static Button IconButton(string iconClass, string tooltip, Action onClick)
-    {
-        var btn = new Button(onClick) { text = "", tooltip = tooltip };
-        btn.AddToClassList("conv-small-btn");
-        btn.AddToClassList("gimmick-icon-btn");
-        btn.AddToClassList(iconClass);
-        return btn;
     }
 
     private void ShowFlash(string message)

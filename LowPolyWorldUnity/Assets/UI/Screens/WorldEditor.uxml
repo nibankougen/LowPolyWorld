@@ -298,12 +298,12 @@
                         <ui:Label class="gimmick-picker-title" text="会話一覧" />
                     </ui:VisualElement>
                     <!-- 話者一覧（ワールド単位の話者定義） -->
-                    <ui:VisualElement class="conv-speaker-section">
+                    <ui:VisualElement name="conv-speaker-area" class="conv-speaker-section conv-speaker-section--tappable">
                         <ui:VisualElement class="conv-speaker-section-head">
                             <ui:Label class="gimmick-subhead" text="話者" />
-                            <ui:Button name="conv-speaker-edit" class="conv-small-btn gimmick-icon-btn gimmick-icon-btn--edit" text="" tooltip="話者を編集" />
+                            <ui:VisualElement class="conv-speaker-chevron" picking-mode="Ignore" />
                         </ui:VisualElement>
-                        <ui:VisualElement name="conv-speaker-summary" class="conv-speaker-summary" />
+                        <ui:VisualElement name="conv-speaker-summary" class="conv-speaker-summary" picking-mode="Ignore" />
                     </ui:VisualElement>
 
                     <ui:ScrollView name="conv-library-list" class="gimmick-edit-scroll" />

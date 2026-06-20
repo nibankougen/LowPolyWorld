@@ -182,14 +182,13 @@ public class WorldEditorController : MonoBehaviour
         _convEditorController.Closed += () => { _convLibraryController.Refresh(); RefreshConversationSummary(); };
         // 話者編集から戻ったら会話一覧の話者表示を更新する
         _speakerLibraryController.Closed += () => { _convLibraryController.Refresh(); RefreshConversationSummary(); };
+        // 会話一覧の話者エリアタップで話者編集を開く
+        _convLibraryController.EditSpeakersRequested += () => _speakerLibraryController.Open();
 
         _convSummaryLabel = _root.Q<Label>("gimmick-conv-summary");
 
         var btnConversations = _root.Q<Button>("gimmick-edit-conversations");
         if (btnConversations != null) btnConversations.clicked += () => _convLibraryController.Open();
-
-        var btnSpeakers = _root.Q<Button>("conv-speaker-edit");
-        if (btnSpeakers != null) btnSpeakers.clicked += () => _speakerLibraryController.Open();
     }
 
     // ギミックタブの「会話」概要（会話数・話者数）を更新する。
