@@ -298,8 +298,8 @@
                         <ui:Label class="gimmick-picker-title" text="会話一覧" />
                     </ui:VisualElement>
                     <!-- 話者一覧（ワールド単位の話者定義） -->
-                    <ui:VisualElement name="conv-speaker-area" class="conv-speaker-section conv-speaker-section--tappable">
-                        <ui:VisualElement class="conv-speaker-section-head">
+                    <ui:VisualElement name="conv-speaker-area" class="gimmick-section conv-speaker-area--tappable">
+                        <ui:VisualElement class="gimmick-summary-head">
                             <ui:Label class="gimmick-subhead" text="話者" />
                             <ui:VisualElement class="conv-next-chevron" picking-mode="Ignore" />
                         </ui:VisualElement>

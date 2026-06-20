@@ -1814,25 +1814,10 @@
     padding: 2px 0;
 }
 
-/* ── 話者セクション（会話一覧の上部）── */
-.conv-speaker-section {
-    margin: 4px 10px 6px 10px;
-    padding: 6px 8px;
-    background-color: var(--lpw-surface-sunken);
-    border-width: 1px;
-    border-color: var(--lpw-border);
-    border-radius: 8px;
-}
-
-.conv-speaker-section-head {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-}
-
-/* 話者エリアはタップで話者編集へ */
-.conv-speaker-section--tappable:hover {
-    background-color: var(--lpw-surface-muted);
+/* ── 話者セクション（会話一覧の上部・ギミックタブの変数/会話と同じ線で区切る領域）── */
+/* 領域そのものは .gimmick-section（border-bottom の区切り線）を使う。タップで話者編集へ。 */
+.conv-speaker-area--tappable:hover {
+    background-color: var(--lpw-surface-hover);
 }
 
 /* タップで別ページへ遷移できることを示す右端の「›」（icon_next・共通） */
@@ -1845,17 +1830,6 @@
     -unity-background-scale-mode: scale-to-fit;
     background-size: 100% 100%;
     -unity-background-image-tint-color: var(--lpw-icon-faint);
-}
-
-.conv-speaker-edit-btn {
-    height: 28px;
-    padding: 0 12px;
-    background-color: var(--lpw-surface-muted);
-    border-width: 1px;
-    border-color: var(--lpw-border);
-    border-radius: 14px;
-    color: var(--lpw-text-secondary);
-    font-size: 13px;
 }
 
 .conv-speaker-summary {
