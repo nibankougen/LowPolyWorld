@@ -1143,10 +1143,10 @@
     flex-direction: column;
 }
 
-/* 変数カードのラッパー（背後の削除ボタン + 前景カード・左スワイプで削除ボタンが出る） */
+/* 変数カードのラッパー（背後の削除ボタン + 前景カード・左スワイプで削除ボタンが出る）。
+   overflow は clip しない（左スワイプ時に前景カードがパディングを越えてはみ出せるように）。 */
 .gimmick-state-rowwrap {
     margin: 4px 0;
-    overflow: hidden;
     border-radius: 8px;
 }
 
@@ -1933,10 +1933,11 @@
 }
 
 /* セリフ行ラッパー（背後の削除ボタン + 前景カードを重ねる・左スワイプで開く） */
+/* スワイプ行ラッパー。overflow は clip しない（左スワイプ時に前景カードがパディングを
+   越えてはみ出せるように）。角丸は前景カード自身の border-radius で見せる。 */
 .conv-line-row {
     margin: 4px 10px;
     border-radius: 8px;
-    overflow: hidden;
 }
 
 /* 背後の削除ボタン領域（カードの裏・右寄せ）。前景を左にスワイプすると現れる。 */
